@@ -13,16 +13,34 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(morgan('dev'))
 app.use(cors())
 
+const userRoute = require('./routes/user')
+const authRoute = require('./routes/auth')
+const depoRoute = require('./routes/depo')
+const showRoute = require('./routes/show')
+const emailRoute = require('./routes/email')
+const dokumenRoute = require('./routes/dokumen')
+const assetRoute = require('./routes/asset')
+const pengRoute = require('./routes/pengadaan')
+const approveRoute = require('./routes/approves')
+
+const authMiddleware = require('./middlewares/auth')
+
 app.use('/uploads', express.static('assets/documents'))
 app.use('/masters', express.static('assets/masters'))
 app.use('/download', express.static('assets/exports'))
 
-// app.get('*', (req, res) => {
-//   response(res, 'Error route not found', {}, 404, false)
-// })
+app.use('/auth', authRoute)
+app.use('/user', authMiddleware, userRoute)
+app.use('/depo', authMiddleware, depoRoute)
+app.use('/email', authMiddleware, emailRoute)
+app.use('/dokumen', authMiddleware, dokumenRoute)
+app.use('/asset', authMiddleware, assetRoute)
+app.use('/peng', authMiddleware, pengRoute)
+app.use('/show', showRoute)
+app.use('/approve', authMiddleware, approveRoute)
 
-app.get('/', (req, res) => {
-  response(res, 'Backend is running')
+app.get('*', (req, res) => {
+  response(res, 'Error route not found', {}, 404, false)
 })
 
 server.listen(APP_PORT, () => {

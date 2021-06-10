@@ -1,60 +1,54 @@
 'use strict'
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('depos', {
+    await queryInterface.createTable('pengadaans', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      no_io: {
+        type: Sequelize.STRING
+      },
+      no_doc: {
+        type: Sequelize.STRING
+      },
+      no_asset: {
+        type: Sequelize.STRING
+      },
+      qty: {
+        type: Sequelize.STRING
+      },
+      nama: {
+        type: Sequelize.STRING
+      },
+      price: {
+        type: Sequelize.STRING
+      },
+      total: {
+        type: Sequelize.STRING
+      },
       kode_plant: {
         type: Sequelize.STRING
       },
-      profit_center: {
+      kategori: {
+        type: Sequelize.ENUM('budget', 'non-budget', 'return')
+      },
+      jenis: {
+        type: Sequelize.ENUM('it', 'non-it', 'return')
+      },
+      alasan: {
         type: Sequelize.STRING
       },
-      kode_sap_1: {
+      no_pengadaan: {
+        type: Sequelize.STRING
+      },
+      status_app: {
         type: Sequelize.INTEGER
       },
-      kode_sap_2: {
+      status_doc: {
         type: Sequelize.INTEGER
-      },
-      cost_center: {
-        type: Sequelize.STRING
-      },
-      nama_area: {
-        type: Sequelize.STRING
-      },
-      channel: {
-        type: Sequelize.STRING
-      },
-      distribution: {
-        type: Sequelize.STRING
-      },
-      status_area: {
-        type: Sequelize.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla')
-      },
-      nama_grom: {
-        type: Sequelize.STRING
-      },
-      nama_rom: {
-        type: Sequelize.STRING
-      },
-      nama_aos: {
-        type: Sequelize.STRING
-      },
-      nama_pic_1: {
-        type: Sequelize.STRING
-      },
-      nama_pic_2: {
-        type: Sequelize.STRING
-      },
-      nama_pic_3: {
-        type: Sequelize.STRING
-      },
-      nama_pic_4: {
-        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,
@@ -67,6 +61,6 @@ module.exports = {
     })
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('depos')
+    await queryInterface.dropTable('pengadaans')
   }
 }

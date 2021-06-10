@@ -1,7 +1,7 @@
 'use strict'
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('depos', {
+    await queryInterface.createTable('emails', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -11,49 +11,34 @@ module.exports = {
       kode_plant: {
         type: Sequelize.STRING
       },
-      profit_center: {
+      email_area: {
         type: Sequelize.STRING
       },
-      kode_sap_1: {
-        type: Sequelize.INTEGER
-      },
-      kode_sap_2: {
-        type: Sequelize.INTEGER
-      },
-      cost_center: {
+      email_staff_purch: {
         type: Sequelize.STRING
       },
-      nama_area: {
+      email_spv_purch: {
         type: Sequelize.STRING
       },
-      channel: {
+      email_manager_purch: {
         type: Sequelize.STRING
       },
-      distribution: {
+      email_am: {
         type: Sequelize.STRING
       },
-      status_area: {
-        type: Sequelize.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla')
-      },
-      nama_grom: {
+      email_aam: {
         type: Sequelize.STRING
       },
-      nama_rom: {
+      email_ga_spv: {
         type: Sequelize.STRING
       },
-      nama_aos: {
+      email_staff_ga: {
         type: Sequelize.STRING
       },
-      nama_pic_1: {
+      email_it_spv: {
         type: Sequelize.STRING
       },
-      nama_pic_2: {
-        type: Sequelize.STRING
-      },
-      nama_pic_3: {
-        type: Sequelize.STRING
-      },
-      nama_pic_4: {
+      email_ism: {
         type: Sequelize.STRING
       },
       createdAt: {
@@ -67,6 +52,6 @@ module.exports = {
     })
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('depos')
+    await queryInterface.dropTable('emails')
   }
 }

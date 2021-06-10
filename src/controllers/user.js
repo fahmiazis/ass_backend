@@ -1,6 +1,6 @@
 const joi = require('joi')
 const response = require('../helpers/response')
-const { users, sequelize } = require('../models')
+const { user, sequelize } = require('../models')
 const bcrypt = require('bcryptjs')
 const { Op, QueryTypes } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
@@ -19,8 +19,7 @@ module.exports = {
       const schema = joi.object({
         username: joi.string().required(),
         password: joi.string().required(),
-        kode_depo: joi.string().allow(''),
-        nama_depo: joi.string().allow(''),
+        kode_plant: joi.string().allow(''),
         user_level: joi.number().required(),
         status: joi.string().required()
       })
@@ -29,14 +28,14 @@ module.exports = {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
         if (level === 1) {
-          const result = await users.findAll({ where: { username: results.username } })
+          const result = await user.findAll({ where: { username: results.username } })
           if (result.length > 0) {
             return response(res, 'username already use', {}, 404, false)
           } else {
-            const result = await users.findAll({
+            const result = await user.findAll({
               where: {
                 [Op.and]: [
-                  { kode_depo: results.kode_depo },
+                  { kode_plant: results.kode_plant },
                   { user_level: results.user_level }
                 ]
               }
@@ -45,7 +44,7 @@ module.exports = {
               return response(res, 'kode depo and user level already use', {}, 404, false)
             } else {
               results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
-              const result = await users.create(results)
+              const result = await user.create(results)
               if (result) {
                 return response(res, 'Add User succesfully', { result })
               } else {
@@ -68,8 +67,7 @@ module.exports = {
       const schema = joi.object({
         username: joi.string(),
         password: joi.string().allow(''),
-        kode_depo: joi.string().allow(''),
-        nama_depo: joi.string().allow(''),
+        kode_plant: joi.string().allow(''),
         user_level: joi.number(),
         status: joi.string()
       })
@@ -78,11 +76,11 @@ module.exports = {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
         if (level === 1) {
-          if (results.kode_depo) {
-            const result = await users.findAll({
+          if (results.kode_plant) {
+            const result = await user.findAll({
               where: {
                 [Op.and]: [
-                  { kode_depo: results.kode_depo },
+                  { kode_plant: results.kode_plant },
                   { user_level: results.user_level }
                 ],
                 [Op.not]: { id: id }
@@ -92,7 +90,7 @@ module.exports = {
               return response(res, 'kode depo and user level already use', {}, 404, false)
             } else {
               if (results.username) {
-                const result = await users.findAll({
+                const result = await user.findAll({
                   where: {
                     username: results.username,
                     [Op.not]: { id: id }
@@ -103,7 +101,7 @@ module.exports = {
                 } else {
                   if (results.password !== '') {
                     results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
-                    const result = await users.findByPk(id)
+                    const result = await user.findByPk(id)
                     if (result) {
                       await result.update(results)
                       return response(res, 'update User succesfully', { result })
@@ -111,7 +109,7 @@ module.exports = {
                       return response(res, 'Fail to update user', {}, 400, false)
                     }
                   } else {
-                    const result = await users.findByPk(id)
+                    const result = await user.findByPk(id)
                     if (result) {
                       await result.update(results)
                       return response(res, 'update User succesfully', { result })
@@ -124,7 +122,7 @@ module.exports = {
             }
           } else {
             if (results.username) {
-              const result = await users.findAll({
+              const result = await user.findAll({
                 where: {
                   username: results.username,
                   [Op.not]: { id: id }
@@ -135,7 +133,7 @@ module.exports = {
               } else {
                 if (results.password !== '') {
                   results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
-                  const result = await users.findByPk(id)
+                  const result = await user.findByPk(id)
                   if (result) {
                     await result.update(results)
                     return response(res, 'update User succesfully', { result })
@@ -143,7 +141,7 @@ module.exports = {
                     return response(res, 'Fail to update user', {}, 400, false)
                   }
                 } else {
-                  const result = await users.findByPk(id)
+                  const result = await user.findByPk(id)
                   if (result) {
                     await result.update(results)
                     return response(res, 'update User succesfully', { result })
@@ -167,7 +165,7 @@ module.exports = {
       const level = req.user.level
       const id = req.params.id
       if (level === 1) {
-        const result = await users.findByPk(id)
+        const result = await user.findByPk(id)
         if (result) {
           await result.destroy()
           return response(res, 'delete user success', { result })
@@ -181,7 +179,7 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  getUsers: async (req, res) => {
+  getUser: async (req, res) => {
     try {
       let { limit, page, search, sort } = req.query
       let searchValue = ''
@@ -206,12 +204,11 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const result = await users.findAndCountAll({
+      const result = await user.findAndCountAll({
         where: {
           [Op.or]: [
             { username: { [Op.like]: `%${searchValue}%` } },
-            { kode_depo: { [Op.like]: `%${searchValue}%` } },
-            { nama_depo: { [Op.like]: `%${searchValue}%` } }
+            { kode_plant: { [Op.like]: `%${searchValue}%` } }
           ],
           [Op.not]: { user_level: 1 }
         },
@@ -221,7 +218,7 @@ module.exports = {
       })
       const pageInfo = pagination('/user/get', req.query, page, limit, result.count)
       if (result) {
-        return response(res, 'list users', { result, pageInfo })
+        return response(res, 'list user', { result, pageInfo })
       } else {
         return response(res, 'failed to get user', {}, 404, false)
       }
@@ -232,7 +229,7 @@ module.exports = {
   getDetailUser: async (req, res) => {
     try {
       const id = req.params.id
-      const result = await users.findByPk(id)
+      const result = await user.findByPk(id)
       if (result) {
         return response(res, `Profile of user with id ${id}`, { result })
       } else {
@@ -259,7 +256,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['User Name', 'Password', 'Kode Depo', 'Nama Depo', 'User Level']
+          const cek = ['User Name', 'Password', 'Kode Depo', 'User Level']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             if (valid[i] === cek[i]) {
@@ -335,7 +332,7 @@ module.exports = {
                   }
                   create.push(noun)
                 }
-                const result = await sequelize.query(`INSERT INTO users (username, password, kode_depo, nama_depo, user_level) VALUES ${create.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO users (username, password, kode_plant, user_level) VALUES ${create.map(a => '(?)').join(',')}`,
                   {
                     replacements: create,
                     type: QueryTypes.INSERT
@@ -370,7 +367,7 @@ module.exports = {
                   }
                   create.push(noun)
                 }
-                const result = await sequelize.query(`INSERT INTO users (username, password, kode_depo, nama_depo, user_level) VALUES ${create.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO users (username, password, kode_plant, user_level) VALUES ${create.map(a => '(?)').join(',')}`,
                   {
                     replacements: create,
                     type: QueryTypes.INSERT
@@ -407,13 +404,13 @@ module.exports = {
   },
   exportSqlUser: async (req, res) => {
     try {
-      const result = await users.findAll()
+      const result = await user.findAll()
       if (result) {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['User Name', 'Password', 'Kode Depo', 'Nama Depo', 'User Level']
-        const key = ['username', 'password', 'kode_depo', 'nama_depo', 'user_level']
+        const header = ['User Name', 'Password', 'Kode Depo', 'User Level']
+        const key = ['username', 'password', 'kode_plant', 'user_level']
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
           arr.push(temp)
@@ -446,7 +443,7 @@ module.exports = {
 //       const level = req.user.level
 //       if (level === 1) {
 //         const result = await pic.findAll()
-//         const user = await users.findAll()
+//         const user = await user.findAll()
 //         if (result) {
 //           const data = []
 //           const dataUser = []
@@ -476,7 +473,7 @@ module.exports = {
 //               const create = [filter[i], await bcrypt.hash(filter[i], await bcrypt.genSalt()), 3]
 //               send.push(create)
 //             }
-//             const results = await sequelize.query(`INSERT INTO users (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
+//             const results = await sequelize.query(`INSERT INTO user (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
 //               {
 //                 replacements: send,
 //                 type: QueryTypes.INSERT
@@ -499,12 +496,12 @@ module.exports = {
 //       return response(res, error.message, {}, 500, false)
 //     }
 //   },
-//   createUserSpv: async (req, res) => {
+//   createUserpv: async (req, res) => {
 //     try {
 //       const level = req.user.level
 //       if (level === 1) {
 //         const result = await pic.findAll()
-//         const user = await users.findAll()
+//         const user = await user.findAll()
 //         if (result) {
 //           const data = []
 //           const dataUser = []
@@ -534,7 +531,7 @@ module.exports = {
 //               const create = [filter[i], await bcrypt.hash(filter[i], await bcrypt.genSalt()), 2]
 //               send.push(create)
 //             }
-//             const results = await sequelize.query(`INSERT INTO users (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
+//             const results = await sequelize.query(`INSERT INTO user (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
 //               {
 //                 replacements: send,
 //                 type: QueryTypes.INSERT

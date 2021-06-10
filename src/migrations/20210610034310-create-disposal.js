@@ -1,60 +1,54 @@
 'use strict'
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('depos', {
+    await queryInterface.createTable('disposals', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      kode_plant: {
+      no_io: {
         type: Sequelize.STRING
       },
-      profit_center: {
+      no_doc: {
         type: Sequelize.STRING
       },
-      kode_sap_1: {
-        type: Sequelize.INTEGER
+      no_asset: {
+        type: Sequelize.STRING
       },
-      kode_sap_2: {
-        type: Sequelize.INTEGER
+      nama_asset: {
+        type: Sequelize.STRING
+      },
+      merk: {
+        type: Sequelize.STRING
+      },
+      kategori: {
+        type: Sequelize.ENUM('it', 'non-it')
+      },
+      status_depo: {
+        type: Sequelize.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla')
       },
       cost_center: {
         type: Sequelize.STRING
       },
-      nama_area: {
+      nilai_buku: {
         type: Sequelize.STRING
       },
-      channel: {
+      nilai_jual: {
         type: Sequelize.STRING
       },
-      distribution: {
+      keterangan: {
         type: Sequelize.STRING
       },
-      status_area: {
-        type: Sequelize.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla')
+      status_app: {
+        type: Sequelize.INTEGER
       },
-      nama_grom: {
-        type: Sequelize.STRING
+      status_doc: {
+        type: Sequelize.INTEGER
       },
-      nama_rom: {
-        type: Sequelize.STRING
-      },
-      nama_aos: {
-        type: Sequelize.STRING
-      },
-      nama_pic_1: {
-        type: Sequelize.STRING
-      },
-      nama_pic_2: {
-        type: Sequelize.STRING
-      },
-      nama_pic_3: {
-        type: Sequelize.STRING
-      },
-      nama_pic_4: {
-        type: Sequelize.STRING
+      status_form: {
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,
@@ -67,6 +61,6 @@ module.exports = {
     })
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('depos')
+    await queryInterface.dropTable('disposals')
   }
 }
