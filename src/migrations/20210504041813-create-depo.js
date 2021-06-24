@@ -15,10 +15,10 @@ module.exports = {
         type: Sequelize.STRING
       },
       kode_sap_1: {
-        type: Sequelize.INTEGER
+        type: Sequelize.STRING
       },
       kode_sap_2: {
-        type: Sequelize.INTEGER
+        type: Sequelize.STRING
       },
       cost_center: {
         type: Sequelize.STRING
@@ -35,10 +35,13 @@ module.exports = {
       status_area: {
         type: Sequelize.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla')
       },
-      nama_grom: {
+      nama_nom: {
         type: Sequelize.STRING
       },
-      nama_rom: {
+      nama_om: {
+        type: Sequelize.STRING
+      },
+      nama_bm: {
         type: Sequelize.STRING
       },
       nama_aos: {
@@ -58,11 +61,13 @@ module.exports = {
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       }
     })
   },

@@ -18,10 +18,13 @@ module.exports = {
       const level = req.user.level
       const schema = joi.object({
         kode_plant: joi.string().required(),
-        email_area: joi.string().required().email(),
+        email_area_aos: joi.string().required().email(),
+        email_area_om: joi.string().required().email(),
         email_staff_purch: joi.string().required().email(),
-        email_spv_purch: joi.string().email().required(),
+        email_spv_purch_1: joi.string().email().required(),
+        email_spv_purch_2: joi.string().email().required(),
         email_manager_purch: joi.string().email().required(),
+        email_spv_asset: joi.string().email().required(),
         email_am: joi.string().email().required(),
         email_aam: joi.string().email().required(),
         email_ga_spv: joi.string().email().required(),
@@ -88,8 +91,11 @@ module.exports = {
             { kode_plant: { [Op.like]: `%${searchValue}%` } },
             { email_staff_purch: { [Op.like]: `%${searchValue}%` } },
             { email_am: { [Op.like]: `%${searchValue}%` } },
-            { email_area: { [Op.like]: `%${searchValue}%` } },
-            { email_spv_purch: { [Op.like]: `%${searchValue}%` } },
+            { email_area_aos: { [Op.like]: `%${searchValue}%` } },
+            { email_area_om: { [Op.like]: `%${searchValue}%` } },
+            { email_spv_purch_1: { [Op.like]: `%${searchValue}%` } },
+            { email_spv_purch_2: { [Op.like]: `%${searchValue}%` } },
+            { email_spv_asset: { [Op.like]: `%${searchValue}%` } },
             { email_aam: { [Op.like]: `%${searchValue}%` } },
             { email_manager_purch: { [Op.like]: `%${searchValue}%` } },
             { email_ga_spv: { [Op.like]: `%${searchValue}%` } },
@@ -148,10 +154,13 @@ module.exports = {
       const id = req.params.id
       const schema = joi.object({
         kode_plant: joi.string(),
-        email_spv_purch: joi.string().email(),
-        email_area: joi.string().email(),
+        email_spv_purch_1: joi.string().email(),
+        email_spv_purch_2: joi.string().email(),
+        email_area_aos: joi.string().email(),
+        email_area_om: joi.string().email(),
         email_staff_purch: joi.string().email(),
         email_manager_purch: joi.string().email(),
+        email_spv_asset: joi.string().email(),
         email_am: joi.string().email(),
         email_aam: joi.string().email(),
         email_ga_spv: joi.string().email(),
@@ -237,7 +246,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Plant', 'Email Area', 'Email Staff Purch', 'Email Spv Purch', 'Email Manager Purch', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM']
+          const cek = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email SPV ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             if (valid[i] === cek[i]) {
@@ -282,7 +291,7 @@ module.exports = {
               }
               if (arr.length > 0) {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO emails (kode_plant,  email_area, email_staff_purch, email_spv_purch, email_manager_purch, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO emails (kode_plant, email_area_aos, email_area_om, email_staff_purch, email_spv_purch_1, email_spv_purch_2, email_manager_purch, email_spv_asset, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -302,7 +311,7 @@ module.exports = {
                 }
               } else {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO emails (kode_plant, email_spv_purch, email_staff_purch, email_manager_purch, email_area, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO emails (kode_plant, email_area_aos, email_area_om, email_staff_purch, email_spv_purch_1, email_spv_purch_2, email_manager_purch, email_spv_asset, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -344,7 +353,7 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Plant', 'Email Area', 'Email Staff Purch', 'Email Spv Purch', 'Email Manager Purch', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM']
+        const header = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email Spv ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM']
         const key = ['kode_plant', 'email_area', 'email_staff_purch', 'email_spv_purch', 'email_manager_purch', 'email_am', 'email_aam', 'email_ga_spv', 'email_staff_ga', 'email_it_spv', 'email_ism']
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }

@@ -12,7 +12,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       jenis_dokumen: {
-        type: Sequelize.ENUM('it', 'non_it', 'all')
+        type: Sequelize.STRING
       },
       divisi: {
         type: Sequelize.STRING
@@ -28,6 +28,9 @@ module.exports = {
       },
       alasan: {
         type: Sequelize.STRING
+      },
+      jenis_form: {
+        type: Sequelize.ENUM('disposal', 'pengadaan', 'stock')
       },
       createdAt: {
         allowNull: false,

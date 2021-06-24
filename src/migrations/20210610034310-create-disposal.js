@@ -8,7 +8,16 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      kode_plant: {
+        type: Sequelize.STRING
+      },
+      area: {
+        type: Sequelize.STRING
+      },
       no_io: {
+        type: Sequelize.STRING
+      },
+      no_disposal: {
         type: Sequelize.STRING
       },
       no_doc: {

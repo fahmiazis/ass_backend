@@ -22,6 +22,7 @@ const dokumenRoute = require('./routes/dokumen')
 const assetRoute = require('./routes/asset')
 const pengRoute = require('./routes/pengadaan')
 const approveRoute = require('./routes/approves')
+const disposalRoute = require('./routes/disposal')
 
 const authMiddleware = require('./middlewares/auth')
 
@@ -38,6 +39,7 @@ app.use('/asset', authMiddleware, assetRoute)
 app.use('/peng', authMiddleware, pengRoute)
 app.use('/show', showRoute)
 app.use('/approve', authMiddleware, approveRoute)
+app.use('/disposal', authMiddleware, disposalRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)

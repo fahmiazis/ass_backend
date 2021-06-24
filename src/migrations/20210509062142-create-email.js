@@ -11,16 +11,25 @@ module.exports = {
       kode_plant: {
         type: Sequelize.STRING
       },
-      email_area: {
+      email_area_aos: {
+        type: Sequelize.STRING
+      },
+      email_area_om: {
         type: Sequelize.STRING
       },
       email_staff_purch: {
         type: Sequelize.STRING
       },
-      email_spv_purch: {
+      email_spv_purch_1: {
+        type: Sequelize.STRING
+      },
+      email_spv_purch_2: {
         type: Sequelize.STRING
       },
       email_manager_purch: {
+        type: Sequelize.STRING
+      },
+      email_spv_asset: {
         type: Sequelize.STRING
       },
       email_am: {
@@ -43,11 +52,13 @@ module.exports = {
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       }
     })
   },

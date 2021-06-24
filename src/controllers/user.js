@@ -270,7 +270,7 @@ module.exports = {
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
               if (a[2] !== '') {
-                plant.push(`Kode depo ${a[2]} dan  User level ${a[4]}`)
+                plant.push(`Kode depo ${a[2]} dan  User level ${a[3]}`)
               }
               user.push(`User Name ${a[0]}`)
               cek.push(`${a[0]}`)

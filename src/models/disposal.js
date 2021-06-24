@@ -14,7 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   disposal.init({
+    kode_plant: DataTypes.STRING,
+    area: DataTypes.STRING,
     no_io: DataTypes.STRING,
+    no_disposal: DataTypes.STRING,
     no_doc: DataTypes.STRING,
     no_asset: DataTypes.STRING,
     nama_asset: DataTypes.STRING,

@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
   document.init({
     nama_dokumen: DataTypes.STRING,
     jenis_dokumen: DataTypes.ENUM('it', 'non_it', 'all'),
-    divisi: DataTypes.STRING
+    divisi: DataTypes.STRING,
+    tipe_dokumen: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'document'

@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   path.init({
     dokumen: DataTypes.STRING,
     no_doc: DataTypes.STRING,
+    no_asset: DataTypes.STRING,
     kode_plant: DataTypes.STRING,
     path: DataTypes.STRING,
     status: DataTypes.INTEGER,

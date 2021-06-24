@@ -21,7 +21,8 @@ module.exports = {
         no_asset: joi.string().required(),
         nama_asset: joi.string().required(),
         area: joi.string().required(),
-        keterangan: joi.string().required()
+        keterangan: joi.string().required(),
+        kode_plant: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -53,6 +54,8 @@ module.exports = {
   },
   getAsset: async (req, res) => {
     try {
+      const level = req.user.level
+      const kode = req.user.kode
       let { limit, page, search, sort } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -76,26 +79,51 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const result = await asset.findAndCountAll({
-        where: {
-          [Op.or]: [
-            { no_doc: { [Op.like]: `%${searchValue}%` } },
-            { tanggal: { [Op.like]: `%${searchValue}%` } },
-            { no_asset: { [Op.like]: `%${searchValue}%` } },
-            { area: { [Op.like]: `%${searchValue}%` } },
-            { nama_asset: { [Op.like]: `%${searchValue}%` } },
-            { keterangan: { [Op.like]: `%${searchValue}%` } }
-          ]
-        },
-        order: [[sortValue, 'ASC']],
-        limit: limit,
-        offset: (page - 1) * limit
-      })
-      const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
-      if (result) {
-        return response(res, 'list users', { result, pageInfo })
-      } else {
-        return response(res, 'failed to get user', {}, 404, false)
+      if (level === 1) {
+        const result = await asset.findAndCountAll({
+          where: {
+            [Op.or]: [
+              { no_doc: { [Op.like]: `%${searchValue}%` } },
+              { tanggal: { [Op.like]: `%${searchValue}%` } },
+              { no_asset: { [Op.like]: `%${searchValue}%` } },
+              { area: { [Op.like]: `%${searchValue}%` } },
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { nama_asset: { [Op.like]: `%${searchValue}%` } },
+              { keterangan: { [Op.like]: `%${searchValue}%` } }
+            ]
+          },
+          order: [[sortValue, 'ASC']],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+        if (result) {
+          return response(res, 'list users', { result, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
+      } else if (level === 5) {
+        const result = await asset.findAndCountAll({
+          where: {
+            kode_plant: kode,
+            [Op.or]: [
+              { no_doc: { [Op.like]: `%${searchValue}%` } },
+              { tanggal: { [Op.like]: `%${searchValue}%` } },
+              { no_asset: { [Op.like]: `%${searchValue}%` } },
+              { nama_asset: { [Op.like]: `%${searchValue}%` } },
+              { keterangan: { [Op.like]: `%${searchValue}%` } }
+            ]
+          },
+          order: [[sortValue, 'ASC']],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+        if (result) {
+          return response(res, 'list users', { result, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -111,6 +139,7 @@ module.exports = {
         no_doc: joi.string(),
         no_asset: joi.string(),
         nama_asset: joi.string(),
+        kode_plant: joi.string(),
         keterangan: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
@@ -190,9 +219,10 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['No.Doc', 'Tanggal', 'No Aset', 'Nama Aset', 'Area', 'Keterangan']
+          const cek = ['No.Doc', 'Tanggal', 'No Aset', 'Nama Aset', 'Area', 'Kode Plant', 'Keterangan']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
+            console.log(valid[i] === cek[i])
             if (valid[i] === cek[i]) {
               count.push(1)
             }
@@ -237,7 +267,7 @@ module.exports = {
               }
               if (arr.length > 0) {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, keterangan) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -257,7 +287,7 @@ module.exports = {
                 }
               } else {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, keterangan) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT

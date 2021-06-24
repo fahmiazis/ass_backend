@@ -15,12 +15,13 @@ module.exports = (sequelize, DataTypes) => {
   };
   docUser.init({
     nama_dokumen: DataTypes.STRING,
-    jenis_dokumen: DataTypes.ENUM('it', 'non_it', 'all'),
+    jenis_dokumen: DataTypes.STRING,
     divisi: DataTypes.STRING,
     no_pengadaan: DataTypes.STRING,
     path: DataTypes.STRING,
     status: DataTypes.INTEGER,
-    alasan: DataTypes.STRING
+    alasan: DataTypes.STRING,
+    jenis_form: DataTypes.ENUM('disposal', 'pengadaan', 'stock')
   }, {
     sequelize,
     modelName: 'docUser'

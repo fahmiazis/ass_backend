@@ -15,10 +15,13 @@ module.exports = (sequelize, DataTypes) => {
   };
   email.init({
     kode_plant: DataTypes.STRING,
-    email_area: DataTypes.STRING,
+    email_area_aos: DataTypes.STRING,
+    email_area_om: DataTypes.STRING,
     email_staff_purch: DataTypes.STRING,
-    email_spv_purch: DataTypes.STRING,
+    email_spv_purch_1: DataTypes.STRING,
+    email_spv_purch_2: DataTypes.STRING,
     email_manager_purch: DataTypes.STRING,
+    email_spv_asset: DataTypes.STRING,
     email_am: DataTypes.STRING,
     email_aam: DataTypes.STRING,
     email_ga_spv: DataTypes.STRING,

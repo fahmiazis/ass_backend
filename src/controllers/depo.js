@@ -25,8 +25,9 @@ module.exports = {
         cost_center: joi.string().required(),
         kode_sap_1: joi.string().required(),
         kode_sap_2: joi.string().required(),
-        nama_grom: joi.string().required(),
-        nama_rom: joi.string().required(),
+        nama_nom: joi.string().required(),
+        nama_om: joi.string().required(),
+        nama_bm: joi.string().required(),
         nama_aos: joi.string().allow(''),
         nama_pic_1: joi.string().allow(''),
         nama_pic_2: joi.string().allow(''),
@@ -96,8 +97,9 @@ module.exports = {
         kode_sap_2: joi.string().required(),
         profit_center: joi.string().required(),
         cost_center: joi.string().required(),
-        nama_grom: joi.string().required(),
-        nama_rom: joi.string().required(),
+        nama_nom: joi.string().required(),
+        nama_om: joi.string().required(),
+        nama_bm: joi.string().required(),
         nama_aos: joi.string().allow(''),
         nama_pic_1: joi.string().allow(''),
         nama_pic_2: joi.string().allow(''),
@@ -211,8 +213,9 @@ module.exports = {
             { kode_sap_1: { [Op.like]: `%${searchValue}%` } },
             { kode_sap_2: { [Op.like]: `%${searchValue}%` } },
             { kode_plant: { [Op.like]: `%${searchValue}%` } },
-            { nama_grom: { [Op.like]: `%${searchValue}%` } },
-            { nama_rom: { [Op.like]: `%${searchValue}%` } },
+            { nama_nom: { [Op.like]: `%${searchValue}%` } },
+            { nama_om: { [Op.like]: `%${searchValue}%` } },
+            { nama_bm: { [Op.like]: `%${searchValue}%` } },
             { nama_aos: { [Op.like]: `%${searchValue}%` } },
             { nama_pic_1: { [Op.like]: `%${searchValue}%` } },
             { nama_pic_2: { [Op.like]: `%${searchValue}%` } },
@@ -281,7 +284,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Depo', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama GROM', 'Nama BM', 'Nama ASS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
+          const cek = ['Kode Plant', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             console.log(valid[i] === cek[i])
@@ -293,40 +296,29 @@ module.exports = {
           if (count.length === cek.length) {
             const plant = []
             const profit = []
+            const cost = []
             const sap1 = []
             const sap2 = []
-            const depo = []
             const kode = []
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
               plant.push(`Kode Plant ${a[0]}`)
               kode.push(`${a[0]}`)
-              depo.push(`Kode Depo ${a[0]}`)
               profit.push(`Profit Center ${a[5]}`)
+              cost.push(`Cost Center ${a[6]}`)
               if (a[7] !== null) {
-                sap1.push(`Kode SAP 1 ${a[6]}`)
+                sap1.push(`Kode SAP 1 ${a[7]}`)
               }
               if (a[8] !== null) {
-                sap2.push(`Kode SAP 2 ${a[7]}`)
+                sap2.push(`Kode SAP 2 ${a[8]}`)
               }
             }
             const object = {}
             const result = []
             const dupProfit = {}
+            const dupCost = {}
             const dupSap1 = {}
-            // const dupSap2 = {}
-            const dupDepo = {}
-
-            depo.forEach(item => {
-              if (!dupDepo[item]) { dupDepo[item] = 0 }
-              dupDepo[item] += 1
-            })
-
-            for (const prop in dupDepo) {
-              if (dupDepo[prop] >= 2) {
-                result.push(prop)
-              }
-            }
+            const dupSap2 = {}
 
             profit.forEach(item => {
               if (!dupProfit[item]) { dupProfit[item] = 0 }
@@ -335,6 +327,17 @@ module.exports = {
 
             for (const prop in dupProfit) {
               if (dupProfit[prop] >= 2) {
+                result.push(prop)
+              }
+            }
+
+            cost.forEach(item => {
+              if (!dupCost[item]) { dupCost[item] = 0 }
+              dupCost[item] += 1
+            })
+
+            for (const prop in dupCost) {
+              if (dupCost[prop] >= 2) {
                 result.push(prop)
               }
             }
@@ -350,16 +353,16 @@ module.exports = {
               }
             }
 
-            // sap2.forEach(item => {
-            //   if (!dupSap2[item]) { dupSap2[item] = 0 }
-            //   dupSap2[item] += 1
-            // })
+            sap2.forEach(item => {
+              if (!dupSap2[item]) { dupSap2[item] = 0 }
+              dupSap2[item] += 1
+            })
 
-            // for (const prop in dupSap2) {
-            //   if (dupSap2[prop] >= 2) {
-            //     result.push(prop)
-            //   }
-            // }
+            for (const prop in dupSap2) {
+              if (dupSap2[prop] >= 2) {
+                result.push(prop)
+              }
+            }
 
             plant.forEach(item => {
               if (!object[item]) { object[item] = 0 }
@@ -388,7 +391,7 @@ module.exports = {
               }
               if (arr.length > 0) {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, kode_sap_1, kode_sap_2, nama_grom, nama_rom, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -408,7 +411,7 @@ module.exports = {
                 }
               } else {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, kode_sap_1, kode_sap_2, nama_grom, nama_rom, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -450,8 +453,8 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Plant', 'Nama Area', 'Profit Center', 'Kode SAP 1', 'Kode SAP 2', 'Cost Center', 'Channel', 'Distribution', 'Status Area', 'Nama GROM', 'Nama ROM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
-        const key = ['kode_plant', 'nama_area', 'channel', 'distribution', 'status_area', 'profit_center', 'kode_sap_1', 'kode_sap_2', 'kode_plant', 'nama_grom', 'nama_rom', 'nama_aos', 'nama_pic_1', 'nama_pic_2', 'nama_pic_3', 'nama_pic_4']
+        const header = ['Kode Plant', 'Nama Area', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Channel', 'Distribution', 'Status Area', 'Nama GROM', 'Nama ROM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
+        const key = ['kode_plant', 'nama_area', 'channel', 'distribution', 'status_area', 'profit_center', 'kode_sap_1', 'kode_sap_2', 'nama_nom', 'nama_om', 'nama_aos', 'nama_pic_1', 'nama_pic_2', 'nama_pic_3', 'nama_pic_4']
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
           arr.push(temp)

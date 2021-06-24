@@ -18,7 +18,8 @@ module.exports = {
       const schema = joi.object({
         nama_dokumen: joi.string().required(),
         jenis_dokumen: joi.string().required(),
-        divisi: joi.string().required()
+        divisi: joi.string().required(),
+        tipe_dokumen: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -54,8 +55,9 @@ module.exports = {
       const id = req.params.id
       const schema = joi.object({
         nama_dokumen: joi.string(),
-        jenis_dokumen: joi.string().required().valid('it', 'non_it'),
-        divisi: joi.string().disallow('-Pilih Divisi-')
+        jenis_dokumen: joi.string().required().valid('it', 'non_it', 'all'),
+        divisi: joi.string().disallow('-Pilih Divisi-'),
+        tipe_dokumen: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {

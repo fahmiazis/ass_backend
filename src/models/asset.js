@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     no_asset: DataTypes.STRING,
     nama_asset: DataTypes.STRING,
     area: DataTypes.STRING,
+    kode_plant: DataTypes.STRING,
     keterangan: DataTypes.STRING
   }, {
     sequelize,

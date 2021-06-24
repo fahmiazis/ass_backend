@@ -14,6 +14,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   approve.init({
+    nama_approve: DataTypes.STRING,
+    nama: DataTypes.STRING,
     jabatan: DataTypes.STRING,
     jenis: DataTypes.ENUM('it', 'non-it', 'all'),
     sebagai: DataTypes.ENUM('pembuat', 'pemeriksa', 'penyetuju'),

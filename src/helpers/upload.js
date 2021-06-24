@@ -9,13 +9,13 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = file.originalname.split('.')[file.originalname.split('.').length - 1]
-    const fileName = `${req.params.id}_${new Date().getTime().toString().concat('.').concat(ext)}`
+    const fileName = `${req.user.username}_${new Date().getTime().toString().concat('.').concat(ext)}`
     cb(null, fileName)
   }
 })
 
 const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/pdf', 'application/x-7z-compressed', 'application/vnd.rar', 'application/zip']
+  const allowedMimes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/pdf', 'application/x-7z-compressed', 'application/vnd.rar', 'application/zip', 'image/jpeg', 'image/png']
   if (allowedMimes.includes(file.mimetype)) {
     return cb(null, true)
   }

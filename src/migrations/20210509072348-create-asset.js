@@ -23,16 +23,21 @@ module.exports = {
       area: {
         type: Sequelize.STRING
       },
+      kode_plant: {
+        type: Sequelize.STRING
+      },
       keterangan: {
         type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.fn('NOW')
       }
     })
   },
