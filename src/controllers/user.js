@@ -1,6 +1,6 @@
 const joi = require('joi')
 const response = require('../helpers/response')
-const { user, sequelize } = require('../models')
+const { user, sequelize, role, depo } = require('../models')
 const bcrypt = require('bcryptjs')
 const { Op, QueryTypes } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
@@ -18,6 +18,7 @@ module.exports = {
       const level = req.user.level
       const schema = joi.object({
         username: joi.string().required(),
+        email: joi.string().email().required(),
         password: joi.string().required(),
         kode_plant: joi.string().allow(''),
         user_level: joi.number().required(),
@@ -55,6 +56,60 @@ module.exports = {
         } else {
           return response(res, "You're not super administrator", {}, 404, false)
         }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  createRole: async (req, res) => {
+    try {
+      const level = req.user.level
+      const schema = joi.object({
+        name: joi.string().required(),
+        nomor: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        if (level === 1) {
+          const result = await role.findAll({
+            where: {
+              [Op.or]: [
+                { name: results.name },
+                { nomor: results.nomor }
+              ]
+            }
+          })
+          if (result.length > 0) {
+            return response(res, 'role or nomor already exist', {}, 404, false)
+          } else {
+            const result = await role.create(results)
+            if (result) {
+              return response(res, 'Add Role succesfully', { result })
+            } else {
+              return response(res, 'Fail to create role', {}, 400, false)
+            }
+          }
+        } else {
+          return response(res, "You're not super administrator", {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getRole: async (req, res) => {
+    try {
+      const result = await role.findAll({
+        where: {
+          [Op.not]: { name: 'admin' }
+        }
+      })
+      if (result) {
+        return response(res, 'succes get role', { result })
+      } else {
+        return response(res, 'failed get role', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -437,65 +492,75 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  createUserAuto: async (req, res) => {
+    try {
+      const level = req.user.level
+      if (level === 1) {
+        const findKey = await depo.findOne()
+        if (findKey) {
+          const dataKey = Object.keys(findKey.dataValues)
+          const exc = ['createdAt', 'updatedAt']
+          for (let i = dataKey.findIndex(x => x === 'nama_nom') - 1; i >= 0; i--) {
+            exc.push(dataKey[i])
+          }
+          const result = await depo.findAll({
+            attributes: { exclude: exc }
+          })
+          const users = await user.findAll()
+          if (result) {
+            const data = []
+            const dataUser = []
+            for (let i = 0; i < result.length; i++) {
+              data.push(result[i])
+            }
+            users.map(x => {
+              return (
+                dataUser.push(x.username)
+              )
+            })
+            const set = new Set(data)
+            const newData = [...set]
+            const filter = []
+            for (let i = 0; i < newData.length; i++) {
+              const pos = dataUser.indexOf(newData[i])
+              if (pos === -1) {
+                filter.push(newData[i])
+              }
+            }
+            return response(res, 'success create user auto', { result })
+          // if (filter.length !== 0) {
+          //   const send = []
+          //   for (let i = 0; i < filter.length; i++) {
+          //     const create = [filter[i], await bcrypt.hash(filter[i], await bcrypt.genSalt()), 3]
+          //     send.push(create)
+          //   }
+          //   const results = await sequelize.query(`INSERT INTO user (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
+          //     {
+          //       replacements: send,
+          //       type: QueryTypes.INSERT
+          //     })
+          //   if (results) {
+          //     return response(res, 'success create user pic')
+          //   } else {
+          //     return response(res, 'failed create user pic', {}, 404, false)
+          //   }
+          // } else {
+          //   return response(res, 'All Pic has user account')
+          // }
+          } else {
+            return response(res, 'failed get pic', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed get pic', {}, 404, false)
+        }
+      } else {
+        return response(res, "You're not super administrator", {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
-//   createUserPic: async (req, res) => {
-//     try {
-//       const level = req.user.level
-//       if (level === 1) {
-//         const result = await pic.findAll()
-//         const user = await user.findAll()
-//         if (result) {
-//           const data = []
-//           const dataUser = []
-//           result.map(x => {
-//             return (
-//               data.push(x.pic)
-//             )
-//           })
-//           user.map(x => {
-//             return (
-//               dataUser.push(x.username)
-//             )
-//           })
-//           const set = new Set(data)
-//           const newData = [...set]
-//           const filter = []
-//           for (let i = 0; i < newData.length; i++) {
-//             const pos = dataUser.indexOf(newData[i])
-//             if (pos === -1) {
-//               filter.push(newData[i])
-//             }
-//           }
-//           console.log(filter)
-//           if (filter.length !== 0) {
-//             const send = []
-//             for (let i = 0; i < filter.length; i++) {
-//               const create = [filter[i], await bcrypt.hash(filter[i], await bcrypt.genSalt()), 3]
-//               send.push(create)
-//             }
-//             const results = await sequelize.query(`INSERT INTO user (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
-//               {
-//                 replacements: send,
-//                 type: QueryTypes.INSERT
-//               })
-//             if (results) {
-//               return response(res, 'success create user pic')
-//             } else {
-//               return response(res, 'failed create user pic', {}, 404, false)
-//             }
-//           } else {
-//             return response(res, 'All Pic has user account')
-//           }
-//         } else {
-//           return response(res, 'failed get pic', {}, 404, false)
-//         }
-//       } else {
-//         return response(res, "You're not super administrator", {}, 404, false)
-//       }
-//     } catch (error) {
-//       return response(res, error.message, {}, 500, false)
-//     }
-//   },
 //   createUserpv: async (req, res) => {
 //     try {
 //       const level = req.user.level

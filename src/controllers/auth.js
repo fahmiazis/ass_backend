@@ -44,6 +44,7 @@ module.exports = {
         password: joi.string().required(),
         kode_plant: joi.string().allow(''),
         user_level: joi.number().required(),
+        email: joi.string().email().required(),
         status: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)

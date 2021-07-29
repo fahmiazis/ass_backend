@@ -19,7 +19,7 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimes.includes(file.mimetype)) {
     return cb(null, true)
   }
-  return cb(new Error('Invalid file type. Only excel, pdf, zip, rar, and 7zip files are allowed.'), false)
+  return cb(new Error('Invalid file type. Only excel, pdf, zip, rar, 7zip, and image files are allowed.'), false)
 }
 
 module.exports = multer({ storage, fileFilter, limits: { fileSize: 20000000 } }).single('document')

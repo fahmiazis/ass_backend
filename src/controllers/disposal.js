@@ -1,9 +1,10 @@
-const { disposal, asset, depo, path } = require('../models')
-// const joi = require('joi')
+const { disposal, asset, depo, path, ttd, approve, role, document, docUser, user } = require('../models')
+const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
+const mailer = require('../helpers/mailer')
 const uploadHelper = require('../helpers/upload')
 
 module.exports = {
@@ -40,7 +41,15 @@ module.exports = {
             }
             const make = await disposal.create(send)
             if (make) {
-              return response(res, 'success add disposal', { result: make })
+              const data = {
+                status: 1
+              }
+              const update = await result.update(data)
+              if (update) {
+                return response(res, 'success add disposal', { result: make })
+              } else {
+                return response(res, 'failed add disposal', {}, 400, false)
+              }
             } else {
               return response(res, 'failed add disposal', {}, 400, false)
             }
@@ -52,6 +61,63 @@ module.exports = {
         }
       } else {
         return response(res, 'failed add disposal', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  addSell: async (req, res) => {
+    try {
+      const id = req.params.id
+      const kode = req.user.kode
+      const result = await asset.findByPk(id)
+      if (result) {
+        const findAsset = await disposal.findAll({
+          where: {
+            no_asset: result.no_asset
+          }
+        })
+        if (findAsset.length > 0) {
+          return response(res, 'success add sell', { result: findAsset })
+        } else if (result.kode_plant === kode) {
+          const findDepo = await depo.findAll({
+            where: {
+              kode_plant: kode
+            }
+          })
+          if (findDepo.length > 0) {
+            const send = {
+              kode_plant: result.kode_plant,
+              area: findDepo[0].nama_area,
+              no_doc: result.no_doc,
+              no_asset: result.no_asset,
+              nama_asset: result.nama_asset,
+              cost_center: findDepo[0].cost_center,
+              status_depo: findDepo[0].status_area,
+              status_form: 1
+            }
+            const make = await disposal.create(send)
+            if (make) {
+              const data = {
+                status: 1
+              }
+              const update = await result.update(data)
+              if (update) {
+                return response(res, 'success add sell', { result: make })
+              } else {
+                return response(res, 'failed add sell', {}, 400, false)
+              }
+            } else {
+              return response(res, 'failed add sell', {}, 400, false)
+            }
+          } else {
+            return response(res, 'failed add sell', {}, 400, false)
+          }
+        } else {
+          return response(res, 'failed add sell', {}, 400, false)
+        }
+      } else {
+        return response(res, 'failed add sell', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -70,10 +136,27 @@ module.exports = {
         }
       })
       if (result) {
-        if (result[0].kode_plant === kode) {
-          const del = await result.destroy()
-          if (del) {
-            return response(res, 'success delete disposal')
+        if (result.kode_plant === kode) {
+          const findAsset = await asset.findOne({
+            where: {
+              no_asset: noAsset
+            }
+          })
+          if (findAsset) {
+            const data = {
+              status: null
+            }
+            const sent = await findAsset.update(data)
+            if (sent) {
+              const del = await result.destroy()
+              if (del) {
+                return response(res, 'success delete disposal')
+              } else {
+                return response(res, 'failed delete disposal', {}, 400, false)
+              }
+            } else {
+              return response(res, 'failed delete disposal', {}, 400, false)
+            }
           } else {
             return response(res, 'failed delete disposal', {}, 400, false)
           }
@@ -91,7 +174,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      let { limit, page, search, sort } = req.query
+      let { limit, page, search, sort, status, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -104,6 +187,11 @@ module.exports = {
       } else {
         sortValue = sort || 'no_disposal'
       }
+      if (!status) {
+        status = 1
+      } else {
+        status = parseInt(status)
+      }
       if (!limit) {
         limit = 10
       } else {
@@ -114,34 +202,54 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level === 1) {
+      if (level !== 5) {
         const result = await disposal.findAndCountAll({
           where: {
             [Op.or]: [
               { kode_plant: { [Op.like]: `%${searchValue}%` } },
               { no_io: { [Op.like]: `%${searchValue}%` } },
-              { no_doc: { [Op.like]: `%${searchValue}%` } },
+              { no_disposal: { [Op.like]: `%${searchValue}%` } },
               { nama_asset: { [Op.like]: `%${searchValue}%` } },
               { kategori: { [Op.like]: `%${searchValue}%` } },
               { keterangan: { [Op.like]: `%${searchValue}%` } }
             ],
-            status_form: 2
+            [Op.or]: [
+              { status_form: status },
+              { status_form: 9 }
+            ]
           },
-          order: [[sortValue, 'ASC']],
+          order: [[{ model: ttd, as: 'appForm' }, 'id', 'DESC'], [sortValue, 'ASC']],
           limit: limit,
-          offset: (page - 1) * limit
+          offset: (page - 1) * limit,
+          include: [
+            {
+              model: ttd,
+              as: 'appForm'
+            }
+          ]
         })
         const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
         if (result) {
           const data = []
-          result.rows.map(x => {
-            return (
-              data.push(x.no_disposal)
-            )
-          })
-          const set = new Set(data)
-          const noDis = [...set]
-          return response(res, 'success get disposal', { result, pageInfo, noDis })
+          if (tipe === 'persetujuan') {
+            result.rows.map(x => {
+              return (
+                data.push(x.status_app)
+              )
+            })
+            const set = new Set(data)
+            const noDis = [...set]
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
+          } else {
+            result.rows.map(x => {
+              return (
+                data.push(x.no_disposal)
+              )
+            })
+            const set = new Set(data)
+            const noDis = [...set]
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
+          }
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
         }
@@ -150,7 +258,7 @@ module.exports = {
           where: {
             [Op.and]: [
               { kode_plant: kode },
-              { status_form: 1 }
+              { status_form: status }
             ]
           }
         })
@@ -204,16 +312,1143 @@ module.exports = {
           ]
         }
       })
+      if (result.length > 0) {
+        const findNo = await disposal.findAll({
+          where: {
+            [Op.not]: { no_disposal: null }
+          }
+        })
+        if (findNo.length > 0) {
+          const cekNo = []
+          for (let i = 0; i < findNo.length; i++) {
+            cekNo.push(parseInt(findNo[i].no_disposal === null ? 0 : findNo[i].no_disposal))
+          }
+          const noDis = Math.max(...cekNo) + 1
+          const temp = []
+          for (let i = 0; i < result.length; i++) {
+            const find = await disposal.findOne({
+              where: {
+                no_asset: result[i].no_asset
+              }
+            })
+            if (find) {
+              if (find.nilai_jual !== '0') {
+                const send = {
+                  status_form: 26,
+                  no_disposal: noDis === undefined ? 1 : noDis
+                }
+                await find.update(send)
+                temp.push(1)
+              } else {
+                const send = {
+                  status_form: 2,
+                  no_disposal: noDis === undefined ? 1 : noDis
+                }
+                await find.update(send)
+                temp.push(1)
+              }
+            }
+          }
+          if (temp.length === result.length) {
+            return response(res, 'success submit', { cekNo })
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
+        } else {
+          const cekNo = [0]
+          const noDis = Math.max(...cekNo) + 1
+          const temp = []
+          for (let i = 0; i < result.length; i++) {
+            const find = await disposal.findOne({
+              where: {
+                no_asset: result[i].no_asset
+              }
+            })
+            if (find) {
+              if (find.nilai_jual !== '0') {
+                const send = {
+                  status_form: 26,
+                  no_disposal: noDis === undefined ? 1 : noDis
+                }
+                await find.update(send)
+                temp.push(1)
+              } else {
+                const send = {
+                  status_form: 2,
+                  no_disposal: noDis === undefined ? 1 : noDis
+                }
+                await find.update(send)
+                temp.push(1)
+              }
+            }
+          }
+          if (temp.length === result.length) {
+            return response(res, 'success submit', { cekNo })
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDetailDisposal: async (req, res) => {
+    try {
+      const nomor = req.params.nomor
+      const result = await disposal.findAll({
+        where: {
+          no_disposal: nomor
+        }
+      })
+      if (result.length > 0) {
+        return response(res, 'succesfully get detail disposal', { result })
+      } else {
+        return response(res, 'failed get detail disposal', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getApproveDisposal: async (req, res) => {
+    try {
+      const no = req.params.no
+      const nama = req.params.nama
+      const result = await ttd.findAll({
+        where: {
+          no_doc: no
+        }
+      })
+      if (result.length > 0) {
+        const penyetuju = []
+        const pembuat = []
+        const pemeriksa = []
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].sebagai === 'pembuat') {
+            pembuat.push(result[i])
+          } else if (result[i].sebagai === 'pemeriksa') {
+            pemeriksa.push(result[i])
+          } else if (result[i].sebagai === 'penyetuju') {
+            penyetuju.push(result[i])
+          }
+        }
+        return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju } })
+      } else {
+        const result = await disposal.findAll({
+          where: {
+            no_disposal: no
+          }
+        })
+        if (result) {
+          const getApp = await approve.findAll({
+            where: {
+              nama_approve: nama
+            }
+          })
+          if (getApp) {
+            const pembuat = []
+            const pemeriksa = []
+            const penyetuju = []
+            const hasil = []
+            for (let i = 0; i < getApp.length; i++) {
+              const send = {
+                jabatan: getApp[i].jabatan,
+                jenis: getApp[i].jenis,
+                sebagai: getApp[i].sebagai,
+                kategori: getApp[i].kategori,
+                no_doc: no
+              }
+              const make = await ttd.create(send)
+              if (make) {
+                if (make.sebagai === 'pembuat') {
+                  pembuat.push(make)
+                } else if (make.sebagai === 'pemeriksa') {
+                  pemeriksa.push(make)
+                } else if (make.sebagai === 'penyetuju') {
+                  penyetuju.push(make)
+                }
+                hasil.push(make)
+              }
+            }
+            if (hasil.length === getApp.length) {
+              return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju } })
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed get data', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  approveDisposal: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const no = req.params.no
+      const result = await role.findAll({
+        where: {
+          nomor: level
+        }
+      })
+      if (result.length > 0) {
+        const find = await ttd.findAll({
+          where: {
+            no_doc: no
+          }
+        })
+        if (find.length > 0) {
+          let hasil = 0
+          let arr = 0
+          for (let i = 0; i < find.length; i++) {
+            if (result[0].name === find[i].jabatan) {
+              hasil = find[i].id
+              arr = i
+            }
+          }
+          if (hasil !== 0) {
+            const data = {
+              nama: name,
+              status: 1,
+              path: null
+            }
+            const findTtd = await ttd.findByPk(hasil)
+            if (findTtd) {
+              const sent = await findTtd.update(data)
+              if (sent) {
+                const results = await ttd.findAll({
+                  where: {
+                    [Op.and]: [
+                      { no_doc: no },
+                      { status: 1 }
+                    ]
+                  }
+                })
+                if (results.length === find.length) {
+                  const findDoc = await disposal.findAll({
+                    where: {
+                      no_disposal: no
+                    }
+                  })
+                  if (findDoc) {
+                    const data = {
+                      status_form: 9
+                    }
+                    const valid = []
+                    for (let i = 0; i < findDoc.length; i++) {
+                      const findAsset = await disposal.findByPk(findDoc[i].id)
+                      if (findAsset) {
+                        await findAsset.update(data)
+                        valid.push(1)
+                      }
+                    }
+                    if (valid.length === findDoc.length) {
+                      return response(res, 'success approve form disposal')
+                    }
+                  }
+                } else {
+                  const findDoc = await disposal.findOne({
+                    where: {
+                      no_disposal: no
+                    }
+                  })
+                  const data = {
+                    nama: findDoc.kode_plant,
+                    status: 1,
+                    path: null
+                  }
+                  if (findDoc) {
+                    const findAos = await ttd.findByPk(find[0].id)
+                    const findRole = await role.findAll({
+                      where: {
+                        name: find[arr + 1].jabatan
+                      }
+                    })
+                    if (findRole.length > 0) {
+                      await findAos.update(data)
+                      const findUser = await user.findOne({
+                        where: {
+                          user_level: findRole[0].nomor
+                        }
+                      })
+                      if (findUser) {
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findUser.email}`,
+                          subject: 'Approve',
+                          html: `<body>
+                                    <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
+                                    <div style="margin-bottom: 5px;">Mohon untuk approve pengajuan disposal asset area.</div>
+                                    <div style="margin-bottom: 20px;"></div>
+                                    <div style="margin-bottom: 30px;">Best Regard,</div>
+                                    <div>Team Asset</div>
+                                </body>`
+                        }
+                        //   const mailOptions = {
+                        //     from: `${result.email_ho_pic}`,
+                        //     replyTo: `${result.email_ho_pic}`,
+                        //     to: `${result.email_aos}`,
+                        //     cc: `${result.email_sa_kasir}, ${result.email_ho_pic}`,
+                        //     subject: 'Rejected Dokumen',
+                        //     html: `<body>
+                        //     <div style="margin-top: 20px; margin-bottom: 20px;">Dear Bapak/Ibu AOS</div>
+                        //     <div style="margin-bottom: 10px;">Report has been verified by Team Accounting with the following list:</div>
+                        //     <table style="border-collapse: collapse; margin-bottom: 20px;">
+                        //           <tr style="height: 75px;">
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">No</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nomor Aset</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nama Barang</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Merk / Type</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Kategori</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cabang / depo</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cost Center</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Buku</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Jual</th>
+                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Keterangan</th>
+                        //           </tr>
+                        //           <tr style="height: 50px;">
+                        //             <th scope="row" style='border: 1px solid black;'>1</th>
+                        //             <td style='border: 1px solid black;'>find.nama_depo}</td>
+                        //             <td style='border: 1px solid black;'>dok.dokumen}</td>
+                        //             <td style='border: 1px solid black;'>act.jenis_dokumen}</td>
+                        //             <td style='border: 1px solid black;'>moment(act.createdAt).subtract(1, 'day').format('DD-MM-YYYY')}</td>
+                        //             <td style='border: 1px solid black;'>moment(dok.createdAt).format('DD-MM-YYYY')}</td>
+                        //             <td style='border: 1px solid black;'>moment(dok.updatedAt).format('DD-MM-YYYY')}</td>
+                        //             <td style='border: 1px solid black;'>Rejected</td>
+                        //             <td style='border: 1px solid black;'>dok.alasan}</td>
+                        //           </tr>
+                        //     </table>
+                        //     <a href="http://trial.pinusmerahabadi.co.id:3000/">With the following link</a>
+                        //     <div style="margin-top: 20px;">Thank you.</div>
+                        // </body>
+                        //     `
+                        //   }
+                        mailer.sendMail(mailOptions, (error, result) => {
+                          if (error) {
+                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
+                          } else if (result) {
+                            return response(res, 'success approve disposal')
+                          }
+                        })
+                      } else {
+                        return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                      }
+                    }
+                  }
+                }
+              } else {
+                return response(res, 'failed approve disposal', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed approve disposal', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed approve disposal', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed approve disposal', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed approve disposal', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  rejectDisposal: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const no = req.params.no
+      const schema = joi.object({
+        alasan: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const result = await role.findAll({
+          where: {
+            nomor: level
+          }
+        })
+        if (result.length > 0) {
+          const find = await ttd.findAll({
+            where: {
+              no_doc: no
+            }
+          })
+          if (find.length > 0) {
+            let hasil = 0
+            for (let i = 0; i < find.length; i++) {
+              if (result[0].name === find[i].jabatan) {
+                hasil = find[i].id
+              }
+            }
+            if (hasil !== 0) {
+              const data = {
+                nama: name,
+                status: 0,
+                path: results.alasan
+              }
+              const findTtd = await ttd.findByPk(hasil)
+              if (findTtd) {
+                const sent = await findTtd.update(data)
+                if (sent) {
+                  return response(res, 'success approve disposal')
+                } else {
+                  return response(res, 'failed approve disposal', {}, 404, false)
+                }
+              } else {
+                return response(res, 'failed approve disposal', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed approve disposal', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed approve disposal', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed approve disposal', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateDisposal: async (req, res) => {
+    try {
+      const id = req.params.id
+      const tipe = req.params.tipe
+      const schema = joi.object({
+        merk: joi.string().allow(''),
+        keterangan: joi.string().required(),
+        nilai_jual: joi.string().required(),
+        nominal: joi.string().allow(''),
+        no_fp: joi.string().allow(''),
+        no_sap: joi.string().allow(''),
+        doc_sap: joi.string()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const result = await disposal.findByPk(id)
+        if (result) {
+          if (tipe === 'sell' || tipe === 'disposal') {
+            const findDoc = await docUser.findAll({
+              where: {
+                no_pengadaan: result.no_asset,
+                [Op.and]: [
+                  { jenis_form: 'disposal' },
+                  {
+                    [Op.or]: [
+                      { tipe: 'pengajuan' },
+                      { tipe: 'jual' },
+                      { tipe: 'purch' }
+                    ]
+                  }
+                ]
+              }
+            })
+            if (findDoc.length > 0) {
+              const cek = []
+              for (let i = 0; i < findDoc.length; i++) {
+                if (findDoc[i].path !== null) {
+                  cek.push(1)
+                }
+              }
+              if (cek.length === findDoc.length) {
+                const update = await result.update(results)
+                if (update) {
+                  return response(res, 'success update disposal')
+                } else {
+                  return response(res, 'failed update disposal', {}, 400, false)
+                }
+              } else {
+                return response(res, 'Lengkapi Dokumen terlebih dahulu', {}, 400, false)
+              }
+            } else {
+              return response(res, 'Lengkapi Dokumen terlebih dahulu', {}, 400, false)
+            }
+          } else {
+            const update = await result.update(results)
+            if (update) {
+              return response(res, 'success update disposal')
+            } else {
+              return response(res, 'failed update disposal', {}, 400, false)
+            }
+          }
+        } else {
+          return response(res, 'failed update disposal', {}, 400, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDocumentDis: async (req, res) => {
+    try {
+      const no = req.params.no
+      const { tipeDokumen, tipe } = req.query
+      let tipeDoValue = ''
+      let tipeValue = ''
+      if (typeof tipeDokumen === 'object') {
+        tipeDoValue = Object.values(tipeDokumen)[0]
+      } else {
+        tipeDoValue = tipeDokumen || 'disposal'
+      }
+      if (typeof tipe === 'object') {
+        tipeValue = Object.values(tipe)[0]
+      } else {
+        tipeValue = tipe || 'pengajuan'
+      }
+      const results = await disposal.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (tipeDoValue === 'disposal' && tipeValue === 'pengajuan') {
+        if (results.nilai_jual !== '0') {
+          const result = await docUser.findAll({
+            where: {
+              no_pengadaan: no,
+              [Op.and]: [
+                { jenis_form: tipeDoValue },
+                {
+                  [Op.or]: [
+                    { tipe: tipeValue },
+                    { tipe: 'jual' },
+                    { tipe: 'purch' }
+                  ]
+                }
+              ]
+            }
+          })
+          if (result.length > 0) {
+            return response(res, 'success get document', { result })
+          } else {
+            const getDoc = await document.findAll({
+              where: {
+                [Op.and]: [
+                  { tipe_dokumen: tipeDoValue },
+                  {
+                    [Op.or]: [
+                      { tipe: tipeValue },
+                      { tipe: 'jual' }
+                    ]
+                  }
+                ],
+                [Op.or]: [
+                  { jenis_dokumen: results.kategori },
+                  { jenis_dokumen: 'all' }
+                ]
+              }
+            })
+            if (getDoc) {
+              const hasil = []
+              for (let i = 0; i < getDoc.length; i++) {
+                const send = {
+                  nama_dokumen: getDoc[i].nama_dokumen,
+                  jenis_dokumen: getDoc[i].jenis_dokumen,
+                  divisi: getDoc[i].divisi,
+                  no_pengadaan: no,
+                  jenis_form: tipeDoValue,
+                  tipe: tipeValue,
+                  path: null
+                }
+                const make = await docUser.create(send)
+                if (make) {
+                  hasil.push(make)
+                }
+              }
+              if (hasil.length === getDoc.length) {
+                return response(res, 'success get document', { result: hasil })
+              } else {
+                return response(res, 'failed get data', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          }
+        } else {
+          const result = await docUser.findAll({
+            where: {
+              no_pengadaan: no,
+              [Op.and]: [
+                { jenis_form: tipeDoValue },
+                { tipe: tipeValue }
+              ]
+            }
+          })
+          if (result.length > 0) {
+            return response(res, 'success get document', { result })
+          } else {
+            const getDoc = await document.findAll({
+              where: {
+                [Op.and]: [
+                  { tipe_dokumen: tipeDoValue },
+                  { tipe: tipeValue }
+                ],
+                [Op.or]: [
+                  { jenis_dokumen: results.kategori },
+                  { jenis_dokumen: 'all' }
+                ]
+              }
+            })
+            if (getDoc) {
+              const hasil = []
+              for (let i = 0; i < getDoc.length; i++) {
+                const send = {
+                  nama_dokumen: getDoc[i].nama_dokumen,
+                  jenis_dokumen: getDoc[i].jenis_dokumen,
+                  divisi: getDoc[i].divisi,
+                  no_pengadaan: no,
+                  jenis_form: tipeDoValue,
+                  tipe: tipeValue,
+                  path: null
+                }
+                const make = await docUser.create(send)
+                if (make) {
+                  hasil.push(make)
+                }
+              }
+              if (hasil.length === getDoc.length) {
+                return response(res, 'success get document', { result: hasil })
+              } else {
+                return response(res, 'failed get data', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          }
+        }
+      } else {
+        const result = await docUser.findAll({
+          where: {
+            no_pengadaan: no,
+            [Op.and]: [
+              { jenis_form: tipeDoValue },
+              { tipe: tipeValue }
+            ]
+          }
+        })
+        if (result.length > 0) {
+          return response(res, 'success get document', { result })
+        } else {
+          const getDoc = await document.findAll({
+            where: {
+              [Op.and]: [
+                { tipe_dokumen: tipeDoValue },
+                { tipe: tipeValue }
+              ],
+              [Op.or]: [
+                { jenis_dokumen: results.kategori },
+                { jenis_dokumen: 'all' }
+              ]
+            }
+          })
+          if (getDoc) {
+            const hasil = []
+            for (let i = 0; i < getDoc.length; i++) {
+              const send = {
+                nama_dokumen: getDoc[i].nama_dokumen,
+                jenis_dokumen: getDoc[i].jenis_dokumen,
+                divisi: getDoc[i].divisi,
+                no_pengadaan: no,
+                jenis_form: tipeDoValue,
+                tipe: tipeValue,
+                path: null
+              }
+              const make = await docUser.create(send)
+              if (make) {
+                hasil.push(make)
+              }
+            }
+            if (hasil.length === getDoc.length) {
+              return response(res, 'success get document', { result: hasil })
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed get data', {}, 404, false)
+          }
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  uploadDocument: async (req, res) => {
+    const id = req.params.id
+    uploadHelper(req, res, async function (err) {
+      try {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            return response(res, 'fieldname doesnt match', {}, 500, false)
+          }
+          return response(res, err.message, {}, 500, false)
+        } else if (err) {
+          return response(res, err.message, {}, 401, false)
+        }
+        const dokumen = `assets/documents/${req.file.filename}`
+        const result = await docUser.findByPk(id)
+        if (result) {
+          const send = {
+            status: 1,
+            path: dokumen
+          }
+          await result.update(send)
+          return response(res, 'successfully upload dokumen', { send })
+        } else {
+          return response(res, 'failed upload dokumen', {}, 404, false)
+        }
+      } catch (error) {
+        return response(res, error.message, {}, 500, false)
+      }
+    })
+  },
+  approveDokumen: async (req, res) => {
+    try {
+      const id = req.params.id
+      const result = await docUser.findByPk(id)
+      if (result) {
+        const send = {
+          status: 3,
+          alasan: ''
+        }
+        const results = await result.update(send)
+        return response(res, 'successfully approve dokumen', { result: results })
+      } else {
+        return response(res, 'failed approve dokumen', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  rejectDokumen: async (req, res) => {
+    try {
+      const id = req.params.id
+      const schema = joi.object({
+        alasan: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const result = await docUser.findByPk(id)
+        if (result) {
+          const send = {
+            alasan: results.alasan,
+            status: 0
+          }
+          const reject = await result.update(send)
+          if (reject) {
+            return response(res, 'successfully reject dokumen', { result: reject })
+          } else {
+            return response(res, 'failed reject dokumen', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed reject dokumen', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getApproveSetDisposal: async (req, res) => {
+    try {
+      const no = req.params.no
+      const nama = req.params.nama
+      const result = await ttd.findAll({
+        where: {
+          no_set: no
+        }
+      })
+      if (result.length > 0) {
+        const penyetuju = []
+        const pembuat = []
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].sebagai === 'pembuat') {
+            pembuat.push(result[i])
+          } else if (result[i].sebagai === 'penyetuju') {
+            penyetuju.push(result[i])
+          }
+        }
+        return response(res, 'success get template approve', { result: { pembuat, penyetuju } })
+      } else {
+        const result = await disposal.findAll({
+          where: {
+            status_app: no
+          }
+        })
+        if (result) {
+          const getApp = await approve.findAll({
+            where: {
+              nama_approve: nama
+            }
+          })
+          if (getApp) {
+            const pembuat = []
+            const penyetuju = []
+            const hasil = []
+            for (let i = 0; i < getApp.length; i++) {
+              const send = {
+                jabatan: getApp[i].jabatan,
+                jenis: getApp[i].jenis,
+                sebagai: getApp[i].sebagai,
+                kategori: getApp[i].kategori,
+                no_set: no
+              }
+              const make = await ttd.create(send)
+              if (make) {
+                if (make.sebagai === 'pembuat') {
+                  pembuat.push(make)
+                } else if (make.sebagai === 'penyetuju') {
+                  penyetuju.push(make)
+                }
+                hasil.push(make)
+              }
+            }
+            if (hasil.length === getApp.length) {
+              return response(res, 'success get template approve', { result: { pembuat, penyetuju } })
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed get data', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  approveSetDisposal: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const no = req.params.no
+      if (level === 22 || level === 23 || level === 25) {
+        const result = await role.findAll({
+          where: {
+            [Op.or]: [
+              { nomor: 22 },
+              { nomor: 23 },
+              { nomor: 25 }
+            ]
+          }
+        })
+        if (result.length > 0) {
+          const cek = []
+          for (let i = 0; i < result.length; i++) {
+            const findUser = await user.findOne({
+              where: {
+                user_level: result[i].nomor
+              }
+            })
+            if (findUser) {
+              const data = {
+                nama: findUser.username,
+                status: 1,
+                path: null
+              }
+              const find = await ttd.findOne({
+                where: {
+                  [Op.and]: [
+                    { no_set: no },
+                    { jabatan: result[i].name }
+                  ]
+                }
+              })
+              if (find) {
+                await find.update(data)
+                cek.push(1)
+              }
+            }
+          }
+          if (cek.length === result.length) {
+            const findDoc = await disposal.findAll({
+              where: {
+                status_app: no
+              }
+            })
+            if (findDoc) {
+              const data = {
+                status_form: 4
+              }
+              const valid = []
+              for (let i = 0; i < findDoc.length; i++) {
+                const findAsset = await disposal.findByPk(findDoc[i].id)
+                if (findAsset) {
+                  await findAsset.update(data)
+                  valid.push(1)
+                }
+              }
+              if (valid.length === findDoc.length) {
+                return response(res, 'success approve form disposal')
+              }
+            }
+          } else {
+            return response(res, 'failed approve disposal', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed approve disposal', {}, 404, false)
+        }
+      } else {
+        const result = await role.findAll({
+          where: {
+            nomor: level
+          }
+        })
+        if (result.length > 0) {
+          const find = await ttd.findAll({
+            where: {
+              no_set: no
+            }
+          })
+          if (find.length > 0) {
+            let hasil = 0
+            let arr = 0
+            for (let i = 0; i < find.length; i++) {
+              if (result[0].name === find[i].jabatan) {
+                hasil = find[i].id
+                arr = i
+              }
+            }
+            if (hasil !== 0) {
+              const data = {
+                nama: name,
+                status: 1,
+                path: null
+              }
+              const findTtd = await ttd.findByPk(hasil)
+              if (findTtd) {
+                const sent = await findTtd.update(data)
+                if (sent) {
+                  const results = await ttd.findAll({
+                    where: {
+                      [Op.and]: [
+                        { no_set: no },
+                        { status: 1 }
+                      ]
+                    }
+                  })
+                  if (results.length === find.length) {
+                    const findDoc = await disposal.findAll({
+                      where: {
+                        status_app: no
+                      }
+                    })
+                    if (findDoc) {
+                      const data = {
+                        status_form: 4
+                      }
+                      const valid = []
+                      for (let i = 0; i < findDoc.length; i++) {
+                        const findAsset = await disposal.findByPk(findDoc[i].id)
+                        if (findAsset) {
+                          await findAsset.update(data)
+                          valid.push(1)
+                        }
+                      }
+                      if (valid.length === findDoc.length) {
+                        return response(res, 'success approve form disposal')
+                      }
+                    }
+                  } else {
+                    const findDoc = await disposal.findOne({
+                      where: {
+                        status_app: no
+                      }
+                    })
+                    if (findDoc) {
+                      const findRole = await role.findAll({
+                        where: {
+                          name: find[arr + 1].jabatan
+                        }
+                      })
+                      if (findRole.length > 0) {
+                        const findUser = await user.findOne({
+                          where: {
+                            user_level: findRole[0].nomor
+                          }
+                        })
+                        if (findUser) {
+                          const mailOptions = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            to: `${findUser.email}`,
+                            subject: 'Approve',
+                            html: `<body>
+                                      <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
+                                      <div style="margin-bottom: 5px;">Mohon untuk approve persetujuan disposal asset area.</div>
+                                      <div style="margin-bottom: 20px;"></div>
+                                      <div style="margin-bottom: 30px;">Best Regard,</div>
+                                      <div>Team Asset</div>
+                                  </body>`
+                          }
+                          //   const mailOptions = {
+                          //     from: `${result.email_ho_pic}`,
+                          //     replyTo: `${result.email_ho_pic}`,
+                          //     to: `${result.email_aos}`,
+                          //     cc: `${result.email_sa_kasir}, ${result.email_ho_pic}`,
+                          //     subject: 'Rejected Dokumen',
+                          //     html: `<body>
+                          //     <div style="margin-top: 20px; margin-bottom: 20px;">Dear Bapak/Ibu AOS</div>
+                          //     <div style="margin-bottom: 10px;">Report has been verified by Team Accounting with the following list:</div>
+                          //     <table style="border-collapse: collapse; margin-bottom: 20px;">
+                          //           <tr style="height: 75px;">
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">No</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nomor Aset</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nama Barang</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Merk / Type</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Kategori</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cabang / depo</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cost Center</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Buku</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Jual</th>
+                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Keterangan</th>
+                          //           </tr>
+                          //           <tr style="height: 50px;">
+                          //             <th scope="row" style='border: 1px solid black;'>1</th>
+                          //             <td style='border: 1px solid black;'>find.nama_depo}</td>
+                          //             <td style='border: 1px solid black;'>dok.dokumen}</td>
+                          //             <td style='border: 1px solid black;'>act.jenis_dokumen}</td>
+                          //             <td style='border: 1px solid black;'>moment(act.createdAt).subtract(1, 'day').format('DD-MM-YYYY')}</td>
+                          //             <td style='border: 1px solid black;'>moment(dok.createdAt).format('DD-MM-YYYY')}</td>
+                          //             <td style='border: 1px solid black;'>moment(dok.updatedAt).format('DD-MM-YYYY')}</td>
+                          //             <td style='border: 1px solid black;'>Rejected</td>
+                          //             <td style='border: 1px solid black;'>dok.alasan}</td>
+                          //           </tr>
+                          //     </table>
+                          //     <a href="http://trial.pinusmerahabadi.co.id:3000/">With the following link</a>
+                          //     <div style="margin-top: 20px;">Thank you.</div>
+                          // </body>
+                          //     `
+                          //   }
+                          mailer.sendMail(mailOptions, (error, result) => {
+                            if (error) {
+                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
+                            } else if (result) {
+                              return response(res, 'success approve disposal')
+                            }
+                          })
+                        } else {
+                          return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 2')
+                        }
+                      }
+                    }
+                  }
+                } else {
+                  return response(res, 'failed approve disposal', {}, 404, false)
+                }
+              } else {
+                return response(res, 'failed approve disposal', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed approve disposal', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed approve disposal', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed approve disposal', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  rejectSetDisposal: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const no = req.params.no
+      const schema = joi.object({
+        alasan: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const result = await role.findAll({
+          where: {
+            nomor: level
+          }
+        })
+        if (result.length > 0) {
+          const find = await ttd.findAll({
+            where: {
+              no_doc: no
+            }
+          })
+          if (find.length > 0) {
+            let hasil = 0
+            for (let i = 0; i < find.length; i++) {
+              if (result[0].name === find[i].jabatan) {
+                hasil = find[i].id
+              }
+            }
+            if (hasil !== 0) {
+              const data = {
+                nama: name,
+                status: 0,
+                path: results.alasan
+              }
+              const findTtd = await ttd.findByPk(hasil)
+              if (findTtd) {
+                const sent = await findTtd.update(data)
+                if (sent) {
+                  return response(res, 'success approve disposal')
+                } else {
+                  return response(res, 'failed approve disposal', {}, 404, false)
+                }
+              } else {
+                return response(res, 'failed approve disposal', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed approve disposal', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed approve disposal', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed approve disposal', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitSetDisposal: async (req, res) => {
+    try {
+      const result = await disposal.findAll({
+        where: {
+          status_form: 9
+        }
+      })
       const findNo = await disposal.findAll()
       if (result) {
         const cekNo = []
         for (let i = 0; i < findNo.length; i++) {
-          cekNo.push(parseInt(findNo[i].no_disposal === null ? 0 : findNo[i].no_disposal))
+          cekNo.push(parseInt(findNo[i].status_app === null ? 0 : findNo[i].status_app))
         }
         const noDis = Math.max(...cekNo) + 1
         const send = {
-          status_form: 2,
-          no_disposal: noDis === undefined ? 1 : noDis
+          status_form: 3,
+          status_app: noDis === undefined ? 1 : noDis
         }
         const temp = []
         for (let i = 0; i < result.length; i++) {
@@ -239,18 +1474,211 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  getDetailDisposal: async (req, res) => {
+  getSetDisposal: async (req, res) => {
     try {
-      const nomor = req.params.nomor
-      const result = await disposal.findAll({
+      const level = req.user.level
+      let { limit, page, search, sort, status, tipe } = req.query
+      let searchValue = ''
+      let sortValue = ''
+      if (typeof search === 'object') {
+        searchValue = Object.values(search)[0]
+      } else {
+        searchValue = search || ''
+      }
+      if (typeof sort === 'object') {
+        sortValue = Object.values(sort)[0]
+      } else {
+        sortValue = sort || 'no_disposal'
+      }
+      if (!status) {
+        status = 1
+      } else {
+        status = parseInt(status)
+      }
+      if (!limit) {
+        limit = 10
+      } else {
+        limit = parseInt(limit)
+      }
+      if (!page) {
+        page = 1
+      } else {
+        page = parseInt(page)
+      }
+      if (level !== 5) {
+        const result = await disposal.findAndCountAll({
+          where: {
+            [Op.or]: [
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { no_io: { [Op.like]: `%${searchValue}%` } },
+              { no_disposal: { [Op.like]: `%${searchValue}%` } },
+              { nama_asset: { [Op.like]: `%${searchValue}%` } },
+              { kategori: { [Op.like]: `%${searchValue}%` } },
+              { keterangan: { [Op.like]: `%${searchValue}%` } }
+            ],
+            [Op.and]: [
+              { status_app: status },
+              { status_form: 3 }
+            ]
+          },
+          order: [[sortValue, 'ASC']],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+        if (result) {
+          const data = []
+          if (tipe === 'persetujuan') {
+            result.rows.map(x => {
+              return (
+                data.push(x.status_app)
+              )
+            })
+            const set = new Set(data)
+            const noDis = [...set]
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
+          } else {
+            result.rows.map(x => {
+              return (
+                data.push(x.no_disposal)
+              )
+            })
+            const set = new Set(data)
+            const noDis = [...set]
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
+          }
+        } else {
+          return response(res, 'failed get disposal', {}, 400, false)
+        }
+      } else if (level === 5) {
+        return response(res, 'failed get disposal', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitEksDisposal: async (req, res) => {
+    try {
+      const no = req.params.no
+      const level = req.user.level
+      const result = await disposal.findOne({
         where: {
-          no_disposal: nomor
+          no_asset: no
         }
       })
-      if (result.length > 0) {
-        return response(res, 'succesfully get detail disposal', { result })
+      if (result) {
+        if (result.nilai_jual === '0') {
+          const data = {
+            status_form: level === 5 ? 5 : 8
+          }
+          const results = await result.update(data)
+          if (results) {
+            return response(res, 'success submit eksekusi disposal')
+          } else {
+            return response(res, 'failed submit disposal', {}, 400, false)
+          }
+        } else {
+          const data = {
+            status_form: level === 5 ? 5 : 6
+          }
+          const results = await result.update(data)
+          if (results) {
+            return response(res, 'success submit eksekusi disposal')
+          } else {
+            return response(res, 'failed submit disposal', {}, 400, false)
+          }
+        }
       } else {
-        return response(res, 'failed get detail disposal', {}, 404, false)
+        return response(res, 'failed submit disposal', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitTaxFin: async (req, res) => {
+    try {
+      const no = req.params.no
+      const result = await disposal.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (result) {
+        if (result.no_io === null) {
+          const data = {
+            status_form: 6,
+            no_io: no
+          }
+          const results = await result.update(data)
+          if (results) {
+            return response(res, 'success submit eksekusi disposal')
+          } else {
+            return response(res, 'failed submit disposal', {}, 400, false)
+          }
+        } else {
+          const data = {
+            status_form: 7,
+            no_io: null
+          }
+          const results = await result.update(data)
+          if (results) {
+            return response(res, 'success submit eksekusi disposal')
+          } else {
+            return response(res, 'failed submit disposal', {}, 400, false)
+          }
+        }
+      } else {
+        return response(res, 'failed submit disposal', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitFinal: async (req, res) => {
+    try {
+      const no = req.params.no
+      const result = await disposal.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (result) {
+        const data = {
+          status_form: 8
+        }
+        const results = await result.update(data)
+        if (results) {
+          return response(res, 'success submit eksekusi disposal')
+        } else {
+          return response(res, 'failed submit disposal', {}, 400, false)
+        }
+      } else {
+        return response(res, 'failed submit disposal', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitPurch: async (req, res) => {
+    try {
+      const no = req.params.no
+      const result = await disposal.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (result) {
+        const data = {
+          status_form: 2
+        }
+        const results = await result.update(data)
+        if (results) {
+          return response(res, 'success submit eksekusi disposal')
+        } else {
+          return response(res, 'failed submit disposal', {}, 400, false)
+        }
+      } else {
+        return response(res, 'failed submit disposal', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

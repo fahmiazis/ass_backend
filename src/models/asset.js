@@ -20,6 +20,15 @@ module.exports = (sequelize, DataTypes) => {
     nama_asset: DataTypes.STRING,
     area: DataTypes.STRING,
     kode_plant: DataTypes.STRING,
+    nilai_buku: DataTypes.STRING,
+    status: DataTypes.STRING,
+    deskripsi: DataTypes.STRING,
+    merk: DataTypes.STRING,
+    satuan: DataTypes.STRING,
+    unit: DataTypes.STRING,
+    kondisi: DataTypes.STRING,
+    lokasi: DataTypes.STRING,
+    grouping: DataTypes.STRING,
     keterangan: DataTypes.STRING
   }, {
     sequelize,

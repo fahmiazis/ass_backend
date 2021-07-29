@@ -21,7 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     path: DataTypes.STRING,
     status: DataTypes.INTEGER,
     alasan: DataTypes.STRING,
-    jenis_form: DataTypes.ENUM('disposal', 'pengadaan', 'stock')
+    jenis_form: DataTypes.ENUM('disposal', 'pengadaan', 'stock'),
+    tipe: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'docUser'

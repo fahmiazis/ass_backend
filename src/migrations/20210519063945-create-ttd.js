@@ -35,6 +35,9 @@ module.exports = {
       status: {
         type: Sequelize.INTEGER
       },
+      no_set: {
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

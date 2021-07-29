@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       // define association here
+      disposal.hasMany(models.ttd, {
+        foreignKey: 'no_doc',
+        as: 'appForm',
+        sourceKey: 'no_disposal'
+      })
     }
   };
   disposal.init({
@@ -30,7 +35,11 @@ module.exports = (sequelize, DataTypes) => {
     keterangan: DataTypes.STRING,
     status_app: DataTypes.INTEGER,
     status_doc: DataTypes.INTEGER,
-    status_form: DataTypes.INTEGER
+    status_form: DataTypes.INTEGER,
+    nominal: DataTypes.STRING,
+    no_sap: DataTypes.STRING,
+    no_fp: DataTypes.STRING,
+    doc_sap: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'disposal'

@@ -7,7 +7,7 @@ const transporter = nodemailer.createTransport({
   port: 587,
   auth: {
     user: 'sys_adm@pinusmerahabadi.co.id',
-    pass: 'sys0911'
+    pass: 'pma159753'
   },
   tls: {
     rejectUnauthorized: false

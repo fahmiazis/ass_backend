@@ -12,7 +12,7 @@ module.exports = {
         jabatan: joi.string().required(),
         jenis: joi.string().required(),
         sebagai: joi.string().required(),
-        kategori: joi.string().required(),
+        kategori: joi.string().allow(''),
         nama_approve: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
@@ -86,9 +86,10 @@ module.exports = {
       const level = req.user.level
       const schema = joi.object({
         jabatan: joi.string().required(),
-        jenis: joi.string(),
-        sebagai: joi.string(),
-        kategori: joi.string()
+        jenis: joi.string().allow(''),
+        sebagai: joi.string().allow(''),
+        kategori: joi.string().allow(''),
+        nama_approve: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -97,7 +98,10 @@ module.exports = {
         if (level === 1) {
           const result = await approve.findAll({
             where: {
-              jabatan: results.jabatan,
+              [Op.and]: [
+                { jabatan: results.jabatan },
+                { nama_approve: results.nama_approve }
+              ],
               [Op.not]: {
                 id: id
               }
@@ -165,6 +169,23 @@ module.exports = {
         return response(res, 'list approve', { result, pageInfo })
       } else {
         return response(res, 'failed to get user', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDetailApprove: async (req, res) => {
+    try {
+      const nama = req.params.nama
+      const result = await approve.findAll({
+        where: {
+          nama_approve: nama
+        }
+      })
+      if (result) {
+        return response(res, 'success get detail disposal', { result })
+      } else {
+        return response(res, 'failed get detail disposal', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

@@ -20,6 +20,9 @@ module.exports = {
       tipe_dokumen: {
         type: Sequelize.STRING
       },
+      tipe: {
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

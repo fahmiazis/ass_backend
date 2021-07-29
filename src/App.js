@@ -21,8 +21,11 @@ const emailRoute = require('./routes/email')
 const dokumenRoute = require('./routes/dokumen')
 const assetRoute = require('./routes/asset')
 const pengRoute = require('./routes/pengadaan')
+const ketRoute = require('./routes/keterangan')
 const approveRoute = require('./routes/approves')
 const disposalRoute = require('./routes/disposal')
+const stockRoute = require('./routes/stock')
+const clossRoute = require('./routes/clossing')
 
 const authMiddleware = require('./middlewares/auth')
 
@@ -39,7 +42,10 @@ app.use('/asset', authMiddleware, assetRoute)
 app.use('/peng', authMiddleware, pengRoute)
 app.use('/show', showRoute)
 app.use('/approve', authMiddleware, approveRoute)
+app.use('/ket', authMiddleware, ketRoute)
 app.use('/disposal', authMiddleware, disposalRoute)
+app.use('/stock', authMiddleware, stockRoute)
+app.use('/clossing', authMiddleware, clossRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)

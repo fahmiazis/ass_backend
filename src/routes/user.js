@@ -8,5 +8,8 @@ route.delete('/delete/:id', user.deleteUser)
 route.get('/detail/:id', user.getDetailUser)
 route.post('/master', user.uploadMasterUser)
 route.get('/export', user.exportSqlUser)
+route.post('/role/add', user.createRole)
+route.get('/role/get', user.getRole)
+route.get('/auto', user.createUserAuto)
 
 module.exports = route

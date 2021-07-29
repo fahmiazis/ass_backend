@@ -70,7 +70,7 @@ module.exports = {
         sortValue = sort || 'id'
       }
       if (!limit) {
-        limit = 10
+        limit = 12
       } else {
         limit = parseInt(limit)
       }
@@ -98,7 +98,7 @@ module.exports = {
         })
         const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
         if (result) {
-          return response(res, 'list users', { result, pageInfo })
+          return response(res, 'list asset', { result, pageInfo })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
@@ -120,7 +120,7 @@ module.exports = {
         })
         const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
         if (result) {
-          return response(res, 'list users', { result, pageInfo })
+          return response(res, 'list asset', { result, pageInfo })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
@@ -131,41 +131,39 @@ module.exports = {
   },
   updateAsset: async (req, res) => {
     try {
-      const level = req.user.level
+      // const level = req.user.level
       const id = req.params.id
       const schema = joi.object({
-        area: joi.string(),
-        tanggal: joi.string(),
-        no_doc: joi.string(),
-        no_asset: joi.string(),
-        nama_asset: joi.string(),
-        kode_plant: joi.string(),
-        keterangan: joi.string()
+        // area: joi.string(),
+        // tanggal: joi.string(),
+        // no_doc: joi.string(),
+        // no_asset: joi.string(),
+        // nama_asset: joi.string(),
+        // kode_plant: joi.string(),
+        keterangan: joi.string().allow(''),
+        deskripsi: joi.string().allow(''),
+        nilai_buku: joi.string().allow(''),
+        merk: joi.string().allow(''),
+        satuan: joi.string().allow(''),
+        unit: joi.string().allow(''),
+        kondisi: joi.string().allow(''),
+        lokasi: joi.string().allow(''),
+        grouping: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
-        if (level === 1) {
-          if (results.no_asset) {
-            const result = await asset.findAll({
-              where:
+        if (results.no_asset) {
+          const result = await asset.findAll({
+            where:
                 {
                   no_asset: results.no_asset,
                   [Op.not]: { id: id }
                 }
-            })
-            if (result.length > 0) {
-              return response(res, 'no asset already use', {}, 400, false)
-            } else {
-              const result = await asset.findByPk(id)
-              if (result) {
-                await result.update(results)
-                return response(res, 'successfully update asset', { result })
-              } else {
-                return response(res, 'failed update asset', {}, 404, false)
-              }
-            }
+          })
+          if (result.length > 0) {
+            return response(res, 'no asset already use', {}, 400, false)
           } else {
             const result = await asset.findByPk(id)
             if (result) {
@@ -176,7 +174,13 @@ module.exports = {
             }
           }
         } else {
-          return response(res, "you're not super administrator", {}, 400, false)
+          const result = await asset.findByPk(id)
+          if (result) {
+            await result.update(results)
+            return response(res, 'successfully update asset', { result })
+          } else {
+            return response(res, 'failed update asset', {}, 404, false)
+          }
         }
       }
     } catch (error) {

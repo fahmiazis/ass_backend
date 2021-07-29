@@ -19,7 +19,8 @@ module.exports = {
         nama_dokumen: joi.string().required(),
         jenis_dokumen: joi.string().required(),
         divisi: joi.string().required(),
-        tipe_dokumen: joi.string().required()
+        tipe_dokumen: joi.string().required(),
+        tipe: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -28,7 +29,10 @@ module.exports = {
         if (level === 1) {
           const result = await document.findAll({
             where: {
-              nama_dokumen: results.nama_dokumen
+              [Op.and]: [
+                { nama_dokumen: results.nama_dokumen },
+                { tipe_dokumen: results.tipe_dokumen }
+              ]
             }
           })
           if (result.length > 0) {
@@ -57,7 +61,8 @@ module.exports = {
         nama_dokumen: joi.string(),
         jenis_dokumen: joi.string().required().valid('it', 'non_it', 'all'),
         divisi: joi.string().disallow('-Pilih Divisi-'),
-        tipe_dokumen: joi.string()
+        tipe_dokumen: joi.string(),
+        tipe: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -67,7 +72,10 @@ module.exports = {
           if (results.nama_dokumen) {
             const result = await document.findAll({
               where: {
-                nama_dokumen: results.nama_dokumen,
+                [Op.and]: [
+                  { nama_dokumen: results.nama_dokumen },
+                  { tipe_dokumen: results.tipe_dokumen }
+                ],
                 [Op.not]: { id: id }
               }
             })

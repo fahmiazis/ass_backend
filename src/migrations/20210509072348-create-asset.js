@@ -26,6 +26,33 @@ module.exports = {
       kode_plant: {
         type: Sequelize.STRING
       },
+      nilai_buku: {
+        type: Sequelize.STRING
+      },
+      status: {
+        type: Sequelize.STRING
+      },
+      deskripsi: {
+        type: Sequelize.STRING
+      },
+      merk: {
+        type: Sequelize.STRING
+      },
+      satuan: {
+        type: Sequelize.STRING
+      },
+      unit: {
+        type: Sequelize.STRING
+      },
+      kondisi: {
+        type: Sequelize.STRING
+      },
+      lokasi: {
+        type: Sequelize.STRING
+      },
+      grouping: {
+        type: Sequelize.STRING
+      },
       keterangan: {
         type: Sequelize.STRING
       },

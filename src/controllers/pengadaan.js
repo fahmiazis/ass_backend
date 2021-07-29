@@ -190,7 +190,9 @@ module.exports = {
       const no = req.params.no
       const result = await docUser.findAll({
         where: {
-          no_pengadaan: no
+          [Op.and]: [
+            { no_pengadaan: no }
+          ]
         }
       })
       if (result.length > 0) {
@@ -201,7 +203,6 @@ module.exports = {
             no_pengadaan: no
           }
         })
-        console.log(result)
         if (result.length > 0) {
           const getDoc = await document.findAll({
             where: {
@@ -218,7 +219,8 @@ module.exports = {
                 nama_dokumen: getDoc[i].nama_dokumen,
                 jenis_dokumen: getDoc[i].jenis_dokumen,
                 divisi: getDoc[i].divisi,
-                no_pengadaan: no
+                no_pengadaan: no,
+                jenis_form: 'pengadaan'
               }
               const make = await docUser.create(send)
               if (make) {

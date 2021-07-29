@@ -240,27 +240,21 @@ module.exports = {
   getDetailDepo: async (req, res) => {
     try {
       const id = req.params.id
-      const schema = joi.object({
-        kode_plant: joi.number()
-      })
-      const { value: results, error } = schema.validate(req.body)
-      if (error) {
-        return response(res, 'Error', { error: error.message }, 401, false)
-      } else {
-        if (results.kode_plant) {
-          const result = await depo.findOne({ where: { kode_plant: results.kode_plant } })
-          if (result) {
-            return response(res, 'succes get detail depo', { result })
-          } else {
-            return response(res, 'failed get detail depo', {}, 404, false)
-          }
+      const level = req.user.level
+      const kode = req.user.kode
+      if (level === 5) {
+        const result = await depo.findOne({ where: { kode_plant: kode } })
+        if (result) {
+          return response(res, 'succes get detail depo', { result })
         } else {
-          const result = await depo.findByPk(id)
-          if (result) {
-            return response(res, 'succes get detail depo', { result })
-          } else {
-            return response(res, 'failed get detail depo', {}, 404, false)
-          }
+          return response(res, 'failed get detail depo', {}, 404, false)
+        }
+      } else {
+        const result = await depo.findByPk(id)
+        if (result) {
+          return response(res, 'succes get detail depo', { result })
+        } else {
+          return response(res, 'failed get detail depo', {}, 404, false)
         }
       }
     } catch (error) {
