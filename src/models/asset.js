@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       // define association here
+      asset.hasMany(models.path, {
+        foreignKey: 'no_asset',
+        as: 'pict',
+        sourceKey: 'no_asset'
+      })
     }
   };
   asset.init({
@@ -29,7 +34,8 @@ module.exports = (sequelize, DataTypes) => {
     kondisi: DataTypes.STRING,
     lokasi: DataTypes.STRING,
     grouping: DataTypes.STRING,
-    keterangan: DataTypes.STRING
+    keterangan: DataTypes.STRING,
+    status_fisik: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'asset'

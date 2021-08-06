@@ -1,10 +1,12 @@
-const { stock, asset, clossing, ttd, approve, role, user } = require('../models')
+const { stock, asset, clossing, ttd, approve, role, user, path, status_stock } = require('../models')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const moment = require('moment')
 const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const mailer = require('../helpers/mailer')
+const multer = require('multer')
+const uploadHelper = require('../helpers/upload')
 
 module.exports = {
   submit: async (req, res) => {
@@ -29,9 +31,9 @@ module.exports = {
                 { [Op.not]: { merk: null } },
                 { [Op.not]: { satuan: null } },
                 { [Op.not]: { unit: null } },
-                { [Op.not]: { kondisi: null } },
                 { [Op.not]: { lokasi: null } },
-                { [Op.not]: { grouping: null } }
+                { [Op.not]: { grouping: null } },
+                { [Op.not]: { status_fisik: null } }
               ]
             }
           })
@@ -115,10 +117,10 @@ module.exports = {
                 }
               }
             } else {
-              return response(res, 'failed submit stock opname', {}, 400, false)
+              return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
             }
           } else {
-            return response(res, 'failed submit stock opname', {}, 400, false)
+            return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
           }
         }
       } else {
@@ -238,17 +240,25 @@ module.exports = {
       })
       if (findClose.length > 0) {
         const time = moment().format('L').split('/')
-        const next = moment().add(1, 'month').format('L').split('/')
-        const start = `${time[2]}-${time[0]}-${findClose[0].start}`
-        const end = `${next[2]}-${next[0]}-${findClose[0].end}`
+        let start = ''
+        let end = ''
+        if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+          const next = moment().subtract(1, 'month').format('L').split('/')
+          end = `${time[2]}-${time[0]}-${findClose[0].end}`
+          start = `${next[2]}-${next[0]}-${findClose[0].start}`
+        } else {
+          const next = moment().add(1, 'month').format('L').split('/')
+          start = `${time[2]}-${time[0]}-${findClose[0].start}`
+          end = `${next[2]}-${next[0]}-${findClose[0].end}`
+        }
         const result = await stock.findAndCountAll({
           where: {
             [Op.and]: [
               { status_form: 1 },
               {
                 tanggalStock: {
-                  [Op.lt]: end,
-                  [Op.gt]: start
+                  [Op.lte]: end,
+                  [Op.gte]: start
                 }
               }
             ],
@@ -293,7 +303,13 @@ module.exports = {
               { kode_plant: findId.kode_plant },
               { no_stock: findId.no_stock }
             ]
-          }
+          },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            }
+          ]
         })
         if (result.length > 0) {
           return response(res, 'success get detail stock', { result })
@@ -417,7 +433,7 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  approveDisposal: async (req, res) => {
+  approveStock: async (req, res) => {
     try {
       const level = req.user.level
       const name = req.user.name
@@ -592,7 +608,7 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  rejectDisposal: async (req, res) => {
+  rejectStock: async (req, res) => {
     try {
       const level = req.user.level
       const name = req.user.name
@@ -648,6 +664,106 @@ module.exports = {
         } else {
           return response(res, 'failed reject stock opname', {}, 404, false)
         }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  uploadPicture: async (req, res) => {
+    const no = req.params.no
+    uploadHelper(req, res, async function (err) {
+      try {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            return response(res, 'fieldname doesnt match', {}, 500, false)
+          }
+          return response(res, err.message, {}, 500, false)
+        } else if (err) {
+          return response(res, err.message, {}, 401, false)
+        }
+        const dokumen = `uploads/${req.file.filename}`
+        const findAsset = await asset.findOne({
+          where: {
+            no_asset: no
+          }
+        })
+        if (findAsset) {
+          const send = {
+            path: dokumen,
+            no_asset: no,
+            no_doc: 'opname'
+          }
+          const result = await path.create(send)
+          if (result) {
+            return response(res, 'successfully upload', { send })
+          } else {
+            return response(res, 'failed upload', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed upload', {}, 404, false)
+        }
+      } catch (error) {
+        return response(res, error.message, {}, 500, false)
+      }
+    })
+  },
+  addStatus: async (req, res) => {
+    try {
+      const schema = joi.object({
+        fisik: joi.string().valid('ada', 'tidak ada'),
+        kondisi: joi.string().allow(''),
+        status: joi.string()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const result = await status_stock.findAll({
+          where: {
+            fisik: results.fisik,
+            [Op.and]: [
+              { kondisi: results.kondisi },
+              { status: results.status }
+            ]
+          }
+        })
+        if (result.length > 0) {
+          return response(res, 'success create status stock')
+        } else {
+          const result = await status_stock.create(results)
+          if (result) {
+            return response(res, 'success create status stock')
+          } else {
+            return response(res, 'failed create status stock', {}, 404, false)
+          }
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getStatus: async (req, res) => {
+    try {
+      let { fisik, kondisi } = req.query
+      if (!fisik) {
+        fisik = ''
+      }
+      if (!kondisi) {
+        kondisi = ''
+      }
+      const result = await status_stock.findAll({
+        where: {
+          [Op.and]: [
+            { fisik: { [Op.like]: `%${fisik}%` } },
+            { kondisi: { [Op.like]: `%${kondisi}%` } }
+          ]
+        }
+      })
+      if (result) {
+        return response(res, 'success get status stock', { result })
+      } else {
+        return response(res, 'failed get status stock', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

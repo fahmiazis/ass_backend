@@ -1,4 +1,4 @@
-const { asset, sequelize } = require('../models')
+const { asset, sequelize, path } = require('../models')
 const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
@@ -114,6 +114,12 @@ module.exports = {
               { keterangan: { [Op.like]: `%${searchValue}%` } }
             ]
           },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            }
+          ],
           order: [[sortValue, 'ASC']],
           limit: limit,
           offset: (page - 1) * limit
@@ -148,7 +154,8 @@ module.exports = {
         unit: joi.string().allow(''),
         kondisi: joi.string().allow(''),
         lokasi: joi.string().allow(''),
-        grouping: joi.string().allow('')
+        grouping: joi.string().allow(''),
+        status_fisik: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -210,117 +217,117 @@ module.exports = {
     const level = req.user.level
     if (level === 1) {
       uploadMaster(req, res, async function (err) {
-        try {
-          if (err instanceof multer.MulterError) {
-            if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
-              console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
-              return response(res, 'fieldname doesnt match', {}, 500, false)
-            }
-            return response(res, err.message, {}, 500, false)
-          } else if (err) {
-            return response(res, err.message, {}, 401, false)
+        // try {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            return response(res, 'fieldname doesnt match', {}, 500, false)
           }
-          const dokumen = `assets/masters/${req.files[0].filename}`
-          const rows = await readXlsxFile(dokumen)
-          const count = []
-          const cek = ['No.Doc', 'Tanggal', 'No Aset', 'Nama Aset', 'Area', 'Kode Plant', 'Keterangan']
-          const valid = rows[0]
-          for (let i = 0; i < cek.length; i++) {
-            console.log(valid[i] === cek[i])
-            if (valid[i] === cek[i]) {
-              count.push(1)
-            }
-          }
-          if (count.length === cek.length) {
-            const plant = []
-            const kode = []
-            for (let i = 1; i < rows.length; i++) {
-              const a = rows[i]
-              if (a[2] !== null) {
-                plant.push(`No Aset ${a[2]}`)
-                kode.push(`${a[2]}`)
-              }
-            }
-            const object = {}
-            const result = []
-
-            plant.forEach(item => {
-              if (!object[item]) { object[item] = 0 }
-              object[item] += 1
-            })
-
-            for (const prop in object) {
-              if (object[prop] >= 2) {
-                result.push(prop)
-              }
-            }
-            if (result.length > 0) {
-              return response(res, 'there is duplication in your file master', { result }, 404, false)
-            } else {
-              const arr = []
-              for (let i = 0; i < rows.length - 1; i++) {
-                const select = await sequelize.query(`SELECT no_asset from assets WHERE no_asset='${kode[i]}'`, {
-                  type: QueryTypes.SELECT
-                })
-                await sequelize.query(`DELETE from assets WHERE no_asset='${kode[i]}'`, {
-                  type: QueryTypes.DELETE
-                })
-                if (select.length > 0) {
-                  arr.push(select[0])
-                }
-              }
-              if (arr.length > 0) {
-                rows.shift()
-                const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan) VALUES ${rows.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: rows,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'successfully upload file master')
-                } else {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'failed to upload file', {}, 404, false)
-                }
-              } else {
-                rows.shift()
-                const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan) VALUES ${rows.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: rows,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'successfully upload file master')
-                } else {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'failed to upload file', {}, 404, false)
-                }
-              }
-            }
-          } else {
-            fs.unlink(dokumen, function (err) {
-              if (err) throw err
-              console.log('success')
-            })
-            return response(res, 'Failed to upload master file, please use the template provided', {}, 400, false)
-          }
-        } catch (error) {
-          return response(res, error.message, {}, 500, false)
+          return response(res, err.message, {}, 500, false)
+        } else if (err) {
+          return response(res, err.message, {}, 401, false)
         }
+        const dokumen = `assets/masters/${req.files[0].filename}`
+        const rows = await readXlsxFile(dokumen)
+        const count = []
+        const cek = ['No.Doc', 'Tanggal', 'No Aset', 'Nama Aset', 'Area', 'Kode Plant', 'Keterangan', 'Merk', 'Satuan', 'Jumlah']
+        const valid = rows[0]
+        for (let i = 0; i < cek.length; i++) {
+          console.log(valid[i] === cek[i])
+          if (valid[i] === cek[i]) {
+            count.push(1)
+          }
+        }
+        if (count.length === cek.length) {
+          const plant = []
+          const kode = []
+          for (let i = 1; i < rows.length; i++) {
+            const a = rows[i]
+            if (a[2] !== null) {
+              plant.push(`No Aset ${a[2]}`)
+              kode.push(`${a[2]}`)
+            }
+          }
+          const object = {}
+          const result = []
+
+          plant.forEach(item => {
+            if (!object[item]) { object[item] = 0 }
+            object[item] += 1
+          })
+
+          for (const prop in object) {
+            if (object[prop] >= 2) {
+              result.push(prop)
+            }
+          }
+          if (result.length > 0) {
+            return response(res, 'there is duplication in your file master', { result }, 404, false)
+          } else {
+            const arr = []
+            for (let i = 0; i < rows.length - 1; i++) {
+              const select = await sequelize.query(`SELECT no_asset from assets WHERE no_asset='${kode[i]}'`, {
+                type: QueryTypes.SELECT
+              })
+              await sequelize.query(`DELETE from assets WHERE no_asset='${kode[i]}'`, {
+                type: QueryTypes.DELETE
+              })
+              if (select.length > 0) {
+                arr.push(select[0])
+              }
+            }
+            if (arr.length > 0) {
+              rows.shift()
+              const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan, merk, satuan, unit) VALUES ${rows.map(a => '(?)').join(',')}`,
+                {
+                  replacements: rows,
+                  type: QueryTypes.INSERT
+                })
+              if (result) {
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'successfully upload file master')
+              } else {
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'failed to upload file', {}, 404, false)
+              }
+            } else {
+              rows.shift()
+              const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan, merk, satuan, unit) VALUES ${rows.map(a => '(?)').join(',')}`,
+                {
+                  replacements: rows,
+                  type: QueryTypes.INSERT
+                })
+              if (result) {
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'successfully upload file master')
+              } else {
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'failed to upload file', {}, 404, false)
+              }
+            }
+          }
+        } else {
+          fs.unlink(dokumen, function (err) {
+            if (err) throw err
+            console.log('success')
+          })
+          return response(res, 'Failed to upload master file, please use the template provided', {}, 400, false)
+        }
+        // } catch (error) {
+        //   return response(res, error.message, {}, 500, false)
+        // }
       })
     } else {
       return response(res, "You're not super administrator", {}, 404, false)

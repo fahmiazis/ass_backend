@@ -37,9 +37,9 @@ module.exports = (sequelize, DataTypes) => {
     status_doc: DataTypes.INTEGER,
     status_form: DataTypes.INTEGER,
     nominal: DataTypes.STRING,
-    no_sap: DataTypes.STRING,
+    no_sap: DataTypes.STRING, // no document sap finance
     no_fp: DataTypes.STRING,
-    doc_sap: DataTypes.STRING
+    doc_sap: DataTypes.STRING // no document sap asset
   }, {
     sequelize,
     modelName: 'disposal'

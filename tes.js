@@ -7,4 +7,4 @@ const next = moment().add(1, 'month').format('L').split('/')
 // console.log(moment(time).format('L 00:00'))
 // console.log(spl)
 
-console.log(next)
+console.log(time)

@@ -735,7 +735,7 @@ module.exports = {
         nominal: joi.string().allow(''),
         no_fp: joi.string().allow(''),
         no_sap: joi.string().allow(''),
-        doc_sap: joi.string()
+        doc_sap: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -756,6 +756,66 @@ module.exports = {
                       { tipe: 'purch' }
                     ]
                   }
+                ]
+              }
+            })
+            if (findDoc.length > 0) {
+              const cek = []
+              for (let i = 0; i < findDoc.length; i++) {
+                if (findDoc[i].path !== null) {
+                  cek.push(1)
+                }
+              }
+              if (cek.length === findDoc.length) {
+                const update = await result.update(results)
+                if (update) {
+                  return response(res, 'success update disposal')
+                } else {
+                  return response(res, 'failed update disposal', {}, 400, false)
+                }
+              } else {
+                return response(res, 'Lengkapi Dokumen terlebih dahulu', {}, 400, false)
+              }
+            } else {
+              return response(res, 'Lengkapi Dokumen terlebih dahulu', {}, 400, false)
+            }
+          } else if (tipe === 'taxDis') {
+            const findDoc = await docUser.findAll({
+              where: {
+                no_pengadaan: result.no_asset,
+                [Op.and]: [
+                  { jenis_form: 'disposal' },
+                  { tipe: 'tax' }
+                ]
+              }
+            })
+            if (findDoc.length > 0) {
+              const cek = []
+              for (let i = 0; i < findDoc.length; i++) {
+                if (findDoc[i].path !== null) {
+                  cek.push(1)
+                }
+              }
+              if (cek.length === findDoc.length) {
+                const update = await result.update(results)
+                if (update) {
+                  return response(res, 'success update disposal')
+                } else {
+                  return response(res, 'failed update disposal', {}, 400, false)
+                }
+              } else {
+                return response(res, 'Lengkapi Dokumen terlebih dahulu', {}, 400, false)
+              }
+            } else {
+              return response(res, 'Lengkapi Dokumen terlebih dahulu', {}, 400, false)
+            }
+          } else if (tipe === 'financeDis') {
+            const findDoc = await docUser.findAll({
+              where: {
+                no_pengadaan: result.no_asset,
+                [Op.and]: [
+                  { jenis_form: 'disposal' },
+                  { tipe: 'finance' }
                 ]
               }
             })
@@ -1568,24 +1628,70 @@ module.exports = {
       })
       if (result) {
         if (result.nilai_jual === '0') {
-          const data = {
-            status_form: level === 5 ? 5 : 8
-          }
-          const results = await result.update(data)
-          if (results) {
-            return response(res, 'success submit eksekusi disposal')
+          const findDoc = await docUser.findAll({
+            where: {
+              no_pengadaan: result.no_asset,
+              [Op.and]: [
+                { jenis_form: 'disposal' },
+                { tipe: 'dispose' }
+              ]
+            }
+          })
+          if (findDoc.length > 0) {
+            const cek = []
+            for (let i = 0; i < findDoc.length; i++) {
+              if (findDoc[i].path !== null) {
+                cek.push(1)
+              }
+            }
+            if (cek.length === findDoc.length) {
+              const data = {
+                status_form: level === 5 ? 5 : 8
+              }
+              const results = await result.update(data)
+              if (results) {
+                return response(res, 'success submit eksekusi disposal')
+              } else {
+                return response(res, 'failed submit disposal', {}, 400, false)
+              }
+            } else {
+              return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+            }
           } else {
-            return response(res, 'failed submit disposal', {}, 400, false)
+            return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
           }
         } else {
-          const data = {
-            status_form: level === 5 ? 5 : 6
-          }
-          const results = await result.update(data)
-          if (results) {
-            return response(res, 'success submit eksekusi disposal')
+          const findDoc = await docUser.findAll({
+            where: {
+              no_pengadaan: result.no_asset,
+              [Op.and]: [
+                { jenis_form: 'disposal' },
+                { tipe: 'sell' }
+              ]
+            }
+          })
+          if (findDoc.length > 0) {
+            const cek = []
+            for (let i = 0; i < findDoc.length; i++) {
+              if (findDoc[i].path !== null) {
+                cek.push(1)
+              }
+            }
+            if (cek.length === findDoc.length) {
+              const data = {
+                status_form: level === 5 ? 5 : 6
+              }
+              const results = await result.update(data)
+              if (results) {
+                return response(res, 'success submit eksekusi disposal')
+              } else {
+                return response(res, 'failed submit disposal', {}, 400, false)
+              }
+            } else {
+              return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+            }
           } else {
-            return response(res, 'failed submit disposal', {}, 400, false)
+            return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
           }
         }
       } else {
@@ -1597,6 +1703,7 @@ module.exports = {
   },
   submitTaxFin: async (req, res) => {
     try {
+      const level = req.user.level
       const no = req.params.no
       const result = await disposal.findOne({
         where: {
@@ -1607,7 +1714,7 @@ module.exports = {
         if (result.no_io === null) {
           const data = {
             status_form: 6,
-            no_io: no
+            no_io: level
           }
           const results = await result.update(data)
           if (results) {
@@ -1615,6 +1722,8 @@ module.exports = {
           } else {
             return response(res, 'failed submit disposal', {}, 400, false)
           }
+        } else if (parseInt(result.no_io) === level) {
+          return response(res, 'success submit eksekusi disposal')
         } else {
           const data = {
             status_form: 7,
@@ -1668,14 +1777,37 @@ module.exports = {
         }
       })
       if (result) {
-        const data = {
-          status_form: 2
-        }
-        const results = await result.update(data)
-        if (results) {
-          return response(res, 'success submit eksekusi disposal')
+        const findDoc = await docUser.findAll({
+          where: {
+            no_pengadaan: result.no_asset,
+            [Op.and]: [
+              { jenis_form: 'disposal' },
+              { tipe: 'purch' }
+            ]
+          }
+        })
+        if (findDoc.length > 0) {
+          const cek = []
+          for (let i = 0; i < findDoc.length; i++) {
+            if (findDoc[i].path !== null) {
+              cek.push(1)
+            }
+          }
+          if (cek.length === findDoc.length) {
+            const data = {
+              status_form: 2
+            }
+            const results = await result.update(data)
+            if (results) {
+              return response(res, 'success submit eksekusi disposal')
+            } else {
+              return response(res, 'failed submit disposal', {}, 400, false)
+            }
+          } else {
+            return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+          }
         } else {
-          return response(res, 'failed submit disposal', {}, 400, false)
+          return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
         }
       } else {
         return response(res, 'failed submit disposal', {}, 400, false)
