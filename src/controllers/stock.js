@@ -28,11 +28,11 @@ module.exports = {
             where: {
               kode_plant: kode,
               [Op.and]: [
-                { [Op.not]: { merk: null } },
                 { [Op.not]: { satuan: null } },
                 { [Op.not]: { unit: null } },
                 { [Op.not]: { lokasi: null } },
                 { [Op.not]: { grouping: null } },
+                { [Op.not]: { kondisi: null } },
                 { [Op.not]: { status_fisik: null } }
               ]
             }
@@ -80,6 +80,17 @@ module.exports = {
                   }
                 }
                 if (hasil.length === result.length) {
+                  for (let i = 0; i < findAsset.length; i++) {
+                    const data = {
+                      status_fisik: null,
+                      kondisi: null,
+                      grouping: null
+                    }
+                    const result = await asset.findByPk(findAsset[i].id)
+                    if (result) {
+                      await result.update(data)
+                    }
+                  }
                   return response(res, 'success submit stock opname')
                 } else {
                   return response(res, 'failed submit stock opname', {}, 400, false)
@@ -111,6 +122,17 @@ module.exports = {
                   }
                 }
                 if (hasil.length === result.length) {
+                  for (let i = 0; i < findAsset.length; i++) {
+                    const data = {
+                      status_fisik: null,
+                      kondisi: null,
+                      grouping: null
+                    }
+                    const result = await asset.findByPk(findAsset[i].id)
+                    if (result) {
+                      await result.update(data)
+                    }
+                  }
                   return response(res, 'success submit stock opname')
                 } else {
                   return response(res, 'failed submit stock opname', {}, 400, false)
@@ -213,6 +235,7 @@ module.exports = {
       let { limit, page, search, sort } = req.query
       let searchValue = ''
       let sortValue = ''
+      const level = req.user.level
       if (typeof search === 'object') {
         searchValue = Object.values(search)[0]
       } else {
@@ -254,7 +277,7 @@ module.exports = {
         const result = await stock.findAndCountAll({
           where: {
             [Op.and]: [
-              { status_form: 1 },
+              { status_form: level === 2 ? 9 : 1 },
               {
                 tanggalStock: {
                   [Op.lte]: end,

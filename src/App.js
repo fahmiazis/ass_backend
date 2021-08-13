@@ -26,6 +26,7 @@ const approveRoute = require('./routes/approves')
 const disposalRoute = require('./routes/disposal')
 const stockRoute = require('./routes/stock')
 const clossRoute = require('./routes/clossing')
+const lokasiRoute = require('./routes/lokasi')
 
 const authMiddleware = require('./middlewares/auth')
 
@@ -46,6 +47,7 @@ app.use('/ket', authMiddleware, ketRoute)
 app.use('/disposal', authMiddleware, disposalRoute)
 app.use('/stock', authMiddleware, stockRoute)
 app.use('/clossing', authMiddleware, clossRoute)
+app.use('/lokasi', authMiddleware, lokasiRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)

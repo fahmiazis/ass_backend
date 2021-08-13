@@ -89,7 +89,11 @@ module.exports = {
               { area: { [Op.like]: `%${searchValue}%` } },
               { kode_plant: { [Op.like]: `%${searchValue}%` } },
               { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } }
+              { keterangan: { [Op.like]: `%${searchValue}%` } },
+              { status_fisik: { [Op.like]: `%${searchValue}%` } },
+              { grouping: { [Op.like]: `%${searchValue}%` } },
+              { kondisi: { [Op.like]: `%${searchValue}%` } },
+              { lokasi: { [Op.like]: `%${searchValue}%` } }
             ]
           },
           order: [[sortValue, 'ASC']],
@@ -117,7 +121,8 @@ module.exports = {
           include: [
             {
               model: path,
-              as: 'pict'
+              as: 'pict',
+              order: [['id', 'DESC']]
             }
           ],
           order: [[sortValue, 'ASC']],
@@ -230,7 +235,7 @@ module.exports = {
         const dokumen = `assets/masters/${req.files[0].filename}`
         const rows = await readXlsxFile(dokumen)
         const count = []
-        const cek = ['No.Doc', 'Tanggal', 'No Aset', 'Nama Aset', 'Area', 'Kode Plant', 'Keterangan', 'Merk', 'Satuan', 'Jumlah']
+        const cek = ['No.Doc', 'Tanggal', 'No Aset', 'Nama Aset', 'Area', 'Kode Plant', 'Keterangan', 'Merk', 'Satuan', 'Jumlah', 'Lokasi']
         const valid = rows[0]
         for (let i = 0; i < cek.length; i++) {
           console.log(valid[i] === cek[i])
@@ -265,58 +270,86 @@ module.exports = {
             return response(res, 'there is duplication in your file master', { result }, 404, false)
           } else {
             const arr = []
-            for (let i = 0; i < rows.length - 1; i++) {
+            rows.shift()
+            for (let i = 0; i < rows.length; i++) {
               const select = await sequelize.query(`SELECT no_asset from assets WHERE no_asset='${kode[i]}'`, {
                 type: QueryTypes.SELECT
               })
-              await sequelize.query(`DELETE from assets WHERE no_asset='${kode[i]}'`, {
-                type: QueryTypes.DELETE
-              })
+              const send = {
+                no_doc: rows[i][0],
+                tanggal: rows[i][1],
+                no_asset: kode[i],
+                nama_asset: rows[i][3],
+                area: rows[i][4],
+                kode_plant: rows[i][5],
+                keterangan: rows[i][6],
+                merk: rows[i][7],
+                satuan: rows[i][8],
+                unit: rows[i][9],
+                lokasi: rows[i][10]
+              }
               if (select.length > 0) {
-                arr.push(select[0])
+                const updateAsset = await asset.update(send, {
+                  where: {
+                    no_asset: kode[i]
+                  }
+                })
+                if (updateAsset) {
+                  arr.push(select[0])
+                }
+              } else {
+                const createAsset = await asset.create(send)
+                if (createAsset) {
+                  arr.push(select[0])
+                }
               }
             }
             if (arr.length > 0) {
-              rows.shift()
-              const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan, merk, satuan, unit) VALUES ${rows.map(a => '(?)').join(',')}`,
-                {
-                  replacements: rows,
-                  type: QueryTypes.INSERT
-                })
-              if (result) {
-                fs.unlink(dokumen, function (err) {
-                  if (err) throw err
-                  console.log('success')
-                })
-                return response(res, 'successfully upload file master')
-              } else {
-                fs.unlink(dokumen, function (err) {
-                  if (err) throw err
-                  console.log('success')
-                })
-                return response(res, 'failed to upload file', {}, 404, false)
-              }
+              return response(res, 'success upload asset balance', { rows })
             } else {
-              rows.shift()
-              const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan, merk, satuan, unit) VALUES ${rows.map(a => '(?)').join(',')}`,
-                {
-                  replacements: rows,
-                  type: QueryTypes.INSERT
-                })
-              if (result) {
-                fs.unlink(dokumen, function (err) {
-                  if (err) throw err
-                  console.log('success')
-                })
-                return response(res, 'successfully upload file master')
-              } else {
-                fs.unlink(dokumen, function (err) {
-                  if (err) throw err
-                  console.log('success')
-                })
-                return response(res, 'failed to upload file', {}, 404, false)
-              }
+              return response(res, 'failed upload asset balance')
             }
+            // if (arr.length > 0) {
+            //   rows.shift()
+            //   const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan, merk, satuan, unit) VALUES ${rows.map(a => '(?)').join(',')}`,
+            //     {
+            //       replacements: rows,
+            //       type: QueryTypes.INSERT
+            //     })
+            //   if (result) {
+            //     fs.unlink(dokumen, function (err) {
+            //       if (err) throw err
+            //       console.log('success')
+            //     })
+            //     return response(res, 'successfully upload file master')
+            //   } else {
+            //     fs.unlink(dokumen, function (err) {
+            //       if (err) throw err
+            //       console.log('success')
+            //     })
+            //     return response(res, 'failed to upload file', {}, 404, false)
+            //   }
+            // } else {
+            //   rows.shift()
+            //   const result = await sequelize.query(`INSERT INTO assets (no_doc, tanggal, no_asset, nama_asset, area, kode_plant, keterangan, merk, satuan, unit) VALUES ${rows.map(a => '(?)').join(',')}`,
+            //     {
+            //       replacements: rows,
+            //       type: QueryTypes.INSERT
+            //     })
+            //   if (result) {
+            //     fs.unlink(dokumen, function (err) {
+            //       if (err) throw err
+            //       console.log('success')
+            //     })
+            //     return response(res, 'successfully upload file master')
+            //   } else {
+            //     fs.unlink(dokumen, function (err) {
+            //       if (err) throw err
+            //       console.log('success')
+            //     })
+            //     return response(res, 'failed to upload file', {}, 404, false)
+            //   }
+            // }
           }
         } else {
           fs.unlink(dokumen, function (err) {
