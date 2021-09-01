@@ -30,7 +30,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       kategori: {
-        type: Sequelize.ENUM('it', 'non-it')
+        type: Sequelize.ENUM('IT', 'NON IT')
       },
       cost_center: {
         type: Sequelize.STRING
@@ -41,6 +41,9 @@ module.exports = {
       area_rec: {
         type: Sequelize.STRING
       },
+      kode_plant_rec: {
+        type: Sequelize.STRING
+      },
       status_app: {
         type: Sequelize.INTEGER
       },
@@ -49,6 +52,12 @@ module.exports = {
       },
       status_form: {
         type: Sequelize.INTEGER
+      },
+      alasan: {
+        type: Sequelize.STRING
+      },
+      tanggalMut: {
+        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,

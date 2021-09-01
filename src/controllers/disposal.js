@@ -6,13 +6,18 @@ const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
 const mailer = require('../helpers/mailer')
 const uploadHelper = require('../helpers/upload')
+const moment = require('moment')
 
 module.exports = {
   addDisposal: async (req, res) => {
     try {
-      const id = req.params.id
+      const no = req.params.no
       const kode = req.user.kode
-      const result = await asset.findByPk(id)
+      const result = await asset.findOne({
+        where: {
+          no_asset: no
+        }
+      })
       if (result) {
         const findAsset = await disposal.findAll({
           where: {
@@ -37,7 +42,10 @@ module.exports = {
               cost_center: findDepo[0].cost_center,
               status_depo: findDepo[0].status_area,
               nilai_jual: 0,
-              status_form: 1
+              nilai_buku: result.nilai_buku,
+              status_form: 1,
+              kategori: result.kategori,
+              merk: result.merk
             }
             const make = await disposal.create(send)
             if (make) {
@@ -68,9 +76,13 @@ module.exports = {
   },
   addSell: async (req, res) => {
     try {
-      const id = req.params.id
+      const no = req.params.no
       const kode = req.user.kode
-      const result = await asset.findByPk(id)
+      const result = await asset.findOne({
+        where: {
+          no_asset: no
+        }
+      })
       if (result) {
         const findAsset = await disposal.findAll({
           where: {
@@ -94,7 +106,10 @@ module.exports = {
               nama_asset: result.nama_asset,
               cost_center: findDepo[0].cost_center,
               status_depo: findDepo[0].status_area,
-              status_form: 1
+              nilai_buku: result.nilai_buku,
+              status_form: 1,
+              kategori: result.kategori,
+              merk: result.merk
             }
             const make = await disposal.create(send)
             if (make) {
@@ -226,10 +241,14 @@ module.exports = {
             {
               model: ttd,
               as: 'appForm'
+            },
+            {
+              model: path,
+              as: 'pict'
             }
           ]
         })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+        const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
         if (result) {
           const data = []
           if (tipe === 'persetujuan') {
@@ -261,7 +280,13 @@ module.exports = {
               { kode_plant: kode },
               { status_form: status }
             ]
-          }
+          },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            }
+          ]
         })
         if (result) {
           return response(res, 'success get disposal', { result })
@@ -336,14 +361,16 @@ module.exports = {
               if (find.nilai_jual !== '0') {
                 const send = {
                   status_form: 26,
-                  no_disposal: noDis === undefined ? 1 : noDis
+                  no_disposal: noDis === undefined ? 1 : noDis,
+                  tanggalDis: moment()
                 }
                 await find.update(send)
                 temp.push(1)
               } else {
                 const send = {
                   status_form: 2,
-                  no_disposal: noDis === undefined ? 1 : noDis
+                  no_disposal: noDis === undefined ? 1 : noDis,
+                  tanggalDis: moment()
                 }
                 await find.update(send)
                 temp.push(1)
@@ -369,14 +396,16 @@ module.exports = {
               if (find.nilai_jual !== '0') {
                 const send = {
                   status_form: 26,
-                  no_disposal: noDis === undefined ? 1 : noDis
+                  no_disposal: noDis === undefined ? 1 : noDis,
+                  tanggalDis: moment()
                 }
                 await find.update(send)
                 temp.push(1)
               } else {
                 const send = {
                   status_form: 2,
-                  no_disposal: noDis === undefined ? 1 : noDis
+                  no_disposal: noDis === undefined ? 1 : noDis,
+                  tanggalDis: moment()
                 }
                 await find.update(send)
                 temp.push(1)

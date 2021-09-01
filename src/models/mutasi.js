@@ -11,6 +11,16 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       // define association here
+      mutasi.hasMany(models.ttd, {
+        foreignKey: 'no_doc',
+        as: 'appForm',
+        sourceKey: 'no_mutasi'
+      })
+      mutasi.hasMany(models.path, {
+        foreignKey: 'no_asset',
+        as: 'pict',
+        sourceKey: 'no_asset'
+      })
     }
   };
   mutasi.init({
@@ -21,13 +31,16 @@ module.exports = (sequelize, DataTypes) => {
     no_asset: DataTypes.STRING,
     nama_asset: DataTypes.STRING,
     merk: DataTypes.STRING,
-    kategori: DataTypes.ENUM('it', 'non-it'),
+    kategori: DataTypes.ENUM('IT', 'NON IT'),
     cost_center: DataTypes.STRING,
     cost_center_rec: DataTypes.STRING,
     area_rec: DataTypes.STRING,
+    kode_plant_rec: DataTypes.STRING,
     status_app: DataTypes.INTEGER,
     status_doc: DataTypes.INTEGER,
-    status_form: DataTypes.INTEGER
+    status_form: DataTypes.INTEGER,
+    alasan: DataTypes.STRING,
+    tanggalMut: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'mutasi'

@@ -33,7 +33,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       kategori: {
-        type: Sequelize.ENUM('it', 'non-it')
+        type: Sequelize.ENUM('IT', 'NON IT')
       },
       status_depo: {
         type: Sequelize.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla')
@@ -58,6 +58,21 @@ module.exports = {
       },
       status_form: {
         type: Sequelize.INTEGER
+      },
+      nominal: {
+        type: Sequelize.STRING
+      },
+      no_sap: {
+        type: Sequelize.STRING
+      },
+      no_fp: {
+        type: Sequelize.STRING
+      },
+      doc_sap: {
+        type: Sequelize.STRING
+      },
+      tanggalDis: {
+        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,

@@ -25,11 +25,12 @@ module.exports = {
               [Op.and]: [
                 { jabatan: results.jabatan },
                 { nama_approve: results.nama_approve }
-              ]
+              ],
+              sebagai: results.sebagai
             }
           })
           if (result.length > 0) {
-            return response(res, 'Telah terdaftar', {}, 404, false)
+            return response(res, 'Telah terdaftar')
           } else {
             const result = await approve.create(results)
             if (result) {

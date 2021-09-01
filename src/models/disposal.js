@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'appForm',
         sourceKey: 'no_disposal'
       })
+      disposal.hasMany(models.path, {
+        foreignKey: 'no_asset',
+        as: 'pict',
+        sourceKey: 'no_asset'
+      })
     }
   };
   disposal.init({
@@ -27,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     no_asset: DataTypes.STRING,
     nama_asset: DataTypes.STRING,
     merk: DataTypes.STRING,
-    kategori: DataTypes.ENUM('it', 'non-it'),
+    kategori: DataTypes.ENUM('IT', 'NON IT'),
     status_depo: DataTypes.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla'),
     cost_center: DataTypes.STRING,
     nilai_buku: DataTypes.STRING,
@@ -39,7 +44,8 @@ module.exports = (sequelize, DataTypes) => {
     nominal: DataTypes.STRING,
     no_sap: DataTypes.STRING, // no document sap finance
     no_fp: DataTypes.STRING,
-    doc_sap: DataTypes.STRING // no document sap asset
+    doc_sap: DataTypes.STRING, // no document sap asset,
+    tanggalDis: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'disposal'

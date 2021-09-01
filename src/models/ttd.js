@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   ttd.init({
     jabatan: DataTypes.STRING,
     jenis: DataTypes.ENUM('it', 'non-it', 'all'),
-    sebagai: DataTypes.ENUM('pembuat', 'pemeriksa', 'penyetuju'),
+    sebagai: DataTypes.ENUM('pembuat', 'pemeriksa', 'penyetuju', 'penerima'),
     kategori: DataTypes.ENUM('budget', 'non-budget', 'return'),
     nama: DataTypes.STRING,
     path: DataTypes.STRING,

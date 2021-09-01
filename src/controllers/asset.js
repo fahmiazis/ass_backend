@@ -56,7 +56,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      let { limit, page, search, sort } = req.query
+      let { limit, page, search, sort, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -68,6 +68,9 @@ module.exports = {
         sortValue = Object.values(sort)[0]
       } else {
         sortValue = sort || 'id'
+      }
+      if (!tipe) {
+        tipe = 'all'
       }
       if (!limit) {
         limit = 12
@@ -111,18 +114,15 @@ module.exports = {
           where: {
             kode_plant: kode,
             [Op.or]: [
-              { no_doc: { [Op.like]: `%${searchValue}%` } },
-              { tanggal: { [Op.like]: `%${searchValue}%` } },
-              { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } }
+              { status: null },
+              { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
+              { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
             ]
           },
           include: [
             {
               model: path,
-              as: 'pict',
-              order: [['id', 'DESC']]
+              as: 'pict'
             }
           ],
           order: [[sortValue, 'ASC']],
@@ -235,7 +235,7 @@ module.exports = {
         const dokumen = `assets/masters/${req.files[0].filename}`
         const rows = await readXlsxFile(dokumen)
         const count = []
-        const cek = ['No.Doc', 'Tanggal', 'No Aset', 'Nama Aset', 'Area', 'Kode Plant', 'Keterangan', 'Merk', 'Satuan', 'Jumlah', 'Lokasi']
+        const cek = ['Asset', 'SNo.', 'Cap.Date', 'Asset Description', 'Acquis.val.', 'Accum.dep.', 'Book val.', 'Plant', 'Cost Ctr', 'Cost Ctr Name', 'Merk', 'SATUAN', 'JUMLAH', 'LOKASI', 'KATEGORI']
         const valid = rows[0]
         for (let i = 0; i < cek.length; i++) {
           console.log(valid[i] === cek[i])
@@ -248,9 +248,9 @@ module.exports = {
           const kode = []
           for (let i = 1; i < rows.length; i++) {
             const a = rows[i]
-            if (a[2] !== null) {
-              plant.push(`No Aset ${a[2]}`)
-              kode.push(`${a[2]}`)
+            if (a[0] !== null) {
+              plant.push(`No Aset ${a[0]}`)
+              kode.push(`${a[0]}`)
             }
           }
           const object = {}
@@ -272,28 +272,34 @@ module.exports = {
             const arr = []
             rows.shift()
             for (let i = 0; i < rows.length; i++) {
-              const select = await sequelize.query(`SELECT no_asset from assets WHERE no_asset='${kode[i]}'`, {
+              const select = await sequelize.query(`SELECT no_asset from assets WHERE no_asset='${rows[i][0]}'`, {
                 type: QueryTypes.SELECT
               })
               const send = {
-                no_doc: rows[i][0],
-                tanggal: rows[i][1],
-                no_asset: kode[i],
+                no_doc: rows[i][1],
+                tanggal: rows[i][2],
+                no_asset: rows[i][0],
                 nama_asset: rows[i][3],
-                area: rows[i][4],
-                kode_plant: rows[i][5],
-                keterangan: rows[i][6],
-                merk: rows[i][7],
-                satuan: rows[i][8],
-                unit: rows[i][9],
-                lokasi: rows[i][10]
+                area: rows[i][9],
+                kode_plant: rows[i][7],
+                nilai_buku: rows[i][6],
+                nilai_acquis: rows[i][4],
+                accum_dep: rows[i][5],
+                merk: rows[i][10],
+                satuan: rows[i][11],
+                unit: rows[i][12],
+                lokasi: rows[i][13],
+                kategori: rows[i][14]
               }
               if (select.length > 0) {
                 const updateAsset = await asset.update(send, {
                   where: {
-                    no_asset: kode[i]
+                    no_asset: rows[i][0]
                   }
                 })
+                // const updateAsset = await sequelize.query(`UPDATE assets SET no_doc='${rows[i][1]}', tanggal='${rows[i][2]}', no_asset='${rows[i][0]}', nama_asset='${rows[i][3]}', area='${rows[i][9]}', kode_plant='${rows[i][7]}', nilai_buku='${rows[i][6]}', nilai_acquis='${rows[i][4]}', accum_dep='${rows[i][5]}', merk='${rows[i][10]}', satuan='${rows[i][11]}', unit='${rows[i][12]}', lokasi='${rows[i][13]}', kategori='${rows[i][14]}' WHERE no_asset='${rows[i][0]}'`, {
+                //   type: QueryTypes.UPDATE
+                // })
                 if (updateAsset) {
                   arr.push(select[0])
                 }

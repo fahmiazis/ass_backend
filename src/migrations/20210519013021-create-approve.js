@@ -21,7 +21,7 @@ module.exports = {
         type: Sequelize.ENUM('it', 'non-it', 'all')
       },
       sebagai: {
-        type: Sequelize.ENUM('pembuat', 'pemeriksa', 'penyetuju')
+        type: Sequelize.ENUM('pembuat', 'pemeriksa', 'penyetuju', 'penerima')
       },
       kategori: {
         type: Sequelize.ENUM('budget', 'non-budget', 'return', 'all')

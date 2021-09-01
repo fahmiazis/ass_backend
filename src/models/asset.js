@@ -35,7 +35,10 @@ module.exports = (sequelize, DataTypes) => {
     lokasi: DataTypes.STRING,
     grouping: DataTypes.STRING,
     keterangan: DataTypes.STRING,
-    status_fisik: DataTypes.STRING
+    status_fisik: DataTypes.STRING,
+    nilai_acquis: DataTypes.STRING,
+    accum_dep: DataTypes.STRING,
+    kategori: DataTypes.ENUM('IT', 'NON IT')
   }, {
     sequelize,
     modelName: 'asset'
