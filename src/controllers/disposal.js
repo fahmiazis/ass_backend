@@ -713,7 +713,7 @@ module.exports = {
                 return response(res, 'failed approve disposal', {}, 404, false)
               }
             } else {
-              return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+              return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
             }
           } else {
             return response(res, 'failed approve disposal', {}, 404, false)
@@ -753,27 +753,33 @@ module.exports = {
           })
           if (find.length > 0) {
             let hasil = 0
+            let arr = null
             for (let i = 0; i < find.length; i++) {
               if (result[0].name === find[i].jabatan) {
                 hasil = find[i].id
+                arr = i
               }
             }
             if (hasil !== 0) {
-              const data = {
-                nama: name,
-                status: 0,
-                path: results.alasan
-              }
-              const findTtd = await ttd.findByPk(hasil)
-              if (findTtd) {
-                const sent = await findTtd.update(data)
-                if (sent) {
-                  return response(res, 'success approve disposal')
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const data = {
+                  nama: name,
+                  status: 0,
+                  path: results.alasan
+                }
+                const findTtd = await ttd.findByPk(hasil)
+                if (findTtd) {
+                  const sent = await findTtd.update(data)
+                  if (sent) {
+                    return response(res, 'success approve disposal')
+                  } else {
+                    return response(res, 'failed approve disposal', {}, 404, false)
+                  }
                 } else {
                   return response(res, 'failed approve disposal', {}, 404, false)
                 }
               } else {
-                return response(res, 'failed approve disposal', {}, 404, false)
+                return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
               }
             } else {
               return response(res, 'failed approve disposal', {}, 404, false)

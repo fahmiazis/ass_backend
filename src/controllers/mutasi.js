@@ -100,7 +100,7 @@ module.exports = {
               return response(res, 'failed add mutasi', {}, 400, false)
             }
           } else {
-            return response(res, 'Hanya bisa menambahkan item dengan area tujuan yang sama. Hapus atau submit item sebelumnya !', {}, 400, false)
+            return response(res, 'Hanya bisa menambahkan item dengan area tujuan yang sama. Kosongkan atau submit cart terlebih dahulu !', {}, 400, false)
           }
         } else {
           const findAsset = await mutasi.findAll({
