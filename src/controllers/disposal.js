@@ -801,12 +801,13 @@ module.exports = {
       const tipe = req.params.tipe
       const schema = joi.object({
         merk: joi.string().allow(''),
-        keterangan: joi.string().required(),
-        nilai_jual: joi.string().required(),
+        keterangan: joi.string().allow(''),
+        nilai_jual: joi.string().allow(''),
         nominal: joi.string().allow(''),
         no_fp: joi.string().allow(''),
         no_sap: joi.string().allow(''),
-        doc_sap: joi.string().allow('')
+        doc_sap: joi.string().allow(''),
+        npwp: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -824,7 +825,8 @@ module.exports = {
                     [Op.or]: [
                       { tipe: 'pengajuan' },
                       { tipe: 'jual' },
-                      { tipe: 'purch' }
+                      { tipe: 'purch' },
+                      { tipe: 'npwp' }
                     ]
                   }
                 ]
@@ -929,7 +931,7 @@ module.exports = {
   getDocumentDis: async (req, res) => {
     try {
       const no = req.params.no
-      const { tipeDokumen, tipe } = req.query
+      let { tipeDokumen, tipe, npwp } = req.query
       let tipeDoValue = ''
       let tipeValue = ''
       if (typeof tipeDokumen === 'object') {
@@ -941,6 +943,9 @@ module.exports = {
         tipeValue = Object.values(tipe)[0]
       } else {
         tipeValue = tipe || 'pengajuan'
+      }
+      if (!npwp) {
+        npwp = ''
       }
       const results = await disposal.findOne({
         where: {
@@ -1008,6 +1013,329 @@ module.exports = {
               }
             } else {
               return response(res, 'failed get data', {}, 404, false)
+            }
+          }
+        } else {
+          const result = await docUser.findAll({
+            where: {
+              no_pengadaan: no,
+              [Op.and]: [
+                { jenis_form: tipeDoValue },
+                { tipe: tipeValue }
+              ]
+            }
+          })
+          if (result.length > 0) {
+            return response(res, 'success get document', { result })
+          } else {
+            const getDoc = await document.findAll({
+              where: {
+                [Op.and]: [
+                  { tipe_dokumen: tipeDoValue },
+                  { tipe: tipeValue }
+                ],
+                [Op.or]: [
+                  { jenis_dokumen: results.kategori },
+                  { jenis_dokumen: 'all' }
+                ]
+              }
+            })
+            if (getDoc) {
+              const hasil = []
+              for (let i = 0; i < getDoc.length; i++) {
+                const send = {
+                  nama_dokumen: getDoc[i].nama_dokumen,
+                  jenis_dokumen: getDoc[i].jenis_dokumen,
+                  divisi: getDoc[i].divisi,
+                  no_pengadaan: no,
+                  jenis_form: tipeDoValue,
+                  tipe: tipeValue,
+                  path: null
+                }
+                const make = await docUser.create(send)
+                if (make) {
+                  hasil.push(make)
+                }
+              }
+              if (hasil.length === getDoc.length) {
+                return response(res, 'success get document', { result: hasil })
+              } else {
+                return response(res, 'failed get data', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          }
+        }
+      } else if (npwp === 'ada') {
+        const findAsset = await disposal.findOne({
+          where: {
+            no_asset: no
+          }
+        })
+        if (findAsset.npwp === 'ada') {
+          const findDoc = await docUser.findAll({
+            where: {
+              [Op.and]: [
+                { no_pengadaan: no },
+                { tipe: 'npwp' }
+              ]
+            }
+          })
+          if (findDoc.length > 0) {
+            const result = await docUser.findAll({
+              where: {
+                [Op.and]: [
+                  { no_pengadaan: no },
+                  { jenis_form: tipeDoValue }
+                ],
+                [Op.or]: [
+                  { tipe: tipeValue },
+                  { tipe: 'npwp' }
+                ]
+              }
+            })
+            if (result.length > 0) {
+              return response(res, 'success get document', { result })
+            } else {
+              const getDoc = await document.findAll({
+                where: {
+                  [Op.and]: [
+                    { tipe_dokumen: tipeDoValue },
+                    { tipe: tipeValue }
+                  ],
+                  [Op.or]: [
+                    { jenis_dokumen: results.kategori },
+                    { jenis_dokumen: 'all' }
+                  ]
+                }
+              })
+              if (getDoc) {
+                const hasil = []
+                for (let i = 0; i < getDoc.length; i++) {
+                  const send = {
+                    nama_dokumen: getDoc[i].nama_dokumen,
+                    jenis_dokumen: getDoc[i].jenis_dokumen,
+                    divisi: getDoc[i].divisi,
+                    no_pengadaan: no,
+                    jenis_form: tipeDoValue,
+                    tipe: getDoc[i].tipeValue,
+                    path: null
+                  }
+                  const make = await docUser.create(send)
+                  if (make) {
+                    hasil.push(make)
+                  }
+                }
+                if (hasil.length === getDoc.length) {
+                  return response(res, 'success get document', { result: hasil })
+                } else {
+                  return response(res, 'failed get data', {}, 404, false)
+                }
+              } else {
+                return response(res, 'failed get data', {}, 404, false)
+              }
+            }
+          } else {
+            const findNpwp = await document.findOne({
+              where: {
+                [Op.and]: [
+                  { tipe_dokumen: tipeDoValue },
+                  { tipe: 'npwp' }
+                ],
+                [Op.or]: [
+                  { jenis_dokumen: results.kategori },
+                  { jenis_dokumen: 'all' }
+                ]
+              }
+            })
+            if (findNpwp) {
+              const send = {
+                nama_dokumen: findNpwp.nama_dokumen,
+                jenis_dokumen: findNpwp.jenis_dokumen,
+                divisi: findNpwp.divisi,
+                no_pengadaan: no,
+                jenis_form: tipeDoValue,
+                tipe: 'npwp',
+                path: null
+              }
+              const make = await docUser.create(send)
+              if (make) {
+                const result = await docUser.findAll({
+                  where: {
+                    [Op.and]: [
+                      { no_pengadaan: no },
+                      { jenis_form: tipeDoValue }
+                    ],
+                    [Op.or]: [
+                      { tipe: tipeValue },
+                      { tipe: 'npwp' }
+                    ]
+                  }
+                })
+                if (result.length > 0) {
+                  return response(res, 'success get document', { result })
+                } else {
+                  const getDoc = await document.findAll({
+                    where: {
+                      [Op.and]: [
+                        { tipe_dokumen: tipeDoValue },
+                        { tipe: tipeValue }
+                      ],
+                      [Op.or]: [
+                        { jenis_dokumen: results.kategori },
+                        { jenis_dokumen: 'all' }
+                      ]
+                    }
+                  })
+                  if (getDoc) {
+                    const hasil = []
+                    for (let i = 0; i < getDoc.length; i++) {
+                      const send = {
+                        nama_dokumen: getDoc[i].nama_dokumen,
+                        jenis_dokumen: getDoc[i].jenis_dokumen,
+                        divisi: getDoc[i].divisi,
+                        no_pengadaan: no,
+                        jenis_form: tipeDoValue,
+                        tipe: getDoc[i].tipeValue,
+                        path: null
+                      }
+                      const make = await docUser.create(send)
+                      if (make) {
+                        hasil.push(make)
+                      }
+                    }
+                    if (hasil.length === getDoc.length) {
+                      return response(res, 'success get document', { result: hasil })
+                    } else {
+                      return response(res, 'failed get data 3', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, 'failed get data 2', {}, 404, false)
+                  }
+                }
+              } else {
+                return response(res, 'failed get data 1', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed get data npwp', {}, 404, false)
+            }
+          }
+        } else if (findAsset.npwp === 'tidak') {
+          const findDoc = await docUser.findOne({
+            where: {
+              [Op.and]: [
+                { no_pengadaan: no },
+                { tipe: 'npwp' }
+              ]
+            }
+          })
+          if (findDoc) {
+            const delDoc = await findDoc.destroy()
+            if (delDoc) {
+              const result = await docUser.findAll({
+                where: {
+                  no_pengadaan: no,
+                  [Op.and]: [
+                    { jenis_form: tipeDoValue },
+                    { tipe: tipeValue }
+                  ]
+                }
+              })
+              if (result.length > 0) {
+                return response(res, 'success get document', { result })
+              } else {
+                const getDoc = await document.findAll({
+                  where: {
+                    [Op.and]: [
+                      { tipe_dokumen: tipeDoValue },
+                      { tipe: tipeValue }
+                    ],
+                    [Op.or]: [
+                      { jenis_dokumen: results.kategori },
+                      { jenis_dokumen: 'all' }
+                    ]
+                  }
+                })
+                if (getDoc) {
+                  const hasil = []
+                  for (let i = 0; i < getDoc.length; i++) {
+                    const send = {
+                      nama_dokumen: getDoc[i].nama_dokumen,
+                      jenis_dokumen: getDoc[i].jenis_dokumen,
+                      divisi: getDoc[i].divisi,
+                      no_pengadaan: no,
+                      jenis_form: tipeDoValue,
+                      tipe: tipeValue,
+                      path: null
+                    }
+                    const make = await docUser.create(send)
+                    if (make) {
+                      hasil.push(make)
+                    }
+                  }
+                  if (hasil.length === getDoc.length) {
+                    return response(res, 'success get document', { result: hasil })
+                  } else {
+                    return response(res, 'failed get data', {}, 404, false)
+                  }
+                } else {
+                  return response(res, 'failed get data', {}, 404, false)
+                }
+              }
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          } else {
+            const result = await docUser.findAll({
+              where: {
+                no_pengadaan: no,
+                [Op.and]: [
+                  { jenis_form: tipeDoValue },
+                  { tipe: tipeValue }
+                ]
+              }
+            })
+            if (result.length > 0) {
+              return response(res, 'success get document', { result })
+            } else {
+              const getDoc = await document.findAll({
+                where: {
+                  [Op.and]: [
+                    { tipe_dokumen: tipeDoValue },
+                    { tipe: tipeValue }
+                  ],
+                  [Op.or]: [
+                    { jenis_dokumen: results.kategori },
+                    { jenis_dokumen: 'all' }
+                  ]
+                }
+              })
+              if (getDoc) {
+                const hasil = []
+                for (let i = 0; i < getDoc.length; i++) {
+                  const send = {
+                    nama_dokumen: getDoc[i].nama_dokumen,
+                    jenis_dokumen: getDoc[i].jenis_dokumen,
+                    divisi: getDoc[i].divisi,
+                    no_pengadaan: no,
+                    jenis_form: tipeDoValue,
+                    tipe: tipeValue,
+                    path: null
+                  }
+                  const make = await docUser.create(send)
+                  if (make) {
+                    hasil.push(make)
+                  }
+                }
+                if (hasil.length === getDoc.length) {
+                  return response(res, 'success get document', { result: hasil })
+                } else {
+                  return response(res, 'failed get data', {}, 404, false)
+                }
+              } else {
+                return response(res, 'failed get data', {}, 404, false)
+              }
             }
           }
         } else {

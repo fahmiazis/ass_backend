@@ -823,4 +823,37 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   }
+  // ,
+  // reportStock: async (req, res) => {
+  //   try {
+  //     let { tipe, sort } = req.query
+  //     if (!tipe) {
+  //       tipe = 'rekap'
+  //     }
+  //     if (!sort) {
+  //       sort = ''
+  //     }
+  //     if (tipe === 'rekap') {
+  //       const findCond = await status_stock.findAll()
+  //       if (findCond.length > 0) {
+  //         for (let i = 0; i < findCond.length; i++) {
+  //           const result = await stock.findAll({
+  //             where: {
+  //               grouping: findCond.status
+  //             }
+  //           })
+  //           if (result.length > 0) {
+
+  //           }
+  //         }
+  //       } else {
+  //         return response(res, 'failed get rekap stock', {}, 404, false)
+  //       }
+  //     } else {
+
+  //     }
+  //   } catch (error) {
+  //     return response(res, error.message, {}, 500, false)
+  //   }
+  // }
 }
