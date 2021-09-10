@@ -263,7 +263,7 @@ module.exports = {
   },
   getStockAll: async (req, res) => {
     try {
-      let { limit, page, search, sort } = req.query
+      let { limit, page, search, sort, group } = req.query
       let searchValue = ''
       let sortValue = ''
       const level = req.user.level
@@ -286,6 +286,9 @@ module.exports = {
         page = 1
       } else {
         page = parseInt(page)
+      }
+      if (!group) {
+        group = ''
       }
       const findClose = await clossing.findAll({
         where: {
@@ -806,14 +809,40 @@ module.exports = {
       if (!kondisi) {
         kondisi = ''
       }
-      const result = await status_stock.findAll({
-        where: {
-          [Op.and]: [
-            { fisik: { [Op.like]: `%${fisik}%` } },
-            { kondisi: { [Op.like]: `%${kondisi}%` } }
-          ]
+
+      if (kondisi === '') {
+        const result = await status_stock.findAll({
+          where: {
+            fisik: fisik
+          }
+        })
+        if (result) {
+          return response(res, 'success get status stock', { result })
+        } else {
+          return response(res, 'failed get status stock', {}, 404, false)
         }
-      })
+      } else {
+        const result = await status_stock.findAll({
+          where: {
+            [Op.and]: [
+              { fisik: { [Op.like]: `%${fisik}%` } },
+              { kondisi: { [Op.like]: `%${kondisi}%` } }
+            ]
+          }
+        })
+        if (result) {
+          return response(res, 'success get status stock', { result })
+        } else {
+          return response(res, 'failed get status stock', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getStatusAll: async (req, res) => {
+    try {
+      const result = await status_stock.findAll()
       if (result) {
         return response(res, 'success get status stock', { result })
       } else {
@@ -822,38 +851,114 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  rekapStock: async (req, res) => {
+    try {
+      const findCond = await status_stock.findAll()
+      if (findCond.length > 0) {
+        const data = []
+        for (let i = 0; i < findCond.length; i++) {
+          const result = await stock.findAll({
+            where: {
+              grouping: findCond.status
+            }
+          })
+          if (result.length > 0) {
+            data.push(result)
+          }
+        }
+        return response(res, 'success rekap', { data })
+      } else {
+        return response(res, 'failed get rekap stock', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getReportAll: async (req, res) => {
+    try {
+      let { limit, page, search, sort, group } = req.query
+      let searchValue = ''
+      let sortValue = ''
+      if (typeof search === 'object') {
+        searchValue = Object.values(search)[0]
+      } else {
+        searchValue = search || ''
+      }
+      if (typeof sort === 'object') {
+        sortValue = Object.values(sort)[0]
+      } else {
+        sortValue = sort || 'id'
+      }
+      if (!limit) {
+        limit = 12
+      } else {
+        limit = parseInt(limit)
+      }
+      if (!page) {
+        page = 1
+      } else {
+        page = parseInt(page)
+      }
+      if (!group) {
+        group = ''
+      }
+      const findClose = await clossing.findAll({
+        where: {
+          jenis: 'stock'
+        }
+      })
+      if (findClose.length > 0) {
+        const time = moment().format('L').split('/')
+        let start = ''
+        let end = ''
+        if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+          const next = moment().subtract(1, 'month').format('L').split('/')
+          end = `${time[2]}-${time[0]}-${findClose[0].end}`
+          start = `${next[2]}-${next[0]}-${findClose[0].start}`
+        } else {
+          const next = moment().add(1, 'month').format('L').split('/')
+          start = `${time[2]}-${time[0]}-${findClose[0].start}`
+          end = `${next[2]}-${next[0]}-${findClose[0].end}`
+        }
+        const result = await stock.findAndCountAll({
+          where: {
+            grouping: { [Op.like]: `%${group}%` },
+            [Op.and]: [
+              { status_form: 9 },
+              {
+                tanggalStock: {
+                  [Op.lte]: end,
+                  [Op.gte]: start
+                }
+              }
+            ],
+            [Op.or]: [
+              { no_asset: { [Op.like]: `%${searchValue}%` } },
+              { deskripsi: { [Op.like]: `%${searchValue}%` } },
+              { keterangan: { [Op.like]: `%${searchValue}%` } },
+              { merk: { [Op.like]: `%${searchValue}%` } },
+              { satuan: { [Op.like]: `%${searchValue}%` } },
+              { unit: { [Op.like]: `%${searchValue}%` } },
+              { kondisi: { [Op.like]: `%${searchValue}%` } },
+              { lokasi: { [Op.like]: `%${searchValue}%` } }
+            ]
+          },
+          order: [[sortValue, 'ASC']],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/stock/get', req.query, page, limit, result.count.length)
+        if (result) {
+          return response(res, 'list stock', { result, pageInfo })
+        } else {
+          return response(res, 'failed get data stock', {}, 404, false)
+        }
+      } else {
+        return response(res, 'tolong buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
-  // ,
-  // reportStock: async (req, res) => {
-  //   try {
-  //     let { tipe, sort } = req.query
-  //     if (!tipe) {
-  //       tipe = 'rekap'
-  //     }
-  //     if (!sort) {
-  //       sort = ''
-  //     }
-  //     if (tipe === 'rekap') {
-  //       const findCond = await status_stock.findAll()
-  //       if (findCond.length > 0) {
-  //         for (let i = 0; i < findCond.length; i++) {
-  //           const result = await stock.findAll({
-  //             where: {
-  //               grouping: findCond.status
-  //             }
-  //           })
-  //           if (result.length > 0) {
-
-  //           }
-  //         }
-  //       } else {
-  //         return response(res, 'failed get rekap stock', {}, 404, false)
-  //       }
-  //     } else {
-
-  //     }
-  //   } catch (error) {
-  //     return response(res, error.message, {}, 500, false)
-  //   }
-  // }
 }

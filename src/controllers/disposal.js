@@ -428,15 +428,32 @@ module.exports = {
   getDetailDisposal: async (req, res) => {
     try {
       const nomor = req.params.nomor
-      const result = await disposal.findAll({
-        where: {
-          no_disposal: nomor
+      let { tipe } = req.query
+      if (!tipe) {
+        tipe = 'pengajuan'
+      }
+      if (tipe === 'persetujuan') {
+        const result = await disposal.findAll({
+          where: {
+            status_app: nomor
+          }
+        })
+        if (result.length > 0) {
+          return response(res, 'succesfully get detail disposal', { result })
+        } else {
+          return response(res, 'failed get detail disposal', {}, 404, false)
         }
-      })
-      if (result.length > 0) {
-        return response(res, 'succesfully get detail disposal', { result })
       } else {
-        return response(res, 'failed get detail disposal', {}, 404, false)
+        const result = await disposal.findAll({
+          where: {
+            no_disposal: nomor
+          }
+        })
+        if (result.length > 0) {
+          return response(res, 'succesfully get detail disposal', { result })
+        } else {
+          return response(res, 'failed get detail disposal', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -1098,43 +1115,7 @@ module.exports = {
             if (result.length > 0) {
               return response(res, 'success get document', { result })
             } else {
-              const getDoc = await document.findAll({
-                where: {
-                  [Op.and]: [
-                    { tipe_dokumen: tipeDoValue },
-                    { tipe: tipeValue }
-                  ],
-                  [Op.or]: [
-                    { jenis_dokumen: results.kategori },
-                    { jenis_dokumen: 'all' }
-                  ]
-                }
-              })
-              if (getDoc) {
-                const hasil = []
-                for (let i = 0; i < getDoc.length; i++) {
-                  const send = {
-                    nama_dokumen: getDoc[i].nama_dokumen,
-                    jenis_dokumen: getDoc[i].jenis_dokumen,
-                    divisi: getDoc[i].divisi,
-                    no_pengadaan: no,
-                    jenis_form: tipeDoValue,
-                    tipe: getDoc[i].tipeValue,
-                    path: null
-                  }
-                  const make = await docUser.create(send)
-                  if (make) {
-                    hasil.push(make)
-                  }
-                }
-                if (hasil.length === getDoc.length) {
-                  return response(res, 'success get document', { result: hasil })
-                } else {
-                  return response(res, 'failed get data', {}, 404, false)
-                }
-              } else {
-                return response(res, 'failed get data', {}, 404, false)
-              }
+              return response(res, 'failed get data', {}, 404, false)
             }
           } else {
             const findNpwp = await document.findOne({
@@ -1163,13 +1144,10 @@ module.exports = {
               if (make) {
                 const result = await docUser.findAll({
                   where: {
-                    [Op.and]: [
-                      { no_pengadaan: no },
-                      { jenis_form: tipeDoValue }
-                    ],
+                    no_pengadaan: no,
                     [Op.or]: [
-                      { tipe: tipeValue },
-                      { tipe: 'npwp' }
+                      { jenis_form: tipeDoValue },
+                      { tipe: tipeValue }
                     ]
                   }
                 })
@@ -1206,7 +1184,23 @@ module.exports = {
                       }
                     }
                     if (hasil.length === getDoc.length) {
-                      return response(res, 'success get document', { result: hasil })
+                      const result = await docUser.findAll({
+                        where: {
+                          [Op.and]: [
+                            { no_pengadaan: no },
+                            { jenis_form: tipeDoValue }
+                          ],
+                          [Op.or]: [
+                            { tipe: tipeValue },
+                            { tipe: 'npwp' }
+                          ]
+                        }
+                      })
+                      if (result.length > 0) {
+                        return response(res, 'success get document', { result })
+                      } else {
+                        return response(res, 'failed get data', {}, 404, false)
+                      }
                     } else {
                       return response(res, 'failed get data 3', {}, 404, false)
                     }
