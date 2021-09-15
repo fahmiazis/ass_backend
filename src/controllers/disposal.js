@@ -1144,10 +1144,13 @@ module.exports = {
               if (make) {
                 const result = await docUser.findAll({
                   where: {
-                    no_pengadaan: no,
+                    [Op.and]: [
+                      { no_pengadaan: no },
+                      { jenis_form: tipeDoValue }
+                    ],
                     [Op.or]: [
-                      { jenis_form: tipeDoValue },
-                      { tipe: tipeValue }
+                      { tipe: tipeValue },
+                      { tipe: 'npwp' }
                     ]
                   }
                 })
@@ -1215,7 +1218,7 @@ module.exports = {
               return response(res, 'failed get data npwp', {}, 404, false)
             }
           }
-        } else if (findAsset.npwp === 'tidak') {
+        } else {
           const findDoc = await docUser.findOne({
             where: {
               [Op.and]: [
@@ -1330,57 +1333,6 @@ module.exports = {
               } else {
                 return response(res, 'failed get data', {}, 404, false)
               }
-            }
-          }
-        } else {
-          const result = await docUser.findAll({
-            where: {
-              no_pengadaan: no,
-              [Op.and]: [
-                { jenis_form: tipeDoValue },
-                { tipe: tipeValue }
-              ]
-            }
-          })
-          if (result.length > 0) {
-            return response(res, 'success get document', { result })
-          } else {
-            const getDoc = await document.findAll({
-              where: {
-                [Op.and]: [
-                  { tipe_dokumen: tipeDoValue },
-                  { tipe: tipeValue }
-                ],
-                [Op.or]: [
-                  { jenis_dokumen: results.kategori },
-                  { jenis_dokumen: 'all' }
-                ]
-              }
-            })
-            if (getDoc) {
-              const hasil = []
-              for (let i = 0; i < getDoc.length; i++) {
-                const send = {
-                  nama_dokumen: getDoc[i].nama_dokumen,
-                  jenis_dokumen: getDoc[i].jenis_dokumen,
-                  divisi: getDoc[i].divisi,
-                  no_pengadaan: no,
-                  jenis_form: tipeDoValue,
-                  tipe: tipeValue,
-                  path: null
-                }
-                const make = await docUser.create(send)
-                if (make) {
-                  hasil.push(make)
-                }
-              }
-              if (hasil.length === getDoc.length) {
-                return response(res, 'success get document', { result: hasil })
-              } else {
-                return response(res, 'failed get data', {}, 404, false)
-              }
-            } else {
-              return response(res, 'failed get data', {}, 404, false)
             }
           }
         }
@@ -2048,43 +2000,81 @@ module.exports = {
                 return response(res, 'failed submit disposal', {}, 400, false)
               }
             } else {
-              return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+              return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
             }
           } else {
-            return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+            return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
           }
         } else {
-          const findDoc = await docUser.findAll({
-            where: {
-              no_pengadaan: result.no_asset,
-              [Op.and]: [
-                { jenis_form: 'disposal' },
-                { tipe: 'sell' }
-              ]
-            }
-          })
-          if (findDoc.length > 0) {
-            const cek = []
-            for (let i = 0; i < findDoc.length; i++) {
-              if (findDoc[i].path !== null) {
-                cek.push(1)
+          if (result.npwp === 'ada') {
+            const findDoc = await docUser.findAll({
+              where: {
+                [Op.and]: [
+                  { no_pengadaan: result.no_asset },
+                  { jenis_form: 'disposal' }
+                ],
+                [Op.or]: [
+                  { tipe: 'sell' },
+                  { tipe: 'npwp' }
+                ]
               }
-            }
-            if (cek.length === findDoc.length) {
-              const data = {
-                status_form: level === 5 ? 5 : 6
+            })
+            if (findDoc.length > 0) {
+              const cek = []
+              for (let i = 0; i < findDoc.length; i++) {
+                if (findDoc[i].path !== null) {
+                  cek.push(1)
+                }
               }
-              const results = await result.update(data)
-              if (results) {
-                return response(res, 'success submit eksekusi disposal')
+              if (cek.length === findDoc.length) {
+                const data = {
+                  status_form: level === 5 ? 5 : 6
+                }
+                const results = await result.update(data)
+                if (results) {
+                  return response(res, 'success submit eksekusi disposal')
+                } else {
+                  return response(res, 'failed submit disposal', {}, 400, false)
+                }
               } else {
-                return response(res, 'failed submit disposal', {}, 400, false)
+                return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
               }
             } else {
-              return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+              return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
             }
           } else {
-            return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+            const findDoc = await docUser.findAll({
+              where: {
+                no_pengadaan: result.no_asset,
+                [Op.and]: [
+                  { jenis_form: 'disposal' },
+                  { tipe: 'sell' }
+                ]
+              }
+            })
+            if (findDoc.length > 0) {
+              const cek = []
+              for (let i = 0; i < findDoc.length; i++) {
+                if (findDoc[i].path !== null) {
+                  cek.push(1)
+                }
+              }
+              if (cek.length === findDoc.length) {
+                const data = {
+                  status_form: level === 5 ? 5 : 6
+                }
+                const results = await result.update(data)
+                if (results) {
+                  return response(res, 'success submit eksekusi disposal')
+                } else {
+                  return response(res, 'failed submit disposal', {}, 400, false)
+                }
+              } else {
+                return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+              }
+            } else {
+              return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+            }
           }
         }
       } else {
@@ -2197,10 +2187,10 @@ module.exports = {
               return response(res, 'failed submit disposal', {}, 400, false)
             }
           } else {
-            return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+            return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
           }
         } else {
-          return response(res, 'Tolong upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+          return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
         }
       } else {
         return response(res, 'failed submit disposal', {}, 400, false)
