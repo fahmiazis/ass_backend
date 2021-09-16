@@ -279,6 +279,11 @@ module.exports = {
             [Op.and]: [
               { kode_plant: kode },
               { status_form: status }
+            ],
+            [Op.or]: [
+              { status_form: status },
+              { status_form: status === 2 ? 9 : status },
+              { status_form: status === 2 ? 26 : status }
             ]
           },
           include: [
