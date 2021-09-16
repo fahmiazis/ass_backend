@@ -585,155 +585,333 @@ module.exports = {
         if (find.length > 0) {
           let hasil = 0
           let arr = null
+          let position = ''
           for (let i = 0; i < find.length; i++) {
             if (result[0].name === find[i].jabatan) {
               hasil = find[i].id
               arr = i
+              position = find[i].jabatan
             }
           }
-          if (hasil !== 0) {
-            if (arr === 0 || find[arr - 1].status === 1) {
-              const data = {
-                nama: name,
-                status: 1,
-                path: null
-              }
-              const findTtd = await ttd.findByPk(hasil)
-              if (findTtd) {
-                const sent = await findTtd.update(data)
-                if (sent) {
-                  const results = await ttd.findAll({
-                    where: {
-                      [Op.and]: [
-                        { no_doc: no },
-                        { status: 1 }
-                      ]
-                    }
-                  })
-                  if (results.length === find.length) {
-                    const findDoc = await disposal.findAll({
+          if (position === 'BM' || position === 'asset') {
+            if (hasil !== 0) {
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const findDisposal = await disposal.findAll({
+                  where: {
+                    no_disposal: no
+                  }
+                })
+                if (findDisposal.length > 0) {
+                  const dataLength = []
+                  const cekfile = []
+                  for (let i = 0; i < findDisposal.length; i++) {
+                    const findFile = await docUser.findAll({
                       where: {
-                        no_disposal: no
+                        no_pengadaan: findDisposal[i].no_asset,
+                        [Op.and]: [
+                          { jenis_form: 'disposal' },
+                          { tipe: 'pengajuan' }
+                        ]
                       }
                     })
-                    if (findDoc) {
-                      const data = {
-                        status_form: 9
-                      }
-                      const valid = []
-                      for (let i = 0; i < findDoc.length; i++) {
-                        const findAsset = await disposal.findByPk(findDoc[i].id)
-                        if (findAsset) {
-                          await findAsset.update(data)
-                          valid.push(1)
+                    if (findFile.length > 0) {
+                      if (position === 'BM') {
+                        for (let j = 0; j < findFile.length; j++) {
+                          dataLength.push(1)
+                          if (findFile[j].status === 3) {
+                            cekfile.push(1)
+                          }
+                        }
+                      } else {
+                        for (let j = 0; j < findFile.length; j++) {
+                          dataLength.push(1)
+                          if (findFile[j].divisi === '3') {
+                            cekfile.push(1)
+                          }
                         }
                       }
-                      if (valid.length === findDoc.length) {
-                        return response(res, 'success approve form disposal')
-                      }
                     }
-                  } else {
-                    const findDoc = await disposal.findOne({
-                      where: {
-                        no_disposal: no
-                      }
-                    })
+                  }
+                  if (cekfile.length === dataLength.length) {
                     const data = {
-                      nama: findDoc.kode_plant,
+                      nama: name,
                       status: 1,
                       path: null
                     }
-                    if (findDoc) {
-                      const findAos = await ttd.findByPk(find[0].id)
-                      const findRole = await role.findAll({
-                        where: {
-                          name: find[arr + 1].jabatan
-                        }
-                      })
-                      if (findRole.length > 0) {
-                        await findAos.update(data)
-                        const findUser = await user.findOne({
+                    const findTtd = await ttd.findByPk(hasil)
+                    if (findTtd) {
+                      const sent = await findTtd.update(data)
+                      if (sent) {
+                        const results = await ttd.findAll({
                           where: {
-                            user_level: findRole[0].nomor
+                            [Op.and]: [
+                              { no_doc: no },
+                              { status: 1 }
+                            ]
                           }
                         })
-                        if (findUser) {
-                          const mailOptions = {
-                            from: 'noreply_asset@pinusmerahabadi.co.id',
-                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                            to: `${findUser.email}`,
-                            subject: 'Approve',
-                            html: `<body>
-                                      <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
-                                      <div style="margin-bottom: 5px;">Mohon untuk approve pengajuan disposal asset area.</div>
-                                      <div style="margin-bottom: 20px;"></div>
-                                      <div style="margin-bottom: 30px;">Best Regard,</div>
-                                      <div>Team Asset</div>
-                                  </body>`
-                          }
-                          //   const mailOptions = {
-                          //     from: `${result.email_ho_pic}`,
-                          //     replyTo: `${result.email_ho_pic}`,
-                          //     to: `${result.email_aos}`,
-                          //     cc: `${result.email_sa_kasir}, ${result.email_ho_pic}`,
-                          //     subject: 'Rejected Dokumen',
-                          //     html: `<body>
-                          //     <div style="margin-top: 20px; margin-bottom: 20px;">Dear Bapak/Ibu AOS</div>
-                          //     <div style="margin-bottom: 10px;">Report has been verified by Team Accounting with the following list:</div>
-                          //     <table style="border-collapse: collapse; margin-bottom: 20px;">
-                          //           <tr style="height: 75px;">
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">No</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nomor Aset</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nama Barang</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Merk / Type</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Kategori</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cabang / depo</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cost Center</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Buku</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Jual</th>
-                          //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Keterangan</th>
-                          //           </tr>
-                          //           <tr style="height: 50px;">
-                          //             <th scope="row" style='border: 1px solid black;'>1</th>
-                          //             <td style='border: 1px solid black;'>find.nama_depo}</td>
-                          //             <td style='border: 1px solid black;'>dok.dokumen}</td>
-                          //             <td style='border: 1px solid black;'>act.jenis_dokumen}</td>
-                          //             <td style='border: 1px solid black;'>moment(act.createdAt).subtract(1, 'day').format('DD-MM-YYYY')}</td>
-                          //             <td style='border: 1px solid black;'>moment(dok.createdAt).format('DD-MM-YYYY')}</td>
-                          //             <td style='border: 1px solid black;'>moment(dok.updatedAt).format('DD-MM-YYYY')}</td>
-                          //             <td style='border: 1px solid black;'>Rejected</td>
-                          //             <td style='border: 1px solid black;'>dok.alasan}</td>
-                          //           </tr>
-                          //     </table>
-                          //     <a href="http://trial.pinusmerahabadi.co.id:3000/">With the following link</a>
-                          //     <div style="margin-top: 20px;">Thank you.</div>
-                          // </body>
-                          //     `
-                          //   }
-                          mailer.sendMail(mailOptions, (error, result) => {
-                            if (error) {
-                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                            } else if (result) {
-                              return response(res, 'success approve disposal')
+                        if (results.length === find.length) {
+                          const findDoc = await disposal.findAll({
+                            where: {
+                              no_disposal: no
                             }
                           })
+                          if (findDoc) {
+                            const data = {
+                              status_form: 9
+                            }
+                            const valid = []
+                            for (let i = 0; i < findDoc.length; i++) {
+                              const findAsset = await disposal.findByPk(findDoc[i].id)
+                              if (findAsset) {
+                                await findAsset.update(data)
+                                valid.push(1)
+                              }
+                            }
+                            if (valid.length === findDoc.length) {
+                              return response(res, 'success approve form disposal')
+                            }
+                          }
                         } else {
-                          return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                          const findDoc = await disposal.findOne({
+                            where: {
+                              no_disposal: no
+                            }
+                          })
+                          if (findDoc) {
+                            const findRole = await role.findAll({
+                              where: {
+                                name: find[arr + 1].jabatan
+                              }
+                            })
+                            if (findRole.length > 0) {
+                              const findUser = await user.findOne({
+                                where: {
+                                  user_level: findRole[0].nomor
+                                }
+                              })
+                              if (findUser) {
+                                const mailOptions = {
+                                  from: 'noreply_asset@pinusmerahabadi.co.id',
+                                  replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                  to: `${findUser.email}`,
+                                  subject: 'Approve',
+                                  html: `<body>
+                                            <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
+                                            <div style="margin-bottom: 5px;">Mohon untuk approve pengajuan disposal asset area.</div>
+                                            <div style="margin-bottom: 20px;"></div>
+                                            <div style="margin-bottom: 30px;">Best Regard,</div>
+                                            <div>Team Asset</div>
+                                        </body>`
+                                }
+                                //   const mailOptions = {
+                                //     from: `${result.email_ho_pic}`,
+                                //     replyTo: `${result.email_ho_pic}`,
+                                //     to: `${result.email_aos}`,
+                                //     cc: `${result.email_sa_kasir}, ${result.email_ho_pic}`,
+                                //     subject: 'Rejected Dokumen',
+                                //     html: `<body>
+                                //     <div style="margin-top: 20px; margin-bottom: 20px;">Dear Bapak/Ibu AOS</div>
+                                //     <div style="margin-bottom: 10px;">Report has been verified by Team Accounting with the following list:</div>
+                                //     <table style="border-collapse: collapse; margin-bottom: 20px;">
+                                //           <tr style="height: 75px;">
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">No</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nomor Aset</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nama Barang</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Merk / Type</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Kategori</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cabang / depo</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cost Center</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Buku</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Jual</th>
+                                //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Keterangan</th>
+                                //           </tr>
+                                //           <tr style="height: 50px;">
+                                //             <th scope="row" style='border: 1px solid black;'>1</th>
+                                //             <td style='border: 1px solid black;'>find.nama_depo}</td>
+                                //             <td style='border: 1px solid black;'>dok.dokumen}</td>
+                                //             <td style='border: 1px solid black;'>act.jenis_dokumen}</td>
+                                //             <td style='border: 1px solid black;'>moment(act.createdAt).subtract(1, 'day').format('DD-MM-YYYY')}</td>
+                                //             <td style='border: 1px solid black;'>moment(dok.createdAt).format('DD-MM-YYYY')}</td>
+                                //             <td style='border: 1px solid black;'>moment(dok.updatedAt).format('DD-MM-YYYY')}</td>
+                                //             <td style='border: 1px solid black;'>Rejected</td>
+                                //             <td style='border: 1px solid black;'>dok.alasan}</td>
+                                //           </tr>
+                                //     </table>
+                                //     <a href="http://trial.pinusmerahabadi.co.id:3000/">With the following link</a>
+                                //     <div style="margin-top: 20px;">Thank you.</div>
+                                // </body>
+                                //     `
+                                //   }
+                                mailer.sendMail(mailOptions, (error, result) => {
+                                  if (error) {
+                                    return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
+                                  } else if (result) {
+                                    return response(res, 'success approve disposal')
+                                  }
+                                })
+                              } else {
+                                return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                              }
+                            }
+                          }
                         }
+                      } else {
+                        return response(res, 'failed approve disposal', {}, 404, false)
                       }
+                    } else {
+                      return response(res, 'failed approve disposal', {}, 404, false)
                     }
+                  } else {
+                    return response(res, 'approve dokumen lampiran pengajuan terlebih dahulu', {}, 404, false)
                   }
                 } else {
                   return response(res, 'failed approve disposal', {}, 404, false)
                 }
               } else {
-                return response(res, 'failed approve disposal', {}, 404, false)
+                return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
               }
             } else {
-              return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
+              return response(res, 'failed approve disposal', {}, 404, false)
             }
           } else {
-            return response(res, 'failed approve disposal', {}, 404, false)
+            if (hasil !== 0) {
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const data = {
+                  nama: name,
+                  status: 1,
+                  path: null
+                }
+                const findTtd = await ttd.findByPk(hasil)
+                if (findTtd) {
+                  const sent = await findTtd.update(data)
+                  if (sent) {
+                    const results = await ttd.findAll({
+                      where: {
+                        [Op.and]: [
+                          { no_doc: no },
+                          { status: 1 }
+                        ]
+                      }
+                    })
+                    if (results.length === find.length) {
+                      const findDoc = await disposal.findAll({
+                        where: {
+                          no_disposal: no
+                        }
+                      })
+                      if (findDoc) {
+                        const data = {
+                          status_form: 9
+                        }
+                        const valid = []
+                        for (let i = 0; i < findDoc.length; i++) {
+                          const findAsset = await disposal.findByPk(findDoc[i].id)
+                          if (findAsset) {
+                            await findAsset.update(data)
+                            valid.push(1)
+                          }
+                        }
+                        if (valid.length === findDoc.length) {
+                          return response(res, 'success approve form disposal')
+                        }
+                      }
+                    } else {
+                      const findDoc = await disposal.findOne({
+                        where: {
+                          no_disposal: no
+                        }
+                      })
+                      if (findDoc) {
+                        const findRole = await role.findAll({
+                          where: {
+                            name: find[arr + 1].jabatan
+                          }
+                        })
+                        if (findRole.length > 0) {
+                          const findUser = await user.findOne({
+                            where: {
+                              user_level: findRole[0].nomor
+                            }
+                          })
+                          if (findUser) {
+                            const mailOptions = {
+                              from: 'noreply_asset@pinusmerahabadi.co.id',
+                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                              to: `${findUser.email}`,
+                              subject: 'Approve',
+                              html: `<body>
+                                        <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
+                                        <div style="margin-bottom: 5px;">Mohon untuk approve pengajuan disposal asset area.</div>
+                                        <div style="margin-bottom: 20px;"></div>
+                                        <div style="margin-bottom: 30px;">Best Regard,</div>
+                                        <div>Team Asset</div>
+                                    </body>`
+                            }
+                            //   const mailOptions = {
+                            //     from: `${result.email_ho_pic}`,
+                            //     replyTo: `${result.email_ho_pic}`,
+                            //     to: `${result.email_aos}`,
+                            //     cc: `${result.email_sa_kasir}, ${result.email_ho_pic}`,
+                            //     subject: 'Rejected Dokumen',
+                            //     html: `<body>
+                            //     <div style="margin-top: 20px; margin-bottom: 20px;">Dear Bapak/Ibu AOS</div>
+                            //     <div style="margin-bottom: 10px;">Report has been verified by Team Accounting with the following list:</div>
+                            //     <table style="border-collapse: collapse; margin-bottom: 20px;">
+                            //           <tr style="height: 75px;">
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">No</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nomor Aset</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nama Barang</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Merk / Type</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Kategori</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cabang / depo</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cost Center</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Buku</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Jual</th>
+                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Keterangan</th>
+                            //           </tr>
+                            //           <tr style="height: 50px;">
+                            //             <th scope="row" style='border: 1px solid black;'>1</th>
+                            //             <td style='border: 1px solid black;'>find.nama_depo}</td>
+                            //             <td style='border: 1px solid black;'>dok.dokumen}</td>
+                            //             <td style='border: 1px solid black;'>act.jenis_dokumen}</td>
+                            //             <td style='border: 1px solid black;'>moment(act.createdAt).subtract(1, 'day').format('DD-MM-YYYY')}</td>
+                            //             <td style='border: 1px solid black;'>moment(dok.createdAt).format('DD-MM-YYYY')}</td>
+                            //             <td style='border: 1px solid black;'>moment(dok.updatedAt).format('DD-MM-YYYY')}</td>
+                            //             <td style='border: 1px solid black;'>Rejected</td>
+                            //             <td style='border: 1px solid black;'>dok.alasan}</td>
+                            //           </tr>
+                            //     </table>
+                            //     <a href="http://trial.pinusmerahabadi.co.id:3000/">With the following link</a>
+                            //     <div style="margin-top: 20px;">Thank you.</div>
+                            // </body>
+                            //     `
+                            //   }
+                            mailer.sendMail(mailOptions, (error, result) => {
+                              if (error) {
+                                return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
+                              } else if (result) {
+                                return response(res, 'success approve disposal')
+                              }
+                            })
+                          } else {
+                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                          }
+                        }
+                      }
+                    }
+                  } else {
+                    return response(res, 'failed approve disposal', {}, 404, false)
+                  }
+                } else {
+                  return response(res, 'failed approve disposal', {}, 404, false)
+                }
+              } else {
+                return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed approve disposal', {}, 404, false)
+            }
           }
         } else {
           return response(res, 'failed approve disposal', {}, 404, false)
@@ -1425,14 +1603,24 @@ module.exports = {
   approveDokumen: async (req, res) => {
     try {
       const id = req.params.id
+      const level = req.user.level
       const result = await docUser.findByPk(id)
       if (result) {
-        const send = {
-          status: 3,
-          alasan: ''
+        if (level === 2) {
+          const send = {
+            divisi: '3',
+            alasan: ''
+          }
+          const results = await result.update(send)
+          return response(res, 'successfully approve dokumen', { result: results })
+        } else {
+          const send = {
+            status: 3,
+            alasan: ''
+          }
+          const results = await result.update(send)
+          return response(res, 'successfully approve dokumen', { result: results })
         }
-        const results = await result.update(send)
-        return response(res, 'successfully approve dokumen', { result: results })
       } else {
         return response(res, 'failed approve dokumen', {}, 404, false)
       }
@@ -1443,6 +1631,7 @@ module.exports = {
   rejectDokumen: async (req, res) => {
     try {
       const id = req.params.id
+      const level = req.user.level
       const schema = joi.object({
         alasan: joi.string().required()
       })
@@ -1452,15 +1641,28 @@ module.exports = {
       } else {
         const result = await docUser.findByPk(id)
         if (result) {
-          const send = {
-            alasan: results.alasan,
-            status: 0
-          }
-          const reject = await result.update(send)
-          if (reject) {
-            return response(res, 'successfully reject dokumen', { result: reject })
+          if (level === 2) {
+            const send = {
+              alasan: results.alasan,
+              divisi: '0'
+            }
+            const reject = await result.update(send)
+            if (reject) {
+              return response(res, 'successfully reject dokumen', { result: reject })
+            } else {
+              return response(res, 'failed reject dokumen', {}, 404, false)
+            }
           } else {
-            return response(res, 'failed reject dokumen', {}, 404, false)
+            const send = {
+              alasan: results.alasan,
+              status: 0
+            }
+            const reject = await result.update(send)
+            if (reject) {
+              return response(res, 'successfully reject dokumen', { result: reject })
+            } else {
+              return response(res, 'failed reject dokumen', {}, 404, false)
+            }
           }
         } else {
           return response(res, 'failed reject dokumen', {}, 404, false)
