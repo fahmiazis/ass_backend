@@ -276,10 +276,7 @@ module.exports = {
       } else if (level === 5) {
         const result = await disposal.findAndCountAll({
           where: {
-            [Op.and]: [
-              { kode_plant: kode },
-              { status_form: status }
-            ],
+            kode_plant: kode,
             [Op.or]: [
               { status_form: status },
               { status_form: status === 2 ? 9 : status },
@@ -1593,7 +1590,8 @@ module.exports = {
         if (result) {
           const send = {
             status: 1,
-            path: dokumen
+            path: dokumen,
+            divisi: 'asset'
           }
           await result.update(send)
           return response(res, 'successfully upload dokumen', { send })
@@ -2214,11 +2212,10 @@ module.exports = {
           }
         } else {
           if (result.npwp === 'ada') {
-            const findDoc = await docUser.findAll({
+            const findTemp = await document.findAll({
               where: {
                 [Op.and]: [
-                  { no_pengadaan: result.no_asset },
-                  { jenis_form: 'disposal' }
+                  { tipe_dokumen: 'disposal' }
                 ],
                 [Op.or]: [
                   { tipe: 'sell' },
@@ -2226,28 +2223,48 @@ module.exports = {
                 ]
               }
             })
-            if (findDoc.length > 0) {
-              const cek = []
-              for (let i = 0; i < findDoc.length; i++) {
-                if (findDoc[i].path !== null) {
-                  cek.push(1)
+            if (findTemp.length > 0) {
+              const findDoc = await docUser.findAll({
+                where: {
+                  [Op.and]: [
+                    { no_pengadaan: result.no_asset },
+                    { jenis_form: 'disposal' }
+                  ],
+                  [Op.or]: [
+                    { tipe: 'sell' },
+                    { tipe: 'npwp' }
+                  ]
                 }
-              }
-              if (cek.length === findDoc.length) {
-                const data = {
-                  status_form: level === 5 ? 5 : 6
-                }
-                const results = await result.update(data)
-                if (results) {
-                  return response(res, 'success submit eksekusi disposal')
+              })
+              if (findDoc.length > 0) {
+                if (findTemp.length === findDoc.length) {
+                  const cek = []
+                  for (let i = 0; i < findDoc.length; i++) {
+                    if (findDoc[i].path !== null) {
+                      cek.push(1)
+                    }
+                  }
+                  if (cek.length === findDoc.length) {
+                    const data = {
+                      status_form: level === 5 ? 5 : 6
+                    }
+                    const results = await result.update(data)
+                    if (results) {
+                      return response(res, 'success submit eksekusi disposal')
+                    } else {
+                      return response(res, 'failed submit disposal', {}, 400, false)
+                    }
+                  } else {
+                    return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+                  }
                 } else {
-                  return response(res, 'failed submit disposal', {}, 400, false)
+                  return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
                 }
               } else {
                 return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
               }
             } else {
-              return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+              return response(res, 'failed submit disposal', {}, 400, false)
             }
           } else {
             const findDoc = await docUser.findAll({
