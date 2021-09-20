@@ -189,6 +189,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
+      const fullname = req.user.fullname
       let { limit, page, search, sort, status, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -217,7 +218,7 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level !== 5) {
+      if (level !== 5 && level !== 12 && level !== 7) {
         const result = await disposal.findAndCountAll({
           where: {
             [Op.or]: [
@@ -292,6 +293,72 @@ module.exports = {
         })
         if (result) {
           return response(res, 'success get disposal', { result })
+        } else {
+          return response(res, 'failed get disposal', {}, 400, false)
+        }
+      } else if (level === 12 || level === 7) {
+        const findDepo = await depo.findAll({
+          where: {
+            [Op.or]: [
+              { nama_bm: level === 7 ? null : fullname },
+              { nama_om: level === 12 ? null : fullname }
+            ]
+          }
+        })
+        if (findDepo.length > 0) {
+          const hasil = []
+          for (let i = 0; i < findDepo.length; i++) {
+            const result = await disposal.findAll({
+              where: {
+                kode_plant: findDepo[i].kode_plant,
+                [Op.or]: [
+                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                  { kategori: { [Op.like]: `%${searchValue}%` } },
+                  { keterangan: { [Op.like]: `%${searchValue}%` } }
+                ],
+                [Op.or]: [
+                  { status_form: status },
+                  { status_form: status === 2 ? 9 : status },
+                  { status_form: status === 2 ? 26 : status }
+                ]
+              },
+              order: [['id', 'ASC']],
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                }
+              ]
+            })
+            if (result.length > 0) {
+              for (let j = 0; j < result.length; j++) {
+                hasil.push(result[j])
+              }
+            }
+          }
+          if (hasil.length > 0) {
+            const data = []
+            hasil.map(x => {
+              return (
+                data.push(x.no_disposal)
+              )
+            })
+            const set = new Set(data)
+            const noDis = [...set]
+            const result = { rows: hasil, count: hasil.length }
+            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+            return response(res, 'success get disposal', { result, pageInfo, noDis, findDepo })
+          } else {
+            const result = { rows: hasil, count: 0 }
+            const noDis = []
+            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
+          }
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
         }

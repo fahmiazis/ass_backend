@@ -19,11 +19,11 @@ module.exports = {
       } else {
         const result = await user.findOne({ where: { username: results.username } })
         if (result) {
-          const { id, kode_plant, user_level, username } = result
+          const { id, kode_plant, user_level, username, fullname, email } = result
           bcrypt.compare(results.password, result.password, function (_err, result) {
             if (result) {
-              jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username }, `${APP_KEY}`, (_err, token) => {
-                return response(res, 'login success', { user: { id, kode_plant, user_level, username }, Token: `${token}` })
+              jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname }, `${APP_KEY}`, (_err, token) => {
+                return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email }, Token: `${token}` })
               })
             } else {
               return response(res, 'Wrong password', {}, 400, false)

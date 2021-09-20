@@ -19,6 +19,7 @@ module.exports = {
       const schema = joi.object({
         username: joi.string().required(),
         email: joi.string().email().required(),
+        fullname: joi.string().required(),
         password: joi.string().required(),
         kode_plant: joi.string().allow(''),
         user_level: joi.number().required(),
@@ -121,17 +122,19 @@ module.exports = {
       const id = req.params.id
       const schema = joi.object({
         username: joi.string(),
+        fullname: joi.string(),
         password: joi.string().allow(''),
         kode_plant: joi.string().allow(''),
         user_level: joi.number(),
+        email: joi.string().email(),
         status: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
-        if (level === 1) {
-          if (results.kode_plant) {
+        if (level !== 0) {
+          if (level === 5) {
             const result = await user.findAll({
               where: {
                 [Op.and]: [
@@ -144,17 +147,46 @@ module.exports = {
             if (result.length > 0) {
               return response(res, 'kode depo and user level already use', {}, 404, false)
             } else {
-              if (results.username) {
-                const result = await user.findAll({
-                  where: {
-                    username: results.username,
-                    [Op.not]: { id: id }
+              const result = await user.findAll({
+                where: {
+                  username: results.username,
+                  [Op.not]: { id: id }
+                }
+              })
+              if (result.length > 0) {
+                return response(res, 'username already use', { result }, 404, false)
+              } else {
+                if (results.fullname !== '' || results.fullname) {
+                  const result = await user.findAll({
+                    where: {
+                      fullname: results.fullname,
+                      [Op.not]: { id: id }
+                    }
+                  })
+                  if (result.length > 0) {
+                    return response(res, 'fullname already use', { result }, 404, false)
+                  } else {
+                    if (results.password) {
+                      results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
+                      const result = await user.findByPk(id)
+                      if (result) {
+                        await result.update(results)
+                        return response(res, 'update User succesfully', { result })
+                      } else {
+                        return response(res, 'Fail to update user', {}, 400, false)
+                      }
+                    } else {
+                      const result = await user.findByPk(id)
+                      if (result) {
+                        await result.update(results)
+                        return response(res, 'update User succesfully', { result })
+                      } else {
+                        return response(res, 'Fail to update user', {}, 400, false)
+                      }
+                    }
                   }
-                })
-                if (result.length > 0) {
-                  return response(res, 'username already use', { result }, 404, false)
                 } else {
-                  if (results.password !== '') {
+                  if (results.password) {
                     results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
                     const result = await user.findByPk(id)
                     if (result) {
@@ -176,17 +208,47 @@ module.exports = {
               }
             }
           } else {
-            if (results.username) {
-              const result = await user.findAll({
-                where: {
-                  username: results.username,
-                  [Op.not]: { id: id }
+            const result = await user.findAll({
+              where: {
+                username: results.username,
+                [Op.not]: { id: id }
+              }
+            })
+            if (result.length > 0) {
+              return response(res, 'username already exist', { result }, 404, false)
+            } else {
+              if (results.fullname !== '' || results.fullname) {
+                const result = await user.findAll({
+                  where: {
+                    fullname: results.fullname,
+                    [Op.not]: { id: id }
+                  }
+                })
+                if (result.length > 0) {
+                  return response(res, 'fullname already use', { result }, 404, false)
+                } else {
+                  console.log(results.password)
+                  if (results.password) {
+                    results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
+                    const result = await user.findByPk(id)
+                    if (result) {
+                      await result.update(results)
+                      return response(res, 'update User succesfully', { result })
+                    } else {
+                      return response(res, 'Fail to update user', {}, 400, false)
+                    }
+                  } else {
+                    const result = await user.findByPk(id)
+                    if (result) {
+                      await result.update(results)
+                      return response(res, 'update User succesfully', { result })
+                    } else {
+                      return response(res, 'Fail to update user', {}, 400, false)
+                    }
+                  }
                 }
-              })
-              if (result.length > 0) {
-                return response(res, 'username already exist', { result }, 404, false)
               } else {
-                if (results.password !== '') {
+                if (results.password) {
                   results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
                   const result = await user.findByPk(id)
                   if (result) {
