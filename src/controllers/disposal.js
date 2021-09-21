@@ -558,6 +558,12 @@ module.exports = {
           }
         })
         if (findDis) {
+          const cekIt = []
+          for (let i = 0; i < findDis.length; i++) {
+            if (findDis[i].kategori === 'IT') {
+              cekIt.push(1)
+            }
+          }
           const getDepo = await depo.findOne({
             where: {
               kode_plant: findDis[0].kode_plant
@@ -565,10 +571,14 @@ module.exports = {
           })
           const getApp = await approve.findAll({
             where: {
-              nama_approve: nama
+              nama_approve: nama,
+              [Op.or]: [
+                { jenis: cekIt.length > 0 ? 'it' : 'all' },
+                { jenis: 'all' }
+              ]
             }
           })
-          if (getApp && getDepo) {
+          if (getApp.length > 0 && getDepo) {
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
@@ -679,7 +689,13 @@ module.exports = {
                         no_pengadaan: findDisposal[i].no_asset,
                         [Op.and]: [
                           { jenis_form: 'disposal' },
-                          { tipe: 'pengajuan' }
+                          {
+                            [Op.or]: [
+                              { tipe: 'pengajuan' },
+                              { tipe: findDisposal.nilai_jual === '0' ? 'pengajuan' : 'jual' },
+                              { tipe: findDisposal.nilai_jual === '0' ? 'pengajuan' : 'purch' }
+                            ]
+                          }
                         ]
                       }
                     })
@@ -1775,8 +1791,6 @@ module.exports = {
             }
           })
           if (getApp) {
-            const pembuat = []
-            const penyetuju = []
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
@@ -1788,24 +1802,37 @@ module.exports = {
               }
               const make = await ttd.create(send)
               if (make) {
-                if (make.sebagai === 'pembuat') {
-                  pembuat.push(make)
-                } else if (make.sebagai === 'penyetuju') {
-                  penyetuju.push(make)
-                }
                 hasil.push(make)
               }
             }
             if (hasil.length === getApp.length) {
-              return response(res, 'success get template approve', { result: { pembuat, penyetuju } })
+              const result = await ttd.findAll({
+                where: {
+                  no_set: no
+                }
+              })
+              if (result.length > 0) {
+                const penyetuju = []
+                const pembuat = []
+                for (let i = 0; i < result.length; i++) {
+                  if (result[i].sebagai === 'pembuat') {
+                    pembuat.push(result[i])
+                  } else if (result[i].sebagai === 'penyetuju') {
+                    penyetuju.push(result[i])
+                  }
+                }
+                return response(res, 'success get template approve', { result: { pembuat, penyetuju } })
+              } else {
+                return response(res, 'failed get data approve', {}, 404, false)
+              }
             } else {
-              return response(res, 'failed get data', {}, 404, false)
+              return response(res, 'failed get data approve', {}, 404, false)
             }
           } else {
-            return response(res, 'failed get data', {}, 404, false)
+            return response(res, 'failed get data approve', {}, 404, false)
           }
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data approve', {}, 404, false)
         }
       }
     } catch (error) {
