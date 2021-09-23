@@ -218,7 +218,7 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level !== 5 && level !== 12 && level !== 7) {
+      if (level !== 5 && level !== 12 && level !== 7 && level !== 13) {
         const result = await disposal.findAndCountAll({
           where: {
             [Op.or]: [
@@ -352,7 +352,7 @@ module.exports = {
             const noDis = [...set]
             const result = { rows: hasil, count: hasil.length }
             const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-            return response(res, 'success get disposal', { result, pageInfo, noDis, findDepo })
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
           } else {
             const result = { rows: hasil, count: 0 }
             const noDis = []
@@ -361,6 +361,70 @@ module.exports = {
           }
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
+        }
+      } else if (level === 13) {
+        const result = await disposal.findAndCountAll({
+          where: {
+            [Op.or]: [
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { no_io: { [Op.like]: `%${searchValue}%` } },
+              { no_disposal: { [Op.like]: `%${searchValue}%` } },
+              { nama_asset: { [Op.like]: `%${searchValue}%` } },
+              { kategori: { [Op.like]: `%${searchValue}%` } },
+              { keterangan: { [Op.like]: `%${searchValue}%` } }
+            ],
+            [Op.or]: [
+              { status_form: status },
+              { status_form: status === 2 ? 9 : status },
+              { status_form: status === 2 ? 26 : status }
+            ]
+          },
+          order: [[{ model: ttd, as: 'appForm' }, 'id', 'DESC'], [sortValue, 'ASC']],
+          limit: limit,
+          offset: (page - 1) * limit,
+          include: [
+            {
+              model: ttd,
+              as: 'appForm'
+            },
+            {
+              model: path,
+              as: 'pict'
+            }
+          ]
+        })
+        if (result.rows.length > 0) {
+          const data = []
+          for (let i = 0; i < result.rows.length; i++) {
+            if (result.rows[i].kategori === 'IT') {
+              data.push(result.rows[i].no_disposal)
+            }
+          }
+          const set = new Set(data)
+          const noDis = [...set]
+          const hasil = []
+          for (let i = 0; i < result.rows.length; i++) {
+            for (let j = 0; j < noDis.length; j++) {
+              if (result.rows[i].no_disposal === noDis[j]) {
+                hasil.push(result.rows[i])
+              }
+            }
+          }
+          if (hasil.length) {
+            const result = { rows: hasil, count: hasil.length }
+            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
+          } else {
+            const result = { rows: [], count: 0 }
+            const noDis = []
+            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+            return response(res, 'success get disposal', { result, pageInfo, noDis })
+          }
+        } else {
+          const result = { rows: [], count: 0 }
+          const noDis = []
+          const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+          return response(res, 'success get disposal', { result, pageInfo, noDis })
         }
       }
     } catch (error) {
