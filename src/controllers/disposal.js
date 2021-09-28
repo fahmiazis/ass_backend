@@ -1862,6 +1862,7 @@ module.exports = {
   },
   submitEditTaxFin: async (req, res) => {
     const no = req.params.no
+    const level = req.user.level
     try {
       const result = await disposal.findOne({
         where: {
@@ -1869,14 +1870,39 @@ module.exports = {
         }
       })
       if (result) {
-        const data = {
-          status_form: 7
-        }
-        const sent = await result.update(data)
-        if (sent) {
-          return response(res, 'success reject tax and finance')
+        if (result.no_io === 'taxfin' && level === 3) {
+          const data = {
+            status_form: 7,
+            no_io: 'finance'
+          }
+          const sent = await result.update(data)
+          if (sent) {
+            return response(res, 'success reject tax and finance')
+          } else {
+            return response(res, 'failed reject tax and finance', {}, 404, false)
+          }
+        } else if (result.no_io === 'taxfin' && level === 4) {
+          const data = {
+            status_form: 7,
+            no_io: 'tax'
+          }
+          const sent = await result.update(data)
+          if (sent) {
+            return response(res, 'success reject tax and finance')
+          } else {
+            return response(res, 'failed reject tax and finance', {}, 404, false)
+          }
         } else {
-          return response(res, 'failed reject tax and finance', {}, 404, false)
+          const data = {
+            status_form: 7,
+            no_io: null
+          }
+          const sent = await result.update(data)
+          if (sent) {
+            return response(res, 'success reject tax and finance')
+          } else {
+            return response(res, 'failed reject tax and finance', {}, 404, false)
+          }
         }
       } else {
         return response(res, 'failed reject tax and finance', {}, 404, false)
