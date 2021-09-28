@@ -1532,14 +1532,14 @@ module.exports = {
                         return response(res, 'failed get data', {}, 404, false)
                       }
                     } else {
-                      return response(res, 'failed get data 3', {}, 404, false)
+                      return response(res, 'failed get data', {}, 404, false)
                     }
                   } else {
-                    return response(res, 'failed get data 2', {}, 404, false)
+                    return response(res, 'failed get data', {}, 404, false)
                   }
                 }
               } else {
-                return response(res, 'failed get data 1', {}, 404, false)
+                return response(res, 'failed get data', {}, 404, false)
               }
             } else {
               return response(res, 'failed get data npwp', {}, 404, false)
@@ -1817,6 +1817,69 @@ module.exports = {
         } else {
           return response(res, 'failed reject dokumen', {}, 404, false)
         }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  rejectTaxFin: async (req, res) => {
+    const no = req.params.no
+    const { tipe } = req.query
+    try {
+      const result = await disposal.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (result) {
+        if (result.no_io === 'finance' || result.no_io === 'tax' || result.no_io === 'taxfin') {
+          const data = {
+            no_io: 'taxfin'
+          }
+          const sent = await result.update(data)
+          if (sent) {
+            return response(res, 'success reject tax and finance')
+          } else {
+            return response(res, 'failed reject tax and finance', {}, 404, false)
+          }
+        } else {
+          const data = {
+            no_io: tipe
+          }
+          const sent = await result.update(data)
+          if (sent) {
+            return response(res, 'success reject tax and finance')
+          } else {
+            return response(res, 'failed reject tax and finance', {}, 404, false)
+          }
+        }
+      } else {
+        return response(res, 'failed reject tax and finance', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitEditTaxFin: async (req, res) => {
+    const no = req.params.no
+    try {
+      const result = await disposal.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (result) {
+        const data = {
+          status_form: 7
+        }
+        const sent = await result.update(data)
+        if (sent) {
+          return response(res, 'success reject tax and finance')
+        } else {
+          return response(res, 'failed reject tax and finance', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed reject tax and finance', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -2346,24 +2409,46 @@ module.exports = {
             }
           })
           if (findDoc.length > 0) {
-            const cek = []
-            for (let i = 0; i < findDoc.length; i++) {
-              if (findDoc[i].path !== null) {
-                cek.push(1)
+            if (level === 2) {
+              const cek = []
+              for (let i = 0; i < findDoc.length; i++) {
+                if (findDoc[i].divisi === '3' || findDoc[i].status === 3) {
+                  cek.push(1)
+                }
               }
-            }
-            if (cek.length === findDoc.length) {
-              const data = {
-                status_form: level === 5 ? 5 : 8
-              }
-              const results = await result.update(data)
-              if (results) {
-                return response(res, 'success submit eksekusi disposal')
+              if (cek.length === findDoc.length) {
+                const data = {
+                  status_form: level === 5 ? 5 : 8
+                }
+                const results = await result.update(data)
+                if (results) {
+                  return response(res, 'success submit eksekusi disposal')
+                } else {
+                  return response(res, 'failed submit disposal', {}, 400, false)
+                }
               } else {
-                return response(res, 'failed submit disposal', {}, 400, false)
+                return response(res, 'Approve dokumen terlebih dahulu sebelum submit', {}, 400, false)
               }
             } else {
-              return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+              const cek = []
+              for (let i = 0; i < findDoc.length; i++) {
+                if (findDoc[i].path !== null) {
+                  cek.push(1)
+                }
+              }
+              if (cek.length === findDoc.length) {
+                const data = {
+                  status_form: level === 5 ? 5 : 8
+                }
+                const results = await result.update(data)
+                if (results) {
+                  return response(res, 'success submit eksekusi disposal')
+                } else {
+                  return response(res, 'failed submit disposal', {}, 400, false)
+                }
+              } else {
+                return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+              }
             }
           } else {
             return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
@@ -2396,24 +2481,46 @@ module.exports = {
               })
               if (findDoc.length > 0) {
                 if (findTemp.length === findDoc.length) {
-                  const cek = []
-                  for (let i = 0; i < findDoc.length; i++) {
-                    if (findDoc[i].path !== null) {
-                      cek.push(1)
+                  if (level === 2) {
+                    const cek = []
+                    for (let i = 0; i < findDoc.length; i++) {
+                      if (findDoc[i].divisi === '3' || findDoc[i].status === 3) {
+                        cek.push(1)
+                      }
                     }
-                  }
-                  if (cek.length === findDoc.length) {
-                    const data = {
-                      status_form: level === 5 ? 5 : 6
-                    }
-                    const results = await result.update(data)
-                    if (results) {
-                      return response(res, 'success submit eksekusi disposal')
+                    if (cek.length === findDoc.length) {
+                      const data = {
+                        status_form: level === 5 ? 5 : 6
+                      }
+                      const results = await result.update(data)
+                      if (results) {
+                        return response(res, 'success submit eksekusi disposal')
+                      } else {
+                        return response(res, 'failed submit disposal', {}, 400, false)
+                      }
                     } else {
-                      return response(res, 'failed submit disposal', {}, 400, false)
+                      return response(res, 'Approve dokumen terlebih dahulu sebelum submit', {}, 400, false)
                     }
                   } else {
-                    return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+                    const cek = []
+                    for (let i = 0; i < findDoc.length; i++) {
+                      if (findDoc[i].path !== null) {
+                        cek.push(1)
+                      }
+                    }
+                    if (cek.length === findDoc.length) {
+                      const data = {
+                        status_form: level === 5 ? 5 : 6
+                      }
+                      const results = await result.update(data)
+                      if (results) {
+                        return response(res, 'success submit eksekusi disposal')
+                      } else {
+                        return response(res, 'failed submit disposal', {}, 400, false)
+                      }
+                    } else {
+                      return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+                    }
                   }
                 } else {
                   return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
@@ -2435,24 +2542,46 @@ module.exports = {
               }
             })
             if (findDoc.length > 0) {
-              const cek = []
-              for (let i = 0; i < findDoc.length; i++) {
-                if (findDoc[i].path !== null) {
-                  cek.push(1)
+              if (level === 2) {
+                const cek = []
+                for (let i = 0; i < findDoc.length; i++) {
+                  if (findDoc[i].status === 3 || findDoc[i].divisi === '3') {
+                    cek.push(1)
+                  }
                 }
-              }
-              if (cek.length === findDoc.length) {
-                const data = {
-                  status_form: level === 5 ? 5 : 6
-                }
-                const results = await result.update(data)
-                if (results) {
-                  return response(res, 'success submit eksekusi disposal')
+                if (cek.length === findDoc.length) {
+                  const data = {
+                    status_form: level === 5 ? 5 : 6
+                  }
+                  const results = await result.update(data)
+                  if (results) {
+                    return response(res, 'success submit eksekusi disposal')
+                  } else {
+                    return response(res, 'failed submit disposal', {}, 400, false)
+                  }
                 } else {
-                  return response(res, 'failed submit disposal', {}, 400, false)
+                  return response(res, 'Approve dokumen terlebih dahulu sebelum submit', {}, 400, false)
                 }
               } else {
-                return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+                const cek = []
+                for (let i = 0; i < findDoc.length; i++) {
+                  if (findDoc[i].path !== null) {
+                    cek.push(1)
+                  }
+                }
+                if (cek.length === findDoc.length) {
+                  const data = {
+                    status_form: level === 5 ? 5 : 6
+                  }
+                  const results = await result.update(data)
+                  if (results) {
+                    return response(res, 'success submit eksekusi disposal')
+                  } else {
+                    return response(res, 'failed submit disposal', {}, 400, false)
+                  }
+                } else {
+                  return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
+                }
               }
             } else {
               return response(res, 'Upload dokumen terlebih dahulu sebelum submit', {}, 400, false)
@@ -2476,10 +2605,10 @@ module.exports = {
         }
       })
       if (result) {
-        if (result.no_io === null) {
+        if (result.no_io === '3' || result.no_io === '4') {
           const data = {
-            status_form: 6,
-            no_io: level
+            status_form: 7,
+            no_io: null
           }
           const results = await result.update(data)
           if (results) {
@@ -2487,12 +2616,10 @@ module.exports = {
           } else {
             return response(res, 'failed submit disposal', {}, 400, false)
           }
-        } else if (parseInt(result.no_io) === level) {
-          return response(res, 'success submit eksekusi disposal')
         } else {
           const data = {
-            status_form: 7,
-            no_io: null
+            status_form: 6,
+            no_io: level
           }
           const results = await result.update(data)
           if (results) {
@@ -2517,14 +2644,40 @@ module.exports = {
         }
       })
       if (result) {
-        const data = {
-          status_form: 8
-        }
-        const results = await result.update(data)
-        if (results) {
-          return response(res, 'success submit eksekusi disposal')
+        const findDoc = await docUser.findAll({
+          where: {
+            [Op.and]: [
+              { jenis_form: 'disposal' },
+              { no_pengadaan: no }
+            ],
+            [Op.or]: [
+              { tipe: 'finance' },
+              { tipe: 'tax' }
+            ]
+          }
+        })
+        if (findDoc.length > 0) {
+          const cek = []
+          for (let i = 0; i < findDoc.length; i++) {
+            if (findDoc[i].divisi === '3' || findDoc[i].status === 3) {
+              cek.push(1)
+            }
+          }
+          if (cek.length === findDoc.length) {
+            const data = {
+              status_form: 8
+            }
+            const results = await result.update(data)
+            if (results) {
+              return response(res, 'success submit final disposal')
+            } else {
+              return response(res, 'failed submit disposal', {}, 400, false)
+            }
+          } else {
+            return response(res, 'approve dokumen terlebih dahulu', {}, 400, false)
+          }
         } else {
-          return response(res, 'failed submit disposal', {}, 400, false)
+          return response(res, 'Tidak ada dokumen finance dan tax', {}, 400, false)
         }
       } else {
         return response(res, 'failed submit disposal', {}, 400, false)
