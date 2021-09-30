@@ -190,7 +190,7 @@ module.exports = {
       const level = req.user.level
       const kode = req.user.kode
       const fullname = req.user.fullname
-      let { limit, page, search, sort, status, tipe } = req.query
+      let { limit, page, search, sort, status, tipe, form } = req.query
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -292,7 +292,75 @@ module.exports = {
           ]
         })
         if (result) {
-          return response(res, 'success get disposal', { result })
+          if (form === 'editdis' && result.rows.length > 0) {
+            const hasil = []
+            for (let i = 0; i < result.rows.length; i++) {
+              const findDoc = await docUser.findAll({
+                where: {
+                  no_pengadaan: result.rows[i].no_asset,
+                  [Op.and]: [
+                    { jenis_form: 'disposal' },
+                    {
+                      [Op.or]: [
+                        { tipe: 'pengajuan' },
+                        { tipe: 'purch' }
+                      ]
+                    }
+                  ]
+                }
+              })
+              if (findDoc.length > 0) {
+                const cek = []
+                for (let j = 0; j < findDoc.length; j++) {
+                  if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                    cek.push(1)
+                  }
+                }
+                if (cek.length > 0) {
+                  hasil.push(result.rows[i])
+                }
+              }
+            }
+            if (hasil.length > 0) {
+              return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+            } else {
+              return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+            }
+          } else if (form === 'editeks' && result.rows.length > 0) {
+            const hasil = []
+            for (let i = 0; i < result.rows.length; i++) {
+              const findDoc = await docUser.findAll({
+                where: {
+                  [Op.and]: [
+                    { no_pengadaan: result.rows[i].no_asset },
+                    { jenis_form: 'disposal' }
+                  ],
+                  [Op.or]: [
+                    { tipe: result.rows[i].nilai_jual === '0' ? 'dispose' : 'sell' },
+                    { tipe: 'npwp' }
+                  ]
+                }
+              })
+              if (findDoc.length > 0) {
+                const cek = []
+                for (let j = 0; j < findDoc.length; j++) {
+                  if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                    cek.push(1)
+                  }
+                }
+                if (cek.length > 0) {
+                  hasil.push(result.rows[i])
+                }
+              }
+            }
+            if (hasil.length > 0) {
+              return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+            } else {
+              return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+            }
+          } else {
+            return response(res, 'success get disposal', { result, form: form })
+          }
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
         }
@@ -1481,7 +1549,7 @@ module.exports = {
                     ]
                   }
                 })
-                if (result.length > 0) {
+                if (result.length > 1) {
                   return response(res, 'success get document', { result })
                 } else {
                   const getDoc = await document.findAll({
