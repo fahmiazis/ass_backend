@@ -1969,7 +1969,7 @@ module.exports = {
                         divisi: getDoc[i].divisi,
                         no_pengadaan: no,
                         jenis_form: tipeDoValue,
-                        tipe: getDoc[i].tipeValue,
+                        tipe: tipeValue,
                         path: null
                       }
                       const make = await docUser.create(send)
