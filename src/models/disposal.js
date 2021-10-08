@@ -21,6 +21,16 @@ module.exports = (sequelize, DataTypes) => {
         as: 'pict',
         sourceKey: 'no_asset'
       })
+      disposal.hasMany(models.ttd, {
+        foreignKey: 'no_set',
+        as: 'ttdSet',
+        sourceKey: 'status_app'
+      })
+      disposal.hasOne(models.asset, {
+        foreignKey: 'no_asset',
+        as: 'dataAsset',
+        sourceKey: 'no_asset'
+      })
     }
   };
   disposal.init({

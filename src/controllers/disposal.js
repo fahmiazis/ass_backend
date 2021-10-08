@@ -246,6 +246,14 @@ module.exports = {
             {
               model: path,
               as: 'pict'
+            },
+            {
+              model: ttd,
+              as: 'ttdSet'
+            },
+            {
+              model: asset,
+              as: 'dataAsset'
             }
           ]
         })
@@ -3095,6 +3103,12 @@ module.exports = {
               { status_form: 3 }
             ]
           },
+          include: [
+            {
+              model: asset,
+              as: 'dataAsset'
+            }
+          ],
           order: [[sortValue, 'ASC']],
           limit: limit,
           offset: (page - 1) * limit
