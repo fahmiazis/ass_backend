@@ -2777,81 +2777,274 @@ module.exports = {
               }
             }
             if (hasil !== 0) {
-              if (arr === 0 || find[arr - 1].status === 1) {
-                const data = {
-                  nama: name,
-                  status: 0,
-                  path: results.alasan
-                }
-                const findTtd = await ttd.findByPk(hasil)
-                if (findTtd) {
-                  if (tipe === 'batal') {
-                    const findDis = await disposal.findAll({
-                      where: {
-                        status_app: no
-                      }
-                    })
-                    if (findDis.length > 0) {
-                      const cek = []
-                      for (let i = 0; i < findDis.length; i++) {
-                        const send = {
-                          status: null
+              if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+                return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
+              } else {
+                if (arr === 0 || find[arr - 1].status === 1) {
+                  const data = {
+                    nama: name,
+                    status: 0,
+                    path: results.alasan
+                  }
+                  const findTtd = await ttd.findByPk(hasil)
+                  if (findTtd) {
+                    if (tipe === 'batal') {
+                      const findDis = await disposal.findAll({
+                        where: {
+                          status_app: no
                         }
-                        const find = await disposal.findOne({
-                          where: {
-                            no_asset: findDis[i].no_asset
+                      })
+                      if (findDis.length > 0) {
+                        const cek = []
+                        for (let i = 0; i < findDis.length; i++) {
+                          const send = {
+                            status: null
                           }
-                        })
-                        const updateAsset = await asset.findOne({
-                          where: {
-                            no_asset: findDis[i].no_asset
+                          const find = await disposal.findOne({
+                            where: {
+                              no_asset: findDis[i].no_asset
+                            }
+                          })
+                          const updateAsset = await asset.findOne({
+                            where: {
+                              no_asset: findDis[i].no_asset
+                            }
+                          })
+                          if (find && updateAsset) {
+                            await updateAsset.update(send)
+                            await find.destroy()
+                            cek.push(1)
                           }
-                        })
-                        if (find && updateAsset) {
-                          await updateAsset.update(send)
-                          await find.destroy()
-                          cek.push(1)
                         }
+                        if (cek.length === findDis.length) {
+                          let draftEmail = ''
+                          const draf = []
+                          const listPlant = []
+                          for (let i = 0; i < arr; i++) {
+                            const result = await user.findOne({
+                              where: {
+                                username: find[i].nama
+                              }
+                            })
+                            if (result) {
+                              draf.push(result)
+                              draftEmail += result.email + ', '
+                            }
+                          }
+                          findDis.map(x => {
+                            return (
+                              listPlant.push(x.kode_plant)
+                            )
+                          })
+                          const set = new Set(listPlant)
+                          const noPlant = [...set]
+                          for (let i = 0; i < noPlant.length; i++) {
+                            const findEmail = await email.findOne({
+                              where: {
+                                kode_plant: noPlant[i]
+                              }
+                            })
+                            if (findEmail) {
+                              draf.push(findEmail)
+                              draftEmail += findEmail.email_area_aos + ', '
+                            }
+                          }
+                          const mailOptions = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            to: `${draftEmail}`,
+                            subject: 'Reject Perbaikan Disposal Asset (TESTING)',
+                            html: `
+                                <head>
+                                <style type="text/css">
+                                  body {
+                                      display: flexbox;
+                                      flex-direction: column;
+                                  }
+                                  .tittle {
+                                      font-size: 15px;
+                                  }
+                                  .mar {
+                                      margin-bottom: 20px;
+                                  }
+                                  .mar1 {
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot {
+                                      margin-top: 20px;
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot1 {
+                                      margin-bottom: 50px;
+                                  }
+                                  .position {
+                                      display: flexbox;
+                                      flex-direction: row;
+                                      justify-content: left;
+                                      margin-top: 10px;
+                                  }
+                                  table {
+                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                      font-size: 12px;
+                                  }
+                                  .demo-table {
+                                      border-collapse: collapse;
+                                      font-size: 13px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td {
+                                      border-bottom: 1px solid #e1edff;
+                                      border-left: 1px solid #e1edff;
+                                      padding: 7px 17px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td:last-child {
+                                      border-right: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:first-child {
+                                      border-top: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:last-child{
+                                      border-bottom: 0;
+                                  }
+                                  caption {
+                                      caption-side: top;
+                                      margin-bottom: 10px;
+                                  }
+                                  
+                                  /* Table Header */
+                                  .demo-table thead th {
+                                      background-color: #508abb;
+                                      color: #FFFFFF;
+                                      border-color: #6ea1cc !important;
+                                      text-transform: uppercase;
+                                  }
+                                  
+                                  /* Table Body */
+                                  .demo-table tbody td {
+                                      color: #353535;
+                                  }
+                                  
+                                  .demo-table tbody tr:nth-child(odd) td {
+                                      background-color: #f4fbff;
+                                  }
+                                  .demo-table tbody tr:hover th,
+                                  .demo-table tbody tr:hover td {
+                                      background-color: #ffffa2;
+                                      border-color: #ffff0f;
+                                      transition: all .2s;
+                                  }
+                              </style>
+                                </head>
+                                <body>
+                                <div class="tittle mar">
+                                    Dear All,
+                                </div>
+                                <div class="tittle mar1">
+                                    <div>Pengajuan disposal asset telah direject, mohon untuk segera diperbaiki</div>
+                                    <div>Alasan reject: ${results.alasan}</div>
+                                    <div>Direject oleh: ${name}</div>
+                                </div>
+                                <div class="position">
+                                    <table class="demo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>No Disposal</th>
+                                                <th>Asset</th>
+                                                <th>Asset description</th>
+                                                <th>Cost Ctr</th>
+                                                <th>Cost Ctr Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                          ${findDis.length > 0 && findDis.map(item => {
+                                            return (
+                                              `<tr>
+                                                <td>${findDis.indexOf(item) + 1}</td>
+                                                <td>D${item.no_disposal}</td>
+                                                <td>${item.no_asset}</td>
+                                                <td>${item.nama_asset}</td>
+                                                <td>${item.cost_center}</td>
+                                                <td>${item.area}</td>
+                                              </tr>`
+                                            )
+                                          })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="tittle foot">
+                                    Terima kasih,
+                                </div>
+                                <div class="tittle foot1">
+                                    Regards,
+                                </div>
+                                <div class="tittle">
+                                    Team Asset
+                                </div>
+                            </body>
+                            `
+                          }
+                          mailer.sendMail(mailOptions, (error, result) => {
+                            if (error) {
+                              return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draf })
+                            } else if (result) {
+                              return response(res, 'success reject disposal')
+                            }
+                          })
+                        } else {
+                          return response(res, 'failed reject disposal', {}, 404, false)
+                        }
+                      } else {
+                        return response(res, 'failed reject disposal', {}, 404, false)
                       }
-                      if (cek.length === findDis.length) {
+                    } else {
+                      const sent = await findTtd.update(data)
+                      if (sent) {
                         let draftEmail = ''
                         const draf = []
                         const listPlant = []
-                        for (let i = 0; i < arr; i++) {
-                          const result = await user.findOne({
-                            where: {
-                              username: find[i].nama
-                            }
-                          })
-                          if (result) {
-                            draf.push(result)
-                            draftEmail += result.email + ', '
+                        const findDis = await disposal.findAll({
+                          where: {
+                            status_app: no
                           }
-                        }
-                        findDis.map(x => {
-                          return (
-                            listPlant.push(x.kode_plant)
-                          )
                         })
-                        const set = new Set(listPlant)
-                        const noPlant = [...set]
-                        for (let i = 0; i < noPlant.length; i++) {
-                          const findEmail = await email.findOne({
-                            where: {
-                              kode_plant: noPlant[i]
+                        if (findDis.length > 0) {
+                          for (let i = 0; i < arr; i++) {
+                            const result = await user.findOne({
+                              where: {
+                                username: find[i].nama
+                              }
+                            })
+                            if (result) {
+                              draf.push(result)
+                              draftEmail += result.email + ', '
                             }
-                          })
-                          if (findEmail) {
-                            draf.push(findEmail)
-                            draftEmail += findEmail.email_area_aos + ', '
                           }
-                        }
-                        const mailOptions = {
-                          from: 'noreply_asset@pinusmerahabadi.co.id',
-                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${draftEmail}`,
-                          subject: 'Reject Perbaikan Disposal Asset (TESTING)',
-                          html: `
+                          findDis.map(x => {
+                            return (
+                              listPlant.push(x.kode_plant)
+                            )
+                          })
+                          const set = new Set(listPlant)
+                          const noPlant = [...set]
+                          for (let i = 0; i < noPlant.length; i++) {
+                            const findEmail = await email.findOne({
+                              where: {
+                                kode_plant: noPlant[i]
+                              }
+                            })
+                            if (findEmail) {
+                              draf.push(findEmail)
+                              draftEmail += findEmail.email_area_aos + ', '
+                            }
+                          }
+                          const mailOptions = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            to: `${draftEmail}`,
+                            subject: 'Reject Perbaikan Disposal Asset (TESTING)',
+                            html: `
                               <head>
                               <style type="text/css">
                                 body {
@@ -2980,217 +3173,28 @@ module.exports = {
                                   Team Asset
                               </div>
                           </body>
-                          `
-                        }
-                        mailer.sendMail(mailOptions, (error, result) => {
-                          if (error) {
-                            return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draf })
-                          } else if (result) {
-                            return response(res, 'success reject disposal')
+                              `
                           }
-                        })
+                          mailer.sendMail(mailOptions, (error, result) => {
+                            if (error) {
+                              return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draftEmail, draf })
+                            } else if (result) {
+                              return response(res, 'success reject disposal')
+                            }
+                          })
+                        } else {
+                          return response(res, 'failed reject disposal', {}, 404, false)
+                        }
                       } else {
                         return response(res, 'failed reject disposal', {}, 404, false)
                       }
-                    } else {
-                      return response(res, 'failed reject disposal', {}, 404, false)
                     }
                   } else {
-                    const sent = await findTtd.update(data)
-                    if (sent) {
-                      let draftEmail = ''
-                      const draf = []
-                      const listPlant = []
-                      const findDis = await disposal.findAll({
-                        where: {
-                          status_app: no
-                        }
-                      })
-                      if (findDis.length > 0) {
-                        for (let i = 0; i < arr; i++) {
-                          const result = await user.findOne({
-                            where: {
-                              username: find[i].nama
-                            }
-                          })
-                          if (result) {
-                            draf.push(result)
-                            draftEmail += result.email + ', '
-                          }
-                        }
-                        findDis.map(x => {
-                          return (
-                            listPlant.push(x.kode_plant)
-                          )
-                        })
-                        const set = new Set(listPlant)
-                        const noPlant = [...set]
-                        for (let i = 0; i < noPlant.length; i++) {
-                          const findEmail = await email.findOne({
-                            where: {
-                              kode_plant: noPlant[i]
-                            }
-                          })
-                          if (findEmail) {
-                            draf.push(findEmail)
-                            draftEmail += findEmail.email_area_aos + ', '
-                          }
-                        }
-                        const mailOptions = {
-                          from: 'noreply_asset@pinusmerahabadi.co.id',
-                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${draftEmail}`,
-                          subject: 'Reject Perbaikan Disposal Asset (TESTING)',
-                          html: `
-                            <head>
-                            <style type="text/css">
-                              body {
-                                  display: flexbox;
-                                  flex-direction: column;
-                              }
-                              .tittle {
-                                  font-size: 15px;
-                              }
-                              .mar {
-                                  margin-bottom: 20px;
-                              }
-                              .mar1 {
-                                  margin-bottom: 10px;
-                              }
-                              .foot {
-                                  margin-top: 20px;
-                                  margin-bottom: 10px;
-                              }
-                              .foot1 {
-                                  margin-bottom: 50px;
-                              }
-                              .position {
-                                  display: flexbox;
-                                  flex-direction: row;
-                                  justify-content: left;
-                                  margin-top: 10px;
-                              }
-                              table {
-                                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                  font-size: 12px;
-                              }
-                              .demo-table {
-                                  border-collapse: collapse;
-                                  font-size: 13px;
-                              }
-                              .demo-table th, 
-                              .demo-table td {
-                                  border-bottom: 1px solid #e1edff;
-                                  border-left: 1px solid #e1edff;
-                                  padding: 7px 17px;
-                              }
-                              .demo-table th, 
-                              .demo-table td:last-child {
-                                  border-right: 1px solid #e1edff;
-                              }
-                              .demo-table td:first-child {
-                                  border-top: 1px solid #e1edff;
-                              }
-                              .demo-table td:last-child{
-                                  border-bottom: 0;
-                              }
-                              caption {
-                                  caption-side: top;
-                                  margin-bottom: 10px;
-                              }
-                              
-                              /* Table Header */
-                              .demo-table thead th {
-                                  background-color: #508abb;
-                                  color: #FFFFFF;
-                                  border-color: #6ea1cc !important;
-                                  text-transform: uppercase;
-                              }
-                              
-                              /* Table Body */
-                              .demo-table tbody td {
-                                  color: #353535;
-                              }
-                              
-                              .demo-table tbody tr:nth-child(odd) td {
-                                  background-color: #f4fbff;
-                              }
-                              .demo-table tbody tr:hover th,
-                              .demo-table tbody tr:hover td {
-                                  background-color: #ffffa2;
-                                  border-color: #ffff0f;
-                                  transition: all .2s;
-                              }
-                          </style>
-                            </head>
-                            <body>
-                            <div class="tittle mar">
-                                Dear All,
-                            </div>
-                            <div class="tittle mar1">
-                                <div>Pengajuan disposal asset telah direject, mohon untuk segera diperbaiki</div>
-                                <div>Alasan reject: ${results.alasan}</div>
-                                <div>Direject oleh: ${name}</div>
-                            </div>
-                            <div class="position">
-                                <table class="demo-table">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>No Disposal</th>
-                                            <th>Asset</th>
-                                            <th>Asset description</th>
-                                            <th>Cost Ctr</th>
-                                            <th>Cost Ctr Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                      ${findDis.length > 0 && findDis.map(item => {
-                                        return (
-                                          `<tr>
-                                            <td>${findDis.indexOf(item) + 1}</td>
-                                            <td>D${item.no_disposal}</td>
-                                            <td>${item.no_asset}</td>
-                                            <td>${item.nama_asset}</td>
-                                            <td>${item.cost_center}</td>
-                                            <td>${item.area}</td>
-                                          </tr>`
-                                        )
-                                      })}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="tittle foot">
-                                Terima kasih,
-                            </div>
-                            <div class="tittle foot1">
-                                Regards,
-                            </div>
-                            <div class="tittle">
-                                Team Asset
-                            </div>
-                        </body>
-                            `
-                        }
-                        mailer.sendMail(mailOptions, (error, result) => {
-                          if (error) {
-                            return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draftEmail, draf })
-                          } else if (result) {
-                            return response(res, 'success reject disposal')
-                          }
-                        })
-                      } else {
-                        return response(res, 'failed reject disposal', {}, 404, false)
-                      }
-                    } else {
-                      return response(res, 'failed reject disposal', {}, 404, false)
-                    }
+                    return response(res, 'failed reject disposal', {}, 404, false)
                   }
                 } else {
-                  return response(res, 'failed reject disposal', {}, 404, false)
+                  return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
                 }
-              } else {
-                return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
               }
             } else {
               return response(res, 'failed reject disposal', {}, 404, false)
