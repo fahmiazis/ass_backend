@@ -208,10 +208,10 @@ module.exports = {
       } else {
         status = parseInt(status)
       }
-      if (!limit) {
-        limit = 10
+      if (limit) {
+        limit = 100
       } else {
-        limit = parseInt(limit)
+        limit = 100
       }
       if (!page) {
         page = 1
@@ -307,112 +307,196 @@ module.exports = {
         if (result) {
           if (form === 'editdis' && result.rows.length > 0) {
             if (result.rows[0].status_app === null) {
-              const findTtd = await ttd.findAll({
-                where: {
-                  no_doc: result.rows[0].no_disposal
-                }
-              })
-              if (findTtd.length > 0) {
-                const valid = []
-                for (let i = 0; i < findTtd.length; i++) {
-                  if (findTtd[i].status === 0) {
-                    valid.push(1)
+              const valid = []
+              for (let i = 0; i < result.rows.length; i++) {
+                const findTtd = await ttd.findAll({
+                  where: {
+                    no_doc: result.rows[i].no_disposal
                   }
-                }
-                if (valid.length > 0) {
-                  return response(res, 'success get disposal', { result })
-                } else {
-                  const hasil = []
-                  for (let i = 0; i < result.rows.length; i++) {
-                    const findDoc = await docUser.findAll({
-                      where: {
-                        no_pengadaan: result.rows[i].no_asset,
-                        [Op.and]: [
-                          { jenis_form: 'disposal' },
-                          {
-                            [Op.or]: [
-                              { tipe: 'pengajuan' },
-                              { tipe: 'jual' },
-                              { tipe: 'purch' }
-                            ]
-                          }
-                        ]
-                      }
-                    })
-                    if (findDoc.length > 0) {
-                      const cek = []
-                      for (let j = 0; j < findDoc.length; j++) {
-                        if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
-                          cek.push(1)
-                        }
-                      }
-                      if (cek.length > 0) {
-                        hasil.push(result.rows[i])
-                      }
+                })
+                if (findTtd.length > 0) {
+                  for (let j = 0; j < findTtd.length; j++) {
+                    if (findTtd[j].status === 0) {
+                      valid.push(result.rows[i])
                     }
                   }
-                  if (hasil.length > 0) {
-                    return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
-                  } else {
-                    return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                }
+              }
+              if (valid.length > 0) {
+                const hasil = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  const findDoc = await docUser.findAll({
+                    where: {
+                      no_pengadaan: result.rows[i].no_asset,
+                      [Op.and]: [
+                        { jenis_form: 'disposal' },
+                        {
+                          [Op.or]: [
+                            { tipe: 'pengajuan' },
+                            { tipe: 'jual' },
+                            { tipe: 'purch' }
+                          ]
+                        }
+                      ]
+                    }
+                  })
+                  if (findDoc.length > 0) {
+                    const cek = []
+                    for (let j = 0; j < findDoc.length; j++) {
+                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                        cek.push(1)
+                      }
+                    }
+                    if (cek.length > 0) {
+                      hasil.push(result.rows[i])
+                    }
                   }
                 }
+                if (hasil.length > 0) {
+                  const newData = valid.concat(hasil)
+                  const filteredArr = newData.reduce((acc, current) => {
+                    const x = acc.find(item => item.id === current.id)
+                    if (!x) {
+                      return acc.concat([current])
+                    } else {
+                      return acc
+                    }
+                  }, [])
+                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length } })
+                } else {
+                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length } })
+                }
               } else {
-                return response(res, 'failed get disposal', {}, 400, false)
+                const hasil = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  const findDoc = await docUser.findAll({
+                    where: {
+                      no_pengadaan: result.rows[i].no_asset,
+                      [Op.and]: [
+                        { jenis_form: 'disposal' },
+                        {
+                          [Op.or]: [
+                            { tipe: 'pengajuan' },
+                            { tipe: 'jual' },
+                            { tipe: 'purch' }
+                          ]
+                        }
+                      ]
+                    }
+                  })
+                  if (findDoc.length > 0) {
+                    const cek = []
+                    for (let j = 0; j < findDoc.length; j++) {
+                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                        cek.push(1)
+                      }
+                    }
+                    if (cek.length > 0) {
+                      hasil.push(result.rows[i])
+                    }
+                  }
+                }
+                if (hasil.length > 0) {
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                } else {
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                }
               }
             } else {
-              const findTtd = await ttd.findAll({
-                where: {
-                  no_set: result.rows[0].status_app
-                }
-              })
-              if (findTtd.length > 0) {
-                const valid = []
-                for (let i = 0; i < findTtd.length; i++) {
-                  if (findTtd[i].status === 0) {
-                    valid.push(1)
+              const valid = []
+              for (let i = 0; i < result.rows.length; i++) {
+                const findTtd = await ttd.findAll({
+                  where: {
+                    no_doc: result.rows[i].no_disposal
                   }
-                }
-                if (valid.length > 0) {
-                  return response(res, 'success get disposal', { result })
-                } else {
-                  const hasil = []
-                  for (let i = 0; i < result.rows.length; i++) {
-                    const findDoc = await docUser.findAll({
-                      where: {
-                        no_pengadaan: result.rows[i].no_asset,
-                        [Op.and]: [
-                          { jenis_form: 'disposal' },
-                          {
-                            [Op.or]: [
-                              { tipe: 'pengajuan' },
-                              { tipe: 'jual' },
-                              { tipe: 'purch' }
-                            ]
-                          }
-                        ]
-                      }
-                    })
-                    if (findDoc.length > 0) {
-                      const cek = []
-                      for (let j = 0; j < findDoc.length; j++) {
-                        if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
-                          cek.push(1)
-                        }
-                      }
-                      if (cek.length > 0) {
-                        hasil.push(result.rows[i])
-                      }
+                })
+                if (findTtd.length > 0) {
+                  for (let j = 0; j < findTtd.length; j++) {
+                    if (findTtd[j].status === 0) {
+                      valid.push(result.rows[i])
                     }
                   }
-                  if (hasil.length > 0) {
-                    return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
-                  } else {
-                    return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                }
+              }
+              if (valid.length > 0) {
+                const hasil = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  const findDoc = await docUser.findAll({
+                    where: {
+                      no_pengadaan: result.rows[i].no_asset,
+                      [Op.and]: [
+                        { jenis_form: 'disposal' },
+                        {
+                          [Op.or]: [
+                            { tipe: 'pengajuan' },
+                            { tipe: 'jual' },
+                            { tipe: 'purch' }
+                          ]
+                        }
+                      ]
+                    }
+                  })
+                  if (findDoc.length > 0) {
+                    const cek = []
+                    for (let j = 0; j < findDoc.length; j++) {
+                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                        cek.push(1)
+                      }
+                    }
+                    if (cek.length > 0) {
+                      hasil.push(result.rows[i])
+                    }
                   }
                 }
+                if (hasil.length > 0) {
+                  const newData = valid.concat(hasil)
+                  const filteredArr = newData.reduce((acc, current) => {
+                    const x = acc.find(item => item.id === current.id)
+                    if (!x) {
+                      return acc.concat([current])
+                    } else {
+                      return acc
+                    }
+                  }, [])
+                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length } })
+                } else {
+                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length } })
+                }
               } else {
-                return response(res, 'failed get disposal', {}, 400, false)
+                const hasil = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  const findDoc = await docUser.findAll({
+                    where: {
+                      no_pengadaan: result.rows[i].no_asset,
+                      [Op.and]: [
+                        { jenis_form: 'disposal' },
+                        {
+                          [Op.or]: [
+                            { tipe: 'pengajuan' },
+                            { tipe: 'jual' },
+                            { tipe: 'purch' }
+                          ]
+                        }
+                      ]
+                    }
+                  })
+                  if (findDoc.length > 0) {
+                    const cek = []
+                    for (let j = 0; j < findDoc.length; j++) {
+                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                        cek.push(1)
+                      }
+                    }
+                    if (cek.length > 0) {
+                      hasil.push(result.rows[i])
+                    }
+                  }
+                }
+                if (hasil.length > 0) {
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                } else {
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                }
               }
             }
           } else if (form === 'editeks' && result.rows.length > 0) {
