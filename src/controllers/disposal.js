@@ -253,8 +253,7 @@ module.exports = {
             },
             {
               model: ttd,
-              as: 'ttdSet',
-              order: [['ttdSet', 'id', 'DESC']]
+              as: 'ttdSet'
             },
             {
               model: asset,
@@ -301,6 +300,14 @@ module.exports = {
             {
               model: path,
               as: 'pict'
+            },
+            {
+              model: ttd,
+              as: 'ttdSet'
+            },
+            {
+              model: ttd,
+              as: 'appForm'
             }
           ]
         })
