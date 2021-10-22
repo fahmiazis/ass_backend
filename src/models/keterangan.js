@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
   };
   keterangan.init({
     nama: DataTypes.STRING,
-    status: DataTypes.ENUM('active', 'inactive')
+    status: DataTypes.ENUM('active', 'inactive'),
+    kategori: DataTypes.ENUM('dispose', 'sell')
   }, {
     sequelize,
     modelName: 'keterangan'

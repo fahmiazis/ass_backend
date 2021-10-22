@@ -43,11 +43,29 @@ module.exports = {
   },
   getKet: async (req, res) => {
     try {
-      const result = await keterangan.findAll()
-      if (result) {
-        return response(res, 'success get keterangan', { result })
+      const nijul = req.params.nijul
+      if (nijul === '0' || nijul === 0) {
+        const result = await keterangan.findAll({
+          where: {
+            kategori: 'dispose'
+          }
+        })
+        if (result) {
+          return response(res, 'success get keterangan', { result })
+        } else {
+          return response(res, 'failed get keterangan', {}, 400, false)
+        }
       } else {
-        return response(res, 'failed get keterangan', {}, 400, false)
+        const result = await keterangan.findAll({
+          where: {
+            kategori: 'sell'
+          }
+        })
+        if (result) {
+          return response(res, 'success get keterangan', { result })
+        } else {
+          return response(res, 'failed get keterangan', {}, 400, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
