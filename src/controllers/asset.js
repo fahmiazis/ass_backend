@@ -82,21 +82,20 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level === 1) {
+      if (level !== 5) {
         const result = await asset.findAndCountAll({
           where: {
             [Op.or]: [
-              { no_doc: { [Op.like]: `%${searchValue}%` } },
-              { tanggal: { [Op.like]: `%${searchValue}%` } },
-              { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { area: { [Op.like]: `%${searchValue}%` } },
-              { kode_plant: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } },
-              { status_fisik: { [Op.like]: `%${searchValue}%` } },
-              { grouping: { [Op.like]: `%${searchValue}%` } },
-              { kondisi: { [Op.like]: `%${searchValue}%` } },
-              { lokasi: { [Op.like]: `%${searchValue}%` } }
+              { no_doc: { [Op.like]: `%${searchValue}` } },
+              { no_asset: { [Op.like]: `%${searchValue}` } },
+              { area: { [Op.like]: `%${searchValue}` } },
+              { kode_plant: { [Op.like]: `%${searchValue}` } },
+              { nama_asset: { [Op.like]: `%${searchValue}` } },
+              { keterangan: { [Op.like]: `%${searchValue}` } },
+              { status_fisik: { [Op.like]: `%${searchValue}` } },
+              { grouping: { [Op.like]: `%${searchValue}` } },
+              { kondisi: { [Op.like]: `%${searchValue}` } },
+              { lokasi: { [Op.like]: `%${searchValue}` } }
             ]
           },
           order: [[sortValue, 'ASC']],
@@ -117,6 +116,9 @@ module.exports = {
               { status: null },
               { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
               { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
+            ],
+            [Op.not]: [
+              { status: '0' }
             ]
           },
           include: [

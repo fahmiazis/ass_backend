@@ -27,5 +27,6 @@ route.patch('/final/submit/:no', disposal.submitFinal)
 route.patch('/purch/submit/:no', disposal.submitPurch)
 route.patch('/taxfin/rej/:no', disposal.rejectTaxFin)
 route.patch('/taxfin/edit/:no', disposal.submitEditTaxFin)
+route.patch('/asset', disposal.updateStatus)
 
 module.exports = route
