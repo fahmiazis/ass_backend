@@ -313,7 +313,13 @@ module.exports = {
         })
         if (result) {
           if (form === 'editdis' && result.rows.length > 0) {
-            if (result.rows[0].status_app === null) {
+            const cekRow = []
+            for (let i = 0; i < result.rows.length; i++) {
+              if (result.rows[i].status_app !== null) {
+                cekRow.push(1)
+              }
+            }
+            if (cekRow.length === 0) {
               const valid = []
               for (let i = 0; i < result.rows.length; i++) {
                 const findTtd = await ttd.findAll({
@@ -414,7 +420,7 @@ module.exports = {
               for (let i = 0; i < result.rows.length; i++) {
                 const findTtd = await ttd.findAll({
                   where: {
-                    no_doc: result.rows[i].no_disposal
+                    no_set: result.rows[i].status_app
                   }
                 })
                 if (findTtd.length > 0) {
