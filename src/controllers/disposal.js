@@ -316,7 +316,7 @@ module.exports = {
             const cekRow = []
             for (let i = 0; i < result.rows.length; i++) {
               if (result.rows[i].status_app !== null) {
-                cekRow.push(1)
+                cekRow.push(result.rows[i])
               }
             }
             if (cekRow.length === 0) {
@@ -375,9 +375,9 @@ module.exports = {
                       return acc
                     }
                   }, [])
-                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length } })
+                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length } })
+                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow } })
                 }
               } else {
                 const hasil = []
@@ -410,9 +410,9 @@ module.exports = {
                   }
                 }
                 if (hasil.length > 0) {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
                 }
               }
             } else {
@@ -471,9 +471,9 @@ module.exports = {
                       return acc
                     }
                   }, [])
-                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length } })
+                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length } })
+                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow } })
                 }
               } else {
                 const hasil = []
@@ -506,9 +506,9 @@ module.exports = {
                   }
                 }
                 if (hasil.length > 0) {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
                 }
               }
             }
