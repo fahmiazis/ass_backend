@@ -293,7 +293,8 @@ module.exports = {
             [Op.or]: [
               { status_form: status },
               { status_form: status === 2 ? 9 : status },
-              { status_form: status === 2 ? 26 : status }
+              { status_form: status === 2 ? 26 : status },
+              { status_form: status === 2 ? 3 : status }
             ]
           },
           include: [
