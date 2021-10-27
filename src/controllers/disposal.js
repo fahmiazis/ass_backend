@@ -419,14 +419,9 @@ module.exports = {
             } else {
               const valid = []
               for (let i = 0; i < result.rows.length; i++) {
-                const findTtd = await ttd.findAll({
-                  where: {
-                    no_set: result.rows[i].status_app
-                  }
-                })
-                if (findTtd.length > 0) {
-                  for (let j = 0; j < findTtd.length; j++) {
-                    if (findTtd[j].status === 0) {
+                if (result.rows[i].ttdSet.length > 0) {
+                  for (let j = 0; j < result.rows[i].ttdSet.length; j++) {
+                    if (result.rows[i].ttdSet[j].status === 0) {
                       valid.push(result.rows[i])
                     }
                   }

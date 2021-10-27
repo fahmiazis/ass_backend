@@ -86,16 +86,8 @@ module.exports = {
         const result = await asset.findAndCountAll({
           where: {
             [Op.or]: [
-              { no_doc: { [Op.like]: `%${searchValue}` } },
               { no_asset: { [Op.like]: `%${searchValue}` } },
-              { area: { [Op.like]: `%${searchValue}` } },
-              { kode_plant: { [Op.like]: `%${searchValue}` } },
-              { nama_asset: { [Op.like]: `%${searchValue}` } },
-              { keterangan: { [Op.like]: `%${searchValue}` } },
-              { status_fisik: { [Op.like]: `%${searchValue}` } },
-              { grouping: { [Op.like]: `%${searchValue}` } },
-              { kondisi: { [Op.like]: `%${searchValue}` } },
-              { lokasi: { [Op.like]: `%${searchValue}` } }
+              { nama_asset: { [Op.like]: `%${searchValue}` } }
             ]
           },
           order: [[sortValue, 'ASC']],
