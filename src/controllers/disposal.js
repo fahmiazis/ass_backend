@@ -375,9 +375,9 @@ module.exports = {
                       return acc
                     }
                   }, [])
-                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow, result } })
                 }
               } else {
                 const hasil = []
@@ -410,9 +410,9 @@ module.exports = {
                   }
                 }
                 if (hasil.length > 0) {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
                 }
               }
             } else {
@@ -471,9 +471,9 @@ module.exports = {
                       return acc
                     }
                   }, [])
-                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow, result } })
                 }
               } else {
                 const hasil = []
@@ -506,9 +506,9 @@ module.exports = {
                   }
                 }
                 if (hasil.length > 0) {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow } })
+                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
                 }
               }
             }
