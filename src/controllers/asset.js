@@ -87,6 +87,8 @@ module.exports = {
           where: {
             [Op.or]: [
               { no_asset: { [Op.like]: `%${searchValue}` } },
+              { area: { [Op.like]: `%${searchValue}` } },
+              { kode_plant: { [Op.like]: `%${searchValue}` } },
               { nama_asset: { [Op.like]: `%${searchValue}` } }
             ]
           },
@@ -108,6 +110,10 @@ module.exports = {
               { status: null },
               { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
               { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
+            ],
+            [Op.or]: [
+              { no_asset: { [Op.like]: `%${searchValue}` } },
+              { nama_asset: { [Op.like]: `%${searchValue}` } }
             ]
           },
           include: [
