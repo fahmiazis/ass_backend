@@ -116,9 +116,6 @@ module.exports = {
               { status: null },
               { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
               { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
-            ],
-            [Op.not]: [
-              { status: '0' }
             ]
           },
           include: [

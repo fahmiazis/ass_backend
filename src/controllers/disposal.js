@@ -209,9 +209,9 @@ module.exports = {
         status = parseInt(status)
       }
       if (limit) {
-        limit = 100
+        limit = 1000
       } else {
-        limit = 100
+        limit = 1000
       }
       if (!page) {
         page = 1
