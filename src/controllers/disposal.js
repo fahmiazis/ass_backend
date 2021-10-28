@@ -323,14 +323,9 @@ module.exports = {
             if (cekRow.length === 0) {
               const valid = []
               for (let i = 0; i < result.rows.length; i++) {
-                const findTtd = await ttd.findAll({
-                  where: {
-                    no_doc: result.rows[i].no_disposal
-                  }
-                })
-                if (findTtd.length > 0) {
-                  for (let j = 0; j < findTtd.length; j++) {
-                    if (findTtd[j].status === 0) {
+                if (result.rows[i].appForm.length > 0) {
+                  for (let j = 0; j < result.rows[i].appForm.length; j++) {
+                    if (result.rows[i].appForm[j].status === 0) {
                       valid.push(result.rows[i])
                     }
                   }
@@ -425,6 +420,11 @@ module.exports = {
                       valid.push(result.rows[i])
                     }
                   }
+                  for (let j = 0; j < result.rows[i].appForm.length; j++) {
+                    if (result.rows[i].appForm[j].status === 0) {
+                      valid.push(result.rows[i])
+                    }
+                  }
                 }
               }
               if (valid.length > 0) {
@@ -467,9 +467,9 @@ module.exports = {
                       return acc
                     }
                   }, [])
-                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
+                  return response(res, 'success get disposal status app', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow, result } })
+                  return response(res, 'success get disposal status app', { result: { rows: valid, count: valid.length, cekRow, result } })
                 }
               } else {
                 const hasil = []
@@ -502,9 +502,9 @@ module.exports = {
                   }
                 }
                 if (hasil.length > 0) {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
+                  return response(res, 'success get disposal status app', { result: { rows: hasil, count: hasil.length, cekRow, result } })
                 } else {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
+                  return response(res, 'success get disposal status app', { result: { rows: hasil, count: hasil.length, cekRow, result } })
                 }
               }
             }
