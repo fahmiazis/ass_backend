@@ -1112,6 +1112,19 @@ module.exports = {
                                     }
                                   })
                                   if (findUser) {
+                                    let tableTd = ''
+                                    for (let i = 0; i < findDis.length; i++) {
+                                      const element = `
+                                      <tr>
+                                        <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                        <td>D${findDis[i].no_disposal}</td>
+                                        <td>${findDis[i].no_asset}</td>
+                                        <td>${findDis[i].nama_asset}</td>
+                                        <td>${findDis[i].cost_center}</td>
+                                        <td>${findDis[i].area}</td>
+                                      </tr>`
+                                      tableTd = tableTd + element
+                                    }
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
@@ -1219,18 +1232,7 @@ module.exports = {
                                                       </tr>
                                                   </thead>
                                                   <tbody>
-                                                    ${findDis.length > 0 && findDis.map(item => {
-                                                      return (
-                                                        `<tr>
-                                                          <td>${findDis.indexOf(item) + 1}</td>
-                                                          <td>D${item.no_disposal}</td>
-                                                          <td>${item.no_asset}</td>
-                                                          <td>${item.nama_asset}</td>
-                                                          <td>${item.cost_center}</td>
-                                                          <td>${item.area}</td>
-                                                        </tr>`
-                                                      )
-                                                    })}
+                                                    ${tableTd}
                                                   </tbody>
                                               </table>
                                           </div>
@@ -1352,6 +1354,19 @@ module.exports = {
                                 }
                               })
                               if (findUser) {
+                                let tableTd = ''
+                                for (let i = 0; i < findDis.length; i++) {
+                                  const element = `
+                                <tr>
+                                  <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                  <td>D${findDis[i].no_disposal}</td>
+                                  <td>${findDis[i].no_asset}</td>
+                                  <td>${findDis[i].nama_asset}</td>
+                                  <td>${findDis[i].cost_center}</td>
+                                  <td>${findDis[i].area}</td>
+                                </tr>`
+                                  tableTd = tableTd + element
+                                }
                                 const mailOptions = {
                                   from: 'noreply_asset@pinusmerahabadi.co.id',
                                   replyTo: 'noreply_asset@pinusmerahabadi.co.id',
@@ -1459,18 +1474,7 @@ module.exports = {
                                                       </tr>
                                                   </thead>
                                                   <tbody>
-                                                    ${findDis.length > 0 && findDis.map(item => {
-                                                      return (
-                                                        `<tr>
-                                                          <td>${findDis.indexOf(item) + 1}</td>
-                                                          <td>D${item.no_disposal}</td>
-                                                          <td>${item.no_asset}</td>
-                                                          <td>${item.nama_asset}</td>
-                                                          <td>${item.cost_center}</td>
-                                                          <td>${item.area}</td>
-                                                        </tr>`
-                                                      )
-                                                    })}
+                                                    ${tableTd}
                                                   </tbody>
                                               </table>
                                           </div>
@@ -1663,6 +1667,19 @@ module.exports = {
                                   }
                                 }
                               }
+                              let tableTd = ''
+                              for (let i = 0; i < findDis.length; i++) {
+                                const element = `
+                                <tr>
+                                  <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                  <td>D${findDis[i].no_disposal}</td>
+                                  <td>${findDis[i].no_asset}</td>
+                                  <td>${findDis[i].nama_asset}</td>
+                                  <td>${findDis[i].cost_center}</td>
+                                  <td>${findDis[i].area + 'king'}</td>
+                                </tr>`
+                                tableTd = tableTd + element
+                              }
                               if (cekDok.length > 0) {
                                 const mailOptions = {
                                   from: 'noreply_asset@pinusmerahabadi.co.id',
@@ -1773,18 +1790,7 @@ module.exports = {
                                                           </tr>
                                                       </thead>
                                                       <tbody>
-                                                        ${findDis.length > 0 && findDis.map(item => {
-                                                          return (
-                                                            `<tr>
-                                                              <td>${findDis.indexOf(item) + 1}</td>
-                                                              <td>D${item.no_disposal}</td>
-                                                              <td>${item.no_asset}</td>
-                                                              <td>${item.nama_asset}</td>
-                                                              <td>${item.cost_center}</td>
-                                                              <td>${item.area}</td>
-                                                            </tr>`
-                                                          )
-                                                        })}
+                                                        ${tableTd}
                                                       </tbody>
                                                   </table>
                                               </div>
@@ -1796,7 +1802,7 @@ module.exports = {
                                               </div>
                                               <div class="tittle">
                                                   Team Asset
-                                              </div>                                      
+                                              </div>
                                           </body>
                                           `
                                 }
@@ -1852,6 +1858,19 @@ module.exports = {
                               }
                             }
                           }
+                        }
+                        let tableTd = ''
+                        for (let i = 0; i < findDis.length; i++) {
+                          const element = `
+                                <tr>
+                                  <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                  <td>D${findDis[i].no_disposal}</td>
+                                  <td>${findDis[i].no_asset}</td>
+                                  <td>${findDis[i].nama_asset}</td>
+                                  <td>${findDis[i].cost_center}</td>
+                                  <td>${findDis[i].area}</td>
+                                </tr>`
+                          tableTd = tableTd + element
                         }
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
@@ -1962,18 +1981,7 @@ module.exports = {
                                       </tr>
                                   </thead>
                                   <tbody>
-                                    ${findDis.length > 0 && findDis.map(item => {
-                                      return (
-                                        `<tr>
-                                          <td>${findDis.indexOf(item) + 1}</td>
-                                          <td>D${item.no_disposal}</td>
-                                          <td>${item.no_asset}</td>
-                                          <td>${item.nama_asset}</td>
-                                          <td>${item.cost_center}</td>
-                                          <td>${item.area}</td>
-                                        </tr>`
-                                      )
-                                    })}
+                                    ${tableTd}
                                   </tbody>
                               </table>
                           </div>
@@ -2938,11 +2946,202 @@ module.exports = {
                   const findAsset = await disposal.findByPk(findDoc[i].id)
                   if (findAsset) {
                     await findAsset.update(data)
-                    valid.push(1)
+                    valid.push(findDoc[i].kode_plant)
                   }
                 }
                 if (valid.length === findDoc.length) {
-                  return response(res, 'success approve form disposal')
+                  const set = new Set(valid)
+                  const noDis = [...set]
+                  const cekEmail = []
+                  for (let i = 0; i < noDis.length; i++) {
+                    const findEmail = await email.findOne({
+                      where: {
+                        kode_plant: noDis[i]
+                      }
+                    })
+                    console.log(noDis)
+                    if (findEmail) {
+                      const findDis = await disposal.findAll({
+                        where: {
+                          [Op.and]: [
+                            { kode_plant: noDis[i] },
+                            { status_app: no }
+                          ]
+                        }
+                      })
+                      if (findDis.length > 0) {
+                        let tableTd = ''
+                        for (let i = 0; i < findDis.length; i++) {
+                          const element = `
+                                <tr>
+                                  <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                  <td>D${findDis[i].no_disposal}</td>
+                                  <td>${findDis[i].no_asset}</td>
+                                  <td>${findDis[i].nama_asset}</td>
+                                  <td>${findDis[i].cost_center}</td>
+                                  <td>${findDis[i].area}</td>
+                                </tr>`
+                          tableTd = tableTd + element
+                        }
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findEmail.email_area_aos}`,
+                          subject: `Approve Persetujuan Disposal ${no} (TESTING)`,
+                          html: `
+                          <head>
+                          <style type="text/css">
+                          body {
+                              display: flexbox;
+                              flex-direction: column;
+                          }
+                          .tittle {
+                              font-size: 15px;
+                          }
+                          .textItalic {
+                              font-style: italic;
+                          }
+                          .mar {
+                              margin-bottom: 20px;
+                          }
+                          .mar1 {
+                              margin-bottom: 10px;
+                          }
+                          .foot {
+                              margin-top: 20px;
+                              margin-bottom: 10px;
+                          }
+                          .foot1 {
+                              margin-bottom: 50px;
+                          }
+                          .position {
+                              display: flexbox;
+                              flex-direction: row;
+                              justify-content: left;
+                              margin-top: 10px;
+                          }
+                          table {
+                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                              font-size: 12px;
+                          }
+                          .demo-table {
+                              border-collapse: collapse;
+                              font-size: 13px;
+                          }
+                          .demo-table th, 
+                          .demo-table td {
+                              border-bottom: 1px solid #e1edff;
+                              border-left: 1px solid #e1edff;
+                              padding: 7px 17px;
+                          }
+                          .demo-table th, 
+                          .demo-table td:last-child {
+                              border-right: 1px solid #e1edff;
+                          }
+                          .demo-table td:first-child {
+                              border-top: 1px solid #e1edff;
+                          }
+                          .demo-table td:last-child{
+                              border-bottom: 0;
+                          }
+                          caption {
+                              caption-side: top;
+                              margin-bottom: 10px;
+                          }
+                          
+                          /* Table Header */
+                          .demo-table thead th {
+                              background-color: #508abb;
+                              color: #FFFFFF;
+                              border-color: #6ea1cc !important;
+                              text-transform: uppercase;
+                          }
+                          
+                          /* Table Body */
+                          .demo-table tbody td {
+                              color: #353535;
+                          }
+                          
+                          .demo-table tbody tr:nth-child(odd) td {
+                              background-color: #f4fbff;
+                          }
+                          .demo-table tbody tr:hover th
+                          .demo-table tbody tr:hover td {
+                              background-color: #ffffa2;
+                              border-color: #ffff0f;
+                              transition: all .2s;
+                          }
+                          .textUnder {
+                              text-decoration: underline;
+                              font-weight: bold;
+                          }
+                      </style>
+                        </head>
+                        <body>
+                            <div class="tittle mar">
+                                Dear Bapak/Ibu AOS,
+                            </div>
+                            <div class="tittle mar1">
+                                <div>Mohon untuk segera eksekusi asset dan mengirimkan kelengkapan scan dan aslinya sbb</div>
+                            </div>
+                            <div class="position mar1">
+                                <table class="demo-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>No Disposal</th>
+                                            <th>Asset</th>
+                                            <th>Asset description</th>
+                                            <th>Cost Ctr</th>
+                                            <th>Cost Ctr Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tableTd}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tittle">1. Kwitansi </div>
+                            <div class="tittle">2. Bukti Transfer</div>
+                            <div class="tittle">3. Serah terima aset & Uang (Terlampir)</div>
+                            <div class="tittle">4. Form Bukti Serah Terima Dokumen Penjualan aset (Terlampir)</div>
+                            <div class="mar1">5. Scan Atau Copyan NPWP Pembeli (Jika Ada)</div>
+                            <div>Pastikan Bapak memiliki scan atau copyannya, yg asli dikirim ke :</div>
+                            <div class="mar1">Rifaldi / Ervyanty(Accounting Asset Staff) PT. Pinus Merah Abadi (HO Bandung) Jl. Soekarno Hatta No. 112, Bandung, Jawa Barat – 40235</div>
+                            <div class="textUnder">NOTE:</div>
+                            <div class="tittle textItalic">A. KETIKA ASET SUDAH DI TRANSAKSIKAN DENGAN PEMBELI MOHON UNTUK SEGERA MENGINFORMASIKANYA KE TIM ASET</div>
+                            <div class="tittle">B. aset sudah bisa di eksekusi maka segera eksekusi (maksimal 1 minggu dari tgl email)</div>
+                            <div class="tittle">C. Jika aset yang sudah dijual/dimusnahkan area harap melengkapi semua dokumen yang di req aset (tanpa kekurangan apapun) jika belum mengerti bisa ditanya ke pic aset</div>
+                            <div class="tittle">D. Uang hasil penjualan aset maksimal di transfer ke rek HO H+1 (wajib cantumkan di berita transaksi/keterangan penjualan aset+nama area) Tranfer Ke No rek : 130.007.611.2112</div>
+                            <div class="tittle mar1">E. Kelengkapan eksekusi disposal aset harus segera dikirimkan dan di informasikan karena ada kaitanya dengan faktur pajak yang harus HO terbitkan ditanggal yang sama saat transaksi.</div>
+                            <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                            <div class="tittle foot">
+                                Terima kasih,
+                            </div>
+                            <div class="tittle foot1">
+                                Regards,
+                            </div>
+                            <div class="tittle">
+                                Team Asset
+                            </div>
+                        </body>
+                          `
+                        }
+                        mailer.sendMail(mailOptions, (error, result) => {
+                          if (error) {
+                            console.log('gagal kirim')
+                          } else {
+                            cekEmail.push('berhasil kirim')
+                          }
+                        })
+                      }
+                    }
+                  }
+                  if (cekEmail.length === noDis.length) {
+                    return response(res, 'success approve disposal', { cekEmail, noDis })
+                  } else {
+                    return response(res, 'success approve fail send email', { cekEmail, noDis })
+                  }
                 }
               }
             } else {
@@ -3044,6 +3243,19 @@ module.exports = {
                                 }
                               })
                               if (findUser) {
+                                let tableTd = ''
+                                for (let i = 0; i < findDis.length; i++) {
+                                  const element = `
+                                    <tr>
+                                      <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                      <td>D${findDis[i].no_disposal}</td>
+                                      <td>${findDis[i].no_asset}</td>
+                                      <td>${findDis[i].nama_asset}</td>
+                                      <td>${findDis[i].cost_center}</td>
+                                      <td>${findDis[i].area}</td>
+                                    </tr>`
+                                  tableTd = tableTd + element
+                                }
                                 const mailOptions = {
                                   from: 'noreply_asset@pinusmerahabadi.co.id',
                                   replyTo: 'noreply_asset@pinusmerahabadi.co.id',
@@ -3151,18 +3363,7 @@ module.exports = {
                                                       </tr>
                                                   </thead>
                                                   <tbody>
-                                                    ${findDis.length > 0 && findDis.map(item => {
-                                                      return (
-                                                        `<tr>
-                                                          <td>${findDis.indexOf(item) + 1}</td>
-                                                          <td>D${item.no_disposal}</td>
-                                                          <td>${item.no_asset}</td>
-                                                          <td>${item.nama_asset}</td>
-                                                          <td>${item.cost_center}</td>
-                                                          <td>${item.area}</td>
-                                                        </tr>`
-                                                      )
-                                                    })}
+                                                    ${tableTd}
                                                   </tbody>
                                               </table>
                                           </div>
@@ -3417,6 +3618,19 @@ module.exports = {
                                     }
                                   }
                                   if (cekDok.length > 0) {
+                                    let tableTd = ''
+                                    for (let i = 0; i < findDis.length; i++) {
+                                      const element = `
+                                        <tr>
+                                          <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                          <td>D${findDis[i].no_disposal}</td>
+                                          <td>${findDis[i].no_asset}</td>
+                                          <td>${findDis[i].nama_asset}</td>
+                                          <td>${findDis[i].cost_center}</td>
+                                          <td>${findDis[i].area}</td>
+                                        </tr>`
+                                      tableTd = tableTd + element
+                                    }
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
@@ -3526,18 +3740,7 @@ module.exports = {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                  ${findDis.length > 0 && findDis.map(item => {
-                                                    return (
-                                                      `<tr>
-                                                        <td>${findDis.indexOf(item) + 1}</td>
-                                                        <td>D${item.no_disposal}</td>
-                                                        <td>${item.no_asset}</td>
-                                                        <td>${item.nama_asset}</td>
-                                                        <td>${item.cost_center}</td>
-                                                        <td>${item.area}</td>
-                                                      </tr>`
-                                                    )
-                                                  })}
+                                                  ${tableTd}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -3621,6 +3824,19 @@ module.exports = {
                               draf.push(findEmail)
                               draftEmail += findEmail.email_area_aos + ', '
                             }
+                          }
+                          let tableTd = ''
+                          for (let i = 0; i < findDis.length; i++) {
+                            const element = `
+                              <tr>
+                                <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                <td>D${findDis[i].no_disposal}</td>
+                                <td>${findDis[i].no_asset}</td>
+                                <td>${findDis[i].nama_asset}</td>
+                                <td>${findDis[i].cost_center}</td>
+                                <td>${findDis[i].area}</td>
+                              </tr>`
+                            tableTd = tableTd + element
                           }
                           const mailOptions = {
                             from: 'noreply_asset@pinusmerahabadi.co.id',
@@ -3731,18 +3947,7 @@ module.exports = {
                                           </tr>
                                       </thead>
                                       <tbody>
-                                        ${findDis.length > 0 && findDis.map(item => {
-                                          return (
-                                            `<tr>
-                                              <td>${findDis.indexOf(item) + 1}</td>
-                                              <td>D${item.no_disposal}</td>
-                                              <td>${item.no_asset}</td>
-                                              <td>${item.nama_asset}</td>
-                                              <td>${item.cost_center}</td>
-                                              <td>${item.area}</td>
-                                            </tr>`
-                                          )
-                                        })}
+                                        ${tableTd}
                                       </tbody>
                                   </table>
                               </div>

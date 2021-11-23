@@ -219,6 +219,10 @@ module.exports = {
             {
               model: path,
               as: 'pict'
+            },
+            {
+              model: asset,
+              as: 'dataAsset'
             }
           ],
           order: [[sortValue, 'ASC']],

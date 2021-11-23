@@ -21,6 +21,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'pict',
         sourceKey: 'no_asset'
       })
+      mutasi.hasOne(models.asset, {
+        foreignKey: 'no_asset',
+        as: 'dataAsset',
+        sourceKey: 'no_asset'
+      })
     }
   };
   mutasi.init({
