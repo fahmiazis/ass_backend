@@ -2041,7 +2041,8 @@ module.exports = {
         no_fp: joi.string().allow(''),
         no_sap: joi.string().allow(''),
         doc_sap: joi.string().allow(''),
-        npwp: joi.string().allow('')
+        npwp: joi.string().allow(''),
+        doc_clearing: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
