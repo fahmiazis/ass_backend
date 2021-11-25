@@ -112,8 +112,8 @@ module.exports = {
               { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
             ],
             [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}` } },
-              { nama_asset: { [Op.like]: `%${searchValue}` } }
+              { no_asset: { [Op.like]: `%${searchValue}%` } },
+              { nama_asset: { [Op.like]: `%${searchValue}%` } }
             ]
           },
           include: [

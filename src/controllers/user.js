@@ -18,7 +18,7 @@ module.exports = {
       const level = req.user.level
       const schema = joi.object({
         username: joi.string().required(),
-        email: joi.string().email().required(),
+        email: joi.string().email(),
         fullname: joi.string().required(),
         password: joi.string().required(),
         kode_plant: joi.string().allow(''),
@@ -30,20 +30,35 @@ module.exports = {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
         if (level === 1) {
-          const result = await user.findAll({ where: { username: results.username } })
-          if (result.length > 0) {
-            return response(res, 'username already use', {}, 404, false)
-          } else {
-            const result = await user.findAll({
-              where: {
-                [Op.and]: [
-                  { kode_plant: results.kode_plant },
-                  { user_level: results.user_level }
-                ]
-              }
-            })
+          if (results.user_level === 5) {
+            const result = await user.findAll({ where: { username: results.username } })
             if (result.length > 0) {
-              return response(res, 'kode depo and user level already use', {}, 404, false)
+              return response(res, 'username already use', {}, 404, false)
+            } else {
+              const result = await user.findAll({
+                where: {
+                  [Op.and]: [
+                    { kode_plant: results.kode_plant },
+                    { user_level: results.user_level }
+                  ]
+                }
+              })
+              if (result.length > 0) {
+                return response(res, 'kode depo and user level already use', {}, 404, false)
+              } else {
+                results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
+                const result = await user.create(results)
+                if (result) {
+                  return response(res, 'Add User succesfully', { result })
+                } else {
+                  return response(res, 'Fail to create user', {}, 400, false)
+                }
+              }
+            }
+          } else {
+            const result = await user.findAll({ where: { username: results.username } })
+            if (result.length > 0) {
+              return response(res, 'username already use', {}, 404, false)
             } else {
               results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
               const result = await user.create(results)
