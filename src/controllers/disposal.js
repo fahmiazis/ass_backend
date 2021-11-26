@@ -1,4 +1,4 @@
-const { disposal, asset, depo, path, ttd, approve, role, document, docUser, email, user } = require('../models')
+const { disposal, asset, depo, path, ttd, approve, role, document, docUser, email, user, notif } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -728,7 +728,9 @@ module.exports = {
         const findNo = await disposal.findAll({
           where: {
             [Op.not]: { no_disposal: null }
-          }
+          },
+          order: [['id', 'DESC']],
+          limit: 5
         })
         if (findNo.length > 0) {
           const cekNo = []
@@ -751,7 +753,7 @@ module.exports = {
                   tanggalDis: moment()
                 }
                 await find.update(send)
-                temp.push(1)
+                temp.push('jual')
               } else {
                 const send = {
                   status_form: 2,
@@ -759,12 +761,182 @@ module.exports = {
                   tanggalDis: moment()
                 }
                 await find.update(send)
-                temp.push(1)
+                temp.push('musnah')
               }
             }
           }
           if (temp.length === result.length) {
-            return response(res, 'success submit', { cekNo })
+            const findDepo = await depo.findOne({
+              where: {
+                kode_plant: kode
+              }
+            })
+            if (findDepo) {
+              const findEmail = await user.findOne({
+                where: {
+                  [Op.or]: [
+                    { username: temp.find(element => element === 'jual') ? '' : findDepo.nama_bm },
+                    { user_level: temp.find(element => element === 'jual') ? 6 : '' }
+                  ]
+                }
+              })
+              if (findEmail) {
+                const data = {
+                  kode_plant: kode,
+                  jenis: 'disposal',
+                  no_proses: `D${noDis === undefined ? 1 : noDis}`,
+                  list_appr: findEmail.username,
+                  keterangan: 'pengajuan'
+                }
+                const createNotif = await notif.create(data)
+                if (createNotif) {
+                  let tableTd = ''
+                  for (let i = 0; i < result.length; i++) {
+                    const element = `
+                  <tr>
+                    <td>${result.indexOf(result[i]) + 1}</td>
+                    <td>D${noDis === undefined ? 1 : noDis}</td>
+                    <td>${result[i].no_asset}</td>
+                    <td>${result[i].nama_asset}</td>
+                    <td>${result[i].cost_center}</td>
+                    <td>${result[i].area}</td>
+                  </tr>`
+                    tableTd = tableTd + element
+                  }
+                  const mailOptions = {
+                    from: 'noreply_asset@pinusmerahabadi.co.id',
+                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                    to: `${findEmail.email}`,
+                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} (TESTING)`,
+                    html: `
+                  <head>
+                    <style type="text/css">
+                    body {
+                        display: flexbox;
+                        flex-direction: column;
+                    }
+                    .tittle {
+                        font-size: 15px;
+                    }
+                    .mar {
+                        margin-bottom: 20px;
+                    }
+                    .mar1 {
+                        margin-bottom: 10px;
+                    }
+                    .foot {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .foot1 {
+                        margin-bottom: 50px;
+                    }
+                    .position {
+                        display: flexbox;
+                        flex-direction: row;
+                        justify-content: left;
+                        margin-top: 10px;
+                    }
+                    table {
+                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                        font-size: 12px;
+                    }
+                    .demo-table {
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }
+                    .demo-table th, 
+                    .demo-table td {
+                        border-bottom: 1px solid #e1edff;
+                        border-left: 1px solid #e1edff;
+                        padding: 7px 17px;
+                    }
+                    .demo-table th, 
+                    .demo-table td:last-child {
+                        border-right: 1px solid #e1edff;
+                    }
+                    .demo-table td:first-child {
+                        border-top: 1px solid #e1edff;
+                    }
+                    .demo-table td:last-child{
+                        border-bottom: 0;
+                    }
+                    caption {
+                        caption-side: top;
+                        margin-bottom: 10px;
+                    }
+                    
+                    /* Table Header */
+                    .demo-table thead th {
+                        background-color: #508abb;
+                        color: #FFFFFF;
+                        border-color: #6ea1cc !important;
+                        text-transform: uppercase;
+                    }
+                    
+                    /* Table Body */
+                    .demo-table tbody td {
+                        color: #353535;
+                    }
+                    
+                    .demo-table tbody tr:nth-child(odd) td {
+                        background-color: #f4fbff;
+                    }
+                    .demo-table tbody tr:hover th,
+                    .demo-table tbody tr:hover td {
+                        background-color: #ffffa2;
+                        border-color: #ffff0f;
+                        transition: all .2s;
+                    }
+                </style>
+                  </head>
+                  <body>
+                      <div class="tittle mar">
+                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : 'BM'},
+                      </div>
+                      <div class="tittle mar1">
+                          <div>Mohon untuk approve pengajuan disposal asset area.</div>
+                      </div>
+                      <div class="position">
+                          <table class="demo-table">
+                              <thead>
+                                  <tr>
+                                      <th>No</th>
+                                      <th>No Disposal</th>
+                                      <th>Asset</th>
+                                      <th>Asset description</th>
+                                      <th>Cost Ctr</th>
+                                      <th>Cost Ctr Name</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                ${tableTd}
+                              </tbody>
+                          </table>
+                      </div>
+                      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                      <div class="tittle foot">
+                          Terima kasih,
+                      </div>
+                      <div class="tittle foot1">
+                          Regards,
+                      </div>
+                      <div class="tittle">
+                          Team Asset
+                      </div>
+                  </body>
+                  `
+                  }
+                  mailer.sendMail(mailOptions, (error, result) => {
+                    if (error) {
+                      return response(res, 'success submit', { cekNo })
+                    } else if (result) {
+                      return response(res, 'success approve disposal')
+                    }
+                  })
+                }
+              }
+            }
           } else {
             return response(res, 'failed submit', {}, 404, false)
           }
@@ -799,7 +971,177 @@ module.exports = {
             }
           }
           if (temp.length === result.length) {
-            return response(res, 'success submit', { cekNo })
+            const findDepo = await depo.findOne({
+              where: {
+                kode_plant: kode
+              }
+            })
+            if (findDepo) {
+              const findEmail = await user.findOne({
+                where: {
+                  [Op.or]: [
+                    { username: temp.find(element => element === 'jual') ? '' : findDepo.nama_bm },
+                    { user_level: temp.find(element => element === 'jual') ? 6 : '' }
+                  ]
+                }
+              })
+              if (findEmail) {
+                const data = {
+                  kode_plant: kode,
+                  jenis: 'disposal',
+                  no_proses: `D${noDis === undefined ? 1 : noDis}`,
+                  list_appr: findEmail.username,
+                  keterangan: 'pengajuan'
+                }
+                const createNotif = await notif.create(data)
+                if (createNotif) {
+                  let tableTd = ''
+                  for (let i = 0; i < result.length; i++) {
+                    const element = `
+                  <tr>
+                    <td>${result.indexOf(result[i]) + 1}</td>
+                    <td>D${noDis === undefined ? 1 : noDis}</td>
+                    <td>${result[i].no_asset}</td>
+                    <td>${result[i].nama_asset}</td>
+                    <td>${result[i].cost_center}</td>
+                    <td>${result[i].area}</td>
+                  </tr>`
+                    tableTd = tableTd + element
+                  }
+                  const mailOptions = {
+                    from: 'noreply_asset@pinusmerahabadi.co.id',
+                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                    to: `${findEmail.email}`,
+                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} (TESTING)`,
+                    html: `
+                  <head>
+                    <style type="text/css">
+                    body {
+                        display: flexbox;
+                        flex-direction: column;
+                    }
+                    .tittle {
+                        font-size: 15px;
+                    }
+                    .mar {
+                        margin-bottom: 20px;
+                    }
+                    .mar1 {
+                        margin-bottom: 10px;
+                    }
+                    .foot {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .foot1 {
+                        margin-bottom: 50px;
+                    }
+                    .position {
+                        display: flexbox;
+                        flex-direction: row;
+                        justify-content: left;
+                        margin-top: 10px;
+                    }
+                    table {
+                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                        font-size: 12px;
+                    }
+                    .demo-table {
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }
+                    .demo-table th, 
+                    .demo-table td {
+                        border-bottom: 1px solid #e1edff;
+                        border-left: 1px solid #e1edff;
+                        padding: 7px 17px;
+                    }
+                    .demo-table th, 
+                    .demo-table td:last-child {
+                        border-right: 1px solid #e1edff;
+                    }
+                    .demo-table td:first-child {
+                        border-top: 1px solid #e1edff;
+                    }
+                    .demo-table td:last-child{
+                        border-bottom: 0;
+                    }
+                    caption {
+                        caption-side: top;
+                        margin-bottom: 10px;
+                    }
+                    
+                    /* Table Header */
+                    .demo-table thead th {
+                        background-color: #508abb;
+                        color: #FFFFFF;
+                        border-color: #6ea1cc !important;
+                        text-transform: uppercase;
+                    }
+                    
+                    /* Table Body */
+                    .demo-table tbody td {
+                        color: #353535;
+                    }
+                    
+                    .demo-table tbody tr:nth-child(odd) td {
+                        background-color: #f4fbff;
+                    }
+                    .demo-table tbody tr:hover th,
+                    .demo-table tbody tr:hover td {
+                        background-color: #ffffa2;
+                        border-color: #ffff0f;
+                        transition: all .2s;
+                    }
+                </style>
+                  </head>
+                  <body>
+                      <div class="tittle mar">
+                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : 'BM'},
+                      </div>
+                      <div class="tittle mar1">
+                          <div>Mohon untuk approve pengajuan disposal asset area.</div>
+                      </div>
+                      <div class="position">
+                          <table class="demo-table">
+                              <thead>
+                                  <tr>
+                                      <th>No</th>
+                                      <th>No Disposal</th>
+                                      <th>Asset</th>
+                                      <th>Asset description</th>
+                                      <th>Cost Ctr</th>
+                                      <th>Cost Ctr Name</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                ${tableTd}
+                              </tbody>
+                          </table>
+                      </div>
+                      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                      <div class="tittle foot">
+                          Terima kasih,
+                      </div>
+                      <div class="tittle foot1">
+                          Regards,
+                      </div>
+                      <div class="tittle">
+                          Team Asset
+                      </div>
+                  </body>
+                  `
+                  }
+                  mailer.sendMail(mailOptions, (error, result) => {
+                    if (error) {
+                      return response(res, 'success submit', { cekNo })
+                    } else if (result) {
+                      return response(res, 'success approve disposal')
+                    }
+                  })
+                }
+              }
+            }
           } else {
             return response(res, 'failed submit', {}, 404, false)
           }

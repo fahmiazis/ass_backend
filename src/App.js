@@ -28,6 +28,7 @@ const stockRoute = require('./routes/stock')
 const clossRoute = require('./routes/clossing')
 const lokasiRoute = require('./routes/lokasi')
 const mutasiRoute = require('./routes/mutasi')
+const notifRoute = require('./routes/notif')
 
 const authMiddleware = require('./middlewares/auth')
 
@@ -50,6 +51,7 @@ app.use('/stock', authMiddleware, stockRoute)
 app.use('/clossing', authMiddleware, clossRoute)
 app.use('/lokasi', authMiddleware, lokasiRoute)
 app.use('/mutasi', authMiddleware, mutasiRoute)
+app.use('/notif', authMiddleware, notifRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)

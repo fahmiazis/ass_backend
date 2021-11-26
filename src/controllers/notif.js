@@ -7,7 +7,7 @@ module.exports = {
     const name = req.user.name
     const result = await notif.findAll({
       where: {
-        list_approve: name
+        list_appr: name
       },
       order: [['id', 'DESC']],
       limit: 20
