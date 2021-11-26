@@ -4818,7 +4818,189 @@ module.exports = {
             }
             const results = await result.update(data)
             if (results) {
-              return response(res, 'success submit eksekusi disposal')
+              const findDepo = await depo.findOne({
+                where: {
+                  kode_plant: result.kode_plant
+                }
+              })
+              if (findDepo) {
+                const findEmail = await user.findOne({
+                  where: {
+                    [Op.or]: [
+                      { username: findDepo.nama_bm }
+                    ]
+                  }
+                })
+                if (findEmail) {
+                  const data = {
+                    list_appr: findEmail.username
+                  }
+                  const findNotif = await notif.findOne({
+                    where: {
+                      [Op.and]: [
+                        { no_proses: result.no_disposal },
+                        { kode_plant: result.kode_plant }
+                      ]
+                    }
+                  })
+                  if (findNotif) {
+                    const createNotif = await findNotif.update(data)
+                    if (createNotif) {
+                      const findDis = await disposal.findAll({
+                        where: {
+                          no_disposal: result.no_disposal
+                        }
+                      })
+                      if (findDis) {
+                        let tableTd = ''
+                        for (let i = 0; i < findDis.length; i++) {
+                          const element = `
+                          <tr>
+                            <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                            <td>D${findDis[i].no_disposal}</td>
+                            <td>${findDis[i].no_asset}</td>
+                            <td>${findDis[i].nama_asset}</td>
+                            <td>${findDis[i].cost_center}</td>
+                            <td>${findDis[i].area}</td>
+                          </tr>`
+                          tableTd = tableTd + element
+                        }
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findEmail.email}`,
+                          subject: `Approve Pengajuan Disposal D${result.no_disposal} (TESTING)`,
+                          html: `
+                            <head>
+                              <style type="text/css">
+                              body {
+                                  display: flexbox;
+                                  flex-direction: column;
+                              }
+                              .tittle {
+                                  font-size: 15px;
+                              }
+                              .mar {
+                                  margin-bottom: 20px;
+                              }
+                              .mar1 {
+                                  margin-bottom: 10px;
+                              }
+                              .foot {
+                                  margin-top: 20px;
+                                  margin-bottom: 10px;
+                              }
+                              .foot1 {
+                                  margin-bottom: 50px;
+                              }
+                              .position {
+                                  display: flexbox;
+                                  flex-direction: row;
+                                  justify-content: left;
+                                  margin-top: 10px;
+                              }
+                              table {
+                                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                  font-size: 12px;
+                              }
+                              .demo-table {
+                                  border-collapse: collapse;
+                                  font-size: 13px;
+                              }
+                              .demo-table th, 
+                              .demo-table td {
+                                  border-bottom: 1px solid #e1edff;
+                                  border-left: 1px solid #e1edff;
+                                  padding: 7px 17px;
+                              }
+                              .demo-table th, 
+                              .demo-table td:last-child {
+                                  border-right: 1px solid #e1edff;
+                              }
+                              .demo-table td:first-child {
+                                  border-top: 1px solid #e1edff;
+                              }
+                              .demo-table td:last-child{
+                                  border-bottom: 0;
+                              }
+                              caption {
+                                  caption-side: top;
+                                  margin-bottom: 10px;
+                              }
+                              
+                              /* Table Header */
+                              .demo-table thead th {
+                                  background-color: #508abb;
+                                  color: #FFFFFF;
+                                  border-color: #6ea1cc !important;
+                                  text-transform: uppercase;
+                              }
+                              
+                              /* Table Body */
+                              .demo-table tbody td {
+                                  color: #353535;
+                              }
+                              
+                              .demo-table tbody tr:nth-child(odd) td {
+                                  background-color: #f4fbff;
+                              }
+                              .demo-table tbody tr:hover th,
+                              .demo-table tbody tr:hover td {
+                                  background-color: #ffffa2;
+                                  border-color: #ffff0f;
+                                  transition: all .2s;
+                              }
+                          </style>
+                            </head>
+                            <body>
+                                <div class="tittle mar">
+                                    Dear Bapak/Ibu BM,
+                                </div>
+                                <div class="tittle mar1">
+                                    <div>Mohon untuk approve pengajuan disposal asset area.</div>
+                                </div>
+                                <div class="position">
+                                    <table class="demo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>No Disposal</th>
+                                                <th>Asset</th>
+                                                <th>Asset description</th>
+                                                <th>Cost Ctr</th>
+                                                <th>Cost Ctr Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                          ${tableTd}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                <div class="tittle foot">
+                                    Terima kasih,
+                                </div>
+                                <div class="tittle foot1">
+                                    Regards,
+                                </div>
+                                <div class="tittle">
+                                    Team Asset
+                                </div>
+                            </body>
+                          `
+                        }
+                        mailer.sendMail(mailOptions, (error, result) => {
+                          if (error) {
+                            return response(res, 'success submit', { no })
+                          } else if (result) {
+                            return response(res, 'success approve disposal')
+                          }
+                        })
+                      }
+                    }
+                  }
+                }
+              }
             } else {
               return response(res, 'failed submit disposal', {}, 400, false)
             }
