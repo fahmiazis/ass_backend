@@ -5426,7 +5426,153 @@ module.exports = {
                     }
                     const upAsset = await findAsset.update(send)
                     if (upAsset) {
-                      return response(res, 'success submit eksekusi disposal')
+                      const findUser = await email.findOne({
+                        where: {
+                          kode_plant: result.kode_plant
+                        }
+                      })
+                      if (findUser) {
+                        const tableTd = `
+                          <tr>
+                            <td>1</td>
+                            <td>D${result.no_disposal}</td>
+                            <td>${result.no_asset}</td>
+                            <td>${result.nama_asset}</td>
+                            <td>${result.cost_center}</td>
+                            <td>${result.area}</td>
+                          </tr>`
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findUser.email}`,
+                          subject: `Selesai Proses Disposal Asset ${result.no_asset} (TESTING)`,
+                          html: `
+                            <head>
+                              <style type="text/css">
+                              body {
+                                  display: flexbox;
+                                  flex-direction: column;
+                              }
+                              .tittle {
+                                  font-size: 15px;
+                              }
+                              .mar {
+                                  margin-bottom: 20px;
+                              }
+                              .mar1 {
+                                  margin-bottom: 10px;
+                              }
+                              .foot {
+                                  margin-top: 20px;
+                                  margin-bottom: 10px;
+                              }
+                              .foot1 {
+                                  margin-bottom: 50px;
+                              }
+                              .position {
+                                  display: flexbox;
+                                  flex-direction: row;
+                                  justify-content: left;
+                                  margin-top: 10px;
+                              }
+                              table {
+                                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                  font-size: 12px;
+                              }
+                              .demo-table {
+                                  border-collapse: collapse;
+                                  font-size: 13px;
+                              }
+                              .demo-table th, 
+                              .demo-table td {
+                                  border-bottom: 1px solid #e1edff;
+                                  border-left: 1px solid #e1edff;
+                                  padding: 7px 17px;
+                              }
+                              .demo-table th, 
+                              .demo-table td:last-child {
+                                  border-right: 1px solid #e1edff;
+                              }
+                              .demo-table td:first-child {
+                                  border-top: 1px solid #e1edff;
+                              }
+                              .demo-table td:last-child{
+                                  border-bottom: 0;
+                              }
+                              caption {
+                                  caption-side: top;
+                                  margin-bottom: 10px;
+                              }
+                              
+                              /* Table Header */
+                              .demo-table thead th {
+                                  background-color: #508abb;
+                                  color: #FFFFFF;
+                                  border-color: #6ea1cc !important;
+                                  text-transform: uppercase;
+                              }
+                              
+                              /* Table Body */
+                              .demo-table tbody td {
+                                  color: #353535;
+                              }
+                              
+                              .demo-table tbody tr:nth-child(odd) td {
+                                  background-color: #f4fbff;
+                              }
+                              .demo-table tbody tr:hover th,
+                              .demo-table tbody tr:hover td {
+                                  background-color: #ffffa2;
+                                  border-color: #ffff0f;
+                                  transition: all .2s;
+                              }
+                          </style>
+                            </head>
+                            <body>
+                                <div class="tittle mar">
+                                    Dear Bapak/Ibu Asset,
+                                </div>
+                                <div class="tittle mar1">
+                                    <div>Asset telah selesai diproses dengan rincian sebagai berikut</div>
+                                </div>
+                                <div class="position">
+                                    <table class="demo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>No Disposal</th>
+                                                <th>Asset</th>
+                                                <th>Asset description</th>
+                                                <th>Cost Ctr</th>
+                                                <th>Cost Ctr Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                          ${tableTd}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                <div class="tittle foot">
+                                    Terima kasih,
+                                </div>
+                                <div class="tittle foot1">
+                                    Regards,
+                                </div>
+                                <div class="tittle">
+                                    Team Asset
+                                </div>
+                            </body>
+                            `
+                        }
+                        mailer.sendMail(mailOptions, (error, result) => {
+                          if (error) {
+                            return response(res, 'success submit', { result })
+                          } else if (result) {
+                            return response(res, 'success submit eksekusi disposal')
+                          }
+                        })
+                      }
                     } else {
                       return response(res, 'failed submit disposal', {}, 400, false)
                     }
@@ -5452,7 +5598,164 @@ module.exports = {
                 }
                 const results = await result.update(data)
                 if (results) {
-                  return response(res, 'success submit eksekusi disposal')
+                  const findUser = await user.findOne({
+                    where: {
+                      user_level: 2
+                    }
+                  })
+                  if (findUser) {
+                    const data = {
+                      kode_plant: result.kode_plant,
+                      jenis: 'disposal',
+                      no_proses: no,
+                      list_appr: findUser.username,
+                      keterangan: 'eksekusi',
+                      response: 'request'
+                    }
+                    const createNotif = await notif.create(data)
+                    if (createNotif) {
+                      const tableTd = `
+                      <tr>
+                        <td>1</td>
+                        <td>D${result.no_disposal}</td>
+                        <td>${result.no_asset}</td>
+                        <td>${result.nama_asset}</td>
+                        <td>${result.cost_center}</td>
+                        <td>${result.area}</td>
+                      </tr>`
+                      const mailOptions = {
+                        from: 'noreply_asset@pinusmerahabadi.co.id',
+                        replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                        to: `${findUser.email}`,
+                        subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                        html: `
+                        <head>
+                          <style type="text/css">
+                          body {
+                              display: flexbox;
+                              flex-direction: column;
+                          }
+                          .tittle {
+                              font-size: 15px;
+                          }
+                          .mar {
+                              margin-bottom: 20px;
+                          }
+                          .mar1 {
+                              margin-bottom: 10px;
+                          }
+                          .foot {
+                              margin-top: 20px;
+                              margin-bottom: 10px;
+                          }
+                          .foot1 {
+                              margin-bottom: 50px;
+                          }
+                          .position {
+                              display: flexbox;
+                              flex-direction: row;
+                              justify-content: left;
+                              margin-top: 10px;
+                          }
+                          table {
+                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                              font-size: 12px;
+                          }
+                          .demo-table {
+                              border-collapse: collapse;
+                              font-size: 13px;
+                          }
+                          .demo-table th, 
+                          .demo-table td {
+                              border-bottom: 1px solid #e1edff;
+                              border-left: 1px solid #e1edff;
+                              padding: 7px 17px;
+                          }
+                          .demo-table th, 
+                          .demo-table td:last-child {
+                              border-right: 1px solid #e1edff;
+                          }
+                          .demo-table td:first-child {
+                              border-top: 1px solid #e1edff;
+                          }
+                          .demo-table td:last-child{
+                              border-bottom: 0;
+                          }
+                          caption {
+                              caption-side: top;
+                              margin-bottom: 10px;
+                          }
+                          
+                          /* Table Header */
+                          .demo-table thead th {
+                              background-color: #508abb;
+                              color: #FFFFFF;
+                              border-color: #6ea1cc !important;
+                              text-transform: uppercase;
+                          }
+                          
+                          /* Table Body */
+                          .demo-table tbody td {
+                              color: #353535;
+                          }
+                          
+                          .demo-table tbody tr:nth-child(odd) td {
+                              background-color: #f4fbff;
+                          }
+                          .demo-table tbody tr:hover th,
+                          .demo-table tbody tr:hover td {
+                              background-color: #ffffa2;
+                              border-color: #ffff0f;
+                              transition: all .2s;
+                          }
+                      </style>
+                        </head>
+                        <body>
+                            <div class="tittle mar">
+                                Dear Team Asset,
+                            </div>
+                            <div class="tittle mar1">
+                                <div>Mohon untuk proses Eksekusi disposal asset area.</div>
+                            </div>
+                            <div class="position">
+                                <table class="demo-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>No Disposal</th>
+                                            <th>Asset</th>
+                                            <th>Asset description</th>
+                                            <th>Cost Ctr</th>
+                                            <th>Cost Ctr Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      ${tableTd}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                            <div class="tittle foot">
+                                Terima kasih,
+                            </div>
+                            <div class="tittle foot1">
+                                Regards,
+                            </div>
+                            <div class="tittle">
+                                Team Asset
+                            </div>
+                        </body>
+                        `
+                      }
+                      mailer.sendMail(mailOptions, (error, result) => {
+                        if (error) {
+                          return response(res, 'success submit', { result })
+                        } else if (result) {
+                          return response(res, 'success submit eksekusi disposal')
+                        }
+                      })
+                    }
+                  }
                 } else {
                   return response(res, 'failed submit disposal', {}, 400, false)
                 }
@@ -5504,7 +5807,313 @@ module.exports = {
                       }
                       const results = await result.update(data)
                       if (results) {
-                        return response(res, 'success submit eksekusi disposal')
+                        const findUser = await user.findOne({
+                          where: {
+                            user_level: 4
+                          }
+                        })
+                        const findTax = await user.findOne({
+                          where: {
+                            user_level: 3
+                          }
+                        })
+                        if (findUser && findTax) {
+                          const data = {
+                            kode_plant: result.kode_plant,
+                            jenis: 'disposal',
+                            no_proses: no,
+                            list_appr: findUser.username,
+                            keterangan: 'finance',
+                            response: 'request'
+                          }
+                          const data1 = {
+                            kode_plant: result.kode_plant,
+                            jenis: 'disposal',
+                            no_proses: no,
+                            list_appr: findTax.username,
+                            keterangan: 'tax',
+                            response: 'request'
+                          }
+                          const createNotifFin = await notif.create(data)
+                          const createNotifTax = await notif.create(data1)
+                          if (createNotifFin && createNotifTax) {
+                            const tableTd = `
+                            <tr>
+                              <td>1</td>
+                              <td>D${result.no_disposal}</td>
+                              <td>${result.no_asset}</td>
+                              <td>${result.nama_asset}</td>
+                              <td>${result.cost_center}</td>
+                              <td>${result.area}</td>
+                            </tr>`
+                            const mailOptions = {
+                              from: 'noreply_asset@pinusmerahabadi.co.id',
+                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                              to: `${findUser.email}`,
+                              subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                              html: `
+                              <head>
+                                <style type="text/css">
+                                body {
+                                    display: flexbox;
+                                    flex-direction: column;
+                                }
+                                .tittle {
+                                    font-size: 15px;
+                                }
+                                .mar {
+                                    margin-bottom: 20px;
+                                }
+                                .mar1 {
+                                    margin-bottom: 10px;
+                                }
+                                .foot {
+                                    margin-top: 20px;
+                                    margin-bottom: 10px;
+                                }
+                                .foot1 {
+                                    margin-bottom: 50px;
+                                }
+                                .position {
+                                    display: flexbox;
+                                    flex-direction: row;
+                                    justify-content: left;
+                                    margin-top: 10px;
+                                }
+                                table {
+                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                    font-size: 12px;
+                                }
+                                .demo-table {
+                                    border-collapse: collapse;
+                                    font-size: 13px;
+                                }
+                                .demo-table th, 
+                                .demo-table td {
+                                    border-bottom: 1px solid #e1edff;
+                                    border-left: 1px solid #e1edff;
+                                    padding: 7px 17px;
+                                }
+                                .demo-table th, 
+                                .demo-table td:last-child {
+                                    border-right: 1px solid #e1edff;
+                                }
+                                .demo-table td:first-child {
+                                    border-top: 1px solid #e1edff;
+                                }
+                                .demo-table td:last-child{
+                                    border-bottom: 0;
+                                }
+                                caption {
+                                    caption-side: top;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                /* Table Header */
+                                .demo-table thead th {
+                                    background-color: #508abb;
+                                    color: #FFFFFF;
+                                    border-color: #6ea1cc !important;
+                                    text-transform: uppercase;
+                                }
+                                
+                                /* Table Body */
+                                .demo-table tbody td {
+                                    color: #353535;
+                                }
+                                
+                                .demo-table tbody tr:nth-child(odd) td {
+                                    background-color: #f4fbff;
+                                }
+                                .demo-table tbody tr:hover th,
+                                .demo-table tbody tr:hover td {
+                                    background-color: #ffffa2;
+                                    border-color: #ffff0f;
+                                    transition: all .2s;
+                                }
+                            </style>
+                              </head>
+                              <body>
+                                  <div class="tittle mar">
+                                      Dear Team Finance,
+                                  </div>
+                                  <div class="tittle mar1">
+                                      <div>Mohon bantuannya untuk cek uang masuk hasil penjualan aset dibawah ini:</div>
+                                  </div>
+                                  <div class="position mar1">
+                                      <table class="demo-table">
+                                          <thead>
+                                              <tr>
+                                                  <th>No</th>
+                                                  <th>No Disposal</th>
+                                                  <th>Asset</th>
+                                                  <th>Asset description</th>
+                                                  <th>Cost Ctr</th>
+                                                  <th>Cost Ctr Name</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                            ${tableTd}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <div class="tittle">Jika uang masuk sudah sesuai, mohon segera:</div>
+                                  <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
+                                  <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
+                                  <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
+                                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                  <div class="tittle foot">
+                                      Terima kasih,
+                                  </div>
+                                  <div class="tittle foot1">
+                                      Regards,
+                                  </div>
+                                  <div class="tittle">
+                                      Team Asset
+                                  </div>
+                              </body>
+                              `
+                            }
+                            const mailOptionsTax = {
+                              from: 'noreply_asset@pinusmerahabadi.co.id',
+                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                              to: `${findTax.email}`,
+                              subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                              html: `
+                              <head>
+                                <style type="text/css">
+                                body {
+                                    display: flexbox;
+                                    flex-direction: column;
+                                }
+                                .tittle {
+                                    font-size: 15px;
+                                }
+                                .mar {
+                                    margin-bottom: 20px;
+                                }
+                                .mar1 {
+                                    margin-bottom: 10px;
+                                }
+                                .foot {
+                                    margin-top: 20px;
+                                    margin-bottom: 10px;
+                                }
+                                .foot1 {
+                                    margin-bottom: 50px;
+                                }
+                                .position {
+                                    display: flexbox;
+                                    flex-direction: row;
+                                    justify-content: left;
+                                    margin-top: 10px;
+                                }
+                                table {
+                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                    font-size: 12px;
+                                }
+                                .demo-table {
+                                    border-collapse: collapse;
+                                    font-size: 13px;
+                                }
+                                .demo-table th, 
+                                .demo-table td {
+                                    border-bottom: 1px solid #e1edff;
+                                    border-left: 1px solid #e1edff;
+                                    padding: 7px 17px;
+                                }
+                                .demo-table th, 
+                                .demo-table td:last-child {
+                                    border-right: 1px solid #e1edff;
+                                }
+                                .demo-table td:first-child {
+                                    border-top: 1px solid #e1edff;
+                                }
+                                .demo-table td:last-child{
+                                    border-bottom: 0;
+                                }
+                                caption {
+                                    caption-side: top;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                /* Table Header */
+                                .demo-table thead th {
+                                    background-color: #508abb;
+                                    color: #FFFFFF;
+                                    border-color: #6ea1cc !important;
+                                    text-transform: uppercase;
+                                }
+                                
+                                /* Table Body */
+                                .demo-table tbody td {
+                                    color: #353535;
+                                }
+                                
+                                .demo-table tbody tr:nth-child(odd) td {
+                                    background-color: #f4fbff;
+                                }
+                                .demo-table tbody tr:hover th,
+                                .demo-table tbody tr:hover td {
+                                    background-color: #ffffa2;
+                                    border-color: #ffff0f;
+                                    transition: all .2s;
+                                }
+                            </style>
+                              </head>
+                              <body>
+                                  <div class="tittle mar">
+                                      Dear Team Tax,
+                                  </div>
+                                  <div class="tittle mar1">
+                                      <div>Mohon bantuannya untuk membuat dan upload faktur pajak atas penjualan asset yang sudah diajukan melalui web dibawah ini:</div>
+                                  </div>
+                                  <div class="position">
+                                      <table class="demo-table">
+                                          <thead>
+                                              <tr>
+                                                  <th>No</th>
+                                                  <th>No Disposal</th>
+                                                  <th>Asset</th>
+                                                  <th>Asset description</th>
+                                                  <th>Cost Ctr</th>
+                                                  <th>Cost Ctr Name</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                            ${tableTd}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                  <div class="tittle foot">
+                                      Terima kasih,
+                                  </div>
+                                  <div class="tittle foot1">
+                                      Regards,
+                                  </div>
+                                  <div class="tittle">
+                                      Team Asset
+                                  </div>
+                              </body>
+                              `
+                            }
+                            mailer.sendMail(mailOptions, (error, result) => {
+                              if (error) {
+                                console.log('success submit')
+                              } else if (result) {
+                                console.log('success submit eksekusi disposal')
+                              }
+                            })
+                            mailer.sendMail(mailOptionsTax, (error, result) => {
+                              if (error) {
+                                return response(res, 'success submit', { result })
+                              } else if (result) {
+                                return response(res, 'success submit eksekusi disposal')
+                              }
+                            })
+                          }
+                        }
                       } else {
                         return response(res, 'failed submit disposal', {}, 400, false)
                       }
@@ -5524,7 +6133,164 @@ module.exports = {
                       }
                       const results = await result.update(data)
                       if (results) {
-                        return response(res, 'success submit eksekusi disposal')
+                        const findUser = await user.findOne({
+                          where: {
+                            user_level: 2
+                          }
+                        })
+                        if (findUser) {
+                          const data = {
+                            kode_plant: result.kode_plant,
+                            jenis: 'disposal',
+                            no_proses: no,
+                            list_appr: findUser.username,
+                            keterangan: 'eksekusi',
+                            response: 'request'
+                          }
+                          const createNotif = await notif.create(data)
+                          if (createNotif) {
+                            const tableTd = `
+                            <tr>
+                              <td>1</td>
+                              <td>D${result.no_disposal}</td>
+                              <td>${result.no_asset}</td>
+                              <td>${result.nama_asset}</td>
+                              <td>${result.cost_center}</td>
+                              <td>${result.area}</td>
+                            </tr>`
+                            const mailOptions = {
+                              from: 'noreply_asset@pinusmerahabadi.co.id',
+                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                              to: `${findUser.email}`,
+                              subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                              html: `
+                              <head>
+                                <style type="text/css">
+                                body {
+                                    display: flexbox;
+                                    flex-direction: column;
+                                }
+                                .tittle {
+                                    font-size: 15px;
+                                }
+                                .mar {
+                                    margin-bottom: 20px;
+                                }
+                                .mar1 {
+                                    margin-bottom: 10px;
+                                }
+                                .foot {
+                                    margin-top: 20px;
+                                    margin-bottom: 10px;
+                                }
+                                .foot1 {
+                                    margin-bottom: 50px;
+                                }
+                                .position {
+                                    display: flexbox;
+                                    flex-direction: row;
+                                    justify-content: left;
+                                    margin-top: 10px;
+                                }
+                                table {
+                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                    font-size: 12px;
+                                }
+                                .demo-table {
+                                    border-collapse: collapse;
+                                    font-size: 13px;
+                                }
+                                .demo-table th, 
+                                .demo-table td {
+                                    border-bottom: 1px solid #e1edff;
+                                    border-left: 1px solid #e1edff;
+                                    padding: 7px 17px;
+                                }
+                                .demo-table th, 
+                                .demo-table td:last-child {
+                                    border-right: 1px solid #e1edff;
+                                }
+                                .demo-table td:first-child {
+                                    border-top: 1px solid #e1edff;
+                                }
+                                .demo-table td:last-child{
+                                    border-bottom: 0;
+                                }
+                                caption {
+                                    caption-side: top;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                /* Table Header */
+                                .demo-table thead th {
+                                    background-color: #508abb;
+                                    color: #FFFFFF;
+                                    border-color: #6ea1cc !important;
+                                    text-transform: uppercase;
+                                }
+                                
+                                /* Table Body */
+                                .demo-table tbody td {
+                                    color: #353535;
+                                }
+                                
+                                .demo-table tbody tr:nth-child(odd) td {
+                                    background-color: #f4fbff;
+                                }
+                                .demo-table tbody tr:hover th,
+                                .demo-table tbody tr:hover td {
+                                    background-color: #ffffa2;
+                                    border-color: #ffff0f;
+                                    transition: all .2s;
+                                }
+                            </style>
+                              </head>
+                              <body>
+                                  <div class="tittle mar">
+                                      Dear Bapak/Ibu Asset,
+                                  </div>
+                                  <div class="tittle mar1">
+                                      <div>Mohon untuk proses disposal asset area.</div>
+                                  </div>
+                                  <div class="position">
+                                      <table class="demo-table">
+                                          <thead>
+                                              <tr>
+                                                  <th>No</th>
+                                                  <th>No Disposal</th>
+                                                  <th>Asset</th>
+                                                  <th>Asset description</th>
+                                                  <th>Cost Ctr</th>
+                                                  <th>Cost Ctr Name</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                            ${tableTd}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                  <div class="tittle foot">
+                                      Terima kasih,
+                                  </div>
+                                  <div class="tittle foot1">
+                                      Regards,
+                                  </div>
+                                  <div class="tittle">
+                                      Team Asset
+                                  </div>
+                              </body>
+                              `
+                            }
+                            mailer.sendMail(mailOptions, (error, result) => {
+                              if (error) {
+                                return response(res, 'success submit', { result })
+                              } else if (result) {
+                                return response(res, 'success submit eksekusi disposal')
+                              }
+                            })
+                          }
+                        }
                       } else {
                         return response(res, 'failed submit disposal', {}, 400, false)
                       }
@@ -5565,7 +6331,313 @@ module.exports = {
                   }
                   const results = await result.update(data)
                   if (results) {
-                    return response(res, 'success submit eksekusi disposal')
+                    const findUser = await user.findOne({
+                      where: {
+                        user_level: 4
+                      }
+                    })
+                    const findTax = await user.findOne({
+                      where: {
+                        user_level: 3
+                      }
+                    })
+                    if (findUser && findTax) {
+                      const data = {
+                        kode_plant: result.kode_plant,
+                        jenis: 'disposal',
+                        no_proses: no,
+                        list_appr: findUser.username,
+                        keterangan: 'finance',
+                        response: 'request'
+                      }
+                      const data1 = {
+                        kode_plant: result.kode_plant,
+                        jenis: 'disposal',
+                        no_proses: no,
+                        list_appr: findTax.username,
+                        keterangan: 'tax',
+                        response: 'request'
+                      }
+                      const createNotifFin = await notif.create(data)
+                      const createNotifTax = await notif.create(data1)
+                      if (createNotifFin && createNotifTax) {
+                        const tableTd = `
+                        <tr>
+                          <td>1</td>
+                          <td>D${result.no_disposal}</td>
+                          <td>${result.no_asset}</td>
+                          <td>${result.nama_asset}</td>
+                          <td>${result.cost_center}</td>
+                          <td>${result.area}</td>
+                        </tr>`
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findUser.email}`,
+                          subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                          html: `
+                          <head>
+                            <style type="text/css">
+                            body {
+                                display: flexbox;
+                                flex-direction: column;
+                            }
+                            .tittle {
+                                font-size: 15px;
+                            }
+                            .mar {
+                                margin-bottom: 20px;
+                            }
+                            .mar1 {
+                                margin-bottom: 10px;
+                            }
+                            .foot {
+                                margin-top: 20px;
+                                margin-bottom: 10px;
+                            }
+                            .foot1 {
+                                margin-bottom: 50px;
+                            }
+                            .position {
+                                display: flexbox;
+                                flex-direction: row;
+                                justify-content: left;
+                                margin-top: 10px;
+                            }
+                            table {
+                                font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                font-size: 12px;
+                            }
+                            .demo-table {
+                                border-collapse: collapse;
+                                font-size: 13px;
+                            }
+                            .demo-table th, 
+                            .demo-table td {
+                                border-bottom: 1px solid #e1edff;
+                                border-left: 1px solid #e1edff;
+                                padding: 7px 17px;
+                            }
+                            .demo-table th, 
+                            .demo-table td:last-child {
+                                border-right: 1px solid #e1edff;
+                            }
+                            .demo-table td:first-child {
+                                border-top: 1px solid #e1edff;
+                            }
+                            .demo-table td:last-child{
+                                border-bottom: 0;
+                            }
+                            caption {
+                                caption-side: top;
+                                margin-bottom: 10px;
+                            }
+                            
+                            /* Table Header */
+                            .demo-table thead th {
+                                background-color: #508abb;
+                                color: #FFFFFF;
+                                border-color: #6ea1cc !important;
+                                text-transform: uppercase;
+                            }
+                            
+                            /* Table Body */
+                            .demo-table tbody td {
+                                color: #353535;
+                            }
+                            
+                            .demo-table tbody tr:nth-child(odd) td {
+                                background-color: #f4fbff;
+                            }
+                            .demo-table tbody tr:hover th,
+                            .demo-table tbody tr:hover td {
+                                background-color: #ffffa2;
+                                border-color: #ffff0f;
+                                transition: all .2s;
+                            }
+                        </style>
+                          </head>
+                          <body>
+                              <div class="tittle mar">
+                                  Dear Team Finance,
+                              </div>
+                              <div class="tittle mar1">
+                                  <div>Mohon bantuannya untuk cek uang masuk hasil penjualan aset dibawah ini:</div>
+                              </div>
+                              <div class="position mar1">
+                                  <table class="demo-table">
+                                      <thead>
+                                          <tr>
+                                              <th>No</th>
+                                              <th>No Disposal</th>
+                                              <th>Asset</th>
+                                              <th>Asset description</th>
+                                              <th>Cost Ctr</th>
+                                              <th>Cost Ctr Name</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                        ${tableTd}
+                                      </tbody>
+                                  </table>
+                              </div>
+                              <div class="tittle">Jika uang masuk sudah sesuai, mohon segera:</div>
+                              <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
+                              <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
+                              <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
+                              <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                              <div class="tittle foot">
+                                  Terima kasih,
+                              </div>
+                              <div class="tittle foot1">
+                                  Regards,
+                              </div>
+                              <div class="tittle">
+                                  Team Asset
+                              </div>
+                          </body>
+                          `
+                        }
+                        const mailOptionsTax = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findTax.email}`,
+                          subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                          html: `
+                          <head>
+                            <style type="text/css">
+                            body {
+                                display: flexbox;
+                                flex-direction: column;
+                            }
+                            .tittle {
+                                font-size: 15px;
+                            }
+                            .mar {
+                                margin-bottom: 20px;
+                            }
+                            .mar1 {
+                                margin-bottom: 10px;
+                            }
+                            .foot {
+                                margin-top: 20px;
+                                margin-bottom: 10px;
+                            }
+                            .foot1 {
+                                margin-bottom: 50px;
+                            }
+                            .position {
+                                display: flexbox;
+                                flex-direction: row;
+                                justify-content: left;
+                                margin-top: 10px;
+                            }
+                            table {
+                                font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                font-size: 12px;
+                            }
+                            .demo-table {
+                                border-collapse: collapse;
+                                font-size: 13px;
+                            }
+                            .demo-table th, 
+                            .demo-table td {
+                                border-bottom: 1px solid #e1edff;
+                                border-left: 1px solid #e1edff;
+                                padding: 7px 17px;
+                            }
+                            .demo-table th, 
+                            .demo-table td:last-child {
+                                border-right: 1px solid #e1edff;
+                            }
+                            .demo-table td:first-child {
+                                border-top: 1px solid #e1edff;
+                            }
+                            .demo-table td:last-child{
+                                border-bottom: 0;
+                            }
+                            caption {
+                                caption-side: top;
+                                margin-bottom: 10px;
+                            }
+                            
+                            /* Table Header */
+                            .demo-table thead th {
+                                background-color: #508abb;
+                                color: #FFFFFF;
+                                border-color: #6ea1cc !important;
+                                text-transform: uppercase;
+                            }
+                            
+                            /* Table Body */
+                            .demo-table tbody td {
+                                color: #353535;
+                            }
+                            
+                            .demo-table tbody tr:nth-child(odd) td {
+                                background-color: #f4fbff;
+                            }
+                            .demo-table tbody tr:hover th,
+                            .demo-table tbody tr:hover td {
+                                background-color: #ffffa2;
+                                border-color: #ffff0f;
+                                transition: all .2s;
+                            }
+                        </style>
+                          </head>
+                          <body>
+                              <div class="tittle mar">
+                                  Dear Team Tax,
+                              </div>
+                              <div class="tittle mar1">
+                                  <div>Mohon bantuannya untuk membuat dan upload faktur pajak atas penjualan asset yang sudah diajukan melalui web dibawah ini:</div>
+                              </div>
+                              <div class="position">
+                                  <table class="demo-table">
+                                      <thead>
+                                          <tr>
+                                              <th>No</th>
+                                              <th>No Disposal</th>
+                                              <th>Asset</th>
+                                              <th>Asset description</th>
+                                              <th>Cost Ctr</th>
+                                              <th>Cost Ctr Name</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                        ${tableTd}
+                                      </tbody>
+                                  </table>
+                              </div>
+                              <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                              <div class="tittle foot">
+                                  Terima kasih,
+                              </div>
+                              <div class="tittle foot1">
+                                  Regards,
+                              </div>
+                              <div class="tittle">
+                                  Team Asset
+                              </div>
+                          </body>
+                          `
+                        }
+                        mailer.sendMail(mailOptions, (error, result) => {
+                          if (error) {
+                            console.log('success submit')
+                          } else if (result) {
+                            console.log('success submit eksekusi disposal')
+                          }
+                        })
+                        mailer.sendMail(mailOptionsTax, (error, result) => {
+                          if (error) {
+                            return response(res, 'success submit', { result })
+                          } else if (result) {
+                            return response(res, 'success submit eksekusi disposal')
+                          }
+                        })
+                      }
+                    }
                   } else {
                     return response(res, 'failed submit disposal', {}, 400, false)
                   }
@@ -5585,7 +6657,164 @@ module.exports = {
                   }
                   const results = await result.update(data)
                   if (results) {
-                    return response(res, 'success submit eksekusi disposal')
+                    const findUser = await user.findOne({
+                      where: {
+                        user_level: 2
+                      }
+                    })
+                    if (findUser) {
+                      const data = {
+                        kode_plant: result.kode_plant,
+                        jenis: 'disposal',
+                        no_proses: no,
+                        list_appr: findUser.username,
+                        keterangan: 'eksekusi',
+                        response: 'request'
+                      }
+                      const createNotif = await notif.create(data)
+                      if (createNotif) {
+                        const tableTd = `
+                        <tr>
+                          <td>1</td>
+                          <td>D${result.no_disposal}</td>
+                          <td>${result.no_asset}</td>
+                          <td>${result.nama_asset}</td>
+                          <td>${result.cost_center}</td>
+                          <td>${result.area}</td>
+                        </tr>`
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findUser.email}`,
+                          subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                          html: `
+                          <head>
+                            <style type="text/css">
+                            body {
+                                display: flexbox;
+                                flex-direction: column;
+                            }
+                            .tittle {
+                                font-size: 15px;
+                            }
+                            .mar {
+                                margin-bottom: 20px;
+                            }
+                            .mar1 {
+                                margin-bottom: 10px;
+                            }
+                            .foot {
+                                margin-top: 20px;
+                                margin-bottom: 10px;
+                            }
+                            .foot1 {
+                                margin-bottom: 50px;
+                            }
+                            .position {
+                                display: flexbox;
+                                flex-direction: row;
+                                justify-content: left;
+                                margin-top: 10px;
+                            }
+                            table {
+                                font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                font-size: 12px;
+                            }
+                            .demo-table {
+                                border-collapse: collapse;
+                                font-size: 13px;
+                            }
+                            .demo-table th, 
+                            .demo-table td {
+                                border-bottom: 1px solid #e1edff;
+                                border-left: 1px solid #e1edff;
+                                padding: 7px 17px;
+                            }
+                            .demo-table th, 
+                            .demo-table td:last-child {
+                                border-right: 1px solid #e1edff;
+                            }
+                            .demo-table td:first-child {
+                                border-top: 1px solid #e1edff;
+                            }
+                            .demo-table td:last-child{
+                                border-bottom: 0;
+                            }
+                            caption {
+                                caption-side: top;
+                                margin-bottom: 10px;
+                            }
+                            
+                            /* Table Header */
+                            .demo-table thead th {
+                                background-color: #508abb;
+                                color: #FFFFFF;
+                                border-color: #6ea1cc !important;
+                                text-transform: uppercase;
+                            }
+                            
+                            /* Table Body */
+                            .demo-table tbody td {
+                                color: #353535;
+                            }
+                            
+                            .demo-table tbody tr:nth-child(odd) td {
+                                background-color: #f4fbff;
+                            }
+                            .demo-table tbody tr:hover th,
+                            .demo-table tbody tr:hover td {
+                                background-color: #ffffa2;
+                                border-color: #ffff0f;
+                                transition: all .2s;
+                            }
+                        </style>
+                          </head>
+                          <body>
+                              <div class="tittle mar">
+                                  Dear Bapak/Ibu Asset,
+                              </div>
+                              <div class="tittle mar1">
+                                  <div>Mohon untuk proses disposal asset area.</div>
+                              </div>
+                              <div class="position">
+                                  <table class="demo-table">
+                                      <thead>
+                                          <tr>
+                                              <th>No</th>
+                                              <th>No Disposal</th>
+                                              <th>Asset</th>
+                                              <th>Asset description</th>
+                                              <th>Cost Ctr</th>
+                                              <th>Cost Ctr Name</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                        ${tableTd}
+                                      </tbody>
+                                  </table>
+                              </div>
+                              <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                              <div class="tittle foot">
+                                  Terima kasih,
+                              </div>
+                              <div class="tittle foot1">
+                                  Regards,
+                              </div>
+                              <div class="tittle">
+                                  Team Asset
+                              </div>
+                          </body>
+                          `
+                        }
+                        mailer.sendMail(mailOptions, (error, result) => {
+                          if (error) {
+                            return response(res, 'success submit', { result })
+                          } else if (result) {
+                            return response(res, 'success submit eksekusi disposal')
+                          }
+                        })
+                      }
+                    }
                   } else {
                     return response(res, 'failed submit disposal', {}, 400, false)
                   }
