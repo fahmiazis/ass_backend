@@ -3900,25 +3900,183 @@ module.exports = {
         }
       })
       if (result) {
-        if (result.no_io === 'finance' || result.no_io === 'tax' || result.no_io === 'taxfin') {
+        const findUser = await user.findOne({
+          where: {
+            user_level: tipe === 'tax' ? 3 : 4
+          }
+        })
+        if (findUser) {
           const data = {
-            no_io: 'taxfin'
+            kode_plant: result.kode_plant,
+            jenis: 'disposal',
+            no_proses: no,
+            list_appr: findUser.username,
+            keterangan: tipe,
+            response: 'revisi'
           }
-          const sent = await result.update(data)
-          if (sent) {
-            return response(res, 'success reject tax and finance')
-          } else {
-            return response(res, 'failed reject tax and finance', {}, 404, false)
-          }
-        } else {
-          const data = {
-            no_io: tipe
-          }
-          const sent = await result.update(data)
-          if (sent) {
-            return response(res, 'success reject tax and finance')
-          } else {
-            return response(res, 'failed reject tax and finance', {}, 404, false)
+          const createNotif = await notif.create(data)
+          if (createNotif) {
+            const tableTd = `
+              <tr>
+                <td>1</td>
+                <td>D${result.no_disposal}</td>
+                <td>${result.no_asset}</td>
+                <td>${result.nama_asset}</td>
+                <td>${result.cost_center}</td>
+                <td>${result.area}</td>
+              </tr>`
+            const mailOptions = {
+              from: 'noreply_asset@pinusmerahabadi.co.id',
+              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+              to: `${findUser.email}`,
+              subject: `Reject ${tipe === 'finance' ? 'Finance' : 'Tax'} Disposal No Asset ${result.no_asset} (TESTING)`,
+              html: `
+              <head>
+                <style type="text/css">
+                body {
+                    display: flexbox;
+                    flex-direction: column;
+                }
+                .tittle {
+                    font-size: 15px;
+                }
+                .mar {
+                    margin-bottom: 20px;
+                }
+                .mar1 {
+                    margin-bottom: 10px;
+                }
+                .foot {
+                    margin-top: 20px;
+                    margin-bottom: 10px;
+                }
+                .foot1 {
+                    margin-bottom: 50px;
+                }
+                .position {
+                    display: flexbox;
+                    flex-direction: row;
+                    justify-content: left;
+                    margin-top: 10px;
+                }
+                table {
+                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                    font-size: 12px;
+                }
+                .demo-table {
+                    border-collapse: collapse;
+                    font-size: 13px;
+                }
+                .demo-table th, 
+                .demo-table td {
+                    border-bottom: 1px solid #e1edff;
+                    border-left: 1px solid #e1edff;
+                    padding: 7px 17px;
+                }
+                .demo-table th, 
+                .demo-table td:last-child {
+                    border-right: 1px solid #e1edff;
+                }
+                .demo-table td:first-child {
+                    border-top: 1px solid #e1edff;
+                }
+                .demo-table td:last-child{
+                    border-bottom: 0;
+                }
+                caption {
+                    caption-side: top;
+                    margin-bottom: 10px;
+                }
+                
+                /* Table Header */
+                .demo-table thead th {
+                    background-color: #508abb;
+                    color: #FFFFFF;
+                    border-color: #6ea1cc !important;
+                    text-transform: uppercase;
+                }
+                
+                /* Table Body */
+                .demo-table tbody td {
+                    color: #353535;
+                }
+                
+                .demo-table tbody tr:nth-child(odd) td {
+                    background-color: #f4fbff;
+                }
+                .demo-table tbody tr:hover th,
+                .demo-table tbody tr:hover td {
+                    background-color: #ffffa2;
+                    border-color: #ffff0f;
+                    transition: all .2s;
+                }
+            </style>
+              </head>
+              <body>
+                  <div class="tittle mar">
+                      Dear Team ${tipe === 'finance' ? 'Finance' : 'Tax'},
+                  </div>
+                  <div class="tittle mar1">
+                      <div>Mohon untuk revisi dokumen lampiran disposal aset dibawah ini:</div>
+                  </div>
+                  <div class="position mar1">
+                      <table class="demo-table">
+                          <thead>
+                              <tr>
+                                  <th>No</th>
+                                  <th>No Disposal</th>
+                                  <th>Asset</th>
+                                  <th>Asset description</th>
+                                  <th>Cost Ctr</th>
+                                  <th>Cost Ctr Name</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                            ${tableTd}
+                          </tbody>
+                      </table>
+                  </div>
+                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                  <div class="tittle foot">
+                      Terima kasih,
+                  </div>
+                  <div class="tittle foot1">
+                      Regards,
+                  </div>
+                  <div class="tittle">
+                      Team Asset
+                  </div>
+              </body>
+              `
+            }
+            mailer.sendMail(mailOptions, (error, result) => {
+              if (error) {
+                console.log('success reject fail send email')
+              } else if (result) {
+                console.log('success reject taxfin disposal')
+              }
+            })
+            if (result.no_io === 'finance' || result.no_io === 'tax' || result.no_io === 'taxfin') {
+              const data = {
+                no_io: 'taxfin'
+              }
+              const sent = await result.update(data)
+              if (sent) {
+                return response(res, 'success reject tax and finance')
+              } else {
+                return response(res, 'failed reject tax and finance', {}, 404, false)
+              }
+            } else {
+              const data = {
+                no_io: tipe
+              }
+              const sent = await result.update(data)
+              if (sent) {
+                return response(res, 'success reject tax and finance')
+              } else {
+                return response(res, 'failed reject tax and finance', {}, 404, false)
+              }
+            }
           }
         }
       } else {
@@ -3938,42 +4096,208 @@ module.exports = {
         }
       })
       if (result) {
-        if (result.no_io === 'taxfin' && level === 3) {
-          const data = {
-            status_form: 7,
-            no_io: 'finance'
+        const findUser = await user.findOne({
+          where: {
+            user_level: 2
           }
-          const sent = await result.update(data)
-          if (sent) {
-            return response(res, 'success reject tax and finance')
-          } else {
-            return response(res, 'failed reject tax and finance', {}, 404, false)
-          }
-        } else if (result.no_io === 'taxfin' && level === 4) {
-          const data = {
-            status_form: 7,
-            no_io: 'tax'
-          }
-          const sent = await result.update(data)
-          if (sent) {
-            return response(res, 'success reject tax and finance')
-          } else {
-            return response(res, 'failed reject tax and finance', {}, 404, false)
-          }
-        } else {
-          const data = {
-            status_form: 7,
-            no_io: null
-          }
-          const sent = await result.update(data)
-          if (sent) {
-            return response(res, 'success reject tax and finance')
-          } else {
-            return response(res, 'failed reject tax and finance', {}, 404, false)
+        })
+        if (findUser) {
+          const findNotif = await notif.findOne({
+            where: {
+              response: 'revisi',
+              [Op.and]: [
+                { no_proses: no },
+                { keterangan: level === 3 ? 'tax' : 'finance' }
+              ]
+            }
+          })
+          if (findNotif) {
+            const data = {
+              list_appr: findUser.username,
+              keterangan: level === 3 ? 'tax' : 'finance',
+              response: 'request'
+            }
+            const createNotif = await notif.update(data)
+            if (createNotif) {
+              const tableTd = `
+              <tr>
+                <td>1</td>
+                <td>D${result.no_disposal}</td>
+                <td>${result.no_asset}</td>
+                <td>${result.nama_asset}</td>
+                <td>${result.cost_center}</td>
+                <td>${result.area}</td>
+              </tr>`
+              const mailOptions = {
+                from: 'noreply_asset@pinusmerahabadi.co.id',
+                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                to: `${findUser.email}`,
+                subject: `Revisi ${level === 4 ? 'Finance' : 'Tax'} Disposal No Asset ${result.no_asset} (TESTING)`,
+                html: `
+              <head>
+                <style type="text/css">
+                body {
+                    display: flexbox;
+                    flex-direction: column;
+                }
+                .tittle {
+                    font-size: 15px;
+                }
+                .mar {
+                    margin-bottom: 20px;
+                }
+                .mar1 {
+                    margin-bottom: 10px;
+                }
+                .foot {
+                    margin-top: 20px;
+                    margin-bottom: 10px;
+                }
+                .foot1 {
+                    margin-bottom: 50px;
+                }
+                .position {
+                    display: flexbox;
+                    flex-direction: row;
+                    justify-content: left;
+                    margin-top: 10px;
+                }
+                table {
+                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                    font-size: 12px;
+                }
+                .demo-table {
+                    border-collapse: collapse;
+                    font-size: 13px;
+                }
+                .demo-table th, 
+                .demo-table td {
+                    border-bottom: 1px solid #e1edff;
+                    border-left: 1px solid #e1edff;
+                    padding: 7px 17px;
+                }
+                .demo-table th, 
+                .demo-table td:last-child {
+                    border-right: 1px solid #e1edff;
+                }
+                .demo-table td:first-child {
+                    border-top: 1px solid #e1edff;
+                }
+                .demo-table td:last-child{
+                    border-bottom: 0;
+                }
+                caption {
+                    caption-side: top;
+                    margin-bottom: 10px;
+                }
+                
+                /* Table Header */
+                .demo-table thead th {
+                    background-color: #508abb;
+                    color: #FFFFFF;
+                    border-color: #6ea1cc !important;
+                    text-transform: uppercase;
+                }
+                
+                /* Table Body */
+                .demo-table tbody td {
+                    color: #353535;
+                }
+                
+                .demo-table tbody tr:nth-child(odd) td {
+                    background-color: #f4fbff;
+                }
+                .demo-table tbody tr:hover th,
+                .demo-table tbody tr:hover td {
+                    background-color: #ffffa2;
+                    border-color: #ffff0f;
+                    transition: all .2s;
+                }
+            </style>
+              </head>
+              <body>
+                  <div class="tittle mar">
+                      Dear Team ${level === 4 ? 'Finance' : 'Tax'},
+                  </div>
+                  <div class="tittle mar1">
+                      <div>Mohon untuk cek revisi dokumen disposal aset dibawah ini:</div>
+                  </div>
+                  <div class="position mar1">
+                      <table class="demo-table">
+                          <thead>
+                              <tr>
+                                  <th>No</th>
+                                  <th>No Disposal</th>
+                                  <th>Asset</th>
+                                  <th>Asset description</th>
+                                  <th>Cost Ctr</th>
+                                  <th>Cost Ctr Name</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                            ${tableTd}
+                          </tbody>
+                      </table>
+                  </div>
+                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                  <div class="tittle foot">
+                      Terima kasih,
+                  </div>
+                  <div class="tittle foot1">
+                      Regards,
+                  </div>
+                  <div class="tittle">
+                      Team Asset
+                  </div>
+              </body>
+              `
+              }
+              mailer.sendMail(mailOptions, (error, result) => {
+                if (error) {
+                  console.log('success submit fail send email')
+                } else if (result) {
+                  console.log('success reject taxfin disposal')
+                }
+              })
+              if (result.no_io === 'taxfin' && level === 3) {
+                const data = {
+                  status_form: 7,
+                  no_io: 'finance'
+                }
+                const sent = await result.update(data)
+                if (sent) {
+                  return response(res, 'success submit tax and finance')
+                } else {
+                  return response(res, 'failed submit tax and finance', {}, 404, false)
+                }
+              } else if (result.no_io === 'taxfin' && level === 4) {
+                const data = {
+                  status_form: 7,
+                  no_io: 'tax'
+                }
+                const sent = await result.update(data)
+                if (sent) {
+                  return response(res, 'success submit tax and finance')
+                } else {
+                  return response(res, 'failed submit tax and finance', {}, 404, false)
+                }
+              } else {
+                const data = {
+                  status_form: 7,
+                  no_io: null
+                }
+                const sent = await result.update(data)
+                if (sent) {
+                  return response(res, 'success submit tax and finance')
+                } else {
+                  return response(res, 'failed submit tax and finance', {}, 404, false)
+                }
+              }
+            }
           }
         }
       } else {
-        return response(res, 'failed reject tax and finance', {}, 404, false)
+        return response(res, 'failed submit tax and finance', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -5634,7 +5958,7 @@ module.exports = {
                                     Dear Bapak/Ibu Asset,
                                 </div>
                                 <div class="tittle mar1">
-                                    <div>Asset telah selesai diproses dengan rincian sebagai berikut</div>
+                                    <div>Proses Disposal Asset telah selesai dengan rincian asset sebagai berikut</div>
                                 </div>
                                 <div class="position">
                                     <table class="demo-table">
@@ -5653,7 +5977,7 @@ module.exports = {
                                         </tbody>
                                     </table>
                                 </div>
-                                <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
                                 <div class="tittle foot">
                                     Terima kasih,
                                 </div>
@@ -6952,7 +7276,189 @@ module.exports = {
           }
           const results = await result.update(data)
           if (results) {
-            return response(res, 'success submit eksekusi disposal')
+            const findUser = await user.findOne({
+              where: {
+                user_level: 2
+              }
+            })
+            if (findUser) {
+              const data = {
+                kode_plant: result.kode_plant,
+                jenis: 'disposal',
+                no_proses: no,
+                list_appr: findUser.username,
+                keterangan: 'tax and finance',
+                response: 'request'
+              }
+              const findNotif = await notif.findAll({
+                where: {
+                  no_proses: no,
+                  [Op.or]: [
+                    { keterangan: 'tax' },
+                    { keterangan: 'finance' }
+                  ]
+                }
+              })
+              if (findNotif) {
+                const cekData = []
+                for (let i = 0; i < findNotif.length; i++) {
+                  const findDel = await notif.findByPk(findNotif[i].id)
+                  if (findDel) {
+                    await findDel.destroy()
+                    cekData.push(1)
+                  }
+                }
+                if (cekData.length === findNotif.length) {
+                  const createNotif = await notif.create(data)
+                  if (createNotif) {
+                    const tableTd = `
+                      <tr>
+                        <td>1</td>
+                        <td>D${result.no_disposal}</td>
+                        <td>${result.no_asset}</td>
+                        <td>${result.nama_asset}</td>
+                        <td>${result.cost_center}</td>
+                        <td>${result.area}</td>
+                      </tr>`
+                    const mailOptions = {
+                      from: 'noreply_asset@pinusmerahabadi.co.id',
+                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                      to: `${findUser.email}`,
+                      subject: `Tax And Finance Disposal No Asset ${result.no_asset} (TESTING)`,
+                      html: `
+                        <head>
+                          <style type="text/css">
+                          body {
+                              display: flexbox;
+                              flex-direction: column;
+                          }
+                          .tittle {
+                              font-size: 15px;
+                          }
+                          .mar {
+                              margin-bottom: 20px;
+                          }
+                          .mar1 {
+                              margin-bottom: 10px;
+                          }
+                          .foot {
+                              margin-top: 20px;
+                              margin-bottom: 10px;
+                          }
+                          .foot1 {
+                              margin-bottom: 50px;
+                          }
+                          .position {
+                              display: flexbox;
+                              flex-direction: row;
+                              justify-content: left;
+                              margin-top: 10px;
+                          }
+                          table {
+                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                              font-size: 12px;
+                          }
+                          .demo-table {
+                              border-collapse: collapse;
+                              font-size: 13px;
+                          }
+                          .demo-table th, 
+                          .demo-table td {
+                              border-bottom: 1px solid #e1edff;
+                              border-left: 1px solid #e1edff;
+                              padding: 7px 17px;
+                          }
+                          .demo-table th, 
+                          .demo-table td:last-child {
+                              border-right: 1px solid #e1edff;
+                          }
+                          .demo-table td:first-child {
+                              border-top: 1px solid #e1edff;
+                          }
+                          .demo-table td:last-child{
+                              border-bottom: 0;
+                          }
+                          caption {
+                              caption-side: top;
+                              margin-bottom: 10px;
+                          }
+                          
+                          /* Table Header */
+                          .demo-table thead th {
+                              background-color: #508abb;
+                              color: #FFFFFF;
+                              border-color: #6ea1cc !important;
+                              text-transform: uppercase;
+                          }
+                          
+                          /* Table Body */
+                          .demo-table tbody td {
+                              color: #353535;
+                          }
+                          
+                          .demo-table tbody tr:nth-child(odd) td {
+                              background-color: #f4fbff;
+                          }
+                          .demo-table tbody tr:hover th,
+                          .demo-table tbody tr:hover td {
+                              background-color: #ffffa2;
+                              border-color: #ffff0f;
+                              transition: all .2s;
+                          }
+                      </style>
+                        </head>
+                        <body>
+                            <div class="tittle mar">
+                                Dear Team Finance,
+                            </div>
+                            <div class="tittle mar1">
+                                <div>Mohon bantuannya untuk cek uang masuk hasil penjualan aset dibawah ini:</div>
+                            </div>
+                            <div class="position mar1">
+                                <table class="demo-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>No Disposal</th>
+                                            <th>Asset</th>
+                                            <th>Asset description</th>
+                                            <th>Cost Ctr</th>
+                                            <th>Cost Ctr Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      ${tableTd}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tittle">Jika uang masuk sudah sesuai, mohon segera:</div>
+                            <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
+                            <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
+                            <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
+                            <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                            <div class="tittle foot">
+                                Terima kasih,
+                            </div>
+                            <div class="tittle foot1">
+                                Regards,
+                            </div>
+                            <div class="tittle">
+                                Team Asset
+                            </div>
+                        </body>
+                        `
+                    }
+                    mailer.sendMail(mailOptions, (error, result) => {
+                      if (error) {
+                        return response(res, 'success submit failed send email')
+                      } else if (result) {
+                        return response(res, 'success submit eksekusi disposal')
+                      }
+                    })
+                  }
+                }
+              }
+            }
           } else {
             return response(res, 'failed submit disposal', {}, 400, false)
           }
@@ -7009,6 +7515,153 @@ module.exports = {
             }
             const results = await result.update(data)
             if (results) {
+              const findUser = await email.findOne({
+                where: {
+                  kode_plant: result.kode_plant
+                }
+              })
+              if (findUser) {
+                const tableTd = `
+                  <tr>
+                    <td>1</td>
+                    <td>D${result.no_disposal}</td>
+                    <td>${result.no_asset}</td>
+                    <td>${result.nama_asset}</td>
+                    <td>${result.cost_center}</td>
+                    <td>${result.area}</td>
+                  </tr>`
+                const mailOptions = {
+                  from: 'noreply_asset@pinusmerahabadi.co.id',
+                  replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                  to: `${findUser.email}`,
+                  subject: `Selesai Proses Disposal Asset ${result.no_asset} (TESTING)`,
+                  html: `
+                    <head>
+                      <style type="text/css">
+                      body {
+                          display: flexbox;
+                          flex-direction: column;
+                      }
+                      .tittle {
+                          font-size: 15px;
+                      }
+                      .mar {
+                          margin-bottom: 20px;
+                      }
+                      .mar1 {
+                          margin-bottom: 10px;
+                      }
+                      .foot {
+                          margin-top: 20px;
+                          margin-bottom: 10px;
+                      }
+                      .foot1 {
+                          margin-bottom: 50px;
+                      }
+                      .position {
+                          display: flexbox;
+                          flex-direction: row;
+                          justify-content: left;
+                          margin-top: 10px;
+                      }
+                      table {
+                          font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                          font-size: 12px;
+                      }
+                      .demo-table {
+                          border-collapse: collapse;
+                          font-size: 13px;
+                      }
+                      .demo-table th, 
+                      .demo-table td {
+                          border-bottom: 1px solid #e1edff;
+                          border-left: 1px solid #e1edff;
+                          padding: 7px 17px;
+                      }
+                      .demo-table th, 
+                      .demo-table td:last-child {
+                          border-right: 1px solid #e1edff;
+                      }
+                      .demo-table td:first-child {
+                          border-top: 1px solid #e1edff;
+                      }
+                      .demo-table td:last-child{
+                          border-bottom: 0;
+                      }
+                      caption {
+                          caption-side: top;
+                          margin-bottom: 10px;
+                      }
+                      
+                      /* Table Header */
+                      .demo-table thead th {
+                          background-color: #508abb;
+                          color: #FFFFFF;
+                          border-color: #6ea1cc !important;
+                          text-transform: uppercase;
+                      }
+                      
+                      /* Table Body */
+                      .demo-table tbody td {
+                          color: #353535;
+                      }
+                      
+                      .demo-table tbody tr:nth-child(odd) td {
+                          background-color: #f4fbff;
+                      }
+                      .demo-table tbody tr:hover th,
+                      .demo-table tbody tr:hover td {
+                          background-color: #ffffa2;
+                          border-color: #ffff0f;
+                          transition: all .2s;
+                      }
+                  </style>
+                    </head>
+                    <body>
+                        <div class="tittle mar">
+                            Dear Bapak/Ibu Asset,
+                        </div>
+                        <div class="tittle mar1">
+                            <div>Proses Disposal Asset telah selesai dengan rincian asset sebagai berikut</div>
+                        </div>
+                        <div class="position">
+                            <table class="demo-table">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>No Disposal</th>
+                                        <th>Asset</th>
+                                        <th>Asset description</th>
+                                        <th>Cost Ctr</th>
+                                        <th>Cost Ctr Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                  ${tableTd}
+                                </tbody>
+                            </table>
+                        </div>
+                        <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                        <div class="tittle foot">
+                            Terima kasih,
+                        </div>
+                        <div class="tittle foot1">
+                            Regards,
+                        </div>
+                        <div class="tittle">
+                            Team Asset
+                        </div>
+                    </body>
+                    `
+                }
+                mailer.sendMail(mailOptions, (error, result) => {
+                  if (error) {
+                    return response(res, 'success submit fail send email', { result })
+                  } else if (result) {
+                    return response(res, 'success submit eksekusi disposal')
+                  }
+                })
+              }
               return response(res, 'success submit final disposal')
             } else {
               return response(res, 'failed submit disposal', {}, 400, false)
