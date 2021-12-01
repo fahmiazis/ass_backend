@@ -3208,6 +3208,15 @@ module.exports = {
                     keterangan: result.nama_dokumen,
                     response: 'revisi'
                   }
+                  const tableTd = `
+                    <tr>
+                      <td>1</td>
+                      <td>D${findDis.no_disposal}</td>
+                      <td>${findDis.no_asset}</td>
+                      <td>${findDis.nama_asset}</td>
+                      <td>${findDis.cost_center}</td>
+                      <td>${findDis.area}</td>
+                    </tr>`
                   if (findNotif) {
                     await findNotif.destroy()
                     const createNotif = await notif.create(data)
@@ -3305,6 +3314,23 @@ module.exports = {
                           </div>
                           <div class="tittle mar1">
                               <div>Mohon untuk approve dokumen ${result.nama_dokumen} yang telah direvisi oleh area.</div>
+                          </div>
+                          <div class="position mar1">
+                              <table class="demo-table">
+                                  <thead>
+                                      <tr>
+                                          <th>No</th>
+                                          <th>No Disposal</th>
+                                          <th>Asset</th>
+                                          <th>Asset description</th>
+                                          <th>Cost Ctr</th>
+                                          <th>Cost Ctr Name</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                    ${tableTd}
+                                  </tbody>
+                              </table>
                           </div>
                           <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
                           <div class="tittle foot">
@@ -3424,6 +3450,23 @@ module.exports = {
                           <div class="tittle mar1">
                               <div>Mohon untuk approve dokumen ${result.nama_dokumen} yang telah direvisi oleh area.</div>
                           </div>
+                          <div class="position mar1">
+                              <table class="demo-table">
+                                  <thead>
+                                      <tr>
+                                          <th>No</th>
+                                          <th>No Disposal</th>
+                                          <th>Asset</th>
+                                          <th>Asset description</th>
+                                          <th>Cost Ctr</th>
+                                          <th>Cost Ctr Name</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                    ${tableTd}
+                                  </tbody>
+                              </table>
+                          </div>
                           <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
                           <div class="tittle foot">
                               Terima kasih,
@@ -3457,6 +3500,15 @@ module.exports = {
                   ]
                 }
               })
+              const tableTd = `
+                <tr>
+                  <td>1</td>
+                  <td>D${findDis.no_disposal}</td>
+                  <td>${findDis.no_asset}</td>
+                  <td>${findDis.nama_asset}</td>
+                  <td>${findDis.cost_center}</td>
+                  <td>${findDis.area}</td>
+                </tr>`
               if (findTtd) {
                 const findUser = await user.findOne({
                   where: {
@@ -3578,6 +3630,23 @@ module.exports = {
                           <div class="tittle mar1">
                               <div>Mohon untuk approve dokumen ${result.nama_dokumen} yang telah direvisi oleh area.</div>
                           </div>
+                          <div class="position mar1">
+                              <table class="demo-table">
+                                  <thead>
+                                      <tr>
+                                          <th>No</th>
+                                          <th>No Disposal</th>
+                                          <th>Asset</th>
+                                          <th>Asset description</th>
+                                          <th>Cost Ctr</th>
+                                          <th>Cost Ctr Name</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                    ${tableTd}
+                                  </tbody>
+                              </table>
+                          </div>
                           <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
                           <div class="tittle foot">
                               Terima kasih,
@@ -3695,6 +3764,23 @@ module.exports = {
                           </div>
                           <div class="tittle mar1">
                               <div>Mohon untuk approve dokumen ${result.nama_dokumen} yang telah direvisi oleh area.</div>
+                          </div>
+                          <div class="position mar1">
+                              <table class="demo-table">
+                                  <thead>
+                                      <tr>
+                                          <th>No</th>
+                                          <th>No Disposal</th>
+                                          <th>Asset</th>
+                                          <th>Asset description</th>
+                                          <th>Cost Ctr</th>
+                                          <th>Cost Ctr Name</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                    ${tableTd}
+                                  </tbody>
+                              </table>
                           </div>
                           <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
                           <div class="tittle foot">
