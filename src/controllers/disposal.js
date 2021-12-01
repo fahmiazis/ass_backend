@@ -2197,7 +2197,7 @@ module.exports = {
                                       <td>${findDis[i].no_asset}</td>
                                       <td>${findDis[i].nama_asset}</td>
                                       <td>${findDis[i].cost_center}</td>
-                                      <td>${findDis[i].area + 'king'}</td>
+                                      <td>${findDis[i].area}</td>
                                     </tr>`
                                   tableTd = tableTd + element
                                 }
