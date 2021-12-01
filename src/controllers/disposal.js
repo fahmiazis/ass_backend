@@ -4188,14 +4188,21 @@ module.exports = {
                                     flex-direction: column;
                                 }
                                 .tittle {
-                                  font-size: 11px;
+                                  font-size: 15px;
                                   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
                                 }
                                 .textItalic {
-                                    font-style: italic;
-                                }
-                                .bold {
+                                  font-style: italic;
                                   font-weight: bold;
+                                  font-size: 15px;
+                                  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                                  margin-top: 10px;
+                                }
+                                .tittleBold {
+                                  font-weight: bold;
+                                  font-size: 15px;
+                                  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                                  margin-top: 10px;
                                 }
                                 .mar {
                                     margin-bottom: 20px;
@@ -4203,11 +4210,18 @@ module.exports = {
                                 .mar1 {
                                     margin-bottom: 10px;
                                 }
+                                .mar2 {
+                                  margin-top: 10px;
+                                }
                                 .foot {
+                                    font-size: 15px;
+                                    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
                                     margin-top: 20px;
                                     margin-bottom: 10px;
                                 }
                                 .foot1 {
+                                    font-size: 15px;
+                                    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
                                     margin-bottom: 50px;
                                 }
                                 .position {
@@ -4215,6 +4229,7 @@ module.exports = {
                                     flex-direction: row;
                                     justify-content: left;
                                     margin-top: 10px;
+                                    margin-bottom: 10px;
                                 }
                                 table {
                                     font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
@@ -4299,7 +4314,7 @@ module.exports = {
                                   </div>
                                   <div class="tittle">Lengkapi dokumen eksekusi sbb:</div>
                                   <div></div>
-                                  <div class="tittle bold">A. Penjualan Aset:</div>
+                                  <div class="tittleBold">A. Penjualan Aset:</div>
                                   <div class="tittle">1. Kwitansi </div>
                                   <div class="tittle">2. Bukti Transfer</div>
                                   <div class="tittle">3. BAST penjualan aset (link download : https://pinusmerahabadi.co.id/portal)</div>
@@ -4310,14 +4325,14 @@ module.exports = {
                                   <div class="tittle">8. Ketika aset sudah dijual mohon segera diinformasikan ke tim aset, karena ada kaitannya dengan faktur pajak yang harus HO terbitkan ditanggal yang sama saat transaksi.</div>
                                   <div class="tittle">9. Document asli point 1-5 dikirim ke HO Bandung UP Rifaldi / Neng Rina / Ervyanty (Accounting Asset) PT. Pinus Merah Abadi (HO Bandung). Jl. Soekarno Hatta No. 112, Bandung, Jawa Barat - 40235.</div>
                                   <div></div>
-                                  <div class="tittle bold">B. Pemusnahan Aset:</div>
+                                  <div class="tittleBold">B. Pemusnahan Aset:</div>
                                   <div class="tittle">1. BA pemusnahan aset dan lampiran foto pemusnahan (link download : https://pinusmerahabadi.co.id/portal)</div>
                                   <div class="tittle">2. Document eksekusi discan dan diupload ke web aset</div>
                                   <div></div>
-                                  <div class="tittle textItalic bold">NOTE:</div>
+                                  <div class="textItalic">NOTE:</div>
                                   <div class="tittle">A. Aset yang sudah  diperbolehkan untuk dieksekusi maka segera eksekusi (maksimal 1 minggu dari tanggal email)</div>
                                   <div class="tittle">B. Jika aset sudah dijual/dimusnahkan area harap melengkapi semua dokumen yang di request aset (tanpa kekurangan apapun) jika belum mengerti dapat bertanya ke PIC aset</div>
-                                  <div></div>
+                                  <div class="mar2"></div>
                                   <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
