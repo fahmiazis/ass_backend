@@ -165,7 +165,26 @@ module.exports = {
             if (sent) {
               const del = await result.destroy()
               if (del) {
-                return response(res, 'success delete disposal')
+                const findDoc = await docUser.findAll({
+                  where: {
+                    no_pengadaan: noAsset
+                  }
+                })
+                if (findDoc.length > 0) {
+                  const cekdok = []
+                  for (let i = 0; i < findDoc.length; i++) {
+                    const findOne = await docUser.findByPk(findDoc[i].id)
+                    if (findOne) {
+                      await findOne.destroy()
+                      cekdok.push(1)
+                    }
+                  }
+                  if (cekdok.length === findDoc.length) {
+                    return response(res, 'success delete disposal')
+                  } else {
+                    return response(res, 'failed delete disposal', {}, 400, false)
+                  }
+                }
               } else {
                 return response(res, 'failed delete disposal', {}, 400, false)
               }
@@ -2178,8 +2197,8 @@ module.exports = {
                                   }
                                 })
                                 if (docFind.length > 0) {
-                                  for (let i = 0; i < docFind.length; i++) {
-                                    const docOne = await docUser.findByPk(docFind[i].id)
+                                  for (let j = 0; j < docFind.length; j++) {
+                                    const docOne = await docUser.findByPk(docFind[j].id)
                                     if (docOne) {
                                       await docOne.destroy()
                                       cekDok.push(1)
