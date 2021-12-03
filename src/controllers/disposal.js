@@ -167,7 +167,17 @@ module.exports = {
               if (del) {
                 const findDoc = await docUser.findAll({
                   where: {
-                    no_pengadaan: noAsset
+                    no_pengadaan: noAsset,
+                    [Op.and]: [
+                      { jenis_form: 'disposal' },
+                      {
+                        [Op.or]: [
+                          { tipe: 'pengajuan' },
+                          { tipe: 'jual' },
+                          { tipe: 'purch' }
+                        ]
+                      }
+                    ]
                   }
                 })
                 if (findDoc.length > 0) {
