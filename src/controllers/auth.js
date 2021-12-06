@@ -2,7 +2,7 @@ const joi = require('joi')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const response = require('../helpers/response')
-const { user } = require('../models')
+const { user, role } = require('../models')
 
 const { APP_KEY } = process.env
 
@@ -17,13 +17,13 @@ module.exports = {
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
-        const result = await user.findOne({ where: { username: results.username } })
+        const result = await user.findOne({ where: { username: results.username }, include: [{ model: role, as: 'role' }] })
         if (result) {
-          const { id, kode_plant, user_level, username, fullname, email } = result
+          const { id, kode_plant, user_level, username, fullname, email, role } = result
           bcrypt.compare(results.password, result.password, function (_err, result) {
             if (result) {
-              jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname }, `${APP_KEY}`, (_err, token) => {
-                return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email }, Token: `${token}` })
+              jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
+                return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name }, Token: `${token}` })
               })
             } else {
               return response(res, 'Wrong password', {}, 400, false)
