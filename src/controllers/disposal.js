@@ -230,7 +230,7 @@ module.exports = {
       if (typeof sort === 'object') {
         sortValue = Object.values(sort)[0]
       } else {
-        sortValue = sort || 'no_disposal'
+        sortValue = sort || 'id'
       }
       if (!status) {
         status = 1
@@ -326,6 +326,11 @@ module.exports = {
               { status_form: status === 2 ? 3 : status }
             ]
           },
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
+            [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
+          ],
           include: [
             {
               model: path,
