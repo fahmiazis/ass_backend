@@ -242,7 +242,6 @@ module.exports = {
                 if (result.length > 0) {
                   return response(res, 'fullname already use', { result }, 404, false)
                 } else {
-                  console.log(results.password)
                   if (results.password) {
                     results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
                     const result = await user.findByPk(id)
@@ -633,6 +632,45 @@ module.exports = {
         }
       } else {
         return response(res, "You're not super administrator", {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  changePassword: async (req, res) => {
+    try {
+      const id = req.user.id
+      const schema = joi.object({
+        current: joi.string().required(),
+        new: joi.string().required()
+      })
+      console.log(id)
+      const { value: results, error } = schema.validate(req.body)
+      console.log(results.new)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        const send = await bcrypt.hash(results.new, await bcrypt.genSalt())
+        const findUser = await user.findByPk(id)
+        if (findUser) {
+          bcrypt.compare(results.current, findUser.password, function (_err, result) {
+            if (result) {
+              const data = {
+                password: send
+              }
+              const updatePass = findUser.update(data)
+              if (updatePass) {
+                return response(res, 'success change password')
+              } else {
+                return response(res, 'success change password2')
+              }
+            } else {
+              return response(res, 'failed change password1', {}, 400, false)
+            }
+          })
+        } else {
+          return response(res, 'failed change password2', {}, 400, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

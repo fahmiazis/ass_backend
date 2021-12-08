@@ -11,5 +11,6 @@ route.get('/export', user.exportSqlUser)
 route.post('/role/add', user.createRole)
 route.get('/role/get', user.getRole)
 route.get('/auto', user.createUserAuto)
+route.patch('/password', user.changePassword)
 
 module.exports = route
