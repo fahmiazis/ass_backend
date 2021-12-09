@@ -90,7 +90,8 @@ module.exports = {
               { area: { [Op.like]: `%${searchValue}` } },
               { kode_plant: { [Op.like]: `%${searchValue}` } },
               { nama_asset: { [Op.like]: `%${searchValue}` } }
-            ]
+            ],
+            [Op.not]: { status: '0' }
           },
           order: [[sortValue, 'ASC']],
           limit: limit,
@@ -105,16 +106,20 @@ module.exports = {
       } else if (level === 5) {
         const result = await asset.findAndCountAll({
           where: {
-            kode_plant: kode,
-            [Op.or]: [
-              { status: null },
-              { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
-              { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
+            [Op.and]: [
+              { kode_plant: kode },
+              { status: null }
             ],
+            // [Op.or]: [
+            //   ,
+            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
+            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
+            // ],
             [Op.or]: [
               { no_asset: { [Op.like]: `%${searchValue}%` } },
               { nama_asset: { [Op.like]: `%${searchValue}%` } }
             ]
+            // [Op.not]: { status: '0' }
           },
           include: [
             {
