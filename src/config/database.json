@@ -3,21 +3,21 @@
     "username": "root",
     "password": null,
     "database": "asset_development",
-    "host": "127.0.0.1",
+    "host": "192.168.35.162",
     "dialect": "mysql"
   },
   "test": {
     "username": "root",
     "password": null,
     "database": "asset_test",
-    "host": "127.0.0.1",
+    "host": "192.168.35.162",
     "dialect": "mysql"
   },
   "production": {
     "username": "root",
     "password": null,
     "database": "asset_production",
-    "host": "127.0.0.1",
+    "host": "192.168.35.162",
     "dialect": "mysql"
   }
 }
