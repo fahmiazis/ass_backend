@@ -94,7 +94,7 @@ module.exports = {
         distribution: joi.string(),
         status_area: joi.string(),
         kode_sap_1: joi.string().required(),
-        kode_sap_2: joi.string().required(),
+        kode_sap_2: joi.string().allow(''),
         profit_center: joi.string().required(),
         cost_center: joi.string().required(),
         nama_nom: joi.string().required(),
