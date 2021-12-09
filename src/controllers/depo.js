@@ -119,29 +119,24 @@ module.exports = {
             if (result.length > 0) {
               return response(res, 'kode sap 1 already use', {}, 404, false)
             } else {
-              const result = await depo.findAll({ where: { kode_sap_2: results.kode_sap_2, [Op.not]: { id: id } } })
+              const result = await depo.findAll({ where: { kode_plant: results.kode_plant, [Op.not]: { id: id } } })
               if (result.length > 0) {
-                return response(res, 'kode sap 2 already use', {}, 404, false)
+                return response(res, 'kode plant already use', {}, 404, false)
               } else {
-                const result = await depo.findAll({ where: { kode_plant: results.kode_plant, [Op.not]: { id: id } } })
+                const result = await depo.findAll({ where: { profit_center: results.profit_center, [Op.not]: { id: id } } })
                 if (result.length > 0) {
-                  return response(res, 'kode plant already use', {}, 404, false)
+                  return response(res, 'profit center already use', {}, 404, false)
                 } else {
-                  const result = await depo.findAll({ where: { profit_center: results.profit_center, [Op.not]: { id: id } } })
+                  const result = await depo.findAll({ where: { cost_center: results.cost_center, [Op.not]: { id: id } } })
                   if (result.length > 0) {
-                    return response(res, 'profit center already use', {}, 404, false)
+                    return response(res, 'cost center already use', {}, 404, false)
                   } else {
-                    const result = await depo.findAll({ where: { cost_center: results.cost_center, [Op.not]: { id: id } } })
-                    if (result.length > 0) {
-                      return response(res, 'cost center already use', {}, 404, false)
+                    const result = await depo.findByPk(id)
+                    if (result) {
+                      await result.update(results)
+                      return response(res, 'succesfully update depo', { result })
                     } else {
-                      const result = await depo.findByPk(id)
-                      if (result) {
-                        await result.update(results)
-                        return response(res, 'succesfully update depo', { result })
-                      } else {
-                        return response(res, 'failed to update depo', {}, 404, false)
-                      }
+                      return response(res, 'failed to update depo', {}, 404, false)
                     }
                   }
                 }
