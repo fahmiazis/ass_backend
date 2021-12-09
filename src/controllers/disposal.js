@@ -218,7 +218,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      const fullname = req.user.fullname
+      const fullname = req.user.name
       let { limit, page, search, sort, status, tipe, form } = req.query
       let searchValue = ''
       let sortValue = ''
