@@ -31,6 +31,16 @@ module.exports = (sequelize, DataTypes) => {
         as: 'dataAsset',
         sourceKey: 'no_asset'
       })
+      disposal.hasMany(models.docUser, {
+        foreignKey: 'no_pengadaan',
+        sourceKey: 'no_asset',
+        as: 'docAsset'
+      })
+      disposal.hasOne(models.depo, {
+        foreignKey: 'kode_plant',
+        sourceKey: 'kode_plant',
+        as: 'depo'
+      })
     }
   };
   disposal.init({

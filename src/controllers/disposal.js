@@ -256,7 +256,7 @@ module.exports = {
               { no_disposal: { [Op.like]: `%${searchValue}%` } },
               { nama_asset: { [Op.like]: `%${searchValue}%` } },
               { kategori: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } }
+              { no_asset: { [Op.like]: `%${searchValue}%` } }
             ],
             [Op.or]: [
               { status_form: status },
@@ -287,6 +287,17 @@ module.exports = {
             {
               model: asset,
               as: 'dataAsset'
+            },
+            {
+              model: docUser,
+              as: 'docAsset',
+              where: {
+                jenis_form: 'disposal'
+              }
+            },
+            {
+              model: depo,
+              as: 'depo'
             }
           ]
         })
