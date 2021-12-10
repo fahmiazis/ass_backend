@@ -252,10 +252,8 @@ module.exports = {
           where: {
             [Op.or]: [
               { kode_plant: { [Op.like]: `%${searchValue}%` } },
-              { no_io: { [Op.like]: `%${searchValue}%` } },
               { no_disposal: { [Op.like]: `%${searchValue}%` } },
               { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { kategori: { [Op.like]: `%${searchValue}%` } },
               { no_asset: { [Op.like]: `%${searchValue}%` } }
             ],
             [Op.or]: [
@@ -287,17 +285,6 @@ module.exports = {
             {
               model: asset,
               as: 'dataAsset'
-            },
-            {
-              model: docUser,
-              as: 'docAsset',
-              where: {
-                jenis_form: 'disposal'
-              }
-            },
-            {
-              model: depo,
-              as: 'depo'
             }
           ]
         })

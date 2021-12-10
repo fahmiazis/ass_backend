@@ -30,6 +30,7 @@ const lokasiRoute = require('./routes/lokasi')
 const mutasiRoute = require('./routes/mutasi')
 const notifRoute = require('./routes/notif')
 const trackingRoute = require('./routes/tracking')
+const reportRoute = require('./routes/report')
 
 const authMiddleware = require('./middlewares/auth')
 
@@ -54,6 +55,7 @@ app.use('/lokasi', authMiddleware, lokasiRoute)
 app.use('/mutasi', authMiddleware, mutasiRoute)
 app.use('/notif', authMiddleware, notifRoute)
 app.use('/track', authMiddleware, trackingRoute)
+app.use('/report', authMiddleware, reportRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)
