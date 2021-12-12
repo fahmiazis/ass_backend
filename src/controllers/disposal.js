@@ -194,6 +194,8 @@ module.exports = {
                   } else {
                     return response(res, 'failed delete disposal', {}, 400, false)
                   }
+                } else {
+                  return response(res, 'success delete disposal')
                 }
               } else {
                 return response(res, 'failed delete disposal', {}, 400, false)
