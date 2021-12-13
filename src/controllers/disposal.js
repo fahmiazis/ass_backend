@@ -7,6 +7,7 @@ const multer = require('multer')
 const mailer = require('../helpers/mailer')
 const uploadHelper = require('../helpers/upload')
 const moment = require('moment')
+const wrapMail = require('../helpers/wrapMail')
 
 module.exports = {
   addDisposal: async (req, res) => {
@@ -1235,7 +1236,7 @@ module.exports = {
   getApproveDisposal: async (req, res) => {
     try {
       const no = req.params.no
-      const nama = req.params.nama
+      const { nama } = req.query
       const result = await ttd.findAll({
         where: {
           no_doc: no
@@ -1497,8 +1498,8 @@ module.exports = {
                                         const mailOptions = {
                                           from: 'noreply_asset@pinusmerahabadi.co.id',
                                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                          to: `${findUser.email}`,
-                                          subject: `Approve Pengajuan Disposal D${no} (TESTING)`,
+                                          to: 'pmaho_asset2@pinusmerahabadi.co.id, fahmiazis797@gmail.com',
+                                          subject: `Approve Pengajuan Disposal D${no} (LOCALHOST)`,
                                           html: `
                                           <head>
                                             <style type="text/css">
@@ -1618,13 +1619,12 @@ module.exports = {
                                           </body>
                                           `
                                         }
-                                        mailer.sendMail(mailOptions, (error, result) => {
-                                          if (error) {
-                                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                                          } else if (result) {
-                                            return response(res, 'success approve disposal')
-                                          }
-                                        })
+                                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                        if (sendEmail) {
+                                          return response(res, 'success approve disposal', { sendEmail })
+                                        } else {
+                                          return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1')
+                                        }
                                       }
                                     }
                                   } else {
@@ -5631,7 +5631,7 @@ module.exports = {
   getApproveSetDisposal: async (req, res) => {
     try {
       const no = req.params.no
-      const nama = req.params.nama
+      const { nama } = req.query
       const result = await ttd.findAll({
         where: {
           no_set: no

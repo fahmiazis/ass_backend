@@ -1,0 +1,32 @@
+const nodemailer = require('nodemailer')
+// const { HOST, PORT, USER, PASS } = process.env
+async function wrapedSendMail (mailOptions) {
+  return new Promise((resolve, reject) => {
+    const transporter = nodemailer.createTransport({
+      host: '192.168.35.203',
+      secure: false,
+      port: 587,
+      auth: {
+        pool: true,
+        rateDelta: 10000,
+        rateLimit: 1,
+        user: 'sys_adm@pinusmerahabadi.co.id',
+        pass: 'sys0911'
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    })
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log('error is ' + error)
+        resolve(false)
+      } else {
+        console.log('Email sent: ' + info.response)
+        resolve(true)
+      }
+    })
+  })
+}
+
+module.exports = { wrapedSendMail }
