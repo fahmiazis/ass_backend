@@ -1255,7 +1255,7 @@ module.exports = {
             penyetuju.push(result[i])
           }
         }
-        return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju } })
+        return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, nama } })
       } else {
         const findDis = await disposal.findAll({
           where: {
@@ -1331,7 +1331,7 @@ module.exports = {
                           penyetuju.push(findRes[i])
                         }
                       }
-                      return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju } })
+                      return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, nama } })
                     }
                   }
                 }
