@@ -1287,10 +1287,10 @@ module.exports = {
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
-                jabatan: getApp[i].jabatan,
-                jenis: getApp[i].jenis,
-                sebagai: getApp[i].sebagai,
-                kategori: getApp[i].kategori,
+                jabatan: getApp[i].jabatan === '' || getApp[i].jabatan === null ? null : getApp[i].jabatan,
+                jenis: getApp[i].jenis === '' || getApp[i].jenis === null ? null : getApp[i].jenis,
+                sebagai: getApp[i].sebagai === '' || getApp[i].sebagai === null ? null : getApp[i].sebagai,
+                kategori: getApp[i].kategori === '' || getApp[i].kategori === null ? null : getApp[i].kategori,
                 no_doc: no
               }
               const make = await ttd.create(send)
@@ -5664,10 +5664,10 @@ module.exports = {
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
-                jabatan: getApp[i].jabatan,
-                jenis: getApp[i].jenis,
-                sebagai: getApp[i].sebagai,
-                kategori: getApp[i].kategori,
+                jabatan: getApp[i].jabatan === '' || getApp[i].jabatan === null ? null : getApp[i].jabatan,
+                jenis: getApp[i].jenis === '' || getApp[i].jenis === null ? null : getApp[i].jenis,
+                sebagai: getApp[i].sebagai === '' || getApp[i].sebagai === null ? null : getApp[i].sebagai,
+                kategori: getApp[i].kategori === '' || getApp[i].kategori === null ? null : getApp[i].kategori,
                 no_set: no
               }
               const make = await ttd.create(send)
