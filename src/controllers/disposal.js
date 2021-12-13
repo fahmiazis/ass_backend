@@ -1255,7 +1255,7 @@ module.exports = {
             penyetuju.push(result[i])
           }
         }
-        return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, nama } })
+        return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, result } })
       } else {
         const findDis = await disposal.findAll({
           where: {
@@ -1331,16 +1331,16 @@ module.exports = {
                           penyetuju.push(findRes[i])
                         }
                       }
-                      return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, nama } })
+                      return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, getApp } })
                     }
                   }
                 }
               }
             } else {
-              return response(res, 'failed get data', {}, 404, false)
+              return response(res, 'failed get data', { getApp }, 404, false)
             }
           } else {
-            return response(res, 'failed get data', {}, 404, false)
+            return response(res, 'failed get data', { getApp }, 404, false)
           }
         } else {
           return response(res, 'failed get data', {}, 404, false)
