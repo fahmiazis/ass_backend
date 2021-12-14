@@ -8,5 +8,6 @@ route.get('/detail/:nama', approve.getDetailApprove)
 route.get('/name', approve.getNameApprove)
 route.patch('/update/:id', approve.updateApprove)
 route.delete('/delete/:id', approve.deleteApprove)
+route.delete('/ttdel/:no', approve.deleteTtd)
 
 module.exports = route

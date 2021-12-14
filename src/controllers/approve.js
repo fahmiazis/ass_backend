@@ -1,4 +1,4 @@
-const { approve, nameApprove } = require('../models')
+const { approve, nameApprove, ttd } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -251,6 +251,35 @@ module.exports = {
         }
       } else {
         return response(res, "you're not super admin", {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  deleteTtd: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findTtd = await ttd.findAll({
+        where: {
+          no_doc: no
+        }
+      })
+      if (findTtd.length > 0) {
+        const cek = []
+        for (let i = 0; i < findTtd.length; i++) {
+          const result = await ttd.findByPk(findTtd[0].id)
+          if (result) {
+            await result.destroy()
+            cek.push(1)
+          }
+        }
+        if (cek.length === findTtd.length) {
+          return response(res, 'success delete ttd')
+        } else {
+          return response(res, 'failed to delete', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed to delete', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
