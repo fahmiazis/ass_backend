@@ -276,10 +276,10 @@ module.exports = {
         if (cek.length === findTtd.length) {
           return response(res, 'success delete ttd')
         } else {
-          return response(res, 'failed to delete', {}, 404, false)
+          return response(res, 'failed to delete1', {}, 404, false)
         }
       } else {
-        return response(res, 'failed to delete', {}, 404, false)
+        return response(res, 'failed to delete2', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
