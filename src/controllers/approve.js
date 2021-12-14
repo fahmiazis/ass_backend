@@ -267,7 +267,7 @@ module.exports = {
       if (findTtd.length > 0) {
         const cek = []
         for (let i = 0; i < findTtd.length; i++) {
-          const result = await ttd.findByPk(findTtd[0].id)
+          const result = await ttd.findByPk(findTtd[i].id)
           if (result) {
             await result.destroy()
             cek.push(1)
