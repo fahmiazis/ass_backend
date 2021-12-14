@@ -950,7 +950,7 @@ module.exports = {
                               </tbody>
                           </table>
                       </div>
-                      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
@@ -1155,7 +1155,7 @@ module.exports = {
                               </tbody>
                           </table>
                       </div>
-                      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
@@ -1606,7 +1606,7 @@ module.exports = {
                                                       </tbody>
                                                   </table>
                                               </div>
-                                              <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                               <div class="tittle foot">
                                                   Terima kasih,
                                               </div>
@@ -1842,7 +1842,7 @@ module.exports = {
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                         <div class="tittle foot">
                                             Terima kasih,
                                         </div>
@@ -2030,7 +2030,7 @@ module.exports = {
                                                   </tbody>
                                               </table>
                                           </div>
-                                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                           <div class="tittle foot">
                                               Terima kasih,
                                           </div>
@@ -3366,7 +3366,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3501,7 +3501,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3671,7 +3671,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3806,7 +3806,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3986,7 +3986,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -4121,7 +4121,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -4299,7 +4299,7 @@ module.exports = {
                                 </tbody>
                             </table>
                         </div>
-                        <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                         <div class="tittle foot">
                             Terima kasih,
                         </div>
@@ -4434,7 +4434,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -4663,7 +4663,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -4846,7 +4846,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -5032,7 +5032,7 @@ module.exports = {
                           </tbody>
                       </table>
                   </div>
-                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                   <div class="tittle foot">
                       Terima kasih,
                   </div>
@@ -5242,7 +5242,7 @@ module.exports = {
                               </tbody>
                           </table>
                       </div>
-                      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
@@ -5418,7 +5418,7 @@ module.exports = {
                               </tbody>
                           </table>
                       </div>
-                      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
@@ -5594,7 +5594,7 @@ module.exports = {
                               </tbody>
                           </table>
                       </div>
-                      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
@@ -5982,7 +5982,7 @@ module.exports = {
                                   <div class="tittle">A. Aset yang sudah  diperbolehkan untuk dieksekusi maka segera eksekusi (maksimal 1 minggu dari tanggal email)</div>
                                   <div class="tittle">B. Jika aset sudah dijual/dimusnahkan area harap melengkapi semua dokumen yang di request aset (tanpa kekurangan apapun) jika belum mengerti dapat bertanya ke PIC aset</div>
                                   <div class="mar2"></div>
-                                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -6111,7 +6111,7 @@ module.exports = {
                                       const element = `
                                         <tr>
                                           <td>${findDis.indexOf(findDis[i]) + 1}</td>
-                                          <td>D${findDis[i].no_disposal}</td>
+                                          <td>${findDis[i].status_app}</td>
                                           <td>${findDis[i].no_asset}</td>
                                           <td>${findDis[i].nama_asset}</td>
                                           <td>${findDis[i].cost_center}</td>
@@ -6218,7 +6218,7 @@ module.exports = {
                                                   <thead>
                                                       <tr>
                                                           <th>No</th>
-                                                          <th>No Disposal</th>
+                                                          <th>No Persetujuan Disposal</th>
                                                           <th>Asset</th>
                                                           <th>Asset description</th>
                                                           <th>Cost Ctr</th>
@@ -6230,7 +6230,7 @@ module.exports = {
                                                   </tbody>
                                               </table>
                                           </div>
-                                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                           <div class="tittle foot">
                                               Terima kasih,
                                           </div>
@@ -7010,7 +7010,7 @@ module.exports = {
                             </tbody>
                         </table>
                     </div>
-                    <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                    <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                     <div class="tittle foot">
                         Terima kasih,
                     </div>
@@ -7302,7 +7302,7 @@ module.exports = {
                                         </tbody>
                                     </table>
                                 </div>
-                                <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                                <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                 <div class="tittle foot">
                                     Terima kasih,
                                 </div>
@@ -7484,7 +7484,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -7711,7 +7711,7 @@ module.exports = {
                                   <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
                                   <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
                                   <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
-                                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -7835,7 +7835,7 @@ module.exports = {
                                           </tbody>
                                       </table>
                                   </div>
-                                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -8019,7 +8019,7 @@ module.exports = {
                                           </tbody>
                                       </table>
                                   </div>
-                                  <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -8235,7 +8235,7 @@ module.exports = {
                               <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
                               <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
                               <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
-                              <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -8359,7 +8359,7 @@ module.exports = {
                                       </tbody>
                                   </table>
                               </div>
-                              <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -8543,7 +8543,7 @@ module.exports = {
                                       </tbody>
                                   </table>
                               </div>
-                              <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -8760,7 +8760,7 @@ module.exports = {
                             <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
                             <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
                             <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
-                            <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -8976,7 +8976,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
+                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -9205,7 +9205,7 @@ module.exports = {
                                         </tbody>
                                     </table>
                                 </div>
-                                <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk approve</a>
+                                <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                                 <div class="tittle foot">
                                     Terima kasih,
                                 </div>
