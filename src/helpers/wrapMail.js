@@ -3,13 +3,13 @@ const nodemailer = require('nodemailer')
 async function wrapedSendMail (mailOptions) {
   return new Promise((resolve, reject) => {
     const transporter = nodemailer.createTransport({
+      connectionTimeout: 60000,
+      socketTimeout: 120000,
+      greetingTimeout: 30000,
       host: '192.168.35.203',
       secure: false,
       port: 587,
       auth: {
-        pool: true,
-        rateDelta: 10000,
-        rateLimit: 1,
         user: 'sys_adm@pinusmerahabadi.co.id',
         pass: 'sys0911'
       },
