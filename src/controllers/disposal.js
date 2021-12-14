@@ -1290,7 +1290,7 @@ module.exports = {
                 jabatan: getApp[i].jabatan === '' || getApp[i].jabatan === null ? null : getApp[i].jabatan,
                 jenis: getApp[i].jenis === '' || getApp[i].jenis === null ? null : getApp[i].jenis,
                 sebagai: getApp[i].sebagai === '' || getApp[i].sebagai === null ? null : getApp[i].sebagai,
-                kategori: 'disposal pengajuan',
+                kategori: null,
                 no_doc: no
               }
               const make = await ttd.create(send)
@@ -5667,7 +5667,7 @@ module.exports = {
                 jabatan: getApp[i].jabatan === '' || getApp[i].jabatan === null ? null : getApp[i].jabatan,
                 jenis: getApp[i].jenis === '' || getApp[i].jenis === null ? null : getApp[i].jenis,
                 sebagai: getApp[i].sebagai === '' || getApp[i].sebagai === null ? null : getApp[i].sebagai,
-                kategori: 'disposal persetujuan',
+                kategori: null,
                 no_set: no
               }
               const make = await ttd.create(send)
