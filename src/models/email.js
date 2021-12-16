@@ -27,7 +27,18 @@ module.exports = (sequelize, DataTypes) => {
     email_ga_spv: DataTypes.STRING,
     email_staff_ga: DataTypes.STRING,
     email_it_spv: DataTypes.STRING,
-    email_ism: DataTypes.STRING
+    email_ism: DataTypes.STRING,
+    email_staff_asset1: DataTypes.STRING,
+    email_staff_asset2: DataTypes.STRING,
+    email_nom: DataTypes.STRING,
+    email_bm: DataTypes.STRING,
+    email_spv_tax: DataTypes.STRING,
+    email_fm: DataTypes.STRING,
+    email_afm: DataTypes.STRING,
+    email_staff_it: DataTypes.STRING,
+    email_staff_tax: DataTypes.STRING,
+    email_spv_finance: DataTypes.STRING,
+    email_staff_admbank: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'email'

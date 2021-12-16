@@ -4,7 +4,6 @@ const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
-const mailer = require('../helpers/mailer')
 const uploadHelper = require('../helpers/upload')
 const moment = require('moment')
 const wrapMail = require('../helpers/wrapMail')
@@ -963,13 +962,12 @@ module.exports = {
                   </body>
                   `
                   }
-                  mailer.sendMail(mailOptions, (error, result) => {
-                    if (error) {
-                      return response(res, 'success submit', { cekNo })
-                    } else if (result) {
-                      return response(res, 'success approve disposal')
-                    }
-                  })
+                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                  if (sendEmail) {
+                    return response(res, 'success approve disposal', { sendEmail })
+                  } else {
+                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                  }
                 }
               }
             }
@@ -1168,13 +1166,12 @@ module.exports = {
                   </body>
                   `
                   }
-                  mailer.sendMail(mailOptions, (error, result) => {
-                    if (error) {
-                      return response(res, 'success submit', { cekNo })
-                    } else if (result) {
-                      return response(res, 'success approve disposal')
-                    }
-                  })
+                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                  if (sendEmail) {
+                    return response(res, 'success approve disposal', { sendEmail })
+                  } else {
+                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                  }
                 }
               }
             }
@@ -1498,7 +1495,7 @@ module.exports = {
                                         const mailOptions = {
                                           from: 'noreply_asset@pinusmerahabadi.co.id',
                                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                          to: 'pmaho_asset2@pinusmerahabadi.co.id, fahmiazis797@gmail.com',
+                                          to: `${findUser.email}`,
                                           subject: `Approve Pengajuan Disposal D${no} (LOCALHOST)`,
                                           html: `
                                           <head>
@@ -1855,13 +1852,12 @@ module.exports = {
                                     </body>
                                     `
                                   }
-                                  mailer.sendMail(mailOptions, (error, result) => {
-                                    if (error) {
-                                      return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                                    } else if (result) {
-                                      return response(res, 'success approve form disposal')
-                                    }
-                                  })
+                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                  if (sendEmail) {
+                                    return response(res, 'success approve disposal', { sendEmail })
+                                  } else {
+                                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                                  }
                                 }
                               }
                             }
@@ -2043,13 +2039,12 @@ module.exports = {
                                       </body>
                                       `
                                     }
-                                    mailer.sendMail(mailOptions, (error, result) => {
-                                      if (error) {
-                                        return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                                      } else if (result) {
-                                        return response(res, 'success approve disposal')
-                                      }
-                                    })
+                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                    if (sendEmail) {
+                                      return response(res, 'success approve disposal', { sendEmail })
+                                    } else {
+                                      return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                                    }
                                   }
                                 }
                               } else {
@@ -2360,13 +2355,12 @@ module.exports = {
                                           </body>
                                           `
                                 }
-                                mailer.sendMail(mailOptions, (error, result) => {
-                                  if (error) {
-                                    return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draf })
-                                  } else if (result) {
-                                    return response(res, 'success reject disposal')
-                                  }
-                                })
+                                const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                if (sendEmail) {
+                                  return response(res, 'success reject disposal', { sendEmail })
+                                } else {
+                                  return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                                }
                               } else {
                                 return response(res, 'failed reject disposal', {}, 404, false)
                               }
@@ -2565,13 +2559,12 @@ module.exports = {
                               </body>
                           `
                               }
-                              mailer.sendMail(mailOptions, (error, result) => {
-                                if (error) {
-                                  return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draftEmail, draf })
-                                } else if (result) {
-                                  return response(res, 'success reject disposal')
-                                }
-                              })
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success reject disposal', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                              }
                             }
                           }
                         }
@@ -3379,13 +3372,12 @@ module.exports = {
                       </body>
                       `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'success submit', {})
-                        } else if (result) {
-                          return response(res, 'successfully upload dokumen', { send })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success submit disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   } else {
                     const createNotif = await notif.create(data)
@@ -3514,13 +3506,12 @@ module.exports = {
                       </body>
                       `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'success submit', {})
-                        } else if (result) {
-                          return response(res, 'successfully upload dokumen', { send })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success submit disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   }
                 }
@@ -3684,13 +3675,12 @@ module.exports = {
                       </body>
                       `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'success submit', {})
-                        } else if (result) {
-                          return response(res, 'successfully upload dokumen', { send })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success submit disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   } else {
                     const createNotif = await notif.create(data)
@@ -3819,13 +3809,12 @@ module.exports = {
                       </body>
                       `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'success submit', {})
-                        } else if (result) {
-                          return response(res, 'successfully upload dokumen', { send })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success submit disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   }
                 }
@@ -3999,13 +3988,12 @@ module.exports = {
                       </body>
                       `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'success submit', {})
-                        } else if (result) {
-                          return response(res, 'successfully upload dokumen', { send })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success submit disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   } else {
                     const createNotif = await notif.create(data)
@@ -4134,13 +4122,12 @@ module.exports = {
                       </body>
                       `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'success submit', {})
-                        } else if (result) {
-                          return response(res, 'successfully upload dokumen', { send })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success submit disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   }
                 }
@@ -4312,13 +4299,12 @@ module.exports = {
                     </body>
                     `
                     }
-                    mailer.sendMail(mailOptions, (error, result) => {
-                      if (error) {
-                        return response(res, 'success submit', {})
-                      } else if (result) {
-                        return response(res, 'successfully upload dokumen', { send })
-                      }
-                    })
+                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                    if (sendEmail) {
+                      return response(res, 'success submit disposal', { sendEmail })
+                    } else {
+                      return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                    }
                   }
                 } else {
                   const createNotif = await notif.create(data)
@@ -4447,13 +4433,12 @@ module.exports = {
                       </body>
                       `
                     }
-                    mailer.sendMail(mailOptions, (error, result) => {
-                      if (error) {
-                        return response(res, 'success submit', {})
-                      } else if (result) {
-                        return response(res, 'successfully upload dokumen', { send })
-                      }
-                    })
+                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                    if (sendEmail) {
+                      return response(res, 'success submit disposal', { sendEmail })
+                    } else {
+                      return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                    }
                   }
                 }
               }
@@ -4676,13 +4661,12 @@ module.exports = {
                         </body>
                         `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'successfully reject dokumen fail send email', { result: reject })
-                        } else if (result) {
-                          return response(res, 'successfully reject dokumen', { result: reject })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success reject disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   }
                 } else {
@@ -4859,13 +4843,12 @@ module.exports = {
                         </body>
                         `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'successfully reject dokumen fail send email', { result: reject })
-                        } else if (result) {
-                          return response(res, 'successfully reject dokumen', { result: reject })
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success reject disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   }
                 } else {
@@ -5045,32 +5028,50 @@ module.exports = {
               </body>
               `
             }
-            mailer.sendMail(mailOptions, (error, result) => {
-              if (error) {
-                console.log('success reject fail send email')
-              } else if (result) {
-                console.log('success reject taxfin disposal')
-              }
-            })
-            if (result.no_io === 'finance' || result.no_io === 'tax' || result.no_io === 'taxfin') {
-              const data = {
-                no_io: 'taxfin'
-              }
-              const sent = await result.update(data)
-              if (sent) {
-                return response(res, 'success reject tax and finance')
+            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+            if (sendEmail) {
+              if (result.no_io === 'finance' || result.no_io === 'tax' || result.no_io === 'taxfin') {
+                const data = {
+                  no_io: 'taxfin'
+                }
+                const sent = await result.update(data)
+                if (sent) {
+                  return response(res, 'success reject tax and finance')
+                } else {
+                  return response(res, 'failed reject tax and finance', {}, 404, false)
+                }
               } else {
-                return response(res, 'failed reject tax and finance', {}, 404, false)
+                const data = {
+                  no_io: tipe
+                }
+                const sent = await result.update(data)
+                if (sent) {
+                  return response(res, 'success reject tax and finance')
+                } else {
+                  return response(res, 'failed reject tax and finance', {}, 404, false)
+                }
               }
             } else {
-              const data = {
-                no_io: tipe
-              }
-              const sent = await result.update(data)
-              if (sent) {
-                return response(res, 'success reject tax and finance')
+              if (result.no_io === 'finance' || result.no_io === 'tax' || result.no_io === 'taxfin') {
+                const data = {
+                  no_io: 'taxfin'
+                }
+                const sent = await result.update(data)
+                if (sent) {
+                  return response(res, 'success reject tax and finance failed sendemail')
+                } else {
+                  return response(res, 'failed reject tax and finance', {}, 404, false)
+                }
               } else {
-                return response(res, 'failed reject tax and finance', {}, 404, false)
+                const data = {
+                  no_io: tipe
+                }
+                const sent = await result.update(data)
+                if (sent) {
+                  return response(res, 'success reject tax and finance failed sendemail')
+                } else {
+                  return response(res, 'failed reject tax and finance', {}, 404, false)
+                }
               }
             }
           }
@@ -5255,13 +5256,12 @@ module.exports = {
                   </body>
                   `
                   }
-                  mailer.sendMail(mailOptions, (error, result) => {
-                    if (error) {
-                      return response(res, 'success submit tax and finance')
-                    } else if (result) {
-                      return response(res, 'success submit tax and finance')
-                    }
-                  })
+                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                  if (sendEmail) {
+                    return response(res, 'success submit taxfin disposal', { sendEmail })
+                  } else {
+                    return response(res, 'berhasil submit taxfin disposal, tidak berhasil kirim notif email 1')
+                  }
                 }
               }
             }
@@ -5431,13 +5431,12 @@ module.exports = {
                   </body>
                   `
                   }
-                  mailer.sendMail(mailOptions, (error, result) => {
-                    if (error) {
-                      return response(res, 'success submit tax and finance')
-                    } else if (result) {
-                      return response(res, 'success submit tax and finance')
-                    }
-                  })
+                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                  if (sendEmail) {
+                    return response(res, 'success submit tax and finance disposal', { sendEmail })
+                  } else {
+                    return response(res, 'berhasil submit tax and finance disposal, tidak berhasil kirim notif email 1')
+                  }
                 }
               }
             }
@@ -5607,13 +5606,12 @@ module.exports = {
                   </body>
                   `
                   }
-                  mailer.sendMail(mailOptions, (error, result) => {
-                    if (error) {
-                      return response(res, 'success submit tax and finance')
-                    } else if (result) {
-                      return response(res, 'success submit tax and finance')
-                    }
-                  })
+                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                  if (sendEmail) {
+                    return response(res, 'success submit tax and finance disposal', { sendEmail })
+                  } else {
+                    return response(res, 'berhasil submit tax and finance disposal, tidak berhasil kirim notif email 1')
+                  }
                 }
               }
             }
@@ -5824,11 +5822,14 @@ module.exports = {
                                 </tr>`
                               tableTd = tableTd + element
                             }
+                            const ccIt = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_it_spv, findEmail.email_ism, findEmail.email_staff_it, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                            const cc = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_ga_spv, findEmail.email_staff_ga]
                             const mailOptions = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                               to: `${findEmail.email_area_aos}`,
-                              subject: `Full Approve Persetujuan Disposal ${no} (TESTING)`,
+                              cc: findDis.find(({ kategori }) => kategori === 'IT') === undefined && findDis.find(({ kategori }) => kategori === 'it') === undefined ? `${cc}` : `${ccIt}`,
+                              subject: `DISPOSAL ASSET ${findDis[0].area} (TESTING)`,
                               html: `
                                 <head>
                                 <style type="text/css">
@@ -5995,13 +5996,12 @@ module.exports = {
                               </body>
                                 `
                             }
-                            mailer.sendMail(mailOptions, (error, result) => {
-                              if (error) {
-                                console.log('gagal kirim')
-                              } else {
-                                cekEmail.push('berhasil kirim')
-                              }
-                            })
+                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                            if (sendEmail) {
+                              return response(res, 'success kirim', { sendEmail })
+                            } else {
+                              return response(res, 'berhasil kirim, tidak berhasil kirim notif email 1')
+                            }
                           }
                         }
                       }
@@ -6243,13 +6243,12 @@ module.exports = {
                                       </body>
                                       `
                                     }
-                                    mailer.sendMail(mailOptions, (error, result) => {
-                                      if (error) {
-                                        return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                                      } else if (result) {
-                                        return response(res, 'success approve disposal')
-                                      }
-                                    })
+                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                    if (sendEmail) {
+                                      return response(res, 'success approve disposal', { sendEmail })
+                                    } else {
+                                      return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                                    }
                                   }
                                 }
                               } else {
@@ -6582,13 +6581,12 @@ module.exports = {
                                     </body>
                                     `
                                     }
-                                    mailer.sendMail(mailOptions, (error, result) => {
-                                      if (error) {
-                                        return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draf })
-                                      } else if (result) {
-                                        return response(res, 'success reject disposal')
-                                      }
-                                    })
+                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                    if (sendEmail) {
+                                      return response(res, 'success reject disposal', { sendEmail })
+                                    } else {
+                                      return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                                    }
                                   } else {
                                     return response(res, 'failed reject persetujuan disposal', {}, 404, false)
                                   }
@@ -6804,13 +6802,12 @@ module.exports = {
                           </body>
                               `
                           }
-                          mailer.sendMail(mailOptions, (error, result) => {
-                            if (error) {
-                              return response(res, 'berhasil reject dokumen, tidak berhasil kirim notif email 1', { error: error, send: draftEmail, draf })
-                            } else if (result) {
-                              return response(res, 'success reject disposal')
-                            }
-                          })
+                          const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                          if (sendEmail) {
+                            return response(res, 'success reject disposal', { sendEmail })
+                          } else {
+                            return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                          }
                         } else {
                           return response(res, 'failed reject disposal', {}, 404, false)
                         }
@@ -7023,13 +7020,12 @@ module.exports = {
                 </body>
                 `
               }
-              mailer.sendMail(mailOptions, (error, result) => {
-                if (error) {
-                  return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                } else if (result) {
-                  return response(res, 'success submit', { cekNo })
-                }
-              })
+              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+              if (sendEmail) {
+                return response(res, 'success submit disposal', { sendEmail })
+              } else {
+                return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+              }
             }
           }
         } else {
@@ -7182,6 +7178,8 @@ module.exports = {
                         }
                       })
                       if (findUser) {
+                        const cc = [findUser.email_am, findUser.email_aam, findUser.email_spv_asset, findUser.email_staff_asset1, findUser.email_staff_asset2, findUser.email_nom, findUser.email_bm, findUser.email_area_om, findUser.email_ga_spv, findUser.email_staff_ga]
+                        const ccIt = [findUser.email_am, findUser.email_aam, findUser.email_spv_asset, findUser.email_staff_asset1, findUser.email_staff_asset2, findUser.email_nom, findUser.email_bm, findUser.email_area_om, findUser.email_it_spv, findUser.email_ism, findUser.email_staff_it, findUser.email_ga_spv, findUser.email_staff_ga]
                         const tableTd = `
                           <tr>
                             <td>1</td>
@@ -7194,8 +7192,9 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findUser.email}`,
-                          subject: `Selesai Proses Disposal Asset ${result.no_asset} (TESTING)`,
+                          to: `${findUser.email_area_aos}`,
+                          cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
+                          subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} (TESTING)`,
                           html: `
                             <head>
                               <style type="text/css">
@@ -7280,10 +7279,10 @@ module.exports = {
                             </head>
                             <body>
                                 <div class="tittle mar">
-                                    Dear Bapak/Ibu Asset,
+                                    Dear Bapak/Ibu,
                                 </div>
                                 <div class="tittle mar1">
-                                    <div>Proses Disposal Asset telah selesai dengan rincian asset sebagai berikut</div>
+                                    <div>Asset yang dimusnahkan dibawah ini telah dihapuskan secara SAP.</div>
                                 </div>
                                 <div class="position">
                                     <table class="demo-table">
@@ -7315,13 +7314,12 @@ module.exports = {
                             </body>
                             `
                         }
-                        mailer.sendMail(mailOptions, (error, result) => {
-                          if (error) {
-                            return response(res, 'success submit', { result })
-                          } else if (result) {
-                            return response(res, 'success submit eksekusi disposal')
-                          }
-                        })
+                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                        if (sendEmail) {
+                          return response(res, 'success submit eksekusi disposal', { sendEmail })
+                        } else {
+                          return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                        }
                       }
                     } else {
                       return response(res, 'failed submit disposal', {}, 400, false)
@@ -7497,13 +7495,12 @@ module.exports = {
                         </body>
                         `
                       }
-                      mailer.sendMail(mailOptions, (error, result) => {
-                        if (error) {
-                          return response(res, 'success submit', { result })
-                        } else if (result) {
-                          return response(res, 'success submit eksekusi disposal')
-                        }
-                      })
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'success submit eksekusi disposal', { sendEmail })
+                      } else {
+                        return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                      }
                     }
                   }
                 } else {
@@ -7587,21 +7584,31 @@ module.exports = {
                           const createNotifFin = await notif.create(data)
                           const createNotifTax = await notif.create(data1)
                           if (createNotifFin && createNotifTax) {
-                            const tableTd = `
-                            <tr>
-                              <td>1</td>
-                              <td>D${result.no_disposal}</td>
-                              <td>${result.no_asset}</td>
-                              <td>${result.nama_asset}</td>
-                              <td>${result.cost_center}</td>
-                              <td>${result.area}</td>
-                            </tr>`
-                            const mailOptions = {
-                              from: 'noreply_asset@pinusmerahabadi.co.id',
-                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              to: `${findUser.email}`,
-                              subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
-                              html: `
+                            const findEmail = await email.findOne({
+                              where: {
+                                kode_plant: result.kode_plant
+                              }
+                            })
+                            if (findEmail) {
+                              const ccTax = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_spv_asset]
+                              const ccFinIt = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_fm, findEmail.email_afm, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_it_spv, findEmail.email_ism, findEmail.email_staff_it, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                              const ccFin = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_fm, findEmail.email_afm, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                              const tableTd = `
+                                <tr>
+                                  <td>1</td>
+                                  <td>D${result.no_disposal}</td>
+                                  <td>${result.no_asset}</td>
+                                  <td>${result.nama_asset}</td>
+                                  <td>${result.cost_center}</td>
+                                  <td>${result.area}</td>
+                                </tr>`
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                to: `${findUser.email}`,
+                                cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
+                                subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} (TESTING)`,
+                                html: `
                               <head>
                                 <style type="text/css">
                                 body {
@@ -7723,13 +7730,14 @@ module.exports = {
                                   </div>
                               </body>
                               `
-                            }
-                            const mailOptionsTax = {
-                              from: 'noreply_asset@pinusmerahabadi.co.id',
-                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              to: `${findTax.email}`,
-                              subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
-                              html: `
+                              }
+                              const mailOptionsTax = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                to: `${findTax.email}`,
+                                cc: `${ccTax}`,
+                                subject: `Permintaan FP disposal asset ${result.no_asset} (TESTING)`,
+                                html: `
                               <head>
                                 <style type="text/css">
                                 body {
@@ -7847,21 +7855,19 @@ module.exports = {
                                   </div>
                               </body>
                               `
+                              }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                const sendEmail1 = await wrapMail.wrapedSendMail(mailOptionsTax)
+                                if (sendEmail1) {
+                                  return response(res, 'success submit eksekusi disposal', { sendEmail })
+                                } else {
+                                  return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                                }
+                              } else {
+                                return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                              }
                             }
-                            mailer.sendMail(mailOptions, (error, result) => {
-                              if (error) {
-                                console.log('success submit')
-                              } else if (result) {
-                                console.log('success submit eksekusi disposal')
-                              }
-                            })
-                            mailer.sendMail(mailOptionsTax, (error, result) => {
-                              if (error) {
-                                return response(res, 'success submit', { result })
-                              } else if (result) {
-                                return response(res, 'success submit eksekusi disposal')
-                              }
-                            })
                           }
                         }
                       } else {
@@ -8032,13 +8038,12 @@ module.exports = {
                               </body>
                               `
                             }
-                            mailer.sendMail(mailOptions, (error, result) => {
-                              if (error) {
-                                return response(res, 'success submit', { result })
-                              } else if (result) {
-                                return response(res, 'success submit eksekusi disposal')
-                              }
-                            })
+                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                            if (sendEmail) {
+                              return response(res, 'success submit disposal', { sendEmail })
+                            } else {
+                              return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                            }
                           }
                         }
                       } else {
@@ -8111,21 +8116,31 @@ module.exports = {
                       const createNotifFin = await notif.create(data)
                       const createNotifTax = await notif.create(data1)
                       if (createNotifFin && createNotifTax) {
-                        const tableTd = `
-                        <tr>
-                          <td>1</td>
-                          <td>D${result.no_disposal}</td>
-                          <td>${result.no_asset}</td>
-                          <td>${result.nama_asset}</td>
-                          <td>${result.cost_center}</td>
-                          <td>${result.area}</td>
-                        </tr>`
-                        const mailOptions = {
-                          from: 'noreply_asset@pinusmerahabadi.co.id',
-                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findUser.email}`,
-                          subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
-                          html: `
+                        const findEmail = await email.findOne({
+                          where: {
+                            kode_plant: result.kode_plant
+                          }
+                        })
+                        if (findEmail) {
+                          const ccTax = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_spv_asset]
+                          const ccFinIt = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_fm, findEmail.email_afm, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_it_spv, findEmail.email_ism, findEmail.email_staff_it, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                          const ccFin = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_fm, findEmail.email_afm, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                          const tableTd = `
+                            <tr>
+                              <td>1</td>
+                              <td>D${result.no_disposal}</td>
+                              <td>${result.no_asset}</td>
+                              <td>${result.nama_asset}</td>
+                              <td>${result.cost_center}</td>
+                              <td>${result.area}</td>
+                            </tr>`
+                          const mailOptions = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            to: `${findUser.email}`,
+                            cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
+                            subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} (TESTING)`,
+                            html: `
                           <head>
                             <style type="text/css">
                             body {
@@ -8247,13 +8262,14 @@ module.exports = {
                               </div>
                           </body>
                           `
-                        }
-                        const mailOptionsTax = {
-                          from: 'noreply_asset@pinusmerahabadi.co.id',
-                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findTax.email}`,
-                          subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
-                          html: `
+                          }
+                          const mailOptionsTax = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            to: `${findTax.email}`,
+                            cc: `${ccTax}`,
+                            subject: `Permintaan FP disposal asset ${result.no_asset} (TESTING)`,
+                            html: `
                           <head>
                             <style type="text/css">
                             body {
@@ -8371,21 +8387,19 @@ module.exports = {
                               </div>
                           </body>
                           `
+                          }
+                          const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                          if (sendEmail) {
+                            const sendEmail1 = await wrapMail.wrapedSendMail(mailOptionsTax)
+                            if (sendEmail1) {
+                              return response(res, 'success submit eksekusi disposal', { sendEmail })
+                            } else {
+                              return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                            }
+                          } else {
+                            return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                          }
                         }
-                        mailer.sendMail(mailOptions, (error, result) => {
-                          if (error) {
-                            console.log('success submit')
-                          } else if (result) {
-                            console.log('success submit eksekusi disposal')
-                          }
-                        })
-                        mailer.sendMail(mailOptionsTax, (error, result) => {
-                          if (error) {
-                            return response(res, 'success submit', { result })
-                          } else if (result) {
-                            return response(res, 'success submit eksekusi disposal')
-                          }
-                        })
                       }
                     }
                   } else {
@@ -8556,13 +8570,12 @@ module.exports = {
                           </body>
                           `
                         }
-                        mailer.sendMail(mailOptions, (error, result) => {
-                          if (error) {
-                            return response(res, 'success submit', { result })
-                          } else if (result) {
-                            return response(res, 'success submit eksekusi disposal')
-                          }
-                        })
+                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                        if (sendEmail) {
+                          return response(res, 'success submit eksekusi disposal', { sendEmail })
+                        } else {
+                          return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                        }
                       }
                     }
                   } else {
@@ -8636,7 +8649,17 @@ module.exports = {
                 if (cekData.length === findNotif.length) {
                   const createNotif = await notif.create(data)
                   if (createNotif) {
-                    const tableTd = `
+                    const findEmail = await email.findOne({
+                      where: {
+                        kode_plant: result.kode_plant
+                      }
+                    })
+                    if (findEmail) {
+                      const ccTax = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_spv_tax, findEmail.email_staff_tax, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                      const ccTaxIt = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.spv_tax, findEmail.staff_tax, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_it_spv, findEmail.email_ism, findEmail.email_staff_it, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                      const ccFinIt = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_fm, findEmail.email_afm, findEmail.email_spv_finance, findEmail.email_staff_admbank, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_it_spv, findEmail.email_ism, findEmail.email_staff_it, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                      const ccFin = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_fm, findEmail.email_afm, findEmail.email_spv_finance, findEmail.email_staff_admbank, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_area_aos, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                      const tableTd = `
                       <tr>
                         <td>1</td>
                         <td>D${result.no_disposal}</td>
@@ -8645,12 +8668,13 @@ module.exports = {
                         <td>${result.cost_center}</td>
                         <td>${result.area}</td>
                       </tr>`
-                    const mailOptions = {
-                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findUser.email}`,
-                      subject: `Tax And Finance Disposal No Asset ${result.no_asset} (TESTING)`,
-                      html: `
+                      const mailOptions = {
+                        from: 'noreply_asset@pinusmerahabadi.co.id',
+                        replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                        to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                        cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
+                        subject: `Hasil jurnal uang masuk disposal asset ${result.no_asset} (TESTING)`,
+                        html: `
                         <head>
                           <style type="text/css">
                           body {
@@ -8734,10 +8758,10 @@ module.exports = {
                         </head>
                         <body>
                             <div class="tittle mar">
-                                Dear Team Finance,
+                                Dear Team Asset,
                             </div>
                             <div class="tittle mar1">
-                                <div>Mohon bantuannya untuk cek uang masuk hasil penjualan aset dibawah ini:</div>
+                                <div>Berikut no dokumen atas penjurnalan uang masuk disposal asset ke HO:</div>
                             </div>
                             <div class="position mar1">
                                 <table class="demo-table">
@@ -8756,10 +8780,6 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="tittle">Jika uang masuk sudah sesuai, mohon segera:</div>
-                            <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
-                            <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
-                            <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
                             <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
@@ -8768,18 +8788,148 @@ module.exports = {
                                 Regards,
                             </div>
                             <div class="tittle">
-                                Team Asset
+                                Team Finance
                             </div>
                         </body>
                         `
-                    }
-                    mailer.sendMail(mailOptions, (error, result) => {
-                      if (error) {
-                        return response(res, 'success submit failed send email')
-                      } else if (result) {
-                        return response(res, 'success submit eksekusi disposal')
                       }
-                    })
+                      const mailOptionsTax = {
+                        from: 'noreply_asset@pinusmerahabadi.co.id',
+                        replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                        to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                        cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccTaxIt}` : `${ccTax}`,
+                        subject: `Done permintaan FP disposal asset ${result.no_asset} (TESTING)`,
+                        html: `
+                        <head>
+                          <style type="text/css">
+                          body {
+                              display: flexbox;
+                              flex-direction: column;
+                          }
+                          .tittle {
+                              font-size: 15px;
+                          }
+                          .mar {
+                              margin-bottom: 20px;
+                          }
+                          .mar1 {
+                              margin-bottom: 10px;
+                          }
+                          .foot {
+                              margin-top: 20px;
+                              margin-bottom: 10px;
+                          }
+                          .foot1 {
+                              margin-bottom: 50px;
+                          }
+                          .position {
+                              display: flexbox;
+                              flex-direction: row;
+                              justify-content: left;
+                              margin-top: 10px;
+                          }
+                          table {
+                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                              font-size: 12px;
+                          }
+                          .demo-table {
+                              border-collapse: collapse;
+                              font-size: 13px;
+                          }
+                          .demo-table th, 
+                          .demo-table td {
+                              border-bottom: 1px solid #e1edff;
+                              border-left: 1px solid #e1edff;
+                              padding: 7px 17px;
+                          }
+                          .demo-table th, 
+                          .demo-table td:last-child {
+                              border-right: 1px solid #e1edff;
+                          }
+                          .demo-table td:first-child {
+                              border-top: 1px solid #e1edff;
+                          }
+                          .demo-table td:last-child{
+                              border-bottom: 0;
+                          }
+                          caption {
+                              caption-side: top;
+                              margin-bottom: 10px;
+                          }
+                          
+                          /* Table Header */
+                          .demo-table thead th {
+                              background-color: #508abb;
+                              color: #FFFFFF;
+                              border-color: #6ea1cc !important;
+                              text-transform: uppercase;
+                          }
+                          
+                          /* Table Body */
+                          .demo-table tbody td {
+                              color: #353535;
+                          }
+                          
+                          .demo-table tbody tr:nth-child(odd) td {
+                              background-color: #f4fbff;
+                          }
+                          .demo-table tbody tr:hover th,
+                          .demo-table tbody tr:hover td {
+                              background-color: #ffffa2;
+                              border-color: #ffff0f;
+                              transition: all .2s;
+                          }
+                      </style>
+                        </head>
+                        <body>
+                            <div class="tittle mar">
+                                Dear Team Asset,
+                            </div>
+                            <div class="tittle mar1">
+                                <div>Faktur pajak atas penjualan asset dibawah ini telah kami buatkan:</div>
+                            </div>
+                            <div class="position mar1">
+                                <table class="demo-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>No Disposal</th>
+                                            <th>Asset</th>
+                                            <th>Asset description</th>
+                                            <th>Cost Ctr</th>
+                                            <th>Cost Ctr Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      ${tableTd}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                            <div class="tittle foot">
+                                Terima kasih,
+                            </div>
+                            <div class="tittle foot1">
+                                Regards,
+                            </div>
+                            <div class="tittle">
+                                Team Tax
+                            </div>
+                        </body>
+                        `
+                      }
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        const sendEmail1 = await wrapMail.wrapedSendMail(mailOptionsTax)
+                        if (sendEmail1) {
+                          return response(res, 'success submit eksekusi disposal')
+                        } else {
+                          return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                        }
+                      } else {
+                        return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                      }
+                    }
                   }
                 }
               }
@@ -8856,6 +9006,8 @@ module.exports = {
                     status: '0'
                   }
                   await findAsset.update(send)
+                  const cc = [findUser.email_am, findUser.email_aam, findUser.email_spv_asset, findUser.email_staff_asset1, findUser.email_staff_asset2, findUser.email_nom, findUser.email_bm, findUser.email_area_om, findUser.email_ga_spv, findUser.email_staff_ga]
+                  const ccIt = [findUser.email_am, findUser.email_aam, findUser.email_spv_asset, findUser.email_staff_asset1, findUser.email_staff_asset2, findUser.email_nom, findUser.email_bm, findUser.email_area_om, findUser.email_it_spv, findUser.email_ism, findUser.email_staff_it, findUser.email_ga_spv, findUser.email_staff_ga]
                   const tableTd = `
                   <tr>
                     <td>1</td>
@@ -8865,11 +9017,20 @@ module.exports = {
                     <td>${result.cost_center}</td>
                     <td>${result.area}</td>
                   </tr>`
+                  const tableTax = `
+                  <tr>
+                    <td>${result.no_asset}</td>
+                    <td>${result.nama_asset}</td>
+                    <td>${result.cost_center}</td>
+                    <td>${result.area}</td>
+                    <td>${result.doc_sap}</td>
+                  </tr>`
                   const mailOptions = {
                     from: 'noreply_asset@pinusmerahabadi.co.id',
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                    to: `${findUser.email}`,
-                    subject: `Selesai Proses Disposal Asset ${result.no_asset} (TESTING)`,
+                    to: `${findUser.email_area_aos}, ${findUser.email_spv_tax}, ${findUser.email_staff_tax}`,
+                    cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
+                    subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} (TESTING)`,
                     html: `
                       <head>
                         <style type="text/css">
@@ -8950,52 +9111,90 @@ module.exports = {
                             border-color: #ffff0f;
                             transition: all .2s;
                         }
-                    </style>
+                        .martit2 {
+                            font-size: 15px;
+                            margin-top: 20px;
+                            margin-bottom: 20px;
+                            font-weight: bold;
+                        }
+                        .martit {
+                            font-size: 15px;
+                            margin-bottom: 20px;
+                            font-weight: bold;
+                        }
+                        .martit3 {
+                            font-size: 15px;
+                            margin-top: 10px;
+                        }
+                      </style>
                       </head>
                       <body>
-                          <div class="tittle mar">
-                              Dear Bapak/Ibu Asset,
-                          </div>
-                          <div class="tittle mar1">
-                              <div>Proses Disposal Asset telah selesai dengan rincian asset sebagai berikut</div>
-                          </div>
-                          <div class="position">
-                              <table class="demo-table">
-                                  <thead>
-                                      <tr>
-                                          <th>No</th>
-                                          <th>No Disposal</th>
-                                          <th>Asset</th>
-                                          <th>Asset description</th>
-                                          <th>Cost Ctr</th>
-                                          <th>Cost Ctr Name</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody>
-                                    ${tableTd}
-                                  </tbody>
-                              </table>
-                          </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
-                          <div class="tittle foot">
-                              Terima kasih,
-                          </div>
-                          <div class="tittle foot1">
-                              Regards,
-                          </div>
-                          <div class="tittle">
-                              Team Asset
-                          </div>
-                      </body>
+                        <div class="martit">
+                            Dear Bapak/Ibu AOS,
+                        </div>
+                        <div class="tittle mar1">
+                            <div>Asset yang dijual dibawah ini telah dihapuskan secara SAP.</div>
+                        </div>
+                        <div class="position">
+                            <table class="demo-table">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>No Disposal</th>
+                                        <th>Asset</th>
+                                        <th>Asset description</th>
+                                        <th>Cost Ctr</th>
+                                        <th>Cost Ctr Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                  ${tableTd}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="martit3">Mohon agar mengirimkan seluruh dokumen aslinya ke PMA HO Bandung Up tim accounting asset.</div>
+                        <div class="tittle">Terlampir form disposal yang sudah selesai diproses.</div>
+                        <div class="martit2">
+                            Dear Bapak/Ibu Tim Tax,
+                        </div>
+                        <div class="tittle mar1">
+                            <div>Asset yang dijual dibawah ini telah dihapuskan secara SAP.</div>
+                        </div>
+                        <div class="position">
+                            <table class="demo-table">
+                                <thead>
+                                    <tr>
+                                        <th>Asset</th>
+                                        <th>Asset description</th>
+                                        <th>Cost Ctr</th>
+                                        <th>Cost Ctr Name</th>
+                                        <th>No Doc SAP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                  ${tableTax}
+                                </tbody>
+                            </table>
+                        </div>
+                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                        <div class="tittle foot">
+                            Terima kasih,
+                        </div>
+                        <div class="tittle foot1">
+                            Regards,
+                        </div>
+                        <div class="tittle">
+                            Team Asset
+                        </div>
+                    </body>
                       `
                   }
-                  mailer.sendMail(mailOptions, (error, result) => {
-                    if (error) {
-                      return response(res, 'success submit fail send email', { result })
-                    } else if (result) {
-                      return response(res, 'success submit eksekusi disposal')
-                    }
-                  })
+                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                  if (sendEmail) {
+                    return response(res, 'success submit disposal', { sendEmail })
+                  } else {
+                    return response(res, 'berhasil submit disposal, tidak berhasil kirim notif email 1')
+                  }
                 } else {
                   return response(res, 'failed submit disposal', {}, 400, false)
                 }
@@ -9218,13 +9417,12 @@ module.exports = {
                             </body>
                           `
                         }
-                        mailer.sendMail(mailOptions, (error, result) => {
-                          if (error) {
-                            return response(res, 'success submit', { no })
-                          } else if (result) {
-                            return response(res, 'success approve disposal')
-                          }
-                        })
+                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                        if (sendEmail) {
+                          return response(res, 'success submit eksekusi disposal', { sendEmail })
+                        } else {
+                          return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                        }
                       }
                     }
                   }

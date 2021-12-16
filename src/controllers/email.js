@@ -246,7 +246,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email SPV ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM']
+          const cek = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email SPV ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM', 'Email Staff It', 'Email Staff Tax', 'Email SPV Finance', 'Email Staff admbank']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             if (valid[i] === cek[i]) {
@@ -291,7 +291,7 @@ module.exports = {
               }
               if (arr.length > 0) {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO emails (kode_plant, email_area_aos, email_area_om, email_staff_purch, email_spv_purch_1, email_spv_purch_2, email_manager_purch, email_spv_asset, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO emails (kode_plant, email_area_aos, email_area_om, email_staff_purch, email_spv_purch_1, email_spv_purch_2, email_manager_purch, email_spv_asset, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism, email_staff_asset1, email_staff_asset2, email_nom, email_bm, email_spv_tax, email_fm, email_afm, email_staff_it, email_staff_tax, email_spv_finance, email_staff_admbank) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -311,7 +311,7 @@ module.exports = {
                 }
               } else {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO emails (kode_plant, email_area_aos, email_area_om, email_staff_purch, email_spv_purch_1, email_spv_purch_2, email_manager_purch, email_spv_asset, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO emails (kode_plant, email_area_aos, email_area_om, email_staff_purch, email_spv_purch_1, email_spv_purch_2, email_manager_purch, email_spv_asset, email_am, email_aam, email_ga_spv, email_staff_ga, email_it_spv, email_ism, email_staff_asset1, email_staff_asset2, email_nom, email_bm, email_spv_tax, email_fm, email_afm, email_staff_it, email_staff_tax, email_spv_finance, email_staff_admbank) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -353,8 +353,8 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email Spv ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM']
-        const key = ['kode_plant', 'email_area', 'email_staff_purch', 'email_spv_purch', 'email_manager_purch', 'email_am', 'email_aam', 'email_ga_spv', 'email_staff_ga', 'email_it_spv', 'email_ism']
+        const header = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email Spv ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM', 'Email Staff Aset 1', 'Email Staff Aset 2', 'Email NOM', 'Email BM', 'Email SPV Tax', 'Email FM', 'Email AFM', 'Email Staff It', 'Email Staff Tax', 'Email SPV Finance', 'Email Staff admbank']
+        const key = ['kode_plant', 'email_area_aos', 'email_area_om', 'email_staff_purch', 'email_spv_purch_1', 'email_spv_purch_2', 'email_manager_purch', 'email_spv_asset', 'email_am', 'email_aam', 'email_ga_spv', 'email_staff_ga', 'email_it_spv', 'email_ism', 'email_staff_asset1', 'email_staff_asset2', 'email_nom', 'email_bm', 'email_spv_tax', 'email_fm', 'email_afm', 'email_staff_it', 'email_staff_tax', 'email_spv_finance', 'email_staff_admbank']
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
           arr.push(temp)

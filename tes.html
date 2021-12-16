@@ -1,163 +1,159 @@
-<head>
-    <style type="text/css">
-    body {
-        display: flexbox;
-        flex-direction: column;
-    }
-    .tittle {
-      font-size: 15px;
-      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    }
-    .textItalic {
-      font-style: italic;
-      font-weight: bold;
-      font-size: 15px;
-      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-      margin-top: 10px;
-    }
-    .tittleBold {
-      font-weight: bold;
-      font-size: 15px;
-      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-      margin-top: 10px;
-    }
-    .mar {
-        margin-bottom: 20px;
-    }
-    .mar1 {
-        margin-bottom: 10px;
-    }
-    .mar2 {
-      margin-top: 10px;
-    }
-    .foot {
-        font-size: 15px;
-        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-        margin-top: 20px;
-        margin-bottom: 10px;
-    }
-    .foot1 {
-        font-size: 15px;
-        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-        margin-bottom: 50px;
-    }
-    .position {
-        display: flexbox;
-        flex-direction: row;
-        justify-content: left;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-    table {
-        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-        font-size: 12px;
-    }
-    .demo-table {
-        border-collapse: collapse;
-        font-size: 13px;
-    }
-    .demo-table th, 
-    .demo-table td {
-        border-bottom: 1px solid #e1edff;
-        border-left: 1px solid #e1edff;
-        padding: 7px 17px;
-    }
-    .demo-table th, 
-    .demo-table td:last-child {
-        border-right: 1px solid #e1edff;
-    }
-    .demo-table td:first-child {
-        border-top: 1px solid #e1edff;
-    }
-    .demo-table td:last-child{
-        border-bottom: 0;
-    }
-    caption {
-        caption-side: top;
-        margin-bottom: 10px;
-    }
-    
-    /* Table Header */
-    .demo-table thead th {
-        background-color: #508abb;
-        color: #FFFFFF;
-        border-color: #6ea1cc !important;
-        text-transform: uppercase;
-    }
-    
-    /* Table Body */
-    .demo-table tbody td {
-        color: #353535;
-    }
-    
-    .demo-table tbody tr:nth-child(odd) td {
-        background-color: #f4fbff;
-    }
-    .demo-table tbody tr:hover th
-    .demo-table tbody tr:hover td {
-        background-color: #ffffa2;
-        border-color: #ffff0f;
-        transition: all .2s;
-    }
-    .textUnder {
-        text-decoration: underline;
-        font-weight: bold;
-    }
-</style>
-  </head>
-  <body>
-      <div class="tittle mar">
-          Dear Bapak/Ibu AOS,
-      </div>
-      <div class="tittle mar1">
-          <div class="tittle">Berikut list aset disposal yang sudah full approved, mohon segera dieksekusi.</div>
-      </div>
-      <div class="position mar1">
-          <table class="demo-table">
-              <thead>
-                  <tr>
-                      <th>No</th>
-                      <th>No Disposal</th>
-                      <th>Asset</th>
-                      <th>Asset description</th>
-                      <th>Cost Ctr</th>
-                      <th>Cost Ctr Name</th>
-                  </tr>
-              </thead>
-              <tbody>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <style type="text/css">
+        body {
+            display: flexbox;
+            flex-direction: column;
+        }
+        .tittle {
+            font-size: 15px;
+        }
+        .mar {
+            margin-bottom: 20px;
+        }
+        .mar1 {
+            margin-bottom: 10px;
+        }
+        .foot {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .foot1 {
+            margin-bottom: 50px;
+        }
+        .position {
+            display: flexbox;
+            flex-direction: row;
+            justify-content: left;
+            margin-top: 10px;
+        }
+        table {
+            font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+            font-size: 12px;
+        }
+        .demo-table {
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .demo-table th, 
+        .demo-table td {
+            border-bottom: 1px solid #e1edff;
+            border-left: 1px solid #e1edff;
+            padding: 7px 17px;
+        }
+        .demo-table th, 
+        .demo-table td:last-child {
+            border-right: 1px solid #e1edff;
+        }
+        .demo-table td:first-child {
+            border-top: 1px solid #e1edff;
+        }
+        .demo-table td:last-child{
+            border-bottom: 0;
+        }
+        caption {
+            caption-side: top;
+            margin-bottom: 10px;
+        }
+        
+        /* Table Header */
+        .demo-table thead th {
+            background-color: #508abb;
+            color: #FFFFFF;
+            border-color: #6ea1cc !important;
+            text-transform: uppercase;
+        }
+        
+        /* Table Body */
+        .demo-table tbody td {
+            color: #353535;
+        }
+        
+        .demo-table tbody tr:nth-child(odd) td {
+            background-color: #f4fbff;
+        }
+        .demo-table tbody tr:hover th,
+        .demo-table tbody tr:hover td {
+            background-color: #ffffa2;
+            border-color: #ffff0f;
+            transition: all .2s;
+        }
+        .martit2 {
+            font-size: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .martit {
+            font-size: 15px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .martit3 {
+            font-size: 15px;
+            margin-top: 10px;
+        }
+      </style>
+      </head>
+      <body>
+        <div class="martit">
+            Dear Bapak/Ibu AOS,
+        </div>
+        <div class="tittle mar1">
+            <div>Asset yang dijual dibawah ini telah dihapuskan secara SAP.</div>
+        </div>
+        <div class="position">
+            <table class="demo-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>No Disposal</th>
+                        <th>Asset</th>
+                        <th>Asset description</th>
+                        <th>Cost Ctr</th>
+                        <th>Cost Ctr Name</th>
+                    </tr>
+                </thead>
+                <tbody>
                   ${tableTd}
-              </tbody>
-          </table>
-      </div>
-      <div class="tittle">Lengkapi dokumen eksekusi sbb:</div>
-      <div></div>
-      <div class="tittleBold">A. Penjualan Aset:</div>
-      <div class="tittle">1. Kwitansi </div>
-      <div class="tittle">2. Bukti Transfer</div>
-      <div class="tittle">3. BAST penjualan aset (link download : https://pinusmerahabadi.co.id/portal)</div>
-      <div class="tittle">4. Dokumentasi serah terima uang dan aset</div>
-      <div class="tittle">5. Scan/copyan NPWP pembeli aset (Jika Ada)</div>
-      <div class="tittle">6. Document eksekusi discan dan diupload ke web aset</div>
-      <div class="tittle">7. Uang hasil penjualan aset maksimal di transfer ke rek HO H+1 (wajib cantumkan di berita transaksi/keterangan penjualan aset+nama area). Transfer ke No.rek : 130.007.611.2112</div>
-      <div class="tittle">8. Ketika aset sudah dijual mohon segera diinformasikan ke tim aset, karena ada kaitannya dengan faktur pajak yang harus HO terbitkan ditanggal yang sama saat transaksi.</div>
-      <div class="tittle">9. Document asli point 1-5 dikirim ke HO Bandung UP Rifaldi / Neng Rina / Ervyanty (Accounting Asset) PT. Pinus Merah Abadi (HO Bandung). Jl. Soekarno Hatta No. 112, Bandung, Jawa Barat - 40235.</div>
-      <div></div>
-      <div class="tittleBold">B. Pemusnahan Aset:</div>
-      <div class="tittle">1. BA pemusnahan aset dan lampiran foto pemusnahan (link download : https://pinusmerahabadi.co.id/portal)</div>
-      <div class="tittle">2. Document eksekusi discan dan diupload ke web aset</div>
-      <div></div>
-      <div class="textItalic">NOTE:</div>
-      <div class="tittle">A. Aset yang sudah  diperbolehkan untuk dieksekusi maka segera eksekusi (maksimal 1 minggu dari tanggal email)</div>
-      <div class="tittle">B. Jika aset sudah dijual/dimusnahkan area harap melengkapi semua dokumen yang di request aset (tanpa kekurangan apapun) jika belum mengerti dapat bertanya ke PIC aset</div>
-      <div class="mar2"></div>
-      <a href="http://trial.pinusmerahabadi.co.id:8000">Klik link berikut untuk akses web asset</a>
-      <div class="tittle foot">
-          Terima kasih,
-      </div>
-      <div class="tittle foot1">
-          Regards,
-      </div>
-      <div class="tittle">
-          Team Asset
-      </div>
-  </body>
+                </tbody>
+            </table>
+        </div>
+        <div class="martit3">Mohon agar mengirimkan seluruh dokumen aslinya ke PMA HO Bandung Up tim accounting asset.</div>
+        <div class="tittle">Terlampir form disposal yang sudah selesai diproses.</div>
+        <div class="martit2">
+            Dear Bapak/Ibu Tim Tax,
+        </div>
+        <div class="tittle mar1">
+            <div>Asset yang dijual dibawah ini telah dihapuskan secara SAP.</div>
+        </div>
+        <div class="position">
+            <table class="demo-table">
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Asset description</th>
+                        <th>Cost Ctr</th>
+                        <th>Cost Ctr Name</th>
+                        <th>No Doc SAP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  ${tableTax}
+                </tbody>
+            </table>
+        </div>
+        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+        <div class="tittle foot">
+            Terima kasih,
+        </div>
+        <div class="tittle foot1">
+            Regards,
+        </div>
+        <div class="tittle">
+            Team Asset
+        </div>
+    </body>
+</html>
+  
