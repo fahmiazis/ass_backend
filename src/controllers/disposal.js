@@ -7188,6 +7188,7 @@ module.exports = {
                             <td>${result.nama_asset}</td>
                             <td>${result.cost_center}</td>
                             <td>${result.area}</td>
+                            <td>${result.doc_sap}<td>
                           </tr>`
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
@@ -7294,6 +7295,7 @@ module.exports = {
                                                 <th>Asset description</th>
                                                 <th>Cost Ctr</th>
                                                 <th>Cost Ctr Name</th>
+                                                <th>No Doc SAP</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -8667,6 +8669,18 @@ module.exports = {
                         <td>${result.nama_asset}</td>
                         <td>${result.cost_center}</td>
                         <td>${result.area}</td>
+                        <td>${result.no_sap}</td>
+                        <td>${result.nominal}</td>
+                      </tr>`
+                      const tableTax = `
+                      <tr>
+                        <td>1</td>
+                        <td>D${result.no_disposal}</td>
+                        <td>${result.no_asset}</td>
+                        <td>${result.nama_asset}</td>
+                        <td>${result.cost_center}</td>
+                        <td>${result.area}</td>
+                        <td>${result.no_fp}</td>
                       </tr>`
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
@@ -8768,11 +8782,13 @@ module.exports = {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>No Disposal</th>
+                                            <th>No Pengajuan Disposal</th>
                                             <th>Asset</th>
                                             <th>Asset description</th>
                                             <th>Cost Ctr</th>
                                             <th>Cost Ctr Name</th>
+                                            <th>No.Doc Finance</th>
+                                            <th>Nominal Uang Masuk</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -8893,15 +8909,16 @@ module.exports = {
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>No Disposal</th>
+                                            <th>No Pengajuan Disposal</th>
                                             <th>Asset</th>
                                             <th>Asset description</th>
                                             <th>Cost Ctr</th>
                                             <th>Cost Ctr Name</th>
+                                            <th>No.Faktur Pajak</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                      ${tableTd}
+                                      ${tableTax}
                                     </tbody>
                                 </table>
                             </div>

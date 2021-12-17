@@ -39,7 +39,7 @@ async function wrapedSendMail (mailOptions) {
         console.log('masuk settimeout false')
         resolve(false)
       }
-    }, 120000)
+    }, 10000)
   })
 }
 
