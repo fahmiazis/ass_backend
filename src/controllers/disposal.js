@@ -5106,7 +5106,7 @@ module.exports = {
           if (findDoc.length > 0) {
             const cek = []
             for (let i = 0; i < findDoc.length; i++) {
-              if (findDoc[i].status !== 0) {
+              if (findDoc[i].divisi !== '0') {
                 cek.push(1)
               }
             }
@@ -5275,9 +5275,9 @@ module.exports = {
                       }
                       const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
                       if (sendEmail) {
-                        return response(res, 'success submit taxfin disposal', { sendEmail })
+                        return response(res, 'success submit taxfin disposal', { sendEmail, findDoc, cek })
                       } else {
-                        return response(res, 'berhasil submit taxfin disposal, tidak berhasil kirim notif email 1')
+                        return response(res, 'berhasil submit taxfin disposal, tidak berhasil kirim notif email 1', { sendEmail, findDoc, cek })
                       }
                     }
                   }
@@ -5304,7 +5304,7 @@ module.exports = {
           if (findDoc.length > 0) {
             const cek = []
             for (let i = 0; i < findDoc.length; i++) {
-              if (findDoc[i].status !== 0) {
+              if (findDoc[i].divisi !== '0') {
                 cek.push(1)
               }
             }
@@ -5473,9 +5473,9 @@ module.exports = {
                       }
                       const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
                       if (sendEmail) {
-                        return response(res, 'success submit tax and finance disposal', { sendEmail })
+                        return response(res, 'success submit tax and finance disposal', { sendEmail, findDoc, cek })
                       } else {
-                        return response(res, 'berhasil submit tax and finance disposal, tidak berhasil kirim notif email 1')
+                        return response(res, 'berhasil submit tax and finance disposal, tidak berhasil kirim notif email 1', { sendEmail, findDoc, cek })
                       }
                     }
                   }
@@ -5502,7 +5502,7 @@ module.exports = {
           if (findDoc.length > 0) {
             const cek = []
             for (let i = 0; i < findDoc.length; i++) {
-              if (findDoc[i].status !== 0) {
+              if (findDoc[i].divisi !== '0') {
                 cek.push(1)
               }
             }
@@ -5671,9 +5671,9 @@ module.exports = {
                       }
                       const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
                       if (sendEmail) {
-                        return response(res, 'success submit tax and finance disposal', { sendEmail })
+                        return response(res, 'success submit tax and finance disposal', { sendEmail, findDoc, cek })
                       } else {
-                        return response(res, 'berhasil submit tax and finance disposal, tidak berhasil kirim notif email 1')
+                        return response(res, 'berhasil submit tax and finance disposal, tidak berhasil kirim notif email 1', { sendEmail, findDoc, cek })
                       }
                     }
                   }
