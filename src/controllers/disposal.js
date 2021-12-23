@@ -287,6 +287,13 @@ module.exports = {
             {
               model: asset,
               as: 'dataAsset'
+            },
+            {
+              model: docUser,
+              as: 'docAsset',
+              where: {
+                jenis_form: 'disposal'
+              }
             }
           ]
         })
