@@ -1,4 +1,4 @@
-const { disposal, asset, depo, path, ttd, docUser } = require('../models')
+const { disposal, asset, depo, ttd } = require('../models')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
@@ -24,10 +24,12 @@ module.exports = {
       } else {
         status = parseInt(status)
       }
-      if (limit) {
-        limit = 1000
+      if (!limit) {
+        limit = 10
+      } else if (limit === 'All') {
+        limit = null
       } else {
-        limit = 1000
+        limit = parseInt(limit)
       }
       if (!page) {
         page = 1
@@ -43,20 +45,16 @@ module.exports = {
         },
         order: [
           [sortValue, 'ASC'],
-          [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
+          // [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
           [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
         ],
         limit: limit,
         offset: (page - 1) * limit,
         include: [
-          {
-            model: ttd,
-            as: 'appForm'
-          },
-          {
-            model: path,
-            as: 'pict'
-          },
+          // {
+          //   model: ttd,
+          //   as: 'appForm'
+          // },
           {
             model: ttd,
             as: 'ttdSet'
@@ -65,13 +63,13 @@ module.exports = {
             model: asset,
             as: 'dataAsset'
           },
-          {
-            model: docUser,
-            as: 'docAsset',
-            where: {
-              jenis_form: 'disposal'
-            }
-          },
+          // {
+          //   model: docUser,
+          //   as: 'docAsset',
+          //   where: {
+          //     jenis_form: 'disposal'
+          //   }
+          // },
           {
             model: depo,
             as: 'depo'
