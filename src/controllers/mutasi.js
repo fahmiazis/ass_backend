@@ -177,6 +177,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
+      const fullname = req.user.name
       let { limit, page, search, sort } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -191,9 +192,9 @@ module.exports = {
         sortValue = sort || 'id'
       }
       if (!limit) {
-        limit = 10
+        limit = 1000
       } else {
-        limit = parseInt(limit)
+        limit = 1000
       }
       if (!page) {
         page = 1
@@ -245,6 +246,134 @@ module.exports = {
           return response(res, 'success get mutasi', { result, pageInfo, noMut })
         } else {
           return response(res, 'failed to get mutasi', {}, 404, false)
+        }
+      } else if (level === 12 || level === 7) {
+        const findDepo = await depo.findAll({
+          where: {
+            [Op.or]: [
+              { nama_bm: level === 7 ? null : fullname },
+              { nama_om: level === 12 ? null : fullname }
+            ]
+          }
+        })
+        if (findDepo.length > 0) {
+          const hasil = []
+          for (let i = 0; i < findDepo.length; i++) {
+            const result = await mutasi.findAll({
+              where: {
+                kode_plant: findDepo[i].kode_plant,
+                status_form: 2,
+                [Op.or]: [
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { cost_center: { [Op.like]: `%${searchValue}%` } },
+                  { area: { [Op.like]: `%${searchValue}%` } },
+                  { no_asset: { [Op.like]: `%${searchValue}%` } },
+                  { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+                ]
+              },
+              order: [
+                [sortValue, 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                }
+              ]
+            })
+            if (result.length > 0) {
+              for (let j = 0; j < result.length; j++) {
+                hasil.push(result[j])
+              }
+            }
+          }
+          if (hasil.length > 0) {
+            const data = []
+            hasil.map(x => {
+              return (
+                data.push(x.no_mutasi)
+              )
+            })
+            const set = new Set(data)
+            const noMut = [...set]
+            const result = { rows: hasil, count: hasil.length }
+            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          } else {
+            const result = { rows: hasil, count: 0 }
+            const noMut = []
+            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          }
+        } else {
+          return response(res, 'failed get mutasi', {}, 400, false)
+        }
+      } else if (level === 13) {
+        const result = await mutasi.findAndCountAll({
+          where: {
+            [Op.or]: [
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { cost_center: { [Op.like]: `%${searchValue}%` } },
+              { area: { [Op.like]: `%${searchValue}%` } },
+              { no_asset: { [Op.like]: `%${searchValue}%` } },
+              { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+            ],
+            status_form: 2
+          },
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+          ],
+          limit: limit,
+          offset: (page - 1) * limit,
+          include: [
+            {
+              model: ttd,
+              as: 'appForm'
+            },
+            {
+              model: path,
+              as: 'pict'
+            }
+          ]
+        })
+        if (result.rows.length > 0) {
+          const data = []
+          for (let i = 0; i < result.rows.length; i++) {
+            if (result.rows[i].kategori === 'IT') {
+              data.push(result.rows[i].no_mutasi)
+            }
+          }
+          const set = new Set(data)
+          const noMut = [...set]
+          const hasil = []
+          for (let i = 0; i < result.rows.length; i++) {
+            for (let j = 0; j < noMut.length; j++) {
+              if (result.rows[i].no_mutasi === noMut[j]) {
+                hasil.push(result.rows[i])
+              }
+            }
+          }
+          if (hasil.length) {
+            const result = { rows: hasil, count: hasil.length }
+            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          } else {
+            const result = { rows: [], count: 0 }
+            const noMut = []
+            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          }
+        } else {
+          const result = { rows: [], count: 0 }
+          const noMut = []
+          const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+          return response(res, 'success get mutasi', { result, pageInfo, noMut })
         }
       } else {
         const result = await mutasi.findAndCountAll({

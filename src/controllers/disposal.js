@@ -680,7 +680,10 @@ module.exports = {
               { status_form: status === 2 ? 26 : status }
             ]
           },
-          order: [[{ model: ttd, as: 'appForm' }, 'id', 'DESC'], [sortValue, 'ASC']],
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+          ],
           limit: limit,
           offset: (page - 1) * limit,
           include: [
