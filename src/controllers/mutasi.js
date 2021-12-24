@@ -177,7 +177,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      const fullname = req.user.name
+      const fullname = req.user.fullname
       let { limit, page, search, sort } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -867,45 +867,6 @@ module.exports = {
                                         <div>Team Asset</div>
                                     </body>`
                             }
-                            //   const mailOptions = {
-                            //     from: `${result.email_ho_pic}`,
-                            //     replyTo: `${result.email_ho_pic}`,
-                            //     to: `${result.email_aos}`,
-                            //     cc: `${result.email_sa_kasir}, ${result.email_ho_pic}`,
-                            //     subject: 'Rejected Dokumen',
-                            //     html: `<body>
-                            //     <div style="margin-top: 20px; margin-bottom: 20px;">Dear Bapak/Ibu AOS</div>
-                            //     <div style="margin-bottom: 10px;">Report has been verified by Team Accounting with the following list:</div>
-                            //     <table style="border-collapse: collapse; margin-bottom: 20px;">
-                            //           <tr style="height: 75px;">
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">No</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nomor Aset</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nama Barang</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Merk / Type</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Kategori</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cabang / depo</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cost Center</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Buku</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Jual</th>
-                            //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Keterangan</th>
-                            //           </tr>
-                            //           <tr style="height: 50px;">
-                            //             <th scope="row" style='border: 1px solid black;'>1</th>
-                            //             <td style='border: 1px solid black;'>find.nama_depo}</td>
-                            //             <td style='border: 1px solid black;'>dok.dokumen}</td>
-                            //             <td style='border: 1px solid black;'>act.jenis_dokumen}</td>
-                            //             <td style='border: 1px solid black;'>moment(act.createdAt).subtract(1, 'day').format('DD-MM-YYYY')}</td>
-                            //             <td style='border: 1px solid black;'>moment(dok.createdAt).format('DD-MM-YYYY')}</td>
-                            //             <td style='border: 1px solid black;'>moment(dok.updatedAt).format('DD-MM-YYYY')}</td>
-                            //             <td style='border: 1px solid black;'>Rejected</td>
-                            //             <td style='border: 1px solid black;'>dok.alasan}</td>
-                            //           </tr>
-                            //     </table>
-                            //     <a href="http://trial.pinusmerahabadi.co.id:3000/">With the following link</a>
-                            //     <div style="margin-top: 20px;">Thank you.</div>
-                            // </body>
-                            //     `
-                            //   }
                             mailer.sendMail(mailOptions, (error, result) => {
                               if (error) {
                                 return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })

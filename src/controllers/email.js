@@ -246,7 +246,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email SPV ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM', 'Email Staff It', 'Email Staff Tax', 'Email SPV Finance', 'Email Staff admbank']
+          const cek = ['Kode Plant', 'Email Area AOS', 'Email Area OM', 'Email Staff Purch', 'Email Spv Purch 1', 'Email Spv Purch 2', 'Email Manager Purch', 'Email SPV ASET', 'Email AM', 'Email AAM', 'Email GA SPV', 'Email Staff GA', 'Email IT SPV', 'Email ISM', 'Email Staff Aset 1', 'Email Staff Aset 2', 'Email NOM', 'Email BM', 'Email SPV Tax', 'Email FM', 'Email AFM', 'Email Staff It', 'Email Staff Tax', 'Email SPV Finance', 'Email Staff admbank']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             if (valid[i] === cek[i]) {
