@@ -1520,7 +1520,7 @@ module.exports = {
                                           from: 'noreply_asset@pinusmerahabadi.co.id',
                                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                           to: `${findUser.email}`,
-                                          subject: `Approve Pengajuan Disposal D${no} (LOCALHOST)`,
+                                          subject: `Approve Pengajuan Disposal D${no} (TESTING)`,
                                           html: `
                                           <head>
                                             <style type="text/css">

@@ -3,7 +3,7 @@ const { mutasi, asset, depo, ttd, approve, role, user, docUser, document, path }
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const joi = require('joi')
-const mailer = require('../helpers/mailer')
+const wrapMail = require('../helpers/wrapMail')
 const moment = require('moment')
 
 module.exports = {
@@ -829,51 +829,169 @@ module.exports = {
                         }
                       }
                     } else {
-                      const findDoc = await mutasi.findOne({
+                      const findDoc = await mutasi.findAll({
                         where: {
                           no_mutasi: no
                         }
                       })
-                      const data = {
-                        nama: findDoc.kode_plant,
-                        status: 1,
-                        path: null
-                      }
-                      if (findDoc) {
-                        const findAos = await ttd.findByPk(find[0].id)
+                      if (findDoc.length > 0) {
                         const findRole = await role.findAll({
                           where: {
                             name: find[arr + 1].jabatan
                           }
                         })
                         if (findRole.length > 0) {
-                          await findAos.update(data)
                           const findUser = await user.findOne({
                             where: {
                               user_level: findRole[0].nomor
                             }
                           })
                           if (findUser) {
+                            let tableTd = ''
+                            for (let i = 0; i < findDoc.length; i++) {
+                              const element = `
+                                <tr>
+                                  <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                  <td>D${findDoc[i].no_mutasi}</td>
+                                  <td>${findDoc[i].no_asset}</td>
+                                  <td>${findDoc[i].nama_asset}</td>
+                                  <td>${findDoc[i].area}</td>
+                                  <td>${findDoc[i].cost_center}</td>
+                                  <td>${findDoc[i].area_rec}</td>
+                                  <td>${findDoc[i].cost_center_rec}</td>
+                                </tr>`
+                              tableTd = tableTd + element
+                            }
                             const mailOptions = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                               to: `${findUser.email}`,
-                              subject: 'Approve',
-                              html: `<body>
-                                        <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
-                                        <div style="margin-bottom: 5px;">Mohon untuk approve pengajuan mutasi asset area.</div>
-                                        <div style="margin-bottom: 20px;"></div>
-                                        <div style="margin-bottom: 30px;">Best Regard,</div>
-                                        <div>Team Asset</div>
-                                    </body>`
+                              subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
+                              html: `
+                              <head>
+                                <style type="text/css">
+                                body {
+                                    display: flexbox;
+                                    flex-direction: column;
+                                }
+                                .tittle {
+                                    font-size: 15px;
+                                }
+                                .mar {
+                                    margin-bottom: 20px;
+                                }
+                                .mar1 {
+                                    margin-bottom: 10px;
+                                }
+                                .foot {
+                                    margin-top: 20px;
+                                    margin-bottom: 10px;
+                                }
+                                .foot1 {
+                                    margin-bottom: 50px;
+                                }
+                                .position {
+                                    display: flexbox;
+                                    flex-direction: row;
+                                    justify-content: left;
+                                    margin-top: 10px;
+                                }
+                                table {
+                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                    font-size: 12px;
+                                }
+                                .demo-table {
+                                    border-collapse: collapse;
+                                    font-size: 13px;
+                                }
+                                .demo-table th, 
+                                .demo-table td {
+                                    border-bottom: 1px solid #e1edff;
+                                    border-left: 1px solid #e1edff;
+                                    padding: 7px 17px;
+                                }
+                                .demo-table th, 
+                                .demo-table td:last-child {
+                                    border-right: 1px solid #e1edff;
+                                }
+                                .demo-table td:first-child {
+                                    border-top: 1px solid #e1edff;
+                                }
+                                .demo-table td:last-child{
+                                    border-bottom: 0;
+                                }
+                                caption {
+                                    caption-side: top;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                /* Table Header */
+                                .demo-table thead th {
+                                    background-color: #508abb;
+                                    color: #FFFFFF;
+                                    border-color: #6ea1cc !important;
+                                    text-transform: uppercase;
+                                }
+                                
+                                /* Table Body */
+                                .demo-table tbody td {
+                                    color: #353535;
+                                }
+                                
+                                .demo-table tbody tr:nth-child(odd) td {
+                                    background-color: #f4fbff;
+                                }
+                                .demo-table tbody tr:hover th,
+                                .demo-table tbody tr:hover td {
+                                    background-color: #ffffa2;
+                                    border-color: #ffff0f;
+                                    transition: all .2s;
+                                }
+                            </style>
+                              </head>
+                              <body>
+                                  <div class="tittle mar">
+                                      Dear Bapak/Ibu Asset,
+                                  </div>
+                                  <div class="tittle mar1">
+                                      <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                  </div>
+                                  <div class="position">
+                                      <table class="demo-table">
+                                          <thead>
+                                              <tr>
+                                                  <th>No</th>
+                                                  <th>No Disposal</th>
+                                                  <th>Asset</th>
+                                                  <th>Asset description</th>
+                                                  <th>Cost Ctr</th>
+                                                  <th>Cost Ctr Name</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                            ${tableTd}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/mutasi">Klik link berikut untuk akses web asset</a>
+                                  <div class="tittle foot">
+                                      Terima kasih,
+                                  </div>
+                                  <div class="tittle foot1">
+                                      Regards,
+                                  </div>
+                                  <div class="tittle">
+                                      Team Asset
+                                  </div>                                      
+                              </body>
+                              `
                             }
-                            mailer.sendMail(mailOptions, (error, result) => {
-                              if (error) {
-                                return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                              } else if (result) {
-                                return response(res, 'success approve mutasi')
-                              }
-                            })
+                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                            if (sendEmail) {
+                              return response(res, 'success approve disposal', { sendEmail })
+                            } else {
+                              return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                            }
                           } else {
                             return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                           }
@@ -979,7 +1097,7 @@ module.exports = {
       if (results) {
         const result = await docUser.findAll({
           where: {
-            no_pengadaan: no,
+            no_pengadaan: nomut,
             [Op.and]: [
               { jenis_form: 'mutasi' },
               {
@@ -1016,7 +1134,7 @@ module.exports = {
                 nama_dokumen: getDoc[i].nama_dokumen,
                 jenis_dokumen: getDoc[i].jenis_dokumen,
                 divisi: getDoc[i].divisi,
-                no_pengadaan: no,
+                no_pengadaan: nomut,
                 jenis_form: 'mutasi',
                 tipe: 'rec',
                 path: null
