@@ -7,6 +7,7 @@ const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
 const moment = require('moment')
 const wrapMail = require('../helpers/wrapMail')
+const axios = require('axios')
 
 module.exports = {
   addDisposal: async (req, res) => {
@@ -804,22 +805,28 @@ module.exports = {
               }
             })
             if (find) {
-              if (find.nilai_jual !== '0') {
-                const send = {
-                  status_form: 26,
-                  no_disposal: noDis === undefined ? 1 : noDis,
-                  tanggalDis: moment()
+              const prev = moment().subtract(1, 'month').format('L').split('/')
+              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.result[i].no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
+              if (findApi.status === 200) {
+                if (find.nilai_jual !== '0') {
+                  const send = {
+                    status_form: 26,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('jual')
+                } else {
+                  const send = {
+                    status_form: 2,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('musnah')
                 }
-                await find.update(send)
-                temp.push('jual')
-              } else {
-                const send = {
-                  status_form: 2,
-                  no_disposal: noDis === undefined ? 1 : noDis,
-                  tanggalDis: moment()
-                }
-                await find.update(send)
-                temp.push('musnah')
               }
             }
           }
@@ -7289,8 +7296,11 @@ module.exports = {
                 }
               }
               if (cek.length === findDoc.length) {
+                const prev = moment().subtract(1, 'month').format('L').split('/')
+                const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
                 const data = {
-                  status_form: 8
+                  status_form: 8,
+                  nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
                 }
                 const results = await result.update(data)
                 if (results) {
@@ -7684,7 +7694,10 @@ module.exports = {
                       }
                     }
                     if (cek.length === findDoc.length) {
+                      const prev = moment().subtract(1, 'month').format('L').split('/')
+                      const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
                       const data = {
+                        nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap,
                         status_form: level === 5 ? 5 : 6
                       }
                       const results = await result.update(data)
@@ -8216,7 +8229,10 @@ module.exports = {
                   }
                 }
                 if (cek.length === findDoc.length) {
+                  const prev = moment().subtract(1, 'month').format('L').split('/')
+                  const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
                   const data = {
+                    nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap,
                     status_form: level === 5 ? 5 : 6
                   }
                   const results = await result.update(data)

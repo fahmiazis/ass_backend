@@ -3,6 +3,7 @@ const spl = moment().format('L').split('/')
 const no = 'O99'
 const time = `${spl[2]}-${spl[0]}-${spl[1]}`
 const next = moment().add(1, 'month').format('L').split('/')
+const prev = moment().subtract(1, 'month').format('L').split('/')
 
 const data = [
   [
@@ -59,3 +60,5 @@ for (let i = 0; i < data.length; i++) {
 // console.log(spl)
 
 console.log(time)
+console.log(typeof next[0])
+console.log(typeof prev[0])

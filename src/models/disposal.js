@@ -67,7 +67,8 @@ module.exports = (sequelize, DataTypes) => {
     doc_sap: DataTypes.STRING, // no document sap asset,
     tanggalDis: DataTypes.DATE,
     npwp: DataTypes.ENUM('ada', 'tidak'),
-    doc_clearing: DataTypes.STRING
+    doc_clearing: DataTypes.STRING,
+    nilai_buku_eks: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'disposal'
