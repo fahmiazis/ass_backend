@@ -806,7 +806,7 @@ module.exports = {
             })
             if (find) {
               const prev = moment().subtract(1, 'month').format('L').split('/')
-              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.result[i].no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
+              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
               if (findApi.status === 200) {
                 if (find.nilai_jual !== '0') {
                   const send = {
@@ -1016,22 +1016,28 @@ module.exports = {
               }
             })
             if (find) {
-              if (find.nilai_jual !== '0') {
-                const send = {
-                  status_form: 26,
-                  no_disposal: noDis === undefined ? 1 : noDis,
-                  tanggalDis: moment()
+              const prev = moment().subtract(1, 'month').format('L').split('/')
+              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
+              if (findApi.status === 200) {
+                if (find.nilai_jual !== '0') {
+                  const send = {
+                    status_form: 26,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('jual')
+                } else {
+                  const send = {
+                    status_form: 2,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('musnah')
                 }
-                await find.update(send)
-                temp.push(1)
-              } else {
-                const send = {
-                  status_form: 2,
-                  no_disposal: noDis === undefined ? 1 : noDis,
-                  tanggalDis: moment()
-                }
-                await find.update(send)
-                temp.push(1)
               }
             }
           }
