@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'dataAsset',
         sourceKey: 'no_asset'
       })
+      mutasi.hasMany(models.docUser, {
+        foreignKey: 'no_pengadaan',
+        sourceKey: 'no_mutasi',
+        as: 'docAsset'
+      })
     }
   };
   mutasi.init({

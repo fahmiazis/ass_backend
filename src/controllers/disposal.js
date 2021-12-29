@@ -789,7 +789,7 @@ module.exports = {
             [Op.not]: { no_disposal: null }
           },
           order: [['id', 'DESC']],
-          limit: 5
+          limit: 50
         })
         if (findNo.length > 0) {
           const cekNo = []
