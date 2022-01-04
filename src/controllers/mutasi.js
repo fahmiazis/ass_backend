@@ -1712,7 +1712,6 @@ module.exports = {
                 jenis_dokumen: getDoc[i].jenis_dokumen,
                 divisi: getDoc[i].divisi,
                 no_pengadaan: nomut,
-                jenis_form: 'mutasi',
                 tipe: 'rec',
                 path: null
               }
