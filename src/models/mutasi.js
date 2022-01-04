@@ -50,7 +50,9 @@ module.exports = (sequelize, DataTypes) => {
     status_doc: DataTypes.INTEGER,
     status_form: DataTypes.INTEGER,
     alasan: DataTypes.STRING,
-    tanggalMut: DataTypes.DATE
+    tanggalMut: DataTypes.DATE,
+    isbudget: DataTypes.ENUM('ya', 'tidak'),
+    doc_sap: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'mutasi'

@@ -351,6 +351,13 @@ module.exports = {
             {
               model: ttd,
               as: 'appForm'
+            },
+            {
+              model: docUser,
+              as: 'docAsset',
+              where: {
+                jenis_form: 'disposal'
+              }
             }
           ]
         })

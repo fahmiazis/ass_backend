@@ -9,7 +9,12 @@ route.get('/detail/:no', mutasi.getDetailMutasi)
 route.get('/approve/:no/:nama', mutasi.getApproveMut)
 route.patch('/app/:no', mutasi.approveMutasi)
 route.patch('/rej/:no', mutasi.rejectMutasi)
+route.patch('/rejeks/:no', mutasi.rejectEksekusi)
 route.get('/rec', mutasi.getMutasiRec)
+route.patch('/docrej/:id', mutasi.rejectDokumen)
 route.get('/doc/:no/:nomut', mutasi.getDocumentMut)
+route.patch('/status/:no/:stat', mutasi.updateBudget)
+route.get('/eks/:no', mutasi.submitEks)
+route.get('/budget/:no', mutasi.submitBudget)
 
 module.exports = route
