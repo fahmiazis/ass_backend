@@ -31,6 +31,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_mutasi',
         as: 'docAsset'
       })
+      mutasi.hasOne(models.depo, {
+        foreignKey: 'kode_plant',
+        sourceKey: 'kode_plant',
+        as: 'depo'
+      })
     }
   };
   mutasi.init({

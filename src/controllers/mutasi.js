@@ -2646,7 +2646,8 @@ module.exports = {
                   }
                   const send = {
                     kode_plant: findMut[i].kode_plant_rec,
-                    status: null
+                    status: null,
+                    area: findMut[i].area_rec
                   }
                   const findData = await mutasi.findOne({
                     where: {
@@ -2843,7 +2844,8 @@ module.exports = {
                   }
                   const send = {
                     kode_plant: findMut[i].kode_plant_rec,
-                    status: null
+                    status: null,
+                    area: findMut[i].area_rec
                   }
                   const findData = await mutasi.findOne({
                     where: {
@@ -3047,7 +3049,8 @@ module.exports = {
             }
             const send = {
               kode_plant: findMut[i].kode_plant_rec,
-              status: null
+              status: null,
+              area: findMut[i].area_rec
             }
             const findData = await mutasi.findOne({
               where: {
