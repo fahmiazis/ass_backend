@@ -58,7 +58,10 @@ module.exports = (sequelize, DataTypes) => {
     tanggalMut: DataTypes.DATE,
     isbudget: DataTypes.ENUM('ya', 'tidak'),
     doc_sap: DataTypes.STRING,
-    no_io: DataTypes.STRING
+    no_io: DataTypes.STRING,
+    cost_centerawal: DataTypes.STRING,
+    tgl_mutasifisik: DataTypes.DATE,
+    tgl_mutasisap: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'mutasi'

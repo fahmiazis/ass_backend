@@ -3236,7 +3236,7 @@ module.exports = {
         const result = await docUser.findByPk(id)
         if (result) {
           const send = {
-            status: 1,
+            status: tipe === 'mutasi' ? 4 : 1,
             path: dokumen,
             divisi: 'asset'
           }
@@ -8026,7 +8026,12 @@ module.exports = {
                                   return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
                                 }
                               } else {
-                                return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                                const sendEmail1 = await wrapMail.wrapedSendMail(mailOptionsTax)
+                                if (sendEmail1) {
+                                  return response(res, 'success submit eksekusi disposal', { sendEmail })
+                                } else {
+                                  return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                                }
                               }
                             }
                           }
@@ -8561,7 +8566,12 @@ module.exports = {
                               return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
                             }
                           } else {
-                            return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                            const sendEmail1 = await wrapMail.wrapedSendMail(mailOptionsTax)
+                            if (sendEmail1) {
+                              return response(res, 'success submit eksekusi disposal', { sendEmail })
+                            } else {
+                              return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                            }
                           }
                         }
                       }
@@ -9109,7 +9119,12 @@ module.exports = {
                             return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
                           }
                         } else {
-                          return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                          const sendEmail1 = await wrapMail.wrapedSendMail(mailOptionsTax)
+                          if (sendEmail1) {
+                            return response(res, 'success submit eksekusi disposal')
+                          } else {
+                            return response(res, 'berhasil submit eksekusi disposal, tidak berhasil kirim notif email 1')
+                          }
                         }
                       }
                     }

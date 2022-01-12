@@ -439,7 +439,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      let { limit, page, search, sort } = req.query
+      let { limit, page, search, sort, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -463,50 +463,98 @@ module.exports = {
         page = parseInt(page)
       }
       if (level === 5) {
-        const result = await mutasi.findAndCountAll({
-          where: {
-            [Op.and]: [
-              { kode_plant_rec: kode },
-              { status_form: 2 }
+        if (tipe === 'editdoc') {
+          const result = await mutasi.findAndCountAll({
+            where: {
+              [Op.and]: [
+                { kode_plant_rec: kode },
+                { status_form: 9 }
+              ],
+              [Op.or]: [
+                { kode_plant: { [Op.like]: `%${searchValue}%` } }
+              ]
+            },
+            include: [
+              {
+                model: ttd,
+                as: 'appForm'
+              },
+              {
+                model: path,
+                as: 'pict'
+              },
+              {
+                model: docUser,
+                as: 'docAsset'
+              }
             ],
-            [Op.or]: [
-              { kode_plant: { [Op.like]: `%${searchValue}%` } }
-            ]
-          },
-          include: [
-            {
-              model: ttd,
-              as: 'appForm'
-            },
-            {
-              model: path,
-              as: 'pict'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
-            }
-          ],
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit
-        })
-        const pageInfo = pagination('/mutasi/rec', req.query, page, limit, result.count)
-        if (result) {
-          const data = []
-          result.rows.map(x => {
-            return (
-              data.push(x.no_mutasi)
-            )
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+            ],
+            limit: limit,
+            offset: (page - 1) * limit
           })
-          const set = new Set(data)
-          const noMut = [...set]
-          return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          const pageInfo = pagination('/mutasi/rec', req.query, page, limit, result.count)
+          if (result) {
+            const data = []
+            result.rows.map(x => {
+              return (
+                data.push(x.no_mutasi)
+              )
+            })
+            const set = new Set(data)
+            const noMut = [...set]
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          } else {
+            return response(res, 'failed to get mutasi', {}, 404, false)
+          }
         } else {
-          return response(res, 'failed to get mutasi', {}, 404, false)
+          const result = await mutasi.findAndCountAll({
+            where: {
+              [Op.and]: [
+                { kode_plant_rec: kode },
+                { status_form: 2 }
+              ],
+              [Op.or]: [
+                { kode_plant: { [Op.like]: `%${searchValue}%` } }
+              ]
+            },
+            include: [
+              {
+                model: ttd,
+                as: 'appForm'
+              },
+              {
+                model: path,
+                as: 'pict'
+              },
+              {
+                model: docUser,
+                as: 'docAsset'
+              }
+            ],
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+            ],
+            limit: limit,
+            offset: (page - 1) * limit
+          })
+          const pageInfo = pagination('/mutasi/rec', req.query, page, limit, result.count)
+          if (result) {
+            const data = []
+            result.rows.map(x => {
+              return (
+                data.push(x.no_mutasi)
+              )
+            })
+            const set = new Set(data)
+            const noMut = [...set]
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          } else {
+            return response(res, 'failed to get mutasi', {}, 404, false)
+          }
         }
       } else {
         return response(res, 'failed to get mutasi', {}, 404, false)
@@ -518,11 +566,7 @@ module.exports = {
   deleteItem: async (req, res) => {
     try {
       const no = req.params.no
-      const result = await mutasi.findOne({
-        where: {
-          no_asset: no
-        }
-      })
+      const result = await mutasi.findByPk(no)
       if (result) {
         await result.destroy()
         const findAsset = await asset.findOne({
@@ -1045,6 +1089,35 @@ module.exports = {
           } else {
             return response(res, 'failed get mutaso', {}, 404, false)
           }
+        }
+      } else if (tipe === 'eks') {
+        const result = await mutasi.findAll({
+          where: {
+            no_mutasi: no
+          },
+          include: [
+            {
+              model: ttd,
+              as: 'appForm'
+            },
+            {
+              model: path,
+              as: 'pict'
+            },
+            {
+              model: docUser,
+              as: 'docAsset'
+            }
+          ],
+          order: [
+            ['id', 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+          ]
+        })
+        if (result.length > 0) {
+          return response(res, 'success get mutasi', { result })
+        } else {
+          return response(res, 'failed get mutaso', {}, 404, false)
         }
       } else {
         const result = await mutasi.findAll({
@@ -1676,7 +1749,10 @@ module.exports = {
                       }
                       const find = await mutasi.findOne({
                         where: {
-                          no_asset: findMut[i].no_asset
+                          [Op.and]: [
+                            { no_asset: findMut[i].no_asset },
+                            { no_mutasi: findMut[i].no_mutasi }
+                          ]
                         }
                       })
                       const updateAsset = await asset.findOne({
@@ -2001,7 +2077,10 @@ module.exports = {
               }
               const find = await mutasi.findOne({
                 where: {
-                  no_asset: list[i]
+                  [Op.and]: [
+                    { no_asset: list[i] },
+                    { no_mutasi: findMut[0].no_mutasi }
+                  ]
                 }
               })
               const updateAsset = await asset.findOne({
@@ -2253,7 +2332,8 @@ module.exports = {
           if (level === 2) {
             const send = {
               alasan: results.alasan,
-              divisi: '0'
+              divisi: '0',
+              status: 4
             }
             const reject = await result.update(send)
             if (reject) {
@@ -2471,11 +2551,7 @@ module.exports = {
           const data = {
             status_form: 3
           }
-          const findData = await mutasi.findOne({
-            where: {
-              no_asset: findBud[i].no_asset
-            }
-          })
+          const findData = await mutasi.findByPk(findBud[i].id)
           if (findData) {
             await findData.update(data)
             const element = `
@@ -2488,6 +2564,7 @@ module.exports = {
                 <td>${findBud[i].cost_center}</td>
                 <td>${findBud[i].area_rec}</td>
                 <td>${findBud[i].cost_center_rec}</td>
+                <td>${findBud[i].no_io}</td>
               </tr>`
             tableTd = tableTd + element
             cek.push(1)
@@ -2607,6 +2684,7 @@ module.exports = {
                                 <th>Cost Ctr</th>
                                 <th>Cabang / Depo Penerima</th>
                                 <th>Cost Ctr Penerima</th>
+                                <th>No io</th>
                               </tr>
                           </thead>
                           <tbody>
@@ -2642,26 +2720,22 @@ module.exports = {
                 const cek = []
                 for (let i = 0; i < findMut.length; i++) {
                   const data = {
-                    status_form: 8
+                    status_form: 7
                   }
-                  const send = {
-                    kode_plant: findMut[i].kode_plant_rec,
-                    status: null,
-                    area: findMut[i].area_rec
-                  }
-                  const findData = await mutasi.findOne({
-                    where: {
-                      no_asset: findMut[i].no_asset
-                    }
-                  })
-                  const findAsset = await asset.findOne({
-                    where: {
-                      no_asset: findMut[i].no_asset
-                    }
-                  })
-                  if (findData && findAsset) {
+                  // const send = {
+                  //   kode_plant: findMut[i].kode_plant_rec,
+                  //   status: null,
+                  //   area: findMut[i].area_rec
+                  // }
+                  const findData = await mutasi.findByPk(findMut[i].id)
+                  // const findAsset = await asset.findOne({
+                  //   where: {
+                  //     no_asset: findMut[i].no_asset
+                  //   }
+                  // })
+                  if (findData) {
                     await findData.update(data)
-                    await findAsset.update(send)
+                    // await findAsset.update(send)
                     const element = `
                     <tr>
                       <td>${findMut.indexOf(findMut[i]) + 1}</td>
@@ -2684,139 +2758,7 @@ module.exports = {
                     }
                   })
                   if (findUser) {
-                    const mailOptions = {
-                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findUser.email_area_aos}`,
-                      // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-                      subject: `SELESAI MUTASI ASSET ${findMut[0].area} (TESTING)`,
-                      html: `
-                      <head>
-                        <style type="text/css">
-                        body {
-                            display: flexbox;
-                            flex-direction: column;
-                        }
-                        .tittle {
-                            font-size: 15px;
-                        }
-                        .mar {
-                            margin-bottom: 20px;
-                        }
-                        .mar1 {
-                            margin-bottom: 10px;
-                        }
-                        .foot {
-                            margin-top: 20px;
-                            margin-bottom: 10px;
-                        }
-                        .foot1 {
-                            margin-bottom: 50px;
-                        }
-                        .position {
-                            display: flexbox;
-                            flex-direction: row;
-                            justify-content: left;
-                            margin-top: 10px;
-                        }
-                        table {
-                            font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                            font-size: 12px;
-                        }
-                        .demo-table {
-                            border-collapse: collapse;
-                            font-size: 13px;
-                        }
-                        .demo-table th, 
-                        .demo-table td {
-                            border-bottom: 1px solid #e1edff;
-                            border-left: 1px solid #e1edff;
-                            padding: 7px 17px;
-                        }
-                        .demo-table th, 
-                        .demo-table td:last-child {
-                            border-right: 1px solid #e1edff;
-                        }
-                        .demo-table td:first-child {
-                            border-top: 1px solid #e1edff;
-                        }
-                        .demo-table td:last-child{
-                            border-bottom: 0;
-                        }
-                        caption {
-                            caption-side: top;
-                            margin-bottom: 10px;
-                        }
-                        
-                        /* Table Header */
-                        .demo-table thead th {
-                            background-color: #508abb;
-                            color: #FFFFFF;
-                            border-color: #6ea1cc !important;
-                            text-transform: uppercase;
-                        }
-                        
-                        /* Table Body */
-                        .demo-table tbody td {
-                            color: #353535;
-                        }
-                        
-                        .demo-table tbody tr:nth-child(odd) td {
-                            background-color: #f4fbff;
-                        }
-                        .demo-table tbody tr:hover th,
-                        .demo-table tbody tr:hover td {
-                            background-color: #ffffa2;
-                            border-color: #ffff0f;
-                            transition: all .2s;
-                        }
-                    </style>
-                      </head>
-                      <body>
-                          <div class="tittle mar">
-                              Dear Bapak/Ibu,
-                          </div>
-                          <div class="tittle mar1">
-                              <div>asset berikut telah berhasil dimutasikan:</div>
-                          </div>
-                          <div class="position mar1">
-                              <table class="demo-table">
-                                  <thead>
-                                      <tr>
-                                        <th>No</th>
-                                        <th>No Mutasi</th>
-                                        <th>Asset</th>
-                                        <th>Asset description</th>
-                                        <th>Cabang / Depo</th>
-                                        <th>Cost Ctr</th>
-                                        <th>Cabang / Depo Penerima</th>
-                                        <th>Cost Ctr Penerima</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody>
-                                    ${tableTd}
-                                  </tbody>
-                              </table>
-                          </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
-                          <div class="tittle foot">
-                              Terima kasih,
-                          </div>
-                          <div class="tittle foot1">
-                              Regards,
-                          </div>
-                          <div class="tittle">
-                              Team Asset
-                          </div>
-                      </body>
-                      `
-                    }
-                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                    if (sendEmail) {
-                      return response(res, 'success submit eksekusi mutasi', { sendEmail })
-                    } else {
-                      return response(res, 'berhasil submit eksekusi mutasi, tidak berhasil kirim notif email 1')
-                    }
+                    return response(res, 'success submit eksekusi mutasi')
                   } else {
                     return response(res, 'success submit eksekusi fail send email')
                   }
@@ -2840,26 +2782,22 @@ module.exports = {
                 const cek = []
                 for (let i = 0; i < findMut.length; i++) {
                   const data = {
-                    status_form: 8
+                    status_form: 7
                   }
-                  const send = {
-                    kode_plant: findMut[i].kode_plant_rec,
-                    status: null,
-                    area: findMut[i].area_rec
-                  }
-                  const findData = await mutasi.findOne({
-                    where: {
-                      no_asset: findMut[i].no_asset
-                    }
-                  })
-                  const findAsset = await asset.findOne({
-                    where: {
-                      no_asset: findMut[i].no_asset
-                    }
-                  })
-                  if (findData && findAsset) {
+                  // const send = {
+                  //   kode_plant: findMut[i].kode_plant_rec,
+                  //   status: null,
+                  //   area: findMut[i].area_rec
+                  // }
+                  const findData = await mutasi.findByPk(findMut[i].id)
+                  // const findAsset = await asset.findOne({
+                  //   where: {
+                  //     no_asset: findMut[i].no_asset
+                  //   }
+                  // })
+                  if (findData) {
                     await findData.update(data)
-                    await findAsset.update(send)
+                    // await findAsset.update(send)
                     const element = `
                     <tr>
                       <td>${findMut.indexOf(findMut[i]) + 1}</td>
@@ -2882,139 +2820,7 @@ module.exports = {
                     }
                   })
                   if (findUser) {
-                    const mailOptions = {
-                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findUser.email_area_aos}`,
-                      // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-                      subject: `SELESAI MUTASI ASSET ${findMut[0].area} (TESTING)`,
-                      html: `
-                      <head>
-                        <style type="text/css">
-                        body {
-                            display: flexbox;
-                            flex-direction: column;
-                        }
-                        .tittle {
-                            font-size: 15px;
-                        }
-                        .mar {
-                            margin-bottom: 20px;
-                        }
-                        .mar1 {
-                            margin-bottom: 10px;
-                        }
-                        .foot {
-                            margin-top: 20px;
-                            margin-bottom: 10px;
-                        }
-                        .foot1 {
-                            margin-bottom: 50px;
-                        }
-                        .position {
-                            display: flexbox;
-                            flex-direction: row;
-                            justify-content: left;
-                            margin-top: 10px;
-                        }
-                        table {
-                            font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                            font-size: 12px;
-                        }
-                        .demo-table {
-                            border-collapse: collapse;
-                            font-size: 13px;
-                        }
-                        .demo-table th, 
-                        .demo-table td {
-                            border-bottom: 1px solid #e1edff;
-                            border-left: 1px solid #e1edff;
-                            padding: 7px 17px;
-                        }
-                        .demo-table th, 
-                        .demo-table td:last-child {
-                            border-right: 1px solid #e1edff;
-                        }
-                        .demo-table td:first-child {
-                            border-top: 1px solid #e1edff;
-                        }
-                        .demo-table td:last-child{
-                            border-bottom: 0;
-                        }
-                        caption {
-                            caption-side: top;
-                            margin-bottom: 10px;
-                        }
-                        
-                        /* Table Header */
-                        .demo-table thead th {
-                            background-color: #508abb;
-                            color: #FFFFFF;
-                            border-color: #6ea1cc !important;
-                            text-transform: uppercase;
-                        }
-                        
-                        /* Table Body */
-                        .demo-table tbody td {
-                            color: #353535;
-                        }
-                        
-                        .demo-table tbody tr:nth-child(odd) td {
-                            background-color: #f4fbff;
-                        }
-                        .demo-table tbody tr:hover th,
-                        .demo-table tbody tr:hover td {
-                            background-color: #ffffa2;
-                            border-color: #ffff0f;
-                            transition: all .2s;
-                        }
-                    </style>
-                      </head>
-                      <body>
-                          <div class="tittle mar">
-                              Dear Bapak/Ibu,
-                          </div>
-                          <div class="tittle mar1">
-                              <div>asset berikut telah berhasil dimutasikan:</div>
-                          </div>
-                          <div class="position mar1">
-                              <table class="demo-table">
-                                  <thead>
-                                      <tr>
-                                        <th>No</th>
-                                        <th>No Mutasi</th>
-                                        <th>Asset</th>
-                                        <th>Asset description</th>
-                                        <th>Cabang / Depo</th>
-                                        <th>Cost Ctr</th>
-                                        <th>Cabang / Depo Penerima</th>
-                                        <th>Cost Ctr Penerima</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody>
-                                    ${tableTd}
-                                  </tbody>
-                              </table>
-                          </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
-                          <div class="tittle foot">
-                              Terima kasih,
-                          </div>
-                          <div class="tittle foot1">
-                              Regards,
-                          </div>
-                          <div class="tittle">
-                              Team Asset
-                          </div>
-                      </body>
-                      `
-                    }
-                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                    if (sendEmail) {
-                      return response(res, 'success submit eksekusi mutasi', { sendEmail })
-                    } else {
-                      return response(res, 'berhasil submit eksekusi mutasi, tidak berhasil kirim notif email 1')
-                    }
+                    return response(res, 'success submit eksekusi mutasi')
                   } else {
                     return response(res, 'success submit eksekusi fail send email')
                   }
@@ -3045,18 +2851,15 @@ module.exports = {
           const cek = []
           for (let i = 0; i < findMut.length; i++) {
             const data = {
-              status_form: 8
+              status_form: 8,
+              tgl_mutasisap: moment()
             }
             const send = {
               kode_plant: findMut[i].kode_plant_rec,
               status: null,
               area: findMut[i].area_rec
             }
-            const findData = await mutasi.findOne({
-              where: {
-                no_asset: findMut[i].no_asset
-              }
-            })
+            const findData = await mutasi.findByPk(findMut[i].id)
             const findAsset = await asset.findOne({
               where: {
                 no_asset: findMut[i].no_asset
@@ -3275,9 +3078,11 @@ module.exports = {
       const no = req.params.no
       const findBud = await mutasi.findAll({
         where: {
-          [Op.and]: [
-            { no_mutasi: no },
-            { status_form: level === 2 ? 4 : 3 }
+          no_mutasi: no,
+          [Op.or]: [
+            { status_form: level === 2 ? 4 : 3 },
+            { status_form: level === 2 ? 7 : 3 },
+            { status_form: level === 2 ? 8 : 3 }
           ]
         }
       })
@@ -3286,13 +3091,10 @@ module.exports = {
         const cek = []
         for (let i = 0; i < findBud.length; i++) {
           const data = {
-            status_form: level === 2 ? 8 : 4
+            status_form: level === 2 ? 8 : 4,
+            tgl_mutasisap: level === 2 ? moment() : null
           }
-          const findData = await mutasi.findOne({
-            where: {
-              no_asset: findBud[i].no_asset
-            }
-          })
+          const findData = await mutasi.findByPk(findBud[i].id)
           if (findData) {
             await findData.update(data)
             const element = `
@@ -3317,7 +3119,12 @@ module.exports = {
               user_level: level === 2 ? 8 : 2
             }
           })
-          if (findUser) {
+          const findEmail = await email.findOne({
+            where: {
+              kode_plant: findBud[0].kode_plant
+            }
+          })
+          if (findUser && findEmail) {
             const mailOptions = {
               from: 'noreply_asset@pinusmerahabadi.co.id',
               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
@@ -3446,11 +3253,157 @@ module.exports = {
               </body>
               `
             }
+            const mailOptionsArea = {
+              from: 'noreply_asset@pinusmerahabadi.co.id',
+              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+              to: `${findEmail.email_area_aos}`,
+              // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+              subject: `SELESAI MUTASI ASSET ${findBud[0].area} (TESTING)`,
+              html: `
+              <head>
+                <style type="text/css">
+                body {
+                    display: flexbox;
+                    flex-direction: column;
+                }
+                .tittle {
+                    font-size: 15px;
+                }
+                .mar {
+                    margin-bottom: 20px;
+                }
+                .mar1 {
+                    margin-bottom: 10px;
+                }
+                .foot {
+                    margin-top: 20px;
+                    margin-bottom: 10px;
+                }
+                .foot1 {
+                    margin-bottom: 50px;
+                }
+                .position {
+                    display: flexbox;
+                    flex-direction: row;
+                    justify-content: left;
+                    margin-top: 10px;
+                }
+                table {
+                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                    font-size: 12px;
+                }
+                .demo-table {
+                    border-collapse: collapse;
+                    font-size: 13px;
+                }
+                .demo-table th, 
+                .demo-table td {
+                    border-bottom: 1px solid #e1edff;
+                    border-left: 1px solid #e1edff;
+                    padding: 7px 17px;
+                }
+                .demo-table th, 
+                .demo-table td:last-child {
+                    border-right: 1px solid #e1edff;
+                }
+                .demo-table td:first-child {
+                    border-top: 1px solid #e1edff;
+                }
+                .demo-table td:last-child{
+                    border-bottom: 0;
+                }
+                caption {
+                    caption-side: top;
+                    margin-bottom: 10px;
+                }
+                
+                /* Table Header */
+                .demo-table thead th {
+                    background-color: #508abb;
+                    color: #FFFFFF;
+                    border-color: #6ea1cc !important;
+                    text-transform: uppercase;
+                }
+                
+                /* Table Body */
+                .demo-table tbody td {
+                    color: #353535;
+                }
+                
+                .demo-table tbody tr:nth-child(odd) td {
+                    background-color: #f4fbff;
+                }
+                .demo-table tbody tr:hover th,
+                .demo-table tbody tr:hover td {
+                    background-color: #ffffa2;
+                    border-color: #ffff0f;
+                    transition: all .2s;
+                }
+            </style>
+              </head>
+              <body>
+                  <div class="tittle mar">
+                      Dear Bapak/Ibu,
+                  </div>
+                  <div class="tittle mar1">
+                      <div>asset berikut telah berhasil dimutasikan:</div>
+                  </div>
+                  <div class="position mar1">
+                      <table class="demo-table">
+                          <thead>
+                              <tr>
+                                <th>No</th>
+                                <th>No Mutasi</th>
+                                <th>Asset</th>
+                                <th>Asset description</th>
+                                <th>Cabang / Depo</th>
+                                <th>Cost Ctr</th>
+                                <th>Cabang / Depo Penerima</th>
+                                <th>Cost Ctr Penerima</th>
+                                <th>No io</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                            ${tableTd}
+                          </tbody>
+                      </table>
+                  </div>
+                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                  <div class="tittle foot">
+                      Terima kasih,
+                  </div>
+                  <div class="tittle foot1">
+                      Regards,
+                  </div>
+                  <div class="tittle">
+                      Team Asset
+                  </div>
+              </body>
+              `
+            }
             const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
             if (sendEmail) {
-              return response(res, 'success submit budget mutasi', { sendEmail })
+              if (level === 2) {
+                const sendEmail = await wrapMail.wrapedSendMail(mailOptionsArea)
+                if (sendEmail) {
+                  return response(res, 'success submit budget mutasi', { sendEmail })
+                } else {
+                  return response(res, 'berhasil submit budget mutasi, tidak berhasil kirim notif email 1')
+                }
+              } else {
+                return response(res, 'success submit budget mutasi', { sendEmail })
+              }
             } else {
-              return response(res, 'berhasil submit budget mutasi, tidak berhasil kirim notif email 1')
+              if (level === 2) {
+                const sendEmail = await wrapMail.wrapedSendMail(mailOptionsArea)
+                if (sendEmail) {
+                  return response(res, 'success submit budget mutasi', { sendEmail })
+                } else {
+                  return response(res, 'berhasil submit budget mutasi, tidak berhasil kirim notif email 1')
+                }
+              } else {
+                return response(res, 'berhasil submit budget mutasi, tidak berhasil kirim notif email 1')
+              }
             }
           } else {
             return response(res, 'failed submit budget', {}, 404, false)
@@ -3487,6 +3440,240 @@ module.exports = {
         } else {
           return response(res, 'failed update status eksekusi', {}, 404, false)
         }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateDate: async (req, res) => {
+    try {
+      const no = req.params.no
+      const schema = joi.object({
+        tgl_mutasifisik: joi.date().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const findMut = await mutasi.findAll({
+          where: {
+            no_mutasi: no
+          }
+        })
+        if (findMut.length > 0) {
+          const cek = []
+          for (let i = 0; i < findMut.length; i++) {
+            const find = await mutasi.findByPk(findMut[i].id)
+            if (find) {
+              await find.update(results)
+              cek.push(1)
+            }
+          }
+          if (cek.length === findMut.length) {
+            return response(res, 'success update tgl mutasi fisik')
+          } else {
+            return response(res, 'failed update status eksekusi', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed update status eksekusi', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitEditMutasi: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findDoc = await docUser.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findDoc.length > 0) {
+        const cek = []
+        for (let i = 0; i < findDoc.length; i++) {
+          const data = {
+            status: 1
+          }
+          const result = await docUser.findByPk(findDoc[i].id)
+          if (result) {
+            await result.update(data)
+            cek.push(result)
+          }
+        }
+        if (cek.length === findDoc.length) {
+          const findMut = await mutasi.findAll({
+            where: {
+              no_mutasi: no
+            }
+          })
+          if (findMut.length > 0) {
+            const findEmail = await email.findOne({
+              where: {
+                kode_plant: findMut[0].kode_plant_rec
+              }
+            })
+            if (findEmail) {
+              let tableTd = ''
+              for (let i = 0; i < findMut.length; i++) {
+                const element = `
+                  <tr>
+                    <td>${findMut.indexOf(findMut[i]) + 1}</td>
+                    <td>${findMut[i].no_mutasi}</td>
+                    <td>${findMut[i].no_asset}</td>
+                    <td>${findMut[i].nama_asset}</td>
+                    <td>${findMut[i].area}</td>
+                    <td>${findMut[i].cost_center}</td>
+                    <td>${findMut[i].area_rec}</td>
+                    <td>${findMut[i].cost_center_rec}</td>
+                  </tr>`
+                tableTd = tableTd + element
+              }
+              const mailOptions = {
+                from: 'noreply_asset@pinusmerahabadi.co.id',
+                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+                subject: `SELESAI REVISI DOKUMEN BA SERAH TERIMA MUTASI ${findMut[0].no_mutasi} (TESTING)`,
+                html: `
+                <head>
+                  <style type="text/css">
+                  body {
+                      display: flexbox;
+                      flex-direction: column;
+                  }
+                  .tittle {
+                      font-size: 15px;
+                  }
+                  .mar {
+                      margin-bottom: 20px;
+                  }
+                  .mar1 {
+                      margin-bottom: 10px;
+                  }
+                  .foot {
+                      margin-top: 20px;
+                      margin-bottom: 10px;
+                  }
+                  .foot1 {
+                      margin-bottom: 50px;
+                  }
+                  .position {
+                      display: flexbox;
+                      flex-direction: row;
+                      justify-content: left;
+                      margin-top: 10px;
+                  }
+                  table {
+                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                      font-size: 12px;
+                  }
+                  .demo-table {
+                      border-collapse: collapse;
+                      font-size: 13px;
+                  }
+                  .demo-table th, 
+                  .demo-table td {
+                      border-bottom: 1px solid #e1edff;
+                      border-left: 1px solid #e1edff;
+                      padding: 7px 17px;
+                  }
+                  .demo-table th, 
+                  .demo-table td:last-child {
+                      border-right: 1px solid #e1edff;
+                  }
+                  .demo-table td:first-child {
+                      border-top: 1px solid #e1edff;
+                  }
+                  .demo-table td:last-child{
+                      border-bottom: 0;
+                  }
+                  caption {
+                      caption-side: top;
+                      margin-bottom: 10px;
+                  }
+                  
+                  /* Table Header */
+                  .demo-table thead th {
+                      background-color: #508abb;
+                      color: #FFFFFF;
+                      border-color: #6ea1cc !important;
+                      text-transform: uppercase;
+                  }
+                  
+                  /* Table Body */
+                  .demo-table tbody td {
+                      color: #353535;
+                  }
+                  
+                  .demo-table tbody tr:nth-child(odd) td {
+                      background-color: #f4fbff;
+                  }
+                  .demo-table tbody tr:hover th,
+                  .demo-table tbody tr:hover td {
+                      background-color: #ffffa2;
+                      border-color: #ffff0f;
+                      transition: all .2s;
+                  }
+              </style>
+                </head>
+                <body>
+                    <div class="tittle mar">
+                        Dear Bapak/Ibu,
+                    </div>
+                    <div class="tittle mar1">
+                        <div>Dokumen BA serah terima terkait asset dibawah telah direvisi</div>
+                    </div>
+                    <div class="position mar1">
+                        <table class="demo-table">
+                            <thead>
+                                <tr>
+                                  <th>No</th>
+                                  <th>No Mutasi</th>
+                                  <th>Asset</th>
+                                  <th>Asset description</th>
+                                  <th>Cabang / Depo</th>
+                                  <th>Cost Ctr</th>
+                                  <th>Cabang / Depo Penerima</th>
+                                  <th>Cost Ctr Penerima</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              ${tableTd}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                    <div class="tittle foot">
+                        Terima kasih,
+                    </div>
+                    <div class="tittle foot1">
+                        Regards,
+                    </div>
+                    <div class="tittle">
+                        Team Asset
+                    </div>
+                </body>
+                `
+              }
+              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+              if (sendEmail) {
+                return response(res, 'success submit edit mutasi2')
+              } else {
+                return response(res, 'success submit edit mutasi fail send email')
+              }
+            } else {
+              return response(res, 'success submit edit mutasi2')
+            }
+          } else {
+            return response(res, 'success submit edit mutasi1')
+          }
+        } else {
+          return response(res, 'failed submit edit mutasi', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit edit mutasi', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
