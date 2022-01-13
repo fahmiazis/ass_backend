@@ -156,13 +156,6 @@ module.exports = {
           {
             model: path,
             as: 'pict'
-          },
-          {
-            model: docUser,
-            as: 'docAsset',
-            where: {
-              jenis_form: 'disposal'
-            }
           }
         ]
       })
