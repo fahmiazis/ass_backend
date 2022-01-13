@@ -1306,8 +1306,13 @@ module.exports = {
               return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
             } else {
               if (arr === 0 || find[arr - 1].status === 1) {
+                const findDepo = await depo.findOne({
+                  where: {
+                    kode_plant: name
+                  }
+                })
                 const data = {
-                  nama: name,
+                  nama: level === 5 ? findDepo.nama_aos : name,
                   status: 1,
                   path: null
                 }
