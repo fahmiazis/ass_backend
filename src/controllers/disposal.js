@@ -139,6 +139,42 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  getCartDisposal: async (req, res) => {
+    try {
+      const kode = req.user.kode
+      const result = await disposal.findAndCountAll({
+        where: {
+          [Op.and]: [
+            { kode_plant: kode },
+            { status_form: 1 }
+          ]
+        },
+        order: [
+          ['id', 'ASC']
+        ],
+        include: [
+          {
+            model: path,
+            as: 'pict'
+          },
+          {
+            model: docUser,
+            as: 'docAsset',
+            where: {
+              jenis_form: 'disposal'
+            }
+          }
+        ]
+      })
+      if (result) {
+        return response(res, 'success get disposal', { result })
+      } else {
+        return response(res, 'failed get disposal', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   deleteDisposal: async (req, res) => {
     try {
       const noAsset = req.params.asset

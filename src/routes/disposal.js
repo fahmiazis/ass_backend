@@ -2,6 +2,7 @@ const route = require('express').Router()
 const disposal = require('../controllers/disposal')
 
 route.get('/get', disposal.getDisposal)
+route.get('/cart', disposal.getCartDisposal)
 route.get('/approve/:no', disposal.getApproveDisposal)
 route.get('/detail/:nomor', disposal.getDetailDisposal)
 route.post('/add/:no', disposal.addDisposal)
