@@ -3483,7 +3483,8 @@ module.exports = {
       const id = req.params.id
       const schema = joi.object({
         no_io: joi.string().allow(''),
-        doc_sap: joi.string().allow('')
+        doc_sap: joi.string().allow(''),
+        cost_centerawal: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
