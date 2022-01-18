@@ -842,7 +842,7 @@ module.exports = {
             })
             if (find) {
               const prev = moment().subtract(1, 'month').format('L').split('/')
-              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
+              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
               if (findApi.status === 200) {
                 if (find.nilai_jual !== '0') {
                   const send = {
@@ -1053,7 +1053,7 @@ module.exports = {
             })
             if (find) {
               const prev = moment().subtract(1, 'month').format('L').split('/')
-              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
+              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
               if (findApi.status === 200) {
                 if (find.nilai_jual !== '0') {
                   const send = {
@@ -7526,10 +7526,18 @@ module.exports = {
               }
               if (cek.length === findDoc.length) {
                 const prev = moment().subtract(1, 'month').format('L').split('/')
-                const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
-                const data = {
-                  status_form: level === 5 ? 5 : 8,
-                  nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
+                const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                let data = {}
+                if (findApi.status === 200) {
+                  data = {
+                    status_form: level === 5 ? 5 : 8,
+                    nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
+                  }
+                } else {
+                  data = {
+                    status_form: level === 5 ? 5 : 8,
+                    nilai_buku_eks: result.nilai_buku
+                  }
                 }
                 const results = await result.update(data)
                 if (results) {
@@ -7737,10 +7745,18 @@ module.exports = {
                     }
                     if (cek.length === findDoc.length) {
                       const prev = moment().subtract(1, 'month').format('L').split('/')
-                      const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
-                      const data = {
-                        nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap,
-                        status_form: level === 5 ? 5 : 6
+                      const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                      let data = {}
+                      if (findApi.status === 200) {
+                        data = {
+                          status_form: level === 5 ? 5 : 8,
+                          nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
+                        }
+                      } else {
+                        data = {
+                          status_form: level === 5 ? 5 : 8,
+                          nilai_buku_eks: result.nilai_buku
+                        }
                       }
                       const results = await result.update(data)
                       if (results) {
@@ -8277,10 +8293,18 @@ module.exports = {
                 }
                 if (cek.length === findDoc.length) {
                   const prev = moment().subtract(1, 'month').format('L').split('/')
-                  const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`)
-                  const data = {
-                    nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap,
-                    status_form: level === 5 ? 5 : 6
+                  const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                  let data = {}
+                  if (findApi.status === 200) {
+                    data = {
+                      status_form: level === 5 ? 5 : 8,
+                      nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
+                    }
+                  } else {
+                    data = {
+                      status_form: level === 5 ? 5 : 8,
+                      nilai_buku_eks: result.nilai_buku
+                    }
                   }
                   const results = await result.update(data)
                   if (results) {

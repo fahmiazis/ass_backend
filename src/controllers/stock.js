@@ -813,7 +813,10 @@ module.exports = {
       if (kondisi === '') {
         const result = await status_stock.findAll({
           where: {
-            fisik: fisik
+            [Op.and]: [
+              { fisik: fisik },
+              { kondisi: '' }
+            ]
           }
         })
         if (result) {
@@ -825,8 +828,8 @@ module.exports = {
         const result = await status_stock.findAll({
           where: {
             [Op.and]: [
-              { fisik: { [Op.like]: `%${fisik}%` } },
-              { kondisi: { [Op.like]: `%${kondisi}%` } }
+              { fisik: fisik },
+              { kondisi: kondisi }
             ]
           }
         })

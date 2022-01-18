@@ -10,8 +10,8 @@ async function wrapedSendMail (mailOptions) {
       secure: false,
       port: 587,
       auth: {
-        user: 'sys_adm@pinusmerahabadi.co.id',
-        pass: 'sys0911'
+        user: 'acc@pinusmerahabadi.co.id',
+        pass: 'acc1801'
       },
       tls: {
         rejectUnauthorized: false

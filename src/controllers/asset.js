@@ -127,7 +127,10 @@ module.exports = {
               as: 'pict'
             }
           ],
-          order: [[sortValue, 'ASC']],
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: path, as: 'pict' }, 'id', 'ASC']
+          ],
           limit: limit,
           offset: (page - 1) * limit
         })
@@ -137,6 +140,102 @@ module.exports = {
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getAssetAll: async (req, res) => {
+    try {
+      const kode = req.user.kode
+      let { limit, page, search, sort, tipe } = req.query
+      let searchValue = ''
+      let sortValue = ''
+      if (typeof search === 'object') {
+        searchValue = Object.values(search)[0]
+      } else {
+        searchValue = search || ''
+      }
+      if (typeof sort === 'object') {
+        sortValue = Object.values(sort)[0]
+      } else {
+        sortValue = sort || 'id'
+      }
+      if (!tipe) {
+        tipe = 'all'
+      }
+      if (!limit) {
+        limit = 12
+      } else {
+        limit = parseInt(limit)
+      }
+      if (!page) {
+        page = 1
+      } else {
+        page = parseInt(page)
+      }
+      const result = await asset.findAndCountAll({
+        where: {
+          [Op.and]: [
+            { kode_plant: kode },
+            {
+              [Op.or]: [
+                { status: '1' },
+                { status: '11' },
+                { status: null }
+              ]
+            }
+          ],
+          [Op.or]: [
+            { no_asset: { [Op.like]: `%${searchValue}` } },
+            { nama_asset: { [Op.like]: `%${searchValue}` } }
+          ]
+          // [Op.not]: { status: '0' }
+        },
+        include: [
+          {
+            model: path,
+            as: 'pict'
+          }
+        ],
+        order: [
+          [sortValue, 'ASC'],
+          [{ model: path, as: 'pict' }, 'id', 'ASC']
+        ],
+        limit: limit,
+        offset: (page - 1) * limit
+      })
+      const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
+      if (result) {
+        return response(res, 'list asset', { result, pageInfo })
+      } else {
+        return response(res, 'failed to get asset', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDetailAsset: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findAsset = await asset.findOne({
+        where: {
+          no_asset: no
+        },
+        include: [
+          {
+            model: path,
+            as: 'pict'
+          }
+        ],
+        order: [
+          [{ model: path, as: 'pict' }, 'id', 'ASC']
+        ]
+      })
+      if (findAsset) {
+        return response(res, 'succes get detail asset', { result: findAsset })
+      } else {
+        return response(res, 'failed to get detail asset', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

@@ -5,6 +5,7 @@ const { pagination } = require('../helpers/pagination')
 const joi = require('joi')
 const wrapMail = require('../helpers/wrapMail')
 const moment = require('moment')
+const axios = require('axios')
 
 module.exports = {
   addMutasi: async (req, res) => {
@@ -1115,7 +1116,61 @@ module.exports = {
           ]
         })
         if (result.length > 0) {
-          return response(res, 'success get mutasi', { result })
+          const prev = moment().format('L').split('/')
+          const cek = []
+          for (let i = 0; i < result.length; i++) {
+            const find = await mutasi.findByPk(result[i].id)
+            if (find) {
+              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+              if (findApi.status === 200) {
+                const data = {
+                  isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
+                  no_io: findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn
+                }
+                await find.update(data)
+                cek.push(1)
+              } else {
+                const data = {
+                  isbudget: 'tidak',
+                  no_io: null
+                }
+                await find.update(data)
+                cek.push(1)
+              }
+            }
+          }
+          if (cek.length > 0) {
+            const result = await mutasi.findAll({
+              where: {
+                no_mutasi: no
+              },
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                },
+                {
+                  model: docUser,
+                  as: 'docAsset'
+                }
+              ],
+              order: [
+                ['id', 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ]
+            })
+            if (result) {
+              return response(res, 'success get mutasi', { result })
+            } else {
+              return response(res, 'success get mutasi', { result })
+            }
+          } else {
+            return response(res, 'success get mutasi', { result })
+          }
         } else {
           return response(res, 'failed get mutaso', {}, 404, false)
         }
