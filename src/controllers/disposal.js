@@ -7749,12 +7749,12 @@ module.exports = {
                       let data = {}
                       if (findApi.status === 200) {
                         data = {
-                          status_form: level === 5 ? 5 : 8,
+                          status_form: level === 5 ? 5 : 6,
                           nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
                         }
                       } else {
                         data = {
-                          status_form: level === 5 ? 5 : 8,
+                          status_form: level === 5 ? 5 : 6,
                           nilai_buku_eks: result.nilai_buku
                         }
                       }
@@ -8297,12 +8297,12 @@ module.exports = {
                   let data = {}
                   if (findApi.status === 200) {
                     data = {
-                      status_form: level === 5 ? 5 : 8,
+                      status_form: level === 5 ? 5 : 6,
                       nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
                     }
                   } else {
                     data = {
-                      status_form: level === 5 ? 5 : 8,
+                      status_form: level === 5 ? 5 : 6,
                       nilai_buku_eks: result.nilai_buku
                     }
                   }
