@@ -2917,7 +2917,8 @@ module.exports = {
             const send = {
               kode_plant: findMut[i].kode_plant_rec,
               status: null,
-              area: findMut[i].area_rec
+              area: findMut[i].area_rec,
+              keterangan: null
             }
             const findData = await mutasi.findByPk(findMut[i].id)
             const findAsset = await asset.findOne({
@@ -3154,9 +3155,21 @@ module.exports = {
             status_form: level === 2 ? 8 : 4,
             tgl_mutasisap: level === 2 ? moment() : null
           }
+          const send = {
+            kode_plant: findBud[i].kode_plant_rec,
+            status: null,
+            area: findBud[i].area_rec,
+            keterangan: null
+          }
           const findData = await mutasi.findByPk(findBud[i].id)
-          if (findData) {
+          const findAsset = await asset.findOne({
+            where: {
+              no_asset: findBud[i].no_asset
+            }
+          })
+          if (findData && findAsset) {
             await findData.update(data)
+            await findAsset.update(send)
             const element = `
               <tr>
                 <td>${findBud.indexOf(findBud[i]) + 1}</td>
