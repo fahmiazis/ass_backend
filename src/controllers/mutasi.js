@@ -1874,138 +1874,289 @@ module.exports = {
                           }
                         }
                         if (valid.length > 0) {
-                          const mailOptions = {
-                            from: 'noreply_asset@pinusmerahabadi.co.id',
-                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                            to: `${draftEmail}`,
-                            subject: 'Reject Mutasi Asset (TESTING WEB ASET)',
-                            html: `
-                              <head>
-                                <style type="text/css">
-                                body {
-                                    display: flexbox;
-                                    flex-direction: column;
-                                }
-                                .tittle {
-                                    font-size: 15px;
-                                }
-                                .mar {
-                                    margin-bottom: 20px;
-                                }
-                                .mar1 {
-                                    margin-bottom: 10px;
-                                }
-                                .foot {
-                                    margin-top: 20px;
-                                    margin-bottom: 10px;
-                                }
-                                .foot1 {
-                                    margin-bottom: 50px;
-                                }
-                                .position {
-                                    display: flexbox;
-                                    flex-direction: row;
-                                    justify-content: left;
-                                    margin-top: 10px;
-                                }
-                                table {
-                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                    font-size: 12px;
-                                }
-                                .demo-table {
-                                    border-collapse: collapse;
-                                    font-size: 13px;
-                                }
-                                .demo-table th, 
-                                .demo-table td {
-                                    border-bottom: 1px solid #e1edff;
-                                    border-left: 1px solid #e1edff;
-                                    padding: 7px 17px;
-                                }
-                                .demo-table th, 
-                                .demo-table td:last-child {
-                                    border-right: 1px solid #e1edff;
-                                }
-                                .demo-table td:first-child {
-                                    border-top: 1px solid #e1edff;
-                                }
-                                .demo-table td:last-child{
-                                    border-bottom: 0;
-                                }
-                                caption {
-                                    caption-side: top;
-                                    margin-bottom: 10px;
-                                }
-                                
-                                /* Table Header */
-                                .demo-table thead th {
-                                    background-color: #508abb;
-                                    color: #FFFFFF;
-                                    border-color: #6ea1cc !important;
-                                    text-transform: uppercase;
-                                }
-                                
-                                /* Table Body */
-                                .demo-table tbody td {
-                                    color: #353535;
-                                }
-                                
-                                .demo-table tbody tr:nth-child(odd) td {
-                                    background-color: #f4fbff;
-                                }
-                                .demo-table tbody tr:hover th,
-                                .demo-table tbody tr:hover td {
-                                    background-color: #ffffa2;
-                                    border-color: #ffff0f;
-                                    transition: all .2s;
-                                }
-                            </style>
-                              </head>
-                              <body>
-                                  <div class="tittle mar">
-                                      Dear Bapak/Ibu,
-                                  </div>
-                                  <div class="tittle mar1">
-                                      <div>Pengajuan mutasi asset telah direject</div>
-                                      <div>Alasan Reject: ${alasan}</div>
-                                      <div>Direject oleh: ${name}</div>
-                                  </div>
-                                  <div class="position">
-                                      <table class="demo-table">
-                                          <thead>
-                                              <tr>
-                                                  <th>No</th>
-                                                  <th>No Mutasi</th>
-                                                  <th>Asset</th>
-                                                  <th>Asset description</th>
-                                                  <th>Cost Ctr</th>
-                                                  <th>Depo / Cabang</th>
-                                                  <th>Cost Ctr  Penerima</th>
-                                                  <th>Depo / Cabang Penerima</th>
-                                              </tr>
-                                          </thead>
-                                          <tbody>
-                                            ${tableTd}
-                                          </tbody>
-                                      </table>
-                                  </div>
-                                  <div class="tittle foot">
-                                      Terima kasih,
-                                  </div>
-                                  <div class="tittle foot1">
-                                      Regards,
-                                  </div>
-                                  <div class="tittle">
-                                    ${name}
-                                  </div>
-                              </body>
-                              `
-                          }
-                          const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                          if (sendEmail) {
-                            return response(res, 'success reject mutasi', { sendEmail })
+                          const findDoc = await docUser.findAll({
+                            where: {
+                              no_pengadaan: no
+                            }
+                          })
+                          if (findDoc.length > 0) {
+                            const cekDoc = []
+                            for (let i = 0; i < findDoc.length; i++) {
+                              const docOne = await docUser.findByPk(findDoc[i].id)
+                              if (docOne) {
+                                await docOne.destroy()
+                                cekDoc.push(1)
+                              }
+                            }
+                            if (cekDoc) {
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                to: `${draftEmail}`,
+                                subject: 'Reject Mutasi Asset (TESTING WEB ASET)',
+                                html: `
+                                  <head>
+                                    <style type="text/css">
+                                    body {
+                                        display: flexbox;
+                                        flex-direction: column;
+                                    }
+                                    .tittle {
+                                        font-size: 15px;
+                                    }
+                                    .mar {
+                                        margin-bottom: 20px;
+                                    }
+                                    .mar1 {
+                                        margin-bottom: 10px;
+                                    }
+                                    .foot {
+                                        margin-top: 20px;
+                                        margin-bottom: 10px;
+                                    }
+                                    .foot1 {
+                                        margin-bottom: 50px;
+                                    }
+                                    .position {
+                                        display: flexbox;
+                                        flex-direction: row;
+                                        justify-content: left;
+                                        margin-top: 10px;
+                                    }
+                                    table {
+                                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                        font-size: 12px;
+                                    }
+                                    .demo-table {
+                                        border-collapse: collapse;
+                                        font-size: 13px;
+                                    }
+                                    .demo-table th, 
+                                    .demo-table td {
+                                        border-bottom: 1px solid #e1edff;
+                                        border-left: 1px solid #e1edff;
+                                        padding: 7px 17px;
+                                    }
+                                    .demo-table th, 
+                                    .demo-table td:last-child {
+                                        border-right: 1px solid #e1edff;
+                                    }
+                                    .demo-table td:first-child {
+                                        border-top: 1px solid #e1edff;
+                                    }
+                                    .demo-table td:last-child{
+                                        border-bottom: 0;
+                                    }
+                                    caption {
+                                        caption-side: top;
+                                        margin-bottom: 10px;
+                                    }
+                                    
+                                    /* Table Header */
+                                    .demo-table thead th {
+                                        background-color: #508abb;
+                                        color: #FFFFFF;
+                                        border-color: #6ea1cc !important;
+                                        text-transform: uppercase;
+                                    }
+                                    
+                                    /* Table Body */
+                                    .demo-table tbody td {
+                                        color: #353535;
+                                    }
+                                    
+                                    .demo-table tbody tr:nth-child(odd) td {
+                                        background-color: #f4fbff;
+                                    }
+                                    .demo-table tbody tr:hover th,
+                                    .demo-table tbody tr:hover td {
+                                        background-color: #ffffa2;
+                                        border-color: #ffff0f;
+                                        transition: all .2s;
+                                    }
+                                </style>
+                                  </head>
+                                  <body>
+                                      <div class="tittle mar">
+                                          Dear Bapak/Ibu,
+                                      </div>
+                                      <div class="tittle mar1">
+                                          <div>Pengajuan mutasi asset telah direject</div>
+                                          <div>Alasan Reject: ${alasan}</div>
+                                          <div>Direject oleh: ${name}</div>
+                                      </div>
+                                      <div class="position">
+                                          <table class="demo-table">
+                                              <thead>
+                                                  <tr>
+                                                      <th>No</th>
+                                                      <th>No Mutasi</th>
+                                                      <th>Asset</th>
+                                                      <th>Asset description</th>
+                                                      <th>Cost Ctr</th>
+                                                      <th>Depo / Cabang</th>
+                                                      <th>Cost Ctr  Penerima</th>
+                                                      <th>Depo / Cabang Penerima</th>
+                                                  </tr>
+                                              </thead>
+                                              <tbody>
+                                                ${tableTd}
+                                              </tbody>
+                                          </table>
+                                      </div>
+                                      <div class="tittle foot">
+                                          Terima kasih,
+                                      </div>
+                                      <div class="tittle foot1">
+                                          Regards,
+                                      </div>
+                                      <div class="tittle">
+                                        ${name}
+                                      </div>
+                                  </body>
+                                  `
+                              }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success reject mutasi', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil reject mutasi, tidak berhasil kirim notif email 1')
+                              }
+                            }
                           } else {
-                            return response(res, 'berhasil reject mutasi, tidak berhasil kirim notif email 1')
+                            const mailOptions = {
+                              from: 'noreply_asset@pinusmerahabadi.co.id',
+                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                              to: `${draftEmail}`,
+                              subject: 'Reject Mutasi Asset (TESTING WEB ASET)',
+                              html: `
+                                <head>
+                                  <style type="text/css">
+                                  body {
+                                      display: flexbox;
+                                      flex-direction: column;
+                                  }
+                                  .tittle {
+                                      font-size: 15px;
+                                  }
+                                  .mar {
+                                      margin-bottom: 20px;
+                                  }
+                                  .mar1 {
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot {
+                                      margin-top: 20px;
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot1 {
+                                      margin-bottom: 50px;
+                                  }
+                                  .position {
+                                      display: flexbox;
+                                      flex-direction: row;
+                                      justify-content: left;
+                                      margin-top: 10px;
+                                  }
+                                  table {
+                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                      font-size: 12px;
+                                  }
+                                  .demo-table {
+                                      border-collapse: collapse;
+                                      font-size: 13px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td {
+                                      border-bottom: 1px solid #e1edff;
+                                      border-left: 1px solid #e1edff;
+                                      padding: 7px 17px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td:last-child {
+                                      border-right: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:first-child {
+                                      border-top: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:last-child{
+                                      border-bottom: 0;
+                                  }
+                                  caption {
+                                      caption-side: top;
+                                      margin-bottom: 10px;
+                                  }
+                                  
+                                  /* Table Header */
+                                  .demo-table thead th {
+                                      background-color: #508abb;
+                                      color: #FFFFFF;
+                                      border-color: #6ea1cc !important;
+                                      text-transform: uppercase;
+                                  }
+                                  
+                                  /* Table Body */
+                                  .demo-table tbody td {
+                                      color: #353535;
+                                  }
+                                  
+                                  .demo-table tbody tr:nth-child(odd) td {
+                                      background-color: #f4fbff;
+                                  }
+                                  .demo-table tbody tr:hover th,
+                                  .demo-table tbody tr:hover td {
+                                      background-color: #ffffa2;
+                                      border-color: #ffff0f;
+                                      transition: all .2s;
+                                  }
+                              </style>
+                                </head>
+                                <body>
+                                    <div class="tittle mar">
+                                        Dear Bapak/Ibu,
+                                    </div>
+                                    <div class="tittle mar1">
+                                        <div>Pengajuan mutasi asset telah direject</div>
+                                        <div>Alasan Reject: ${alasan}</div>
+                                        <div>Direject oleh: ${name}</div>
+                                    </div>
+                                    <div class="position">
+                                        <table class="demo-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>No Mutasi</th>
+                                                    <th>Asset</th>
+                                                    <th>Asset description</th>
+                                                    <th>Cost Ctr</th>
+                                                    <th>Depo / Cabang</th>
+                                                    <th>Cost Ctr  Penerima</th>
+                                                    <th>Depo / Cabang Penerima</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                              ${tableTd}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="tittle foot">
+                                        Terima kasih,
+                                    </div>
+                                    <div class="tittle foot1">
+                                        Regards,
+                                    </div>
+                                    <div class="tittle">
+                                      ${name}
+                                    </div>
+                                </body>
+                                `
+                            }
+                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                            if (sendEmail) {
+                              return response(res, 'success reject mutasi', { sendEmail })
+                            } else {
+                              return response(res, 'berhasil reject mutasi, tidak berhasil kirim notif email 1')
+                            }
                           }
                         } else {
                           return response(res, 'failed reject mutasi7', {}, 404, false)
@@ -3181,6 +3332,7 @@ module.exports = {
                 <td>${findBud[i].area_rec}</td>
                 <td>${findBud[i].cost_center_rec}</td>
                 <td>${findBud[i].no_io}</td>
+                <td>${findBud[i].cost_centerawal}</td>
               </tr>`
             tableTd = tableTd + element
             cek.push(1)
@@ -3306,6 +3458,7 @@ module.exports = {
                                 <th>Cabang / Depo Penerima</th>
                                 <th>Cost Ctr Penerima</th>
                                 <th>No io</th>
+                                <th>Cost Center Io</th>
                               </tr>
                           </thead>
                           <tbody>
@@ -3434,6 +3587,7 @@ module.exports = {
                                 <th>Cabang / Depo Penerima</th>
                                 <th>Cost Ctr Penerima</th>
                                 <th>No io</th>
+                                <th>Cost Center Io</th>
                               </tr>
                           </thead>
                           <tbody>
