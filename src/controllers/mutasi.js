@@ -572,7 +572,7 @@ module.exports = {
         await result.destroy()
         const findAsset = await asset.findOne({
           where: {
-            no_asset: no
+            no_asset: result.no_asset
           }
         })
         if (findAsset) {
