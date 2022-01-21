@@ -1,4 +1,4 @@
-const { stock, asset, clossing, ttd, approve, role, user, path, status_stock } = require('../models')
+const { stock, asset, clossing, ttd, approve, role, user, path, depo, status_stock, docUser, document } = require('../models')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const moment = require('moment')
@@ -183,6 +183,152 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  getDocument: async (req, res) => {
+    try {
+      const no = req.params.no
+      const results = await asset.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (results) {
+        const findClose = await clossing.findAll({
+          where: {
+            jenis: 'stock'
+          }
+        })
+        if (findClose.length > 0) {
+          const time = moment().format('L').split('/')
+          let start = ''
+          let end = ''
+          if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+            const next = moment().subtract(1, 'month').format('L').split('/')
+            end = `${time[2]}-${time[0]}-${findClose[0].end}`
+            start = `${next[2]}-${next[0]}-${findClose[0].start}`
+          } else {
+            const next = moment().add(1, 'month').format('L').split('/')
+            start = `${time[2]}-${time[0]}-${findClose[0].start}`
+            end = `${next[2]}-${next[0]}-${findClose[0].end}`
+          }
+          const result = await docUser.findAll({
+            where: {
+              [Op.and]: [
+                { no_stock: no },
+                {
+                  periode: {
+                    [Op.lte]: end,
+                    [Op.gte]: start
+                  }
+                }
+              ]
+            }
+          })
+          if (result.length > 0) {
+            return response(res, 'success get document', { result })
+          } else {
+            const getDoc = await document.findAll({
+              where: {
+                [Op.and]: [
+                  { tipe_dokumen: 'stock' },
+                  {
+                    [Op.or]: [
+                      { tipe: 'pengajuan' }
+                    ]
+                  }
+                ]
+              }
+            })
+            if (getDoc) {
+              const hasil = []
+              for (let i = 0; i < getDoc.length; i++) {
+                const send = {
+                  nama_dokumen: getDoc[i].nama_dokumen,
+                  jenis_dokumen: getDoc[i].jenis_dokumen,
+                  divisi: getDoc[i].divisi,
+                  no_stock: no,
+                  tipe: 'pengajuan',
+                  path: null,
+                  periode: start
+                }
+                const make = await docUser.create(send)
+                if (make) {
+                  hasil.push(make)
+                }
+              }
+              if (hasil.length === getDoc.length) {
+                return response(res, 'success get document', { result: hasil })
+              } else {
+                return response(res, 'failed get data', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          }
+        } else {
+          return response(res, 'Failed get document', {}, 400, false)
+        }
+      } else {
+        return response(res, 'Failed get document', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  cekDokumen: async (req, res) => {
+    try {
+      const no = req.params.no
+      const results = await asset.findOne({
+        where: {
+          no_asset: no
+        }
+      })
+      if (results) {
+        const findClose = await clossing.findAll({
+          where: {
+            jenis: 'stock'
+          }
+        })
+        if (findClose.length > 0) {
+          const time = moment().format('L').split('/')
+          let start = ''
+          let end = ''
+          if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+            const next = moment().subtract(1, 'month').format('L').split('/')
+            end = `${time[2]}-${time[0]}-${findClose[0].end}`
+            start = `${next[2]}-${next[0]}-${findClose[0].start}`
+          } else {
+            const next = moment().add(1, 'month').format('L').split('/')
+            start = `${time[2]}-${time[0]}-${findClose[0].start}`
+            end = `${next[2]}-${next[0]}-${findClose[0].end}`
+          }
+          const result = await docUser.findAll({
+            where: {
+              [Op.and]: [
+                { no_stock: no },
+                {
+                  periode: {
+                    [Op.lte]: end,
+                    [Op.gte]: start
+                  }
+                }
+              ]
+            }
+          })
+          if (result.length > 0) {
+            return response(res, 'success get document', { result, end, start })
+          } else {
+            return response(res, 'Failed get document', { end, start, time }, 400, false)
+          }
+        } else {
+          return response(res, 'Failed get document', {}, 400, false)
+        }
+      } else {
+        return response(res, 'Failed get document', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   getStock: async (req, res) => {
     try {
       const kode = req.user.kode
@@ -264,6 +410,7 @@ module.exports = {
   getStockAll: async (req, res) => {
     try {
       let { limit, page, search, sort, group } = req.query
+      const fullname = req.user.fullname
       let searchValue = ''
       let sortValue = ''
       const level = req.user.level
@@ -308,39 +455,92 @@ module.exports = {
           start = `${time[2]}-${time[0]}-${findClose[0].start}`
           end = `${next[2]}-${next[0]}-${findClose[0].end}`
         }
-        const result = await stock.findAndCountAll({
-          where: {
-            [Op.and]: [
-              { status_form: level === 2 ? 9 : 1 },
-              {
-                tanggalStock: {
-                  [Op.lte]: end,
-                  [Op.gte]: start
+        if (level === 12 || level === 7) {
+          const findDepo = await depo.findAll({
+            where: {
+              [Op.or]: [
+                { nama_bm: level === 7 ? null : fullname },
+                { nama_om: level === 12 ? null : fullname }
+              ]
+            }
+          })
+          if (findDepo.length > 0) {
+            const hasil = []
+            for (let i = 0; i < findDepo.length; i++) {
+              const result = await stock.findAll({
+                where: {
+                  kode_plant: findDepo[i].kode_plant,
+                  [Op.and]: [
+                    { status_form: level === 2 ? 9 : 1 },
+                    {
+                      tanggalStock: {
+                        [Op.lte]: end,
+                        [Op.gte]: start
+                      }
+                    }
+                  ],
+                  [Op.or]: [
+                    { no_asset: { [Op.like]: `%${searchValue}%` } },
+                    { deskripsi: { [Op.like]: `%${searchValue}%` } },
+                    { keterangan: { [Op.like]: `%${searchValue}%` } },
+                    { kondisi: { [Op.like]: `%${searchValue}%` } },
+                    { grouping: { [Op.like]: `%${searchValue}%` } }
+                  ]
+                },
+                order: [[sortValue, 'ASC']],
+                limit: limit,
+                offset: (page - 1) * limit,
+                group: 'no_stock'
+              })
+              if (result.length > 0) {
+                for (let j = 0; j < result.length; j++) {
+                  hasil.push(result[j])
                 }
               }
-            ],
-            [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { deskripsi: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } },
-              { merk: { [Op.like]: `%${searchValue}%` } },
-              { satuan: { [Op.like]: `%${searchValue}%` } },
-              { unit: { [Op.like]: `%${searchValue}%` } },
-              { kondisi: { [Op.like]: `%${searchValue}%` } },
-              { lokasi: { [Op.like]: `%${searchValue}%` } },
-              { grouping: { [Op.like]: `%${searchValue}%` } }
-            ]
-          },
-          order: [[sortValue, 'ASC']],
-          limit: limit,
-          offset: (page - 1) * limit,
-          group: 'no_stock'
-        })
-        const pageInfo = pagination('/stock/get', req.query, page, limit, result.count.length)
-        if (result) {
-          return response(res, 'list stock', { result, pageInfo })
+            }
+            if (hasil.length > 0) {
+              const result = { rows: hasil, count: hasil.length }
+              const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
+              return response(res, 'list stock', { result, pageInfo })
+            } else {
+              const result = { rows: hasil, count: 0 }
+              const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
+              return response(res, 'list stock', { result, pageInfo })
+            }
+          } else {
+            return response(res, 'failed get data stock', {}, 404, false)
+          }
         } else {
-          return response(res, 'failed get data stock', {}, 404, false)
+          const result = await stock.findAndCountAll({
+            where: {
+              [Op.and]: [
+                { status_form: level === 2 ? 9 : 1 },
+                {
+                  tanggalStock: {
+                    [Op.lte]: end,
+                    [Op.gte]: start
+                  }
+                }
+              ],
+              [Op.or]: [
+                { no_asset: { [Op.like]: `%${searchValue}%` } },
+                { deskripsi: { [Op.like]: `%${searchValue}%` } },
+                { keterangan: { [Op.like]: `%${searchValue}%` } },
+                { kondisi: { [Op.like]: `%${searchValue}%` } },
+                { grouping: { [Op.like]: `%${searchValue}%` } }
+              ]
+            },
+            order: [[sortValue, 'ASC']],
+            limit: limit,
+            offset: (page - 1) * limit,
+            group: 'no_stock'
+          })
+          const pageInfo = pagination('/stock/get', req.query, page, limit, result.count.length)
+          if (result) {
+            return response(res, 'list stock', { result, pageInfo })
+          } else {
+            return response(res, 'failed get data stock', {}, 404, false)
+          }
         }
       } else {
         return response(res, 'tolong buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
@@ -410,37 +610,79 @@ module.exports = {
           }
         })
         if (result) {
+          const getDepo = await depo.findOne({
+            where: {
+              kode_plant: result[0].kode_plant
+            }
+          })
           const getApp = await approve.findAll({
             where: {
               nama_approve: nama
             }
           })
-          if (getApp) {
+          if (getApp && getDepo) {
             const pembuat = []
             const pemeriksa = []
             const penyetuju = []
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
-                jabatan: getApp[i].jabatan,
-                jenis: getApp[i].jenis,
-                sebagai: getApp[i].sebagai,
-                kategori: getApp[i].kategori,
+                jabatan: getApp[i].jabatan === '' || getApp[i].jabatan === null ? null : getApp[i].jabatan,
+                jenis: getApp[i].jenis === '' || getApp[i].jenis === null ? null : getApp[i].jenis,
+                sebagai: getApp[i].sebagai === '' || getApp[i].sebagai === null ? null : getApp[i].sebagai,
+                kategori: null,
                 no_doc: no
               }
               const make = await ttd.create(send)
               if (make) {
-                if (make.sebagai === 'pembuat') {
-                  pembuat.push(make)
-                } else if (make.sebagai === 'pemeriksa') {
-                  pemeriksa.push(make)
-                } else if (make.sebagai === 'penyetuju') {
-                  penyetuju.push(make)
-                }
+                // if (make.sebagai === 'pembuat') {
+                //   pembuat.push(make)
+                // } else if (make.sebagai === 'pemeriksa') {
+                //   pemeriksa.push(make)
+                // } else if (make.sebagai === 'penyetuju') {
+                //   penyetuju.push(make)
+                // }
                 hasil.push(make)
               }
             }
             if (hasil.length === getApp.length) {
+              const result = await ttd.findAll({
+                where: {
+                  no_doc: no
+                }
+              })
+              if (result.length > 0) {
+                const findArea = await ttd.findByPk(result[0].id)
+                if (findArea) {
+                  const data = {
+                    nama: getDepo.nama_aos,
+                    status: 1
+                  }
+                  const updateArea = await findArea.update(data)
+                  if (updateArea) {
+                    const findRes = await ttd.findAll({
+                      where: {
+                        no_doc: no
+                      }
+                    })
+                    if (findRes.length > 0) {
+                      const penyetuju = []
+                      const pembuat = []
+                      const pemeriksa = []
+                      for (let i = 0; i < findRes.length; i++) {
+                        if (findRes[i].sebagai === 'pembuat') {
+                          pembuat.push(findRes[i])
+                        } else if (findRes[i].sebagai === 'pemeriksa') {
+                          pemeriksa.push(findRes[i])
+                        } else if (findRes[i].sebagai === 'penyetuju') {
+                          penyetuju.push(findRes[i])
+                        }
+                      }
+                      return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, getApp } })
+                    }
+                  }
+                }
+              }
               return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju } })
             } else {
               return response(res, 'failed get data', {}, 404, false)
@@ -508,7 +750,7 @@ module.exports = {
         })
         if (find.length > 0) {
           let hasil = 0
-          let arr = 0
+          let arr = null
           for (let i = 0; i < find.length; i++) {
             if (result[0].name === find[i].jabatan) {
               hasil = find[i].id
@@ -516,141 +758,103 @@ module.exports = {
             }
           }
           if (hasil !== 0) {
-            const data = {
-              nama: name,
-              status: 1,
-              path: null
-            }
-            const findTtd = await ttd.findByPk(hasil)
-            if (findTtd) {
-              const sent = await findTtd.update(data)
-              if (sent) {
-                const results = await ttd.findAll({
-                  where: {
-                    [Op.and]: [
-                      { no_doc: no },
-                      { status: 1 }
-                    ]
-                  }
-                })
-                if (results.length === find.length) {
-                  const findDoc = await stock.findAll({
-                    where: {
-                      no_stock: no
-                    }
-                  })
-                  if (findDoc) {
-                    const data = {
-                      status_form: 9
-                    }
-                    const valid = []
-                    for (let i = 0; i < findDoc.length; i++) {
-                      const findAsset = await stock.findByPk(findDoc[i].id)
-                      if (findAsset) {
-                        await findAsset.update(data)
-                        valid.push(1)
-                      }
-                    }
-                    if (valid.length === findDoc.length) {
-                      return response(res, 'success approve stock opname')
-                    }
-                  }
-                } else {
-                  const findDoc = await stock.findOne({
-                    where: {
-                      no_stock: no
-                    }
-                  })
-                  const data = {
-                    nama: findDoc.kode_plant,
-                    status: 1,
-                    path: null
-                  }
-                  if (findDoc) {
-                    const findAos = await ttd.findByPk(find[0].id)
-                    const findRole = await role.findAll({
+            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+              return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
+            } else {
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const data = {
+                  nama: name,
+                  status: 1,
+                  path: null
+                }
+                const findTtd = await ttd.findByPk(hasil)
+                if (findTtd) {
+                  const sent = await findTtd.update(data)
+                  if (sent) {
+                    const results = await ttd.findAll({
                       where: {
-                        name: find[arr + 1].jabatan
+                        [Op.and]: [
+                          { no_doc: no },
+                          { status: 1 }
+                        ]
                       }
                     })
-                    if (findRole.length > 0) {
-                      await findAos.update(data)
-                      const findUser = await user.findOne({
+                    if (results.length === find.length) {
+                      const findDoc = await stock.findAll({
                         where: {
-                          user_level: findRole[0].nomor
+                          no_stock: no
                         }
                       })
-                      if (findUser) {
-                        const mailOptions = {
-                          from: 'noreply_asset@pinusmerahabadi.co.id',
-                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findUser.email}`,
-                          subject: 'Approve',
-                          html: `<body>
-                                    <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
-                                    <div style="margin-bottom: 5px;">Mohon untuk approve pengajuan disposal asset area.</div>
-                                    <div style="margin-bottom: 20px;"></div>
-                                    <div style="margin-bottom: 30px;">Best Regard,</div>
-                                    <div>Team Asset</div>
-                                </body>`
+                      if (findDoc) {
+                        const data = {
+                          status_form: 9
                         }
-                        //   const mailOptions = {
-                        //     from: `${result.email_ho_pic}`,
-                        //     replyTo: `${result.email_ho_pic}`,
-                        //     to: `${result.email_aos}`,
-                        //     cc: `${result.email_sa_kasir}, ${result.email_ho_pic}`,
-                        //     subject: 'Rejected Dokumen',
-                        //     html: `<body>
-                        //     <div style="margin-top: 20px; margin-bottom: 20px;">Dear Bapak/Ibu AOS</div>
-                        //     <div style="margin-bottom: 10px;">Report has been verified by Team Accounting with the following list:</div>
-                        //     <table style="border-collapse: collapse; margin-bottom: 20px;">
-                        //           <tr style="height: 75px;">
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">No</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nomor Aset</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nama Barang</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Merk / Type</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Kategori</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cabang / depo</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Cost Center</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Buku</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Nilai Jual</th>
-                        //             <th style="border: 1px solid black; background-color: lightgray; width: 100px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">Keterangan</th>
-                        //           </tr>
-                        //           <tr style="height: 50px;">
-                        //             <th scope="row" style='border: 1px solid black;'>1</th>
-                        //             <td style='border: 1px solid black;'>find.nama_depo}</td>
-                        //             <td style='border: 1px solid black;'>dok.dokumen}</td>
-                        //             <td style='border: 1px solid black;'>act.jenis_dokumen}</td>
-                        //             <td style='border: 1px solid black;'>moment(act.createdAt).subtract(1, 'day').format('DD-MM-YYYY')}</td>
-                        //             <td style='border: 1px solid black;'>moment(dok.createdAt).format('DD-MM-YYYY')}</td>
-                        //             <td style='border: 1px solid black;'>moment(dok.updatedAt).format('DD-MM-YYYY')}</td>
-                        //             <td style='border: 1px solid black;'>Rejected</td>
-                        //             <td style='border: 1px solid black;'>dok.alasan}</td>
-                        //           </tr>
-                        //     </table>
-                        //     <a href="http://trial.pinusmerahabadi.co.id:3000/">With the following link</a>
-                        //     <div style="margin-top: 20px;">Thank you.</div>
-                        // </body>
-                        //     `
-                        //   }
-                        mailer.sendMail(mailOptions, (error, result) => {
-                          if (error) {
-                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
-                          } else if (result) {
-                            return response(res, 'success approve disposal')
+                        const valid = []
+                        for (let i = 0; i < findDoc.length; i++) {
+                          const findAsset = await stock.findByPk(findDoc[i].id)
+                          if (findAsset) {
+                            await findAsset.update(data)
+                            valid.push(1)
+                          }
+                        }
+                        if (valid.length === findDoc.length) {
+                          return response(res, 'success approve stock opname')
+                        }
+                      }
+                    } else {
+                      const findDoc = await stock.findOne({
+                        where: {
+                          no_stock: no
+                        }
+                      })
+                      if (findDoc) {
+                        const findRole = await role.findAll({
+                          where: {
+                            name: find[arr + 1].jabatan
                           }
                         })
-                      } else {
-                        return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                        if (findRole.length > 0) {
+                          const findUser = await user.findOne({
+                            where: {
+                              user_level: findRole[0].nomor
+                            }
+                          })
+                          if (findUser) {
+                            const mailOptions = {
+                              from: 'noreply_asset@pinusmerahabadi.co.id',
+                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                              to: `${findUser.email}`,
+                              subject: 'Approve',
+                              html: `<body>
+                                        <div style="margin-top: 20px; margin-bottom: 35px;">Dear Bapak/Ibu</div>
+                                        <div style="margin-bottom: 5px;">Mohon untuk approve pengajuan disposal asset area.</div>
+                                        <div style="margin-bottom: 20px;"></div>
+                                        <div style="margin-bottom: 30px;">Best Regard,</div>
+                                        <div>Team Asset</div>
+                                    </body>`
+                            }
+                            mailer.sendMail(mailOptions, (error, result) => {
+                              if (error) {
+                                return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1', { error: error, send: findUser.email })
+                              } else if (result) {
+                                return response(res, 'success approve disposal')
+                              }
+                            })
+                          } else {
+                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                          }
+                        }
                       }
                     }
+                  } else {
+                    return response(res, 'failed approve disposal', {}, 404, false)
                   }
+                } else {
+                  return response(res, 'failed approve disposal', {}, 404, false)
                 }
               } else {
-                return response(res, 'failed approve disposal', {}, 404, false)
+                return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
               }
-            } else {
-              return response(res, 'failed approve disposal', {}, 404, false)
             }
           } else {
             return response(res, 'failed approve disposal', {}, 404, false)
@@ -690,27 +894,37 @@ module.exports = {
           })
           if (find.length > 0) {
             let hasil = 0
+            let arr = null
             for (let i = 0; i < find.length; i++) {
               if (result[0].name === find[i].jabatan) {
                 hasil = find[i].id
+                arr = i
               }
             }
             if (hasil !== 0) {
-              const data = {
-                nama: name,
-                status: 0,
-                path: results.alasan
-              }
-              const findTtd = await ttd.findByPk(hasil)
-              if (findTtd) {
-                const sent = await findTtd.update(data)
-                if (sent) {
-                  return response(res, 'success reject stock opname')
-                } else {
-                  return response(res, 'failed reject stock opname', {}, 404, false)
-                }
+              if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+                return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
               } else {
-                return response(res, 'failed reject stock opname', {}, 404, false)
+                if (arr === 0 || find[arr - 1].status === 1) {
+                  const data = {
+                    nama: name,
+                    status: 0,
+                    path: results.alasan
+                  }
+                  const findTtd = await ttd.findByPk(hasil)
+                  if (findTtd) {
+                    const sent = await findTtd.update(data)
+                    if (sent) {
+                      return response(res, 'success reject stock opname')
+                    } else {
+                      return response(res, 'failed reject stock opname', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, 'failed reject stock opname', {}, 404, false)
+                  }
+                } else {
+                  return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+                }
               }
             } else {
               return response(res, 'failed reject stock opname', {}, 404, false)

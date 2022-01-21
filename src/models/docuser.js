@@ -22,7 +22,9 @@ module.exports = (sequelize, DataTypes) => {
     status: DataTypes.INTEGER,
     alasan: DataTypes.STRING,
     jenis_form: DataTypes.ENUM('disposal', 'pengadaan', 'stock'),
-    tipe: DataTypes.STRING
+    tipe: DataTypes.STRING,
+    periode: DataTypes.DATE,
+    no_stock: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'docUser'

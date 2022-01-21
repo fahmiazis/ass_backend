@@ -68,7 +68,8 @@ module.exports = (sequelize, DataTypes) => {
     tanggalDis: DataTypes.DATE,
     npwp: DataTypes.ENUM('ada', 'tidak'),
     doc_clearing: DataTypes.STRING,
-    nilai_buku_eks: DataTypes.STRING
+    nilai_buku_eks: DataTypes.STRING,
+    tgl_eksekusi: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'disposal'

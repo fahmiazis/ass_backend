@@ -13,5 +13,7 @@ route.post('/img/:no', stock.uploadPicture)
 route.post('/status/add', stock.addStatus)
 route.get('/status/get', stock.getStatus)
 route.get('/status/all', stock.getStatusAll)
+route.get('/doc/:no', stock.getDocument)
+route.get('/cekdoc/:no', stock.cekDokumen)
 
 module.exports = route
