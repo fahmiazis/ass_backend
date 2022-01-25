@@ -490,7 +490,7 @@ module.exports = {
                 // order: [[sortValue, 'ASC']],
                 limit: limit,
                 offset: (page - 1) * limit,
-                group: 'no_stock'
+                group: ['no_stock']
               })
               if (result.length > 0) {
                 for (let j = 0; j < result.length; j++) {
@@ -533,7 +533,7 @@ module.exports = {
             order: [[sortValue, 'ASC']],
             limit: limit,
             offset: (page - 1) * limit,
-            group: 'no_stock'
+            group: ['no_stock']
           })
           const pageInfo = pagination('/stock/get', req.query, page, limit, result.count.length)
           if (result) {
