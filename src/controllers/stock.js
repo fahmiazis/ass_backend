@@ -122,6 +122,7 @@ module.exports = {
                           lokasi: result[i].lokasi,
                           grouping: result[i].grouping,
                           keterangan: result[i].keterangan,
+                          status_fisik: result[i].status_fisik,
                           tanggalStock: moment().format('L'),
                           status_form: 1,
                           no_stock: 'O' + noDis
@@ -164,6 +165,7 @@ module.exports = {
                           lokasi: result[i].lokasi,
                           grouping: result[i].grouping,
                           keterangan: result[i].keterangan,
+                          status_fisik: result[i].status_fisik,
                           tanggalStock: moment().format('L'),
                           status_form: 1,
                           no_stock: 'O' + noDis
@@ -293,10 +295,10 @@ module.exports = {
             }
           }
         } else {
-          return response(res, 'Failed get document', {}, 400, false)
+          return response(res, 'Failed get document 2', {}, 400, false)
         }
       } else {
-        return response(res, 'Failed get document', {}, 400, false)
+        return response(res, 'Failed get document 1', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -360,7 +362,7 @@ module.exports = {
   getStock: async (req, res) => {
     try {
       const kode = req.user.kode
-      let { limit, page, search, sort } = req.query
+      let { limit, page, search, sort, status } = req.query
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -383,44 +385,67 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const result = await stock.findAndCountAll({
-        where: {
-          [Op.and]: [
-            { kode_plant: kode },
-            { status_form: 1 }
-          ],
-          [Op.or]: [
-            { no_asset: { [Op.like]: `%${searchValue}%` } },
-            { deskripsi: { [Op.like]: `%${searchValue}%` } },
-            { keterangan: { [Op.like]: `%${searchValue}%` } },
-            { merk: { [Op.like]: `%${searchValue}%` } },
-            { satuan: { [Op.like]: `%${searchValue}%` } },
-            { unit: { [Op.like]: `%${searchValue}%` } },
-            { kondisi: { [Op.like]: `%${searchValue}%` } },
-            { lokasi: { [Op.like]: `%${searchValue}%` } },
-            { grouping: { [Op.like]: `%${searchValue}%` } }
-          ]
-        },
-        order: [[sortValue, 'ASC']],
-        limit: limit,
-        offset: (page - 1) * limit
-      })
-      const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
-      if (result.rows.length > 0) {
-        return response(res, 'list asset', { result, pageInfo })
+      if (!status) {
+        status = 1
       } else {
-        const result = await asset.findAndCountAll({
+        status = parseInt(status)
+      }
+      const findClose = await clossing.findAll({
+        where: {
+          jenis: 'stock'
+        }
+      })
+      if (findClose.length > 0) {
+        const time = moment().format('L').split('/')
+        let start = ''
+        let end = ''
+        if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+          const next = moment().subtract(1, 'month').format('L').split('/')
+          end = `${time[2]}-${time[0]}-${findClose[0].end}`
+          start = `${next[2]}-${next[0]}-${findClose[0].start}`
+        } else {
+          const next = moment().add(1, 'month').format('L').split('/')
+          start = `${time[2]}-${time[0]}-${findClose[0].start}`
+          end = `${next[2]}-${next[0]}-${findClose[0].end}`
+        }
+        const result = await stock.findAndCountAll({
           where: {
             kode_plant: kode,
+            [Op.and]: [
+              { status_app: status },
+              {
+                tanggalStock: {
+                  [Op.lte]: end,
+                  [Op.gte]: start
+                }
+              }
+            ],
             [Op.or]: [
-              { no_doc: { [Op.like]: `%${searchValue}%` } },
-              { tanggal: { [Op.like]: `%${searchValue}%` } },
               { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } }
+              { deskripsi: { [Op.like]: `%${searchValue}%` } },
+              { keterangan: { [Op.like]: `%${searchValue}%` } },
+              { merk: { [Op.like]: `%${searchValue}%` } },
+              { satuan: { [Op.like]: `%${searchValue}%` } },
+              { unit: { [Op.like]: `%${searchValue}%` } },
+              { kondisi: { [Op.like]: `%${searchValue}%` } },
+              { lokasi: { [Op.like]: `%${searchValue}%` } },
+              { grouping: { [Op.like]: `%${searchValue}%` } }
             ]
           },
-          order: [[sortValue, 'ASC']],
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            },
+            {
+              model: ttd,
+              as: 'appForm'
+            }
+          ],
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+          ],
           limit: limit,
           offset: (page - 1) * limit
         })
@@ -428,8 +453,10 @@ module.exports = {
         if (result) {
           return response(res, 'list asset', { result, pageInfo })
         } else {
-          return response(res, 'failed to get user', {}, 404, false)
+          return response(res, 'failed to get stock', {}, 404, false)
         }
+      } else {
+        return response(res, 'tolong buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -515,7 +542,16 @@ module.exports = {
                     { grouping: { [Op.like]: `%${searchValue}%` } }
                   ]
                 },
-                // order: [[sortValue, 'ASC']],
+                include: [
+                  {
+                    model: ttd,
+                    as: 'appForm'
+                  }
+                ],
+                order: [
+                  [sortValue, 'ASC'],
+                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+                ],
                 limit: limit,
                 offset: (page - 1) * limit,
                 group: ['no_stock']
@@ -558,7 +594,16 @@ module.exports = {
                 { grouping: { [Op.like]: `%${searchValue}%` } }
               ]
             },
-            order: [[sortValue, 'ASC']],
+            include: [
+              {
+                model: ttd,
+                as: 'appForm'
+              }
+            ],
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+            ],
             limit: limit,
             offset: (page - 1) * limit,
             group: ['no_stock']
@@ -601,6 +646,87 @@ module.exports = {
         } else {
           return response(res, 'failed get detail', {}, 400, false)
         }
+      } else {
+        return response(res, 'failed get detail', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateStock: async (req, res) => {
+    try {
+      const id = req.params.id
+      const schema = joi.object({
+        // area: joi.string(),
+        // tanggal: joi.string(),
+        // no_doc: joi.string(),
+        // no_asset: joi.string(),
+        // nama_asset: joi.string(),
+        // kode_plant: joi.string(),
+        keterangan: joi.string().allow(''),
+        deskripsi: joi.string().allow(''),
+        nilai_buku: joi.string().allow(''),
+        merk: joi.string().allow(''),
+        satuan: joi.string().allow(''),
+        unit: joi.string().allow(''),
+        kondisi: joi.string().allow(''),
+        lokasi: joi.string().allow(''),
+        grouping: joi.string().allow(''),
+        status_fisik: joi.string().allow('')
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        if (results.no_asset) {
+          const result = await asset.findAll({
+            where:
+                {
+                  no_asset: results.no_asset,
+                  [Op.not]: { id: id }
+                }
+          })
+          if (result.length > 0) {
+            return response(res, 'no asset already use', {}, 400, false)
+          } else {
+            const result = await asset.findByPk(id)
+            if (result) {
+              await result.update(results)
+              return response(res, 'successfully update asset', { result })
+            } else {
+              return response(res, 'failed update asset', {}, 404, false)
+            }
+          }
+        } else {
+          const result = await stock.findByPk(id)
+          if (result) {
+            await result.update(results)
+            return response(res, 'successfully update asset', { result })
+          } else {
+            return response(res, 'failed update asset', {}, 404, false)
+          }
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDetailItem: async (req, res) => {
+    try {
+      const id = req.params.id
+      const result = await stock.findOne({
+        where: {
+          id: id
+        },
+        include: [
+          {
+            model: path,
+            as: 'pict'
+          }
+        ]
+      })
+      if (result) {
+        return response(res, 'success get detail stock', { result })
       } else {
         return response(res, 'failed get detail', {}, 400, false)
       }
@@ -902,45 +1028,70 @@ module.exports = {
       const level = req.user.level
       const name = req.user.name
       const no = req.params.no
-      const schema = joi.object({
-        alasan: joi.string().required()
+      const list = Object.values(req.body)
+      const alasan = list[0]
+      const result = await role.findAll({
+        where: {
+          nomor: level
+        }
       })
-      const { value: results, error } = schema.validate(req.body)
-      if (error) {
-        return response(res, 'Error', { error: error.message }, 404, false)
-      } else {
-        const result = await role.findAll({
+      if (result.length > 0) {
+        const find = await ttd.findAll({
           where: {
-            nomor: level
+            no_doc: no
           }
         })
-        if (result.length > 0) {
-          const find = await ttd.findAll({
-            where: {
-              no_doc: no
+        if (find.length > 0) {
+          let hasil = 0
+          let arr = null
+          for (let i = 0; i < find.length; i++) {
+            if (result[0].name === find[i].jabatan) {
+              hasil = find[i].id
+              arr = i
             }
-          })
-          if (find.length > 0) {
-            let hasil = 0
-            let arr = null
-            for (let i = 0; i < find.length; i++) {
-              if (result[0].name === find[i].jabatan) {
-                hasil = find[i].id
-                arr = i
-              }
-            }
-            if (hasil !== 0) {
-              if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
-                return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
-              } else {
-                if (arr === 0 || find[arr - 1].status === 1) {
-                  const data = {
-                    nama: name,
-                    status: 0,
-                    path: results.alasan
+          }
+          if (hasil !== 0) {
+            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+              return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
+            } else {
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const data = {
+                  nama: name,
+                  status: 0,
+                  path: alasan
+                }
+                const findTtd = await ttd.findByPk(hasil)
+                if (findTtd) {
+                  let tableTd = ''
+                  const cek = []
+                  for (let i = 1; i < list.length; i++) {
+                    const send = {
+                      status_app: 0
+                    }
+                    const find = await stock.findOne({
+                      where: {
+                        [Op.and]: [
+                          { no_asset: list[i] },
+                          { no_stock: no }
+                        ]
+                      }
+                    })
+                    if (find) {
+                      const element = `
+                        <tr>
+                          <td>${i}</td>
+                          <td>${find.no_stock}</td>
+                          <td>${find.no_asset}</td>
+                          <td>${find.nama_asset}</td>
+                          <td>${find.cost_center}</td>
+                          <td>${find.area}</td>
+                        </tr>`
+                      tableTd = tableTd + element
+                      await find.update(send)
+                      cek.push(1)
+                    }
                   }
-                  const findTtd = await ttd.findByPk(hasil)
-                  if (findTtd) {
+                  if (cek.length === (list.length - 1)) {
                     const sent = await findTtd.update(data)
                     if (sent) {
                       return response(res, 'success reject stock opname')
@@ -951,11 +1102,11 @@ module.exports = {
                     return response(res, 'failed reject stock opname', {}, 404, false)
                   }
                 } else {
-                  return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+                  return response(res, 'failed reject stock opname', {}, 404, false)
                 }
+              } else {
+                return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
               }
-            } else {
-              return response(res, 'failed reject stock opname', {}, 404, false)
             }
           } else {
             return response(res, 'failed reject stock opname', {}, 404, false)
@@ -963,6 +1114,8 @@ module.exports = {
         } else {
           return response(res, 'failed reject stock opname', {}, 404, false)
         }
+      } else {
+        return response(res, 'failed reject stock opname', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -1201,6 +1354,23 @@ module.exports = {
         }
       } else {
         return response(res, 'tolong buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitRevisi: async (req, res) => {
+    try {
+      const id = req.params.id
+      const data = {
+        status_app: 1
+      }
+      const findStock = await stock.findByPk(id)
+      if (findStock) {
+        await findStock.update(data)
+        return response(res, 'success submit stock')
+      } else {
+        return response(res, 'failed submit revisi stock', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

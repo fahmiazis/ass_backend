@@ -2342,7 +2342,6 @@ module.exports = {
                       kode_plant: findMut[0].kode_plant_rec
                     }
                   })
-                  console.log(findEmail.email_area_aos)
                   if (findEmail) {
                     draf.push(findEmail)
                     draftEmail += findEmail.email_area_aos + ', '
@@ -2353,14 +2352,12 @@ module.exports = {
                       username: findTtd[i].nama
                     }
                   })
-                  console.log(user.username)
                   if (result) {
                     draf.push(result)
                     draftEmail += result.email + ', '
                   }
                 }
               }
-              console.log(draf)
               if (draf.length > 0) {
                 const valid = []
                 for (let i = 0; i < findTtd.length; i++) {

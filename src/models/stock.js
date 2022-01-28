@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'pict',
         sourceKey: 'no_asset'
       })
+      stock.hasMany(models.ttd, {
+        foreignKey: 'no_doc',
+        as: 'appForm',
+        sourceKey: 'no_stock'
+      })
     }
   };
   stock.init({
@@ -34,7 +39,8 @@ module.exports = (sequelize, DataTypes) => {
     status_app: DataTypes.TINYINT,
     status_doc: DataTypes.TINYINT,
     status_form: DataTypes.TINYINT,
-    tanggalStock: DataTypes.DATE
+    tanggalStock: DataTypes.DATE,
+    status_fisik: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'stock'
