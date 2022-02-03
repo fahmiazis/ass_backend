@@ -358,5 +358,12 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  postApi: async (req, res) => {
+    try {
+      return response(res, 'succcess request api', { result: req.body })
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
 }

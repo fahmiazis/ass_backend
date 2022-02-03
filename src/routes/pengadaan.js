@@ -7,5 +7,6 @@ route.get('/document/:no', pengadaan.getDocumentIo)
 route.patch('/appdoc/:id', pengadaan.approveDokumen)
 route.patch('/rejdoc/:id', pengadaan.rejectDokumen)
 route.post('/upload/:id', pengadaan.uploadDocument)
+route.post('/post', pengadaan.postApi)
 
 module.exports = route
