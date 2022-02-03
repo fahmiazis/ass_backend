@@ -280,7 +280,7 @@ module.exports = {
         page = parseInt(page)
       }
       if (level !== 5 && level !== 12 && level !== 7 && level !== 13) {
-        const result = await disposal.findAndCountAll({
+        const result = await disposal.findAll({
           where: {
             [Op.or]: [
               { kode_plant: { [Op.like]: `%${searchValue}%` } },
@@ -327,11 +327,11 @@ module.exports = {
             }
           ]
         })
-        const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+        const pageInfo = pagination('/disposal/get', req.query, page, limit, result.length)
         if (result) {
           const data = []
           if (tipe === 'persetujuan') {
-            result.rows.map(x => {
+            result.map(x => {
               return (
                 data.push(x.status_app)
               )
@@ -340,20 +340,20 @@ module.exports = {
             const noDis = [...set]
             return response(res, 'success get disposal', { result, pageInfo, noDis })
           } else {
-            result.rows.map(x => {
+            result.map(x => {
               return (
                 data.push(x.no_disposal)
               )
             })
             const set = new Set(data)
             const noDis = [...set]
-            return response(res, 'success get disposal', { result, pageInfo, noDis })
+            return response(res, 'success get disposal', { result: { rows: result }, pageInfo, noDis })
           }
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
         }
       } else if (level === 5) {
-        const result = await disposal.findAndCountAll({
+        const result = await disposal.findAll({
           where: {
             kode_plant: kode,
             [Op.or]: [
