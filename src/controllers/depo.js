@@ -443,7 +443,7 @@ module.exports = {
         const worksheet = workbook.addWorksheet()
         const arr = []
         const header = ['Kode Plant', 'Nama Area', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Channel', 'Distribution', 'Status Area', 'Nama GROM', 'Nama ROM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
-        const key = ['kode_plant', 'nama_area', 'channel', 'distribution', 'status_area', 'profit_center', 'kode_sap_1', 'kode_sap_2', 'nama_nom', 'nama_om', 'nama_aos', 'nama_pic_1', 'nama_pic_2', 'nama_pic_3', 'nama_pic_4']
+        const key = ['kode_plant', 'nama_area', 'profit_center', 'distribution', 'status_area', 'profit_center', 'kode_sap_1', 'kode_sap_2', 'nama_nom', 'nama_om', 'nama_aos', 'nama_pic_1', 'nama_pic_2', 'nama_pic_3', 'nama_pic_4']
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
           arr.push(temp)

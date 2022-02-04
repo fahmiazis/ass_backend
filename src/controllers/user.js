@@ -644,9 +644,7 @@ module.exports = {
         current: joi.string().required(),
         new: joi.string().required()
       })
-      console.log(id)
       const { value: results, error } = schema.validate(req.body)
-      console.log(results.new)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
@@ -665,11 +663,41 @@ module.exports = {
                 return response(res, 'success change password2')
               }
             } else {
-              return response(res, 'failed change password1', {}, 400, false)
+              return response(res, 'failed change password', {}, 400, false)
             }
           })
         } else {
-          return response(res, 'failed change password2', {}, 400, false)
+          return response(res, 'failed change password', {}, 400, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  resetPassword: async (req, res) => {
+    try {
+      const id = req.params.id
+      const schema = joi.object({
+        new: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        const send = await bcrypt.hash(results.new, await bcrypt.genSalt())
+        const findUser = await user.findByPk(id)
+        if (findUser) {
+          const data = {
+            password: send
+          }
+          const updatePass = findUser.update(data)
+          if (updatePass) {
+            return response(res, 'success reset password')
+          } else {
+            return response(res, 'success reset password2')
+          }
+        } else {
+          return response(res, 'failed reset password', {}, 400, false)
         }
       }
     } catch (error) {

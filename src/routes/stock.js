@@ -19,5 +19,6 @@ route.get('/cekdoc/:no', stock.cekDokumen)
 route.get('/area', stock.getStock)
 route.patch('/update/:id', stock.updateStock)
 route.patch('/subrev/:id', stock.submitRevisi)
+route.post('/add', stock.addStock)
 
 module.exports = route

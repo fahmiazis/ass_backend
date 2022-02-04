@@ -9,6 +9,7 @@ const server = require('http').createServer(app)
 
 const { APP_PORT, APP_URL } = process.env
 
+app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(morgan('dev'))
 app.use(cors())
