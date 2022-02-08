@@ -1522,7 +1522,7 @@ module.exports = {
                               </head>
                               <body>
                                   <div class="tittle mar">
-                                      Dear Bapak/Ibu,
+                                      Dear Bapak/Ibu Asset,
                                   </div>
                                   <div class="tittle mar1">
                                       <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>

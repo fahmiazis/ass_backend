@@ -388,30 +388,30 @@ module.exports = {
           ]
         })
         if (result) {
-          if (form === 'editdis' && result.rows.length > 0) {
+          if (form === 'editdis' && result.length > 0) {
             const cekRow = []
-            for (let i = 0; i < result.rows.length; i++) {
-              if (result.rows[i].status_app !== null) {
-                cekRow.push(result.rows[i])
+            for (let i = 0; i < result.length; i++) {
+              if (result[i].status_app !== null) {
+                cekRow.push(result[i])
               }
             }
             if (cekRow.length === 0) {
               const valid = []
-              for (let i = 0; i < result.rows.length; i++) {
-                if (result.rows[i].appForm.length > 0) {
-                  for (let j = 0; j < result.rows[i].appForm.length; j++) {
-                    if (result.rows[i].appForm[j].status === 0) {
-                      valid.push(result.rows[i])
+              for (let i = 0; i < result.length; i++) {
+                if (result[i].appForm.length > 0) {
+                  for (let j = 0; j < result[i].appForm.length; j++) {
+                    if (result[i].appForm[j].status === 0) {
+                      valid.push(result[i])
                     }
                   }
                 }
               }
               if (valid.length > 0) {
                 const hasil = []
-                for (let i = 0; i < result.rows.length; i++) {
+                for (let i = 0; i < result.length; i++) {
                   const findDoc = await docUser.findAll({
                     where: {
-                      no_pengadaan: result.rows[i].no_asset,
+                      no_pengadaan: result[i].no_asset,
                       [Op.and]: [
                         { jenis_form: 'disposal' },
                         {
@@ -432,7 +432,7 @@ module.exports = {
                       }
                     }
                     if (cek.length > 0) {
-                      hasil.push(result.rows[i])
+                      hasil.push(result[i])
                     }
                   }
                 }
@@ -452,10 +452,10 @@ module.exports = {
                 }
               } else {
                 const hasil = []
-                for (let i = 0; i < result.rows.length; i++) {
+                for (let i = 0; i < result.length; i++) {
                   const findDoc = await docUser.findAll({
                     where: {
-                      no_pengadaan: result.rows[i].no_asset,
+                      no_pengadaan: result[i].no_asset,
                       [Op.and]: [
                         { jenis_form: 'disposal' },
                         {
@@ -476,7 +476,7 @@ module.exports = {
                       }
                     }
                     if (cek.length > 0) {
-                      hasil.push(result.rows[i])
+                      hasil.push(result[i])
                     }
                   }
                 }
@@ -488,26 +488,26 @@ module.exports = {
               }
             } else {
               const valid = []
-              for (let i = 0; i < result.rows.length; i++) {
-                if (result.rows[i].ttdSet.length > 0) {
-                  for (let j = 0; j < result.rows[i].ttdSet.length; j++) {
-                    if (result.rows[i].ttdSet[j].status === 0) {
-                      valid.push(result.rows[i])
+              for (let i = 0; i < result.length; i++) {
+                if (result[i].ttdSet.length > 0) {
+                  for (let j = 0; j < result[i].ttdSet.length; j++) {
+                    if (result[i].ttdSet[j].status === 0) {
+                      valid.push(result[i])
                     }
                   }
-                  for (let j = 0; j < result.rows[i].appForm.length; j++) {
-                    if (result.rows[i].appForm[j].status === 0) {
-                      valid.push(result.rows[i])
+                  for (let j = 0; j < result[i].appForm.length; j++) {
+                    if (result[i].appForm[j].status === 0) {
+                      valid.push(result[i])
                     }
                   }
                 }
               }
               if (valid.length > 0) {
                 const hasil = []
-                for (let i = 0; i < result.rows.length; i++) {
+                for (let i = 0; i < result.length; i++) {
                   const findDoc = await docUser.findAll({
                     where: {
-                      no_pengadaan: result.rows[i].no_asset,
+                      no_pengadaan: result[i].no_asset,
                       [Op.and]: [
                         { jenis_form: 'disposal' },
                         {
@@ -528,7 +528,7 @@ module.exports = {
                       }
                     }
                     if (cek.length > 0) {
-                      hasil.push(result.rows[i])
+                      hasil.push(result[i])
                     }
                   }
                 }
@@ -548,10 +548,10 @@ module.exports = {
                 }
               } else {
                 const hasil = []
-                for (let i = 0; i < result.rows.length; i++) {
+                for (let i = 0; i < result.length; i++) {
                   const findDoc = await docUser.findAll({
                     where: {
-                      no_pengadaan: result.rows[i].no_asset,
+                      no_pengadaan: result[i].no_asset,
                       [Op.and]: [
                         { jenis_form: 'disposal' },
                         {
@@ -572,7 +572,7 @@ module.exports = {
                       }
                     }
                     if (cek.length > 0) {
-                      hasil.push(result.rows[i])
+                      hasil.push(result[i])
                     }
                   }
                 }
@@ -583,17 +583,17 @@ module.exports = {
                 }
               }
             }
-          } else if (form === 'editeks' && result.rows.length > 0) {
+          } else if (form === 'editeks' && result.length > 0) {
             const hasil = []
-            for (let i = 0; i < result.rows.length; i++) {
+            for (let i = 0; i < result.length; i++) {
               const findDoc = await docUser.findAll({
                 where: {
                   [Op.and]: [
-                    { no_pengadaan: result.rows[i].no_asset },
+                    { no_pengadaan: result[i].no_asset },
                     { jenis_form: 'disposal' }
                   ],
                   [Op.or]: [
-                    { tipe: result.rows[i].nilai_jual === '0' ? 'dispose' : 'sell' },
+                    { tipe: result[i].nilai_jual === '0' ? 'dispose' : 'sell' },
                     { tipe: 'npwp' }
                   ]
                 }
@@ -606,7 +606,7 @@ module.exports = {
                   }
                 }
                 if (cek.length > 0) {
-                  hasil.push(result.rows[i])
+                  hasil.push(result[i])
                 }
               }
             }
