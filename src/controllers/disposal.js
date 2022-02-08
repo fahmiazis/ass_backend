@@ -616,7 +616,7 @@ module.exports = {
               return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
             }
           } else {
-            return response(res, 'success get disposal', { result, form: form })
+            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, form: form })
           }
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
