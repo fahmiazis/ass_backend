@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
   status_stock.init({
     fisik: DataTypes.ENUM('ada', 'tidak ada'),
     kondisi: DataTypes.ENUM('baik', 'rusak'),
-    status: DataTypes.STRING
+    status: DataTypes.STRING,
+    isSap: DataTypes.ENUM('true', 'false')
   }, {
     sequelize,
     modelName: 'status_stock'

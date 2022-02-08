@@ -48,8 +48,234 @@ module.exports = {
               ]
             }
           })
-          if (findStock.no_stock !== null) {
-            return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
+          if (findStock) {
+            if (findStock.no_stock !== null) {
+              return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
+            } else {
+              const result = await asset.findAll({
+                where: {
+                  kode_plant: kode,
+                  [Op.and]: [
+                    { [Op.not]: { satuan: null } },
+                    { [Op.not]: { unit: null } },
+                    { [Op.not]: { lokasi: null } },
+                    { [Op.not]: { grouping: null } },
+                    { [Op.not]: { kondisi: null } },
+                    { [Op.not]: { status_fisik: null } }
+                  ]
+                }
+              })
+              if (result.length > 0) {
+                const findAsset = await asset.findAll({
+                  where: {
+                    kode_plant: kode,
+                    [Op.or]: [
+                      { status: '1' },
+                      { status: '11' },
+                      { status: null }
+                    ]
+                  }
+                })
+                if (result.length === findAsset.length) {
+                  const findPict = await asset.findAll({
+                    where: {
+                      kode_plant: kode
+                    },
+                    include: [
+                      {
+                        model: path,
+                        as: 'pict'
+                      }
+                    ]
+                  })
+                  if (findPict.length > 0) {
+                    const cekImage = []
+                    for (let i = 0; i < findPict.length; i++) {
+                      const image = findPict[i].pict
+                      if (image.length > 0) {
+                        const timeIm = moment(image[image.length - 1].createdAt).format('L').split('/')
+                        if (parseInt(timeIm[1]) > end && parseInt(timeIm[1]) < start) {
+                          console.log(parseInt(timeIm[1]))
+                        } else {
+                          cekImage.push(1)
+                        }
+                      }
+                    }
+                    if (cekImage.length === findPict.length) {
+                      const findNo = await stock.findAll({
+                        where: {
+                          [Op.not]: { no_stock: null }
+                        },
+                        group: ['no_stock']
+                      })
+                      if (findNo.length > 0) {
+                        const cekNo = []
+                        for (let i = 0; i < findNo.length; i++) {
+                          const no = findNo[i].no_stock.split('O')
+                          cekNo.push(parseInt(no[1]))
+                        }
+                        const noDis = Math.max(...cekNo) + 1
+                        const hasil = []
+                        for (let i = 0; i < result.length; i++) {
+                          const data = {
+                            kode_plant: kode,
+                            area: result[i].area,
+                            deskripsi: result[i].nama_asset,
+                            no_asset: result[i].no_asset,
+                            merk: result[i].merk,
+                            satuan: result[i].satuan,
+                            unit: result[i].unit,
+                            kondisi: result[i].kondisi,
+                            lokasi: result[i].lokasi,
+                            grouping: result[i].grouping,
+                            keterangan: result[i].keterangan,
+                            status_fisik: result[i].status_fisik,
+                            tanggalStock: moment().format('L'),
+                            status_form: 1
+                          }
+                          const send = await stock.create(data)
+                          if (send) {
+                            hasil.push('1')
+                          }
+                        }
+                        if (hasil.length === result.length) {
+                          const findNo = await stock.findAll({
+                            where: {
+                              [Op.and]: [
+                                { kode_plant: kode },
+                                {
+                                  tanggalStock: {
+                                    [Op.lte]: akhir,
+                                    [Op.gte]: awal
+                                  }
+                                }
+                              ]
+                            }
+                          })
+                          if (findNo) {
+                            const cek = []
+                            for (let i = 0; i < findNo.length; i++) {
+                              const data = {
+                                no_stock: 'O' + noDis,
+                                status_form: 1
+                              }
+                              const result = await stock.findByPk(findNo[i].id)
+                              if (result) {
+                                await result.update(data)
+                                cek.push('1')
+                              }
+                            }
+                            if (cek.length === findNo.length) {
+                              for (let i = 0; i < findAsset.length; i++) {
+                                const data = {
+                                  status_fisik: null,
+                                  kondisi: null,
+                                  grouping: null
+                                }
+                                const result = await asset.findByPk(findAsset[i].id)
+                                if (result) {
+                                  await result.update(data)
+                                }
+                              }
+                              return response(res, 'success submit stock opname')
+                            } else {
+                              return response(res, 'failed submit stock opname', {}, 400, false)
+                            }
+                          } else {
+                            return response(res, 'failed submit stock opname', {}, 400, false)
+                          }
+                        } else {
+                          return response(res, 'failed submit stock opname', {}, 400, false)
+                        }
+                      } else {
+                        const cekNo = [0]
+                        const noDis = Math.max(...cekNo) + 1
+                        const hasil = []
+                        for (let i = 0; i < result.length; i++) {
+                          const data = {
+                            kode_plant: kode,
+                            area: result[i].area,
+                            deskripsi: result[i].nama_asset,
+                            no_asset: result[i].no_asset,
+                            merk: result[i].merk,
+                            satuan: result[i].satuan,
+                            unit: result[i].unit,
+                            kondisi: result[i].kondisi,
+                            lokasi: result[i].lokasi,
+                            grouping: result[i].grouping,
+                            keterangan: result[i].keterangan,
+                            status_fisik: result[i].status_fisik,
+                            tanggalStock: moment().format('L'),
+                            status_form: 1
+                          }
+                          const send = await stock.create(data)
+                          if (send) {
+                            hasil.push('1')
+                          }
+                        }
+                        if (hasil.length === result.length) {
+                          const findNo = await stock.findAll({
+                            where: {
+                              [Op.and]: [
+                                { kode_plant: kode },
+                                {
+                                  tanggalStock: {
+                                    [Op.lte]: akhir,
+                                    [Op.gte]: awal
+                                  }
+                                }
+                              ]
+                            }
+                          })
+                          if (findNo) {
+                            const cek = []
+                            for (let i = 0; i < findNo.length; i++) {
+                              const data = {
+                                no_stock: 'O' + noDis,
+                                status_form: 1
+                              }
+                              const result = await stock.findByPk(findNo[i].id)
+                              if (result) {
+                                await result.update(data)
+                                cek.push('1')
+                              }
+                            }
+                            if (cek.length === findNo.length) {
+                              for (let i = 0; i < findAsset.length; i++) {
+                                const data = {
+                                  status_fisik: null,
+                                  kondisi: null,
+                                  grouping: null
+                                }
+                                const result = await asset.findByPk(findAsset[i].id)
+                                if (result) {
+                                  await result.update(data)
+                                }
+                              }
+                              return response(res, 'success submit stock opname')
+                            } else {
+                              return response(res, 'failed submit stock opname', {}, 400, false)
+                            }
+                          } else {
+                            return response(res, 'failed submit stock opname', {}, 400, false)
+                          }
+                        } else {
+                          return response(res, 'failed submit stock opname', {}, 400, false)
+                        }
+                      }
+                    } else {
+                      return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length }, 400, false)
+                    }
+                  } else {
+                    return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
+                  }
+                } else {
+                  return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
+                }
+              } else {
+                return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
+              }
+            }
           } else {
             const result = await asset.findAll({
               where: {
@@ -453,11 +679,6 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (!status) {
-        status = 1
-      } else {
-        status = parseInt(status)
-      }
       const findClose = await clossing.findAll({
         where: {
           jenis: 'stock'
@@ -480,7 +701,7 @@ module.exports = {
           where: {
             kode_plant: kode,
             [Op.and]: [
-              { status_app: status },
+              { status_app: status === 'null' ? null : status },
               {
                 tanggalStock: {
                   [Op.lte]: end,
@@ -790,6 +1011,10 @@ module.exports = {
           {
             model: path,
             as: 'pict'
+          },
+          {
+            model: path,
+            as: 'img'
           }
         ]
       })
@@ -1228,12 +1453,48 @@ module.exports = {
       }
     })
   },
+  uploadImage: async (req, res) => {
+    const no = req.params.no
+    uploadHelper(req, res, async function (err) {
+      try {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            return response(res, 'fieldname doesnt match', {}, 500, false)
+          }
+          return response(res, err.message, {}, 500, false)
+        } else if (err) {
+          return response(res, err.message, {}, 401, false)
+        }
+        const dokumen = `uploads/${req.file.filename}`
+        const findAsset = await stock.findByPk(no)
+        if (findAsset) {
+          const send = {
+            path: dokumen,
+            no_asset: no,
+            no_doc: 'opname'
+          }
+          const result = await path.create(send)
+          if (result) {
+            return response(res, 'successfully upload', { send })
+          } else {
+            return response(res, 'failed upload', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed upload', {}, 404, false)
+        }
+      } catch (error) {
+        return response(res, error.message, {}, 500, false)
+      }
+    })
+  },
   addStatus: async (req, res) => {
     try {
       const schema = joi.object({
         fisik: joi.string().valid('ada', 'tidak ada'),
         kondisi: joi.string().allow(''),
-        status: joi.string()
+        status: joi.string(),
+        isSap: joi.string().valid('true', 'false')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -1265,7 +1526,7 @@ module.exports = {
   },
   getStatus: async (req, res) => {
     try {
-      let { fisik, kondisi } = req.query
+      let { fisik, kondisi, sap } = req.query
       if (!fisik) {
         fisik = ''
       }
@@ -1276,6 +1537,7 @@ module.exports = {
       if (kondisi === '') {
         const result = await status_stock.findAll({
           where: {
+            isSap: sap,
             [Op.and]: [
               { fisik: fisik },
               { kondisi: '' }
@@ -1290,6 +1552,7 @@ module.exports = {
       } else {
         const result = await status_stock.findAll({
           where: {
+            isSap: sap,
             [Op.and]: [
               { fisik: fisik },
               { kondisi: kondisi }
@@ -1459,8 +1722,7 @@ module.exports = {
         kondisi: joi.string().allow(''),
         lokasi: joi.string().allow(''),
         grouping: joi.string().allow(''),
-        status_fisik: joi.string().allow(''),
-        status_doc: 1
+        status_fisik: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -1502,12 +1764,38 @@ module.exports = {
                 ]
               }
             })
-            if (findStock.no_stock !== null) {
-              return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
+            const data = {
+              kode_plant: results.kode_plant,
+              area: results.area,
+              deskripsi: results.deskripsi,
+              no_asset: results.no_asset,
+              merk: results.merk,
+              satuan: results.satuan,
+              unit: results.unit,
+              kondisi: results.kondisi,
+              lokasi: results.lokasi,
+              grouping: results.grouping,
+              keterangan: results.keterangan,
+              status_fisik: results.status_fisik,
+              tanggalStock: moment().format('L'),
+              status_form: 0,
+              status_doc: 1
+            }
+            if (findStock) {
+              if (findStock.no_stock !== null) {
+                return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
+              } else {
+                const send = await stock.create(data)
+                if (send) {
+                  return response(res, 'success add stock opname', { result: send })
+                } else {
+                  return response(res, 'failed add stock opname', {}, 400, false)
+                }
+              }
             } else {
-              const send = await stock.create(results)
+              const send = await stock.create(data)
               if (send) {
-                return response(res, 'success add stock opname')
+                return response(res, 'success add stock opname', { result: send })
               } else {
                 return response(res, 'failed add stock opname', {}, 400, false)
               }

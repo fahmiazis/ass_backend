@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'pict',
         sourceKey: 'no_asset'
       })
+      stock.hasMany(models.path, {
+        foreignKey: 'no_asset',
+        as: 'img',
+        sourceKey: 'id'
+      })
       stock.hasMany(models.ttd, {
         foreignKey: 'no_doc',
         as: 'appForm',
