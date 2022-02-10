@@ -1693,7 +1693,7 @@ module.exports = {
                               </head>
                               <body>
                                   <div class="tittle mar">
-                                      Dear Bapak/Ibu,
+                                      Dear Bapak/Ibu ${find[arr + 1].jabatan},
                                   </div>
                                   <div class="tittle mar1">
                                       <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
@@ -2341,7 +2341,6 @@ module.exports = {
                       kode_plant: findMut[0].kode_plant
                     }
                   })
-                  console.log(findEmail.email_area_aos)
                   if (findEmail) {
                     draf.push(findEmail)
                     draftEmail += findEmail.email_area_aos + ', '
