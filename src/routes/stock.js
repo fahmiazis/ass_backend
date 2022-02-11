@@ -21,5 +21,6 @@ route.get('/area', stock.getStock)
 route.patch('/update/:id', stock.updateStock)
 route.patch('/subrev/:id', stock.submitRevisi)
 route.post('/add', stock.addStock)
+route.patch('/subaset/:no', stock.submitAsset)
 
 module.exports = route

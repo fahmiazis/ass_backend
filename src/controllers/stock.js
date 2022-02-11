@@ -1807,6 +1807,7 @@ module.exports = {
                       }
                     })
                     if (results.length === find.length) {
+                      console.log('masuk asset')
                       const findDoc = await stock.findAll({
                         where: {
                           no_stock: no
@@ -1920,7 +1921,7 @@ module.exports = {
                             </head>
                             <body>
                                 <div class="tittle mar">
-                                    Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                    Dear Bapak/Ibu Asset,
                                 </div>
                                 <div class="tittle mar1">
                                     <div>Mohon lanjutkan proses pengajuan stock opname area ${findDoc[0].area} dengan nomor opname ${no}.</div>
@@ -2643,11 +2644,11 @@ module.exports = {
           start = `${time[2]}-${time[0]}-${findClose[0].start}`
           end = `${next[2]}-${next[0]}-${findClose[0].end}`
         }
-        const result = await stock.findAndCountAll({
+        const result = await stock.findAll({
           where: {
             grouping: { [Op.like]: `%${group}%` },
             [Op.and]: [
-              { status_form: 9 },
+              { status_form: 8 },
               {
                 tanggalStock: {
                   [Op.lte]: end,
@@ -2670,14 +2671,169 @@ module.exports = {
           limit: limit,
           offset: (page - 1) * limit
         })
-        const pageInfo = pagination('/stock/get', req.query, page, limit, result.count.length)
+        const pageInfo = pagination('/stock/get', req.query, page, limit, result.length)
         if (result) {
-          return response(res, 'list stock', { result, pageInfo })
+          return response(res, 'list stock', { result: { rows: result, count: result.length }, pageInfo })
         } else {
           return response(res, 'failed get data stock', {}, 404, false)
         }
       } else {
         return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitAsset: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findStock = await stock.findAll({
+        where: {
+          no_stock: no
+        }
+      })
+      if (findStock.length > 0) {
+        const cek = []
+        for (let i = 0; i < findStock.length; i++) {
+          const find = await stock.findByPk(findStock[i].id)
+          const data = {
+            status_form: 8
+          }
+          if (find) {
+            await find.update(data)
+            cek.push(1)
+          }
+        }
+        if (findStock.length === cek.length) {
+          const findEmail = await email.findOne({
+            where: {
+              kode_plant: findStock[0].kode_plant
+            }
+          })
+          if (findEmail) {
+            const mailOptions = {
+              from: 'noreply_asset@pinusmerahabadi.co.id',
+              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+              to: `${findEmail.email_area_aos}`,
+              subject: `Proses Stock Opname ${no} Telah Selesai (TESTING)`,
+              html: `
+            <head>
+              <style type="text/css">
+              body {
+                  display: flexbox;
+                  flex-direction: column;
+              }
+              .tittle {
+                  font-size: 15px;
+              }
+              .mar {
+                  margin-bottom: 20px;
+              }
+              .mar1 {
+                  margin-bottom: 10px;
+              }
+              .foot {
+                  margin-top: 20px;
+                  margin-bottom: 10px;
+              }
+              .foot1 {
+                  margin-bottom: 50px;
+              }
+              .position {
+                  display: flexbox;
+                  flex-direction: row;
+                  justify-content: left;
+                  margin-top: 10px;
+              }
+              table {
+                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                  font-size: 12px;
+              }
+              .demo-table {
+                  border-collapse: collapse;
+                  font-size: 13px;
+              }
+              .demo-table th, 
+              .demo-table td {
+                  border-bottom: 1px solid #e1edff;
+                  border-left: 1px solid #e1edff;
+                  padding: 7px 17px;
+              }
+              .demo-table th, 
+              .demo-table td:last-child {
+                  border-right: 1px solid #e1edff;
+              }
+              .demo-table td:first-child {
+                  border-top: 1px solid #e1edff;
+              }
+              .demo-table td:last-child{
+                  border-bottom: 0;
+              }
+              caption {
+                  caption-side: top;
+                  margin-bottom: 10px;
+              }
+              
+              /* Table Header */
+              .demo-table thead th {
+                  background-color: #508abb;
+                  color: #FFFFFF;
+                  border-color: #6ea1cc !important;
+                  text-transform: uppercase;
+              }
+              
+              /* Table Body */
+              .demo-table tbody td {
+                  color: #353535;
+              }
+              
+              .demo-table tbody tr:nth-child(odd) td {
+                  background-color: #f4fbff;
+              }
+              .demo-table tbody tr:hover th,
+              .demo-table tbody tr:hover td {
+                  background-color: #ffffa2;
+                  border-color: #ffff0f;
+                  transition: all .2s;
+              }
+          </style>
+            </head>
+            <body>
+                <div class="tittle mar">
+                    Dear Bapak/Ibu AOS,
+                </div>
+                <div class="tittle mar1">
+                    <div>Pengajuan stock opname ${no} telah selesai diproses.</div>
+                </div>
+                <div class="position">
+                </div>
+                <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                <div class="tittle foot">
+                    Terima kasih,
+                </div>
+                <div class="tittle foot1">
+                    Regards,
+                </div>
+                <div class="tittle">
+                    Team Asset
+                </div>
+            </body>
+            `
+            }
+            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+            if (sendEmail) {
+              return response(res, 'success submit stock opname')
+            } else {
+              return response(res, 'berhasil submit mutasi, tidak berhasil kirim notif email 1')
+            }
+          } else {
+            return response(res, 'berhasil submit tidak berhasil kirim notif email')
+          }
+        } else {
+          return response(res, 'failed submit stock2', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit stock1', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -2691,8 +2847,170 @@ module.exports = {
       }
       const findStock = await stock.findByPk(id)
       if (findStock) {
-        await findStock.update(data)
-        return response(res, 'success submit stock')
+        const upStock = await findStock.update(data)
+        if (upStock) {
+          const find = await ttd.findOne({
+            where: {
+              [Op.and]: [
+                { no_doc: findStock.no_stock },
+                { status: 0 }
+              ]
+            }
+          })
+          if (find) {
+            const findUser = await user.findOne({
+              where: {
+                username: find.nama
+              }
+            })
+            if (findUser) {
+              const tableTd = `
+              <tr>
+                <td>1</td>
+                <td>${findStock.no_stock}</td>
+                <td>${findStock.no_asset}</td>
+                <td>${findStock.nama_asset}</td>
+                <td>${findStock.cost_center}</td>
+                <td>${findStock.area}</td>
+              </tr>`
+              const mailOptions = {
+                from: 'noreply_asset@pinusmerahabadi.co.id',
+                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                to: `${findUser.email}`,
+                subject: `Revisi Stock Opname ${findStock.no_stock} (TESTING WEB ASET)`,
+                html: `
+                <head>
+                  <style type="text/css">
+                  body {
+                      display: flexbox;
+                      flex-direction: column;
+                  }
+                  .tittle {
+                      font-size: 15px;
+                  }
+                  .mar {
+                      margin-bottom: 20px;
+                  }
+                  .mar1 {
+                      margin-bottom: 10px;
+                  }
+                  .foot {
+                      margin-top: 20px;
+                      margin-bottom: 10px;
+                  }
+                  .foot1 {
+                      margin-bottom: 50px;
+                  }
+                  .position {
+                      display: flexbox;
+                      flex-direction: row;
+                      justify-content: left;
+                      margin-top: 10px;
+                  }
+                  table {
+                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                      font-size: 12px;
+                  }
+                  .demo-table {
+                      border-collapse: collapse;
+                      font-size: 13px;
+                  }
+                  .demo-table th, 
+                  .demo-table td {
+                      border-bottom: 1px solid #e1edff;
+                      border-left: 1px solid #e1edff;
+                      padding: 7px 17px;
+                  }
+                  .demo-table th, 
+                  .demo-table td:last-child {
+                      border-right: 1px solid #e1edff;
+                  }
+                  .demo-table td:first-child {
+                      border-top: 1px solid #e1edff;
+                  }
+                  .demo-table td:last-child{
+                      border-bottom: 0;
+                  }
+                  caption {
+                      caption-side: top;
+                      margin-bottom: 10px;
+                  }
+                  
+                  /* Table Header */
+                  .demo-table thead th {
+                      background-color: #508abb;
+                      color: #FFFFFF;
+                      border-color: #6ea1cc !important;
+                      text-transform: uppercase;
+                  }
+                  
+                  /* Table Body */
+                  .demo-table tbody td {
+                      color: #353535;
+                  }
+                  
+                  .demo-table tbody tr:nth-child(odd) td {
+                      background-color: #f4fbff;
+                  }
+                  .demo-table tbody tr:hover th,
+                  .demo-table tbody tr:hover td {
+                      background-color: #ffffa2;
+                      border-color: #ffff0f;
+                      transition: all .2s;
+                  }
+              </style>
+                </head>
+                <body>
+                    <div class="tittle mar">
+                        Dear Bapak/Ibu,
+                    </div>
+                    <div class="tittle mar1">
+                        <div>Pengajuan stock opname telah direvisi oleh area</div>
+                    </div>
+                    <div class="position">
+                        <table class="demo-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>No Stock</th>
+                                    <th>Asset</th>
+                                    <th>Asset description</th>
+                                    <th>Cost Ctr</th>
+                                    <th>Depo / Cabang</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              ${tableTd}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tittle foot">
+                        Terima kasih,
+                    </div>
+                    <div class="tittle foot1">
+                        Regards,
+                    </div>
+                    <div class="tittle">
+                      AOS ${findStock.area}
+                    </div>
+                </body>
+                `
+              }
+              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+              if (sendEmail) {
+                return response(res, 'success submit stock')
+              } else {
+                return response(res, 'berhasil revisi stock gagal kirim notif email')
+              }
+            } else {
+              return response(res, 'berhasil revisi stock gagal kirim notif email')
+            }
+          } else {
+            return response(res, 'berhasil revisi stock gagal kirim notif email')
+          }
+        } else {
+          return response(res, 'failed submit revisi stock', {}, 404, false)
+        }
       } else {
         return response(res, 'failed submit revisi stock', {}, 404, false)
       }
