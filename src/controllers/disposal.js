@@ -335,7 +335,7 @@ module.exports = {
             })
             const set = new Set(data)
             const noDis = [...set]
-            return response(res, 'success get disposal', { result, pageInfo, noDis })
+            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
           } else {
             result.map(x => {
               return (
@@ -344,7 +344,7 @@ module.exports = {
             })
             const set = new Set(data)
             const noDis = [...set]
-            return response(res, 'success get disposal', { result: { rows: result }, pageInfo, noDis })
+            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
           }
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
