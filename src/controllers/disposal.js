@@ -7336,7 +7336,8 @@ module.exports = {
               }
               if (cek.length === findDoc.length) {
                 const data = {
-                  status_form: 8
+                  status_form: 8,
+                  tgl_eksekusi: moment()
                 }
                 const results = await result.update(data)
                 if (results) {
@@ -7747,12 +7748,14 @@ module.exports = {
                       if (findApi.status === 200) {
                         data = {
                           status_form: level === 5 ? 5 : 6,
-                          nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
+                          nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap,
+                          tgl_eksekusi: moment()
                         }
                       } else {
                         data = {
                           status_form: level === 5 ? 5 : 6,
-                          nilai_buku_eks: result.nilai_buku
+                          nilai_buku_eks: result.nilai_buku,
+                          tgl_eksekusi: moment()
                         }
                       }
                       const results = await result.update(data)
@@ -8295,12 +8298,14 @@ module.exports = {
                   if (findApi.status === 200) {
                     data = {
                       status_form: level === 5 ? 5 : 6,
-                      nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap
+                      nilai_buku_eks: findApi.data[0].nafap === undefined ? result.nilai_buku : findApi.data[0].nafap,
+                      tgl_eksekusi: moment()
                     }
                   } else {
                     data = {
                       status_form: level === 5 ? 5 : 6,
-                      nilai_buku_eks: result.nilai_buku
+                      nilai_buku_eks: result.nilai_buku,
+                      tgl_eksekusi: moment()
                     }
                   }
                   const results = await result.update(data)

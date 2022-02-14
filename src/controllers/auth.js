@@ -11,26 +11,45 @@ module.exports = {
     try {
       const schema = joi.object({
         username: joi.string().required(),
-        password: joi.string().required()
+        password: joi.string().required(),
+        cost_center: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
-        const result = await user.findOne({ where: { username: results.username }, include: [{ model: role, as: 'role' }] })
-        if (result) {
-          const { id, kode_plant, user_level, username, fullname, email, role } = result
-          bcrypt.compare(results.password, result.password, function (_err, result) {
-            if (result) {
-              jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
-                return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name }, Token: `${token}` })
-              })
-            } else {
-              return response(res, 'Wrong password', {}, 400, false)
-            }
-          })
+        if (results.username === 'p000' || results.username === 'P000') {
+          const result = await user.findOne({ where: { username: results.username }, include: [{ model: role, as: 'role' }] })
+          if (result) {
+            const { id, kode_plant, user_level, username, fullname, email, role } = result
+            bcrypt.compare(results.password, result.password, function (_err, result) {
+              if (result) {
+                jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
+                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name, cost_center: results.cost_center }, Token: `${token}` })
+                })
+              } else {
+                return response(res, 'Wrong password', {}, 400, false)
+              }
+            })
+          } else {
+            return response(res, 'username is not registered', {}, 400, false)
+          }
         } else {
-          return response(res, 'username is not registered', {}, 400, false)
+          const result = await user.findOne({ where: { username: results.username }, include: [{ model: role, as: 'role' }] })
+          if (result) {
+            const { id, kode_plant, user_level, username, fullname, email, role } = result
+            bcrypt.compare(results.password, result.password, function (_err, result) {
+              if (result) {
+                jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
+                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name }, Token: `${token}` })
+                })
+              } else {
+                return response(res, 'Wrong password', {}, 400, false)
+              }
+            })
+          } else {
+            return response(res, 'username is not registered', {}, 400, false)
+          }
         }
       }
     } catch (error) {
