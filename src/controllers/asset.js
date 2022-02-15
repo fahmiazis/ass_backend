@@ -336,7 +336,7 @@ module.exports = {
         const dokumen = `assets/masters/${req.files[0].filename}`
         const rows = await readXlsxFile(dokumen)
         const count = []
-        const cek = ['Asset', 'SNo.', 'Cap.Date', 'Asset Description', 'Acquis.val.', 'Accum.dep.', 'Book val.', 'Plant', 'Cost Ctr', 'Cost Ctr Name', 'Merk', 'SATUAN', 'JUMLAH', 'LOKASI', 'KATEGORI']
+        const cek = ['Asset', 'SNo.', 'Cap.Date', 'Asset Description', 'Acquis.val.', 'Accum.dep.', 'Book val.', 'Plant', 'Cost Ctr', 'Cost Ctr Name', 'MERK', 'SATUAN', 'JUMLAH', 'LOKASI', 'KATEGORI']
         const valid = rows[0]
         for (let i = 0; i < cek.length; i++) {
           console.log(valid[i] === cek[i])
@@ -393,7 +393,7 @@ module.exports = {
                 kategori: rows[i][14],
                 cost_center: rows[i][8]
               }
-              if (select || select.length > 0) {
+              if (select.length > 0) {
                 const updateAsset = await asset.update(send, {
                   where: {
                     no_asset: rows[i][0]
