@@ -273,7 +273,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Plant', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
+          const cek = ['Kode Plant', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             console.log(valid[i] === cek[i])
@@ -284,7 +284,6 @@ module.exports = {
           console.log(count.length)
           if (count.length === cek.length) {
             const plant = []
-            const profit = []
             const cost = []
             const sap1 = []
             const sap2 = []
@@ -293,7 +292,6 @@ module.exports = {
               const a = rows[i]
               plant.push(`Kode Plant ${a[0]}`)
               kode.push(`${a[0]}`)
-              profit.push(`Profit Center ${a[5]}`)
               cost.push(`Cost Center ${a[6]}`)
               if (a[7] !== null) {
                 sap1.push(`Kode SAP 1 ${a[7]}`)
@@ -304,21 +302,9 @@ module.exports = {
             }
             const object = {}
             const result = []
-            const dupProfit = {}
             const dupCost = {}
             const dupSap1 = {}
             const dupSap2 = {}
-
-            profit.forEach(item => {
-              if (!dupProfit[item]) { dupProfit[item] = 0 }
-              dupProfit[item] += 1
-            })
-
-            for (const prop in dupProfit) {
-              if (dupProfit[prop] >= 2) {
-                result.push(prop)
-              }
-            }
 
             cost.forEach(item => {
               if (!dupCost[item]) { dupCost[item] = 0 }
@@ -380,7 +366,7 @@ module.exports = {
               }
               if (arr.length > 0) {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4, nama_asman) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT
@@ -400,7 +386,7 @@ module.exports = {
                 }
               } else {
                 rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4) VALUES ${rows.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4, nama_asman) VALUES ${rows.map(a => '(?)').join(',')}`,
                   {
                     replacements: rows,
                     type: QueryTypes.INSERT

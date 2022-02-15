@@ -387,7 +387,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['User Name', 'Password', 'Kode Depo', 'User Level']
+          const cek = ['User Name', 'Full Name', 'Password', 'Kode Depo', 'User Level', 'Email']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             if (valid[i] === cek[i]) {
@@ -400,8 +400,8 @@ module.exports = {
             const cek = []
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
-              if (a[2] !== '') {
-                plant.push(`Kode depo ${a[2]} dan  User level ${a[3]}`)
+              if (a[4] === '5' || a[4] === 5) {
+                plant.push(`Kode depo ${a[3]} dan  User level ${a[4]}`)
               }
               user.push(`User Name ${a[0]}`)
               cek.push(`${a[0]}`)
@@ -453,7 +453,7 @@ module.exports = {
                   const noun = []
                   const process = rows[i]
                   for (let j = 0; j < process.length; j++) {
-                    if (j === 1) {
+                    if (j === 2) {
                       let str = process[j]
                       str = await bcrypt.hash(str, await bcrypt.genSalt())
                       noun.push(str)
@@ -463,7 +463,7 @@ module.exports = {
                   }
                   create.push(noun)
                 }
-                const result = await sequelize.query(`INSERT INTO users (username, password, kode_plant, user_level) VALUES ${create.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO users (username, fullname, password, kode_plant, user_level, email) VALUES ${create.map(a => '(?)').join(',')}`,
                   {
                     replacements: create,
                     type: QueryTypes.INSERT
@@ -498,7 +498,7 @@ module.exports = {
                   }
                   create.push(noun)
                 }
-                const result = await sequelize.query(`INSERT INTO users (username, password, kode_plant, user_level) VALUES ${create.map(a => '(?)').join(',')}`,
+                const result = await sequelize.query(`INSERT INTO users (username, fullname, password, kode_plant, user_level, email) VALUES ${create.map(a => '(?)').join(',')}`,
                   {
                     replacements: create,
                     type: QueryTypes.INSERT

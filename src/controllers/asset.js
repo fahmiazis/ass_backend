@@ -390,9 +390,10 @@ module.exports = {
                 satuan: rows[i][11],
                 unit: rows[i][12],
                 lokasi: rows[i][13],
-                kategori: rows[i][14]
+                kategori: rows[i][14],
+                cost_center: rows[i][8]
               }
-              if (select.length > 0) {
+              if (select || select.length > 0) {
                 const updateAsset = await asset.update(send, {
                   where: {
                     no_asset: rows[i][0]
