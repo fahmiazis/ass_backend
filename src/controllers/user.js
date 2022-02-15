@@ -488,7 +488,7 @@ module.exports = {
                   const noun = []
                   const process = rows[i]
                   for (let j = 0; j < process.length; j++) {
-                    if (j === 1) {
+                    if (j === 2) {
                       let str = process[j]
                       str = await bcrypt.hash(str, await bcrypt.genSalt())
                       noun.push(str)

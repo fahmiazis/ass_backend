@@ -14,6 +14,7 @@ module.exports = {
     try {
       const no = req.params.no
       const kode = req.user.kode
+      const level = req.user.level
       const result = await asset.findOne({
         where: {
           no_asset: no
@@ -35,7 +36,7 @@ module.exports = {
           })
           if (findDepo.length > 0) {
             const send = {
-              kode_plant: result.kode_plant,
+              kode_plant: level === 9 ? result.cost_center : result.kode_plant,
               area: findDepo[0].nama_area,
               no_doc: result.no_doc,
               no_asset: result.no_asset,
