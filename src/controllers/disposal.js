@@ -907,7 +907,7 @@ module.exports = {
                     from: 'noreply_asset@pinusmerahabadi.co.id',
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                     to: `${findEmail.email}`,
-                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} (TESTING)`,
+                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} `,
                     html: `
                   <head>
                     <style type="text/css">
@@ -1014,7 +1014,7 @@ module.exports = {
                               </tbody>
                           </table>
                       </div>
-                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
@@ -1117,7 +1117,7 @@ module.exports = {
                     from: 'noreply_asset@pinusmerahabadi.co.id',
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                     to: `${findEmail.email}`,
-                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} (TESTING)`,
+                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} `,
                     html: `
                   <head>
                     <style type="text/css">
@@ -1224,7 +1224,7 @@ module.exports = {
                               </tbody>
                           </table>
                       </div>
-                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
@@ -1567,7 +1567,7 @@ module.exports = {
                                           from: 'noreply_asset@pinusmerahabadi.co.id',
                                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                           to: `${findUser.email}`,
-                                          subject: `Approve Pengajuan Disposal D${no} (TESTING)`,
+                                          subject: `Approve Pengajuan Disposal D${no} `,
                                           html: `
                                           <head>
                                             <style type="text/css">
@@ -1674,7 +1674,7 @@ module.exports = {
                                                       </tbody>
                                                   </table>
                                               </div>
-                                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                               <div class="tittle foot">
                                                   Terima kasih,
                                               </div>
@@ -1803,7 +1803,7 @@ module.exports = {
                                     from: 'noreply_asset@pinusmerahabadi.co.id',
                                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                     to: `${findUser.email}`,
-                                    subject: `Full Approve Pengajuan Disposal D${no} (TESTING)`,
+                                    subject: `Full Approve Pengajuan Disposal D${no} `,
                                     html: `
                                     <head>
                                       <style type="text/css">
@@ -1910,7 +1910,7 @@ module.exports = {
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                         <div class="tittle foot">
                                             Terima kasih,
                                         </div>
@@ -1990,7 +1990,7 @@ module.exports = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                       to: `${findUser.email}`,
-                                      subject: `Approve Pengajuan Disposal D${no} (TESTING)`,
+                                      subject: `Approve Pengajuan Disposal D${no} `,
                                       html: `
                                       <head>
                                         <style type="text/css">
@@ -2097,7 +2097,7 @@ module.exports = {
                                                   </tbody>
                                               </table>
                                           </div>
-                                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                           <div class="tittle foot">
                                               Terima kasih,
                                           </div>
@@ -2305,7 +2305,7 @@ module.exports = {
                                   from: 'noreply_asset@pinusmerahabadi.co.id',
                                   replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                   to: `${draftEmail}`,
-                                  subject: 'Reject Pembatalan Disposal Asset (TESTING)',
+                                  subject: 'Reject Pembatalan Disposal Asset ',
                                   html: `
                                           <head>
                                             <style type="text/css">
@@ -2509,7 +2509,7 @@ module.exports = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                 to: `${draftEmail}`,
-                                subject: 'Reject Perbaikan Disposal Asset (TESTING)',
+                                subject: 'Reject Perbaikan Disposal Asset ',
                                 html: `
                                   <head>
                                   <style type="text/css">
@@ -3323,7 +3323,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findUser.email}`,
-                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} (TESTING)`,
+                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
                         <style type="text/css">
@@ -3430,7 +3430,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3457,7 +3457,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findUser.email}`,
-                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} (TESTING)`,
+                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
                         <style type="text/css">
@@ -3564,7 +3564,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3626,7 +3626,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findUser.email}`,
-                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} (TESTING)`,
+                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
                         <style type="text/css">
@@ -3733,7 +3733,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3760,7 +3760,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findUser.email}`,
-                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} (TESTING)`,
+                        subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
                         <style type="text/css">
@@ -3867,7 +3867,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -3939,7 +3939,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findUser.email}`,
-                        subject: `Revisi Dokumen Persetujuan Disposal D${findDis.no_disposal} (TESTING)`,
+                        subject: `Revisi Dokumen Persetujuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
                         <style type="text/css">
@@ -4046,7 +4046,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -4073,7 +4073,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findUser.email}`,
-                        subject: `Revisi Dokumen Persetujuan Disposal D${findDis.no_disposal} (TESTING)`,
+                        subject: `Revisi Dokumen Persetujuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
                         <style type="text/css">
@@ -4180,7 +4180,7 @@ module.exports = {
                                   </tbody>
                               </table>
                           </div>
-                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                           <div class="tittle foot">
                               Terima kasih,
                           </div>
@@ -4258,7 +4258,7 @@ module.exports = {
                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                       to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
                       cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-                      subject: `REVISI KELENGKAPAN EKSEKUSI DISPOSAL ASSET ${findDis.area} (TESTING)`,
+                      subject: `REVISI KELENGKAPAN EKSEKUSI DISPOSAL ASSET ${findDis.area} `,
                       html: `
                     <head>
                       <style type="text/css">
@@ -4365,7 +4365,7 @@ module.exports = {
                                 </tbody>
                             </table>
                         </div>
-                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                         <div class="tittle foot">
                             Terima kasih,
                         </div>
@@ -4393,7 +4393,7 @@ module.exports = {
                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                       to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
                       cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-                      subject: `REVISI KELENGKAPAN EKSEKUSI DISPOSAL ASSET ${findDis.area} (TESTING)`,
+                      subject: `REVISI KELENGKAPAN EKSEKUSI DISPOSAL ASSET ${findDis.area} `,
                       html: `
                     <head>
                       <style type="text/css">
@@ -4500,7 +4500,7 @@ module.exports = {
                                 </tbody>
                             </table>
                         </div>
-                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                         <div class="tittle foot">
                             Terima kasih,
                         </div>
@@ -4622,7 +4622,7 @@ module.exports = {
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findEmail.email_area_aos}`,
                         cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-                        subject: `REJECT KELENGKAPAN ${ket === 'peng' ? 'PENGAJUAN' : 'EKSEKUSI'} DISPOSAL ASSET ${findDis.area} (TESTING)`,
+                        subject: `REJECT KELENGKAPAN ${ket === 'peng' ? 'PENGAJUAN' : 'EKSEKUSI'} DISPOSAL ASSET ${findDis.area} `,
                         html: `
                         <head>
                           <style type="text/css">
@@ -4732,7 +4732,7 @@ module.exports = {
                                 </table>
                             </div>
                             <div class="tittle">Mohon agar melengkapi/memperbaiki kelengkapan eksekusi disposalnya untuk dapat diproses lebih lanjut.</div>
-                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -4805,7 +4805,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findEmail.email_area_aos}`,
-                        subject: `Reject Dokumen ${ket === 'peng' ? 'Pengajuan' : 'Eksekusi'} Disposal No Asset ${result.no_asset} (TESTING)`,
+                        subject: `Reject Dokumen ${ket === 'peng' ? 'Pengajuan' : 'Eksekusi'} Disposal No Asset ${result.no_asset} `,
                         html: `
                         <head>
                           <style type="text/css">
@@ -4914,7 +4914,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -5001,7 +5001,7 @@ module.exports = {
               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
               to: `${findUser.email}`,
               cc: tipe === 'tax' ? `${ccTax}` : tipe === 'finance' && (result.kategori === 'IT' || result.kategori === 'it') ? `${ccFinIt}` : `${ccFin}`,
-              subject: `REJECT ${tipe === 'finance' ? 'JURNAL UANG MASUK' : 'FAKTUR PAJAK'} DISPOSAL ASSET ${result.area} (TESTING)`,
+              subject: `REJECT ${tipe === 'finance' ? 'JURNAL UANG MASUK' : 'FAKTUR PAJAK'} DISPOSAL ASSET ${result.area} `,
               html: `
               <head>
                 <style type="text/css">
@@ -5110,7 +5110,7 @@ module.exports = {
                       </table>
                   </div>
                   <div class="tittle">Mohon agar melengkapi/memperbaiki kelengkapan eksekusi disposalnya untuk dapat diproses lebih lanjut.</div>
-                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                  <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                   <div class="tittle foot">
                       Terima kasih,
                   </div>
@@ -5259,7 +5259,7 @@ module.exports = {
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
                           cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccTaxIt}` : `${ccTax}`,
-                          subject: `REVISI FAKTUR PAJAK DISPOSAL ASSET ${result.area} (TESTING)`,
+                          subject: `REVISI FAKTUR PAJAK DISPOSAL ASSET ${result.area} `,
                           html: `
                         <head>
                           <style type="text/css">
@@ -5366,7 +5366,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -5458,7 +5458,7 @@ module.exports = {
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
                           cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
-                          subject: `REVISI JURNAL UANG MASUK DISPOSAL ASSET ${result.area} (TESTING)`,
+                          subject: `REVISI JURNAL UANG MASUK DISPOSAL ASSET ${result.area} `,
                           html: `
                         <head>
                           <style type="text/css">
@@ -5565,7 +5565,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -5657,7 +5657,7 @@ module.exports = {
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
                           cc: (level === 3 && result.kategori === 'IT') || (level === 3 && result.kategori === 'it') ? `${ccTaxIt}` : (level === 4 && result.kategori === 'IT') || (level === 4 && result.kategori === 'it') ? `${ccFinIt}` : (level === 3 && result.kategori !== 'IT') || (level === 3 && result.kategori !== 'it') ? `${ccTax}` : (level === 4 && result.kategori !== 'IT') || (level === 4 && result.kategori !== 'it') ? `${ccFin}` : '',
-                          subject: `REVISI ${level === 3 ? 'FAKTUR PAJAK' : 'JURNAL UANG MASUK'} DISPOSAL ASSET ${result.area} (TESTING)`,
+                          subject: `REVISI ${level === 3 ? 'FAKTUR PAJAK' : 'JURNAL UANG MASUK'} DISPOSAL ASSET ${result.area} `,
                           html: `
                         <head>
                           <style type="text/css">
@@ -5764,7 +5764,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -6009,7 +6009,7 @@ module.exports = {
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                               to: `${findEmail.email_area_aos}`,
                               cc: findDis.find(({ kategori }) => kategori === 'IT') === undefined && findDis.find(({ kategori }) => kategori === 'it') === undefined ? `${cc}` : `${ccIt}`,
-                              subject: `DISPOSAL ASSET ${findDis[0].area} (TESTING)`,
+                              subject: `DISPOSAL ASSET ${findDis[0].area} `,
                               html: `
                                 <head>
                                 <style type="text/css">
@@ -6163,7 +6163,7 @@ module.exports = {
                                   <div class="tittle">A. Aset yang sudah  diperbolehkan untuk dieksekusi maka segera eksekusi (maksimal 1 minggu dari tanggal email)</div>
                                   <div class="tittle">B. Jika aset sudah dijual/dimusnahkan area harap melengkapi semua dokumen yang di request aset (tanpa kekurangan apapun) jika belum mengerti dapat bertanya ke PIC aset</div>
                                   <div class="mar2"></div>
-                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                  <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -6303,7 +6303,7 @@ module.exports = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                       to: `${findUser.email}`,
-                                      subject: `Approve Persetujuan Disposal ${no} (TESTING)`,
+                                      subject: `Approve Persetujuan Disposal ${no} `,
                                       html: `
                                       <head>
                                         <style type="text/css">
@@ -6410,7 +6410,7 @@ module.exports = {
                                                   </tbody>
                                               </table>
                                           </div>
-                                          <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                           <div class="tittle foot">
                                               Terima kasih,
                                           </div>
@@ -6640,7 +6640,7 @@ module.exports = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                       to: `${draftEmail}`,
-                                      subject: 'Reject Pembatalan Form Persetujuan Disposal Asset (TESTING)',
+                                      subject: 'Reject Pembatalan Form Persetujuan Disposal Asset ',
                                       html: `
                                         <head>
                                         <style type="text/css">
@@ -6861,7 +6861,7 @@ module.exports = {
                             from: 'noreply_asset@pinusmerahabadi.co.id',
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                             to: `${draftEmail}`,
-                            subject: 'Reject Perbaikan Disposal Asset (TESTING)',
+                            subject: 'Reject Perbaikan Disposal Asset ',
                             html: `
                               <head>
                               <style type="text/css">
@@ -7080,7 +7080,7 @@ module.exports = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                 to: `${findUser.email}`,
-                subject: `Approve Persetujuan Disposal ${noDis === undefined ? 1 : noDis} (TESTING)`,
+                subject: `Approve Persetujuan Disposal ${noDis === undefined ? 1 : noDis} `,
                 html: `
                 <head>
                   <style type="text/css">
@@ -7187,7 +7187,7 @@ module.exports = {
                             </tbody>
                         </table>
                     </div>
-                    <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                     <div class="tittle foot">
                         Terima kasih,
                     </div>
@@ -7376,7 +7376,7 @@ module.exports = {
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findUser.email_area_aos}`,
                           cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
-                          subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} (TESTING)`,
+                          subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} `,
                           html: `
                             <head>
                               <style type="text/css">
@@ -7484,7 +7484,7 @@ module.exports = {
                                         </tbody>
                                     </table>
                                 </div>
-                                <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                 <div class="tittle foot">
                                     Terima kasih,
                                 </div>
@@ -7569,7 +7569,7 @@ module.exports = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                         to: `${findUser.email}`,
-                        subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                        subject: `Eksekusi Disposal No Asset ${result.no_asset} `,
                         html: `
                         <head>
                           <style type="text/css">
@@ -7676,7 +7676,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -7814,7 +7814,7 @@ module.exports = {
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                 to: `${findUser.email}`,
                                 cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
-                                subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} (TESTING)`,
+                                subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} `,
                                 html: `
                               <head>
                                 <style type="text/css">
@@ -7925,7 +7925,7 @@ module.exports = {
                                   <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
                                   <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
                                   <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
-                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                  <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -7943,7 +7943,7 @@ module.exports = {
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                                 to: `${findTax.email}`,
                                 cc: `${ccTax}`,
-                                subject: `Permintaan FP disposal asset ${result.no_asset} (TESTING)`,
+                                subject: `Permintaan FP disposal asset ${result.no_asset} `,
                                 html: `
                               <head>
                                 <style type="text/css">
@@ -8050,7 +8050,7 @@ module.exports = {
                                           </tbody>
                                       </table>
                                   </div>
-                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                  <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -8130,7 +8130,7 @@ module.exports = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                               to: `${findUser.email}`,
-                              subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                              subject: `Eksekusi Disposal No Asset ${result.no_asset} `,
                               html: `
                               <head>
                                 <style type="text/css">
@@ -8237,7 +8237,7 @@ module.exports = {
                                           </tbody>
                                       </table>
                                   </div>
-                                  <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                  <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                   <div class="tittle foot">
                                       Terima kasih,
                                   </div>
@@ -8364,7 +8364,7 @@ module.exports = {
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                             to: `${findUser.email}`,
                             cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
-                            subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} (TESTING)`,
+                            subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} `,
                             html: `
                           <head>
                             <style type="text/css">
@@ -8475,7 +8475,7 @@ module.exports = {
                               <div class="tittle">1. Jurnal ke COA piutang lain-lain</div>
                               <div class="tittle">2. Input nomor doc jurnal dan nominal uang masuk di web</div>
                               <div class="tittle">3. Upload screencapture rekening koran dan jurnal yang terbentuk di SAP</div>
-                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -8493,7 +8493,7 @@ module.exports = {
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                             to: `${findTax.email}`,
                             cc: `${ccTax}`,
-                            subject: `Permintaan FP disposal asset ${result.no_asset} (TESTING)`,
+                            subject: `Permintaan FP disposal asset ${result.no_asset} `,
                             html: `
                           <head>
                             <style type="text/css">
@@ -8600,7 +8600,7 @@ module.exports = {
                                       </tbody>
                                   </table>
                               </div>
-                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -8680,7 +8680,7 @@ module.exports = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findUser.email}`,
-                          subject: `Eksekusi Disposal No Asset ${result.no_asset} (TESTING)`,
+                          subject: `Eksekusi Disposal No Asset ${result.no_asset} `,
                           html: `
                           <head>
                             <style type="text/css">
@@ -8787,7 +8787,7 @@ module.exports = {
                                       </tbody>
                                   </table>
                               </div>
-                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -8918,7 +8918,7 @@ module.exports = {
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
                           cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
-                          subject: `Hasil jurnal uang masuk disposal asset ${result.no_asset} (TESTING)`,
+                          subject: `Hasil jurnal uang masuk disposal asset ${result.no_asset} `,
                           html: `
                           <head>
                             <style type="text/css">
@@ -9027,7 +9027,7 @@ module.exports = {
                                       </tbody>
                                   </table>
                               </div>
-                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -9045,7 +9045,7 @@ module.exports = {
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
                           cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccTaxIt}` : `${ccTax}`,
-                          subject: `Done permintaan FP disposal asset ${result.no_asset} (TESTING)`,
+                          subject: `Done permintaan FP disposal asset ${result.no_asset} `,
                           html: `
                           <head>
                             <style type="text/css">
@@ -9153,7 +9153,7 @@ module.exports = {
                                       </tbody>
                                   </table>
                               </div>
-                              <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                               <div class="tittle foot">
                                   Terima kasih,
                               </div>
@@ -9284,7 +9284,7 @@ module.exports = {
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                     to: `${findUser.email_area_aos}, ${findUser.email_spv_tax}, ${findUser.email_staff_tax}`,
                     cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
-                    subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} (TESTING)`,
+                    subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} `,
                     html: `
                       <head>
                         <style type="text/css">
@@ -9430,7 +9430,7 @@ module.exports = {
                                 </tbody>
                             </table>
                         </div>
-                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                         <div class="tittle foot">
                             Terima kasih,
                         </div>
@@ -9551,7 +9551,7 @@ module.exports = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
                           to: `${findEmail.email}`,
-                          subject: `Approve Pengajuan Disposal D${result.no_disposal} (TESTING)`,
+                          subject: `Approve Pengajuan Disposal D${result.no_disposal} `,
                           html: `
                             <head>
                               <style type="text/css">
@@ -9658,7 +9658,7 @@ module.exports = {
                                         </tbody>
                                     </table>
                                 </div>
-                                <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                 <div class="tittle foot">
                                     Terima kasih,
                                 </div>
