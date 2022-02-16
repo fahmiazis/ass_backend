@@ -284,5 +284,36 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  updateRom: async (req, res) => {
+    try {
+      const findTtd = await ttd.findAll({
+        where: {
+          jabatan: 'ROM'
+        }
+      })
+      if (findTtd.length > 0) {
+        const cek = []
+        for (let i = 0; i < findTtd.length; i++) {
+          const result = await ttd.findByPk(findTtd[i].id)
+          if (result) {
+            const data = {
+              jabatan: 'OM'
+            }
+            await result.update(data)
+            cek.push(1)
+          }
+        }
+        if (cek.length === findTtd.length) {
+          return response(res, 'success update rom')
+        } else {
+          return response(res, 'failed to update rom', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed to update rom', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
 }

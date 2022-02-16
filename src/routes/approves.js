@@ -9,5 +9,6 @@ route.get('/name', approve.getNameApprove)
 route.patch('/update/:id', approve.updateApprove)
 route.delete('/delete/:id', approve.deleteApprove)
 route.delete('/ttdel/:no', approve.deleteTtd)
+route.patch('/rom', approve.updateRom)
 
 module.exports = route
