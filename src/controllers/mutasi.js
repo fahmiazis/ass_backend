@@ -827,6 +827,7 @@ module.exports = {
                 const send = {
                   status_form: 2,
                   no_mutasi: noMut === undefined ? 'M1' : 'M' + noMut,
+                  alasan: results.alasan,
                   tanggalMut: moment()
                 }
                 await find.update(send)
