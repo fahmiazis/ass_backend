@@ -809,10 +809,12 @@ module.exports = {
   submitDisposal: async (req, res) => {
     try {
       const kode = req.user.kode
+      const cost = req.user.username
+      const level = req.user.level
       const result = await disposal.findAll({
         where: {
           [Op.and]: [
-            { kode_plant: kode },
+            { kode_plant: level === 5 ? kode : level === 9 && cost },
             { status_form: 1 }
           ]
         }
@@ -833,11 +835,7 @@ module.exports = {
           const noDis = Math.max(...cekNo) + 1
           const temp = []
           for (let i = 0; i < result.length; i++) {
-            const find = await disposal.findOne({
-              where: {
-                no_asset: result[i].no_asset
-              }
-            })
+            const find = await disposal.findByPk(result[i].id)
             if (find) {
               const prev = moment().subtract(1, 'month').format('L').split('/')
               const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
@@ -867,7 +865,7 @@ module.exports = {
           if (temp.length === result.length) {
             const findDepo = await depo.findOne({
               where: {
-                kode_plant: kode
+                kode_plant: level === 5 ? kode : level === 9 && cost
               }
             })
             if (findDepo) {
@@ -992,7 +990,7 @@ module.exports = {
                   </head>
                   <body>
                       <div class="tittle mar">
-                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : 'BM'},
+                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : level === 5 ? 'BM' : level === 9 && 'Manager'},
                       </div>
                       <div class="tittle mar1">
                           <div>Mohon untuk approve pengajuan disposal asset area.</div>
@@ -1078,7 +1076,7 @@ module.exports = {
           if (temp.length === result.length) {
             const findDepo = await depo.findOne({
               where: {
-                kode_plant: kode
+                kode_plant: level === 5 ? kode : level === 9 && cost
               }
             })
             if (findDepo) {
@@ -1202,7 +1200,7 @@ module.exports = {
                   </head>
                   <body>
                       <div class="tittle mar">
-                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : 'BM'},
+                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : level === 5 ? 'BM' : level === 9 && 'Manager'},
                       </div>
                       <div class="tittle mar1">
                           <div>Mohon untuk approve pengajuan disposal asset area.</div>
