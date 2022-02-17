@@ -83,7 +83,7 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level !== 5 || level !== 9) {
+      if (level !== 5 && level !== 9) {
         const result = await asset.findAll({
           where: {
             [Op.or]: [
@@ -94,6 +94,12 @@ module.exports = {
             ],
             [Op.not]: { status: '0' }
           },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            }
+          ],
           order: [[sortValue, 'ASC']],
           limit: limit,
           offset: (page - 1) * limit
