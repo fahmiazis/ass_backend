@@ -809,7 +809,7 @@ module.exports = {
   submitDisposal: async (req, res) => {
     try {
       const kode = req.user.kode
-      const cost = req.user.username
+      const cost = req.user.name
       const level = req.user.level
       const result = await disposal.findAll({
         where: {

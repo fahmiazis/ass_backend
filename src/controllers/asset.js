@@ -56,7 +56,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      const cost = req.user.username
+      const cost = req.user.name
       let { limit, page, search, sort, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
