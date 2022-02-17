@@ -56,6 +56,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
+      const cost = req.user.username
       let { limit, page, search, sort, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -82,8 +83,8 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level !== 5) {
-        const result = await asset.findAndCountAll({
+      if (level !== 5 || level !== 9) {
+        const result = await asset.findAll({
           where: {
             [Op.or]: [
               { no_asset: { [Op.like]: `%${searchValue}` } },
@@ -97,14 +98,14 @@ module.exports = {
           limit: limit,
           offset: (page - 1) * limit
         })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.length)
         if (result) {
-          return response(res, 'list asset', { result, pageInfo })
+          return response(res, 'list asset', { result: { rows: result, count: result.length }, pageInfo })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
       } else if (level === 5) {
-        const result = await asset.findAndCountAll({
+        const result = await asset.findAll({
           where: {
             [Op.and]: [
               { kode_plant: kode },
@@ -134,9 +135,46 @@ module.exports = {
           limit: limit,
           offset: (page - 1) * limit
         })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.length)
         if (result) {
-          return response(res, 'list asset', { result, pageInfo })
+          return response(res, 'list asset', { result: { rows: result, count: result.length }, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
+      } else if (level === 9) {
+        const result = await asset.findAll({
+          where: {
+            [Op.and]: [
+              { cost_center: cost },
+              { status: null }
+            ],
+            // [Op.or]: [
+            //   ,
+            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
+            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
+            // ],
+            [Op.or]: [
+              { no_asset: { [Op.like]: `%${searchValue}%` } },
+              { nama_asset: { [Op.like]: `%${searchValue}%` } }
+            ]
+            // [Op.not]: { status: '0' }
+          },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            }
+          ],
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: path, as: 'pict' }, 'id', 'ASC']
+          ],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.length)
+        if (result) {
+          return response(res, 'list asset', { result: { rows: result, count: result.length }, pageInfo })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }

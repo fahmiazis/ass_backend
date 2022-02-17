@@ -30,7 +30,12 @@ module.exports = {
             }
           })
           if (result.length > 0) {
-            return response(res, 'Telah terdaftar')
+            const result = await approve.create(results)
+            if (result) {
+              return response(res, 'succesfully create approve', { result })
+            } else {
+              return response(res, 'failed to create', {}, 404, false)
+            }
           } else {
             const result = await approve.create(results)
             if (result) {
