@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       // define association here
+      docUser.hasMany(models.disposal, {
+        foreignKey: 'no_asset',
+        sourceKey: 'no_pengadaan',
+        as: 'disposal'
+      })
     }
   };
   docUser.init({

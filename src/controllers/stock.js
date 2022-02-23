@@ -1447,7 +1447,12 @@ module.exports = {
           const result = await stock.findAndCountAll({
             where: {
               [Op.and]: [
-                { status_form: level === 2 ? 9 : 1 },
+                {
+                  [Op.or]: [
+                    { status_form: level === 2 ? 9 : 1 },
+                    { status_form: level === 2 ? 8 : 1 }
+                  ]
+                },
                 {
                   tanggalStock: {
                     [Op.lte]: end,
@@ -1807,7 +1812,6 @@ module.exports = {
                       }
                     })
                     if (results.length === find.length) {
-                      console.log('masuk asset')
                       const findDoc = await stock.findAll({
                         where: {
                           no_stock: no
@@ -2705,6 +2709,11 @@ module.exports = {
           }
         }
         if (findStock.length === cek.length) {
+          // const valid = []
+          // const prev = moment().subtract(1, 'month').format('L').split('/')
+          // for (let i = 0; i < findStock.length; i++) {
+          //   const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${findStock[i].no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+          // }
           const findEmail = await email.findOne({
             where: {
               kode_plant: findStock[0].kode_plant

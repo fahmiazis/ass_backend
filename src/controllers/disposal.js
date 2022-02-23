@@ -4615,139 +4615,285 @@ module.exports = {
                         <td>${findDis.cost_center}</td>
                         <td>${findDis.area}</td>
                       </tr>`
-                      const mailOptions = {
-                        from: 'noreply_asset@pinusmerahabadi.co.id',
-                        replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findEmail.email_area_aos}`,
-                        cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-                        subject: `REJECT KELENGKAPAN ${ket === 'peng' ? 'PENGAJUAN' : 'EKSEKUSI'} DISPOSAL ASSET ${findDis.area} `,
-                        html: `
-                        <head>
-                          <style type="text/css">
-                          body {
-                              display: flexbox;
-                              flex-direction: column;
+                      if (result.tipe === 'purch') {
+                        const findUser = await user.findOne({
+                          where: {
+                            user_level: 6
                           }
-                          .tittle {
-                              font-size: 15px;
+                        })
+                        if (findUser) {
+                          const mailOptions = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            to: `${findUser.email}`,
+                            cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+                            subject: `REJECT KELENGKAPAN ${ket === 'peng' ? 'PENGAJUAN' : 'EKSEKUSI'} DISPOSAL ASSET ${findDis.area} `,
+                            html: `
+                            <head>
+                              <style type="text/css">
+                              body {
+                                  display: flexbox;
+                                  flex-direction: column;
+                              }
+                              .tittle {
+                                  font-size: 15px;
+                              }
+                              .mar {
+                                  margin-bottom: 20px;
+                              }
+                              .mar1 {
+                                  margin-bottom: 10px;
+                              }
+                              .foot {
+                                  margin-top: 20px;
+                                  margin-bottom: 10px;
+                              }
+                              .foot1 {
+                                  margin-bottom: 50px;
+                              }
+                              .position {
+                                  display: flexbox;
+                                  flex-direction: row;
+                                  justify-content: left;
+                                  margin-top: 10px;
+                              }
+                              table {
+                                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                  font-size: 12px;
+                              }
+                              .demo-table {
+                                  border-collapse: collapse;
+                                  font-size: 13px;
+                              }
+                              .demo-table th, 
+                              .demo-table td {
+                                  border-bottom: 1px solid #e1edff;
+                                  border-left: 1px solid #e1edff;
+                                  padding: 7px 17px;
+                              }
+                              .demo-table th, 
+                              .demo-table td:last-child {
+                                  border-right: 1px solid #e1edff;
+                              }
+                              .demo-table td:first-child {
+                                  border-top: 1px solid #e1edff;
+                              }
+                              .demo-table td:last-child{
+                                  border-bottom: 0;
+                              }
+                              caption {
+                                  caption-side: top;
+                                  margin-bottom: 10px;
+                              }
+                              
+                              /* Table Header */
+                              .demo-table thead th {
+                                  background-color: #508abb;
+                                  color: #FFFFFF;
+                                  border-color: #6ea1cc !important;
+                                  text-transform: uppercase;
+                              }
+                              
+                              /* Table Body */
+                              .demo-table tbody td {
+                                  color: #353535;
+                              }
+                              
+                              .demo-table tbody tr:nth-child(odd) td {
+                                  background-color: #f4fbff;
+                              }
+                              .demo-table tbody tr:hover th,
+                              .demo-table tbody tr:hover td {
+                                  background-color: #ffffa2;
+                                  border-color: #ffff0f;
+                                  transition: all .2s;
+                              }
+                          </style>
+                            </head>
+                            <body>
+                                <div class="tittle mar">
+                                    Dear Bapak/Ibu,
+                                </div>
+                                <div class="tittle mar1">
+                                    <div>Lampiran ${ket === 'peng' ? 'pengajuan' : 'eksekusi'} disposal asset telah direject dengan alasan sebagai berikut:</div>
+                                    <div>Alasan reject: ${results.alasan}</div>
+                                    <div>Direject oleh: ${level === 2 ? 'Team Asset' : level === 12 ? 'BM' : 'Team Purchasing'}</div>
+                                </div>
+                                <div class="position mar1">
+                                    <table class="demo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>No Disposal</th>
+                                                <th>Asset</th>
+                                                <th>Asset description</th>
+                                                <th>Cost Ctr</th>
+                                                <th>Cost Ctr Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                          ${tableTd}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="tittle">Mohon agar melengkapi/memperbaiki kelengkapan eksekusi disposalnya untuk dapat diproses lebih lanjut.</div>
+                                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                <div class="tittle foot">
+                                    Terima kasih,
+                                </div>
+                                <div class="tittle foot1">
+                                    Regards,
+                                </div>
+                                <div class="tittle">
+                                    Team Asset
+                                </div>
+                            </body>
+                            `
                           }
-                          .mar {
-                              margin-bottom: 20px;
+                          const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                          if (sendEmail) {
+                            return response(res, 'success reject disposal', { sendEmail })
+                          } else {
+                            return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
                           }
-                          .mar1 {
-                              margin-bottom: 10px;
-                          }
-                          .foot {
-                              margin-top: 20px;
-                              margin-bottom: 10px;
-                          }
-                          .foot1 {
-                              margin-bottom: 50px;
-                          }
-                          .position {
-                              display: flexbox;
-                              flex-direction: row;
-                              justify-content: left;
-                              margin-top: 10px;
-                          }
-                          table {
-                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                              font-size: 12px;
-                          }
-                          .demo-table {
-                              border-collapse: collapse;
-                              font-size: 13px;
-                          }
-                          .demo-table th, 
-                          .demo-table td {
-                              border-bottom: 1px solid #e1edff;
-                              border-left: 1px solid #e1edff;
-                              padding: 7px 17px;
-                          }
-                          .demo-table th, 
-                          .demo-table td:last-child {
-                              border-right: 1px solid #e1edff;
-                          }
-                          .demo-table td:first-child {
-                              border-top: 1px solid #e1edff;
-                          }
-                          .demo-table td:last-child{
-                              border-bottom: 0;
-                          }
-                          caption {
-                              caption-side: top;
-                              margin-bottom: 10px;
-                          }
-                          
-                          /* Table Header */
-                          .demo-table thead th {
-                              background-color: #508abb;
-                              color: #FFFFFF;
-                              border-color: #6ea1cc !important;
-                              text-transform: uppercase;
-                          }
-                          
-                          /* Table Body */
-                          .demo-table tbody td {
-                              color: #353535;
-                          }
-                          
-                          .demo-table tbody tr:nth-child(odd) td {
-                              background-color: #f4fbff;
-                          }
-                          .demo-table tbody tr:hover th,
-                          .demo-table tbody tr:hover td {
-                              background-color: #ffffa2;
-                              border-color: #ffff0f;
-                              transition: all .2s;
-                          }
-                      </style>
-                        </head>
-                        <body>
-                            <div class="tittle mar">
-                                Dear Bapak/Ibu,
-                            </div>
-                            <div class="tittle mar1">
-                                <div>Lampiran ${ket === 'peng' ? 'pengajuan' : 'eksekusi'} disposal asset telah direject dengan alasan sebagai berikut:</div>
-                                <div>Alasan reject: ${results.alasan}</div>
-                                <div>Direject oleh: ${level === 2 ? 'Team Asset' : level === 12 ? 'BM' : 'Team Purchasing'}</div>
-                            </div>
-                            <div class="position mar1">
-                                <table class="demo-table">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>No Disposal</th>
-                                            <th>Asset</th>
-                                            <th>Asset description</th>
-                                            <th>Cost Ctr</th>
-                                            <th>Cost Ctr Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                      ${tableTd}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="tittle">Mohon agar melengkapi/memperbaiki kelengkapan eksekusi disposalnya untuk dapat diproses lebih lanjut.</div>
-                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                            <div class="tittle foot">
-                                Terima kasih,
-                            </div>
-                            <div class="tittle foot1">
-                                Regards,
-                            </div>
-                            <div class="tittle">
-                                Team Asset
-                            </div>
-                        </body>
-                        `
-                      }
-                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                      if (sendEmail) {
-                        return response(res, 'success reject disposal', { sendEmail })
+                        } else {
+                          return response(res, 'successfully reject dokumen', { result: reject })
+                        }
                       } else {
-                        return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findEmail.email_area_aos}`,
+                          cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+                          subject: `REJECT KELENGKAPAN ${ket === 'peng' ? 'PENGAJUAN' : 'EKSEKUSI'} DISPOSAL ASSET ${findDis.area} `,
+                          html: `
+                          <head>
+                            <style type="text/css">
+                            body {
+                                display: flexbox;
+                                flex-direction: column;
+                            }
+                            .tittle {
+                                font-size: 15px;
+                            }
+                            .mar {
+                                margin-bottom: 20px;
+                            }
+                            .mar1 {
+                                margin-bottom: 10px;
+                            }
+                            .foot {
+                                margin-top: 20px;
+                                margin-bottom: 10px;
+                            }
+                            .foot1 {
+                                margin-bottom: 50px;
+                            }
+                            .position {
+                                display: flexbox;
+                                flex-direction: row;
+                                justify-content: left;
+                                margin-top: 10px;
+                            }
+                            table {
+                                font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                font-size: 12px;
+                            }
+                            .demo-table {
+                                border-collapse: collapse;
+                                font-size: 13px;
+                            }
+                            .demo-table th, 
+                            .demo-table td {
+                                border-bottom: 1px solid #e1edff;
+                                border-left: 1px solid #e1edff;
+                                padding: 7px 17px;
+                            }
+                            .demo-table th, 
+                            .demo-table td:last-child {
+                                border-right: 1px solid #e1edff;
+                            }
+                            .demo-table td:first-child {
+                                border-top: 1px solid #e1edff;
+                            }
+                            .demo-table td:last-child{
+                                border-bottom: 0;
+                            }
+                            caption {
+                                caption-side: top;
+                                margin-bottom: 10px;
+                            }
+                            
+                            /* Table Header */
+                            .demo-table thead th {
+                                background-color: #508abb;
+                                color: #FFFFFF;
+                                border-color: #6ea1cc !important;
+                                text-transform: uppercase;
+                            }
+                            
+                            /* Table Body */
+                            .demo-table tbody td {
+                                color: #353535;
+                            }
+                            
+                            .demo-table tbody tr:nth-child(odd) td {
+                                background-color: #f4fbff;
+                            }
+                            .demo-table tbody tr:hover th,
+                            .demo-table tbody tr:hover td {
+                                background-color: #ffffa2;
+                                border-color: #ffff0f;
+                                transition: all .2s;
+                            }
+                        </style>
+                          </head>
+                          <body>
+                              <div class="tittle mar">
+                                  Dear Bapak/Ibu,
+                              </div>
+                              <div class="tittle mar1">
+                                  <div>Lampiran ${ket === 'peng' ? 'pengajuan' : 'eksekusi'} disposal asset telah direject dengan alasan sebagai berikut:</div>
+                                  <div>Alasan reject: ${results.alasan}</div>
+                                  <div>Direject oleh: ${level === 2 ? 'Team Asset' : level === 12 ? 'BM' : 'Team Purchasing'}</div>
+                              </div>
+                              <div class="position mar1">
+                                  <table class="demo-table">
+                                      <thead>
+                                          <tr>
+                                              <th>No</th>
+                                              <th>No Disposal</th>
+                                              <th>Asset</th>
+                                              <th>Asset description</th>
+                                              <th>Cost Ctr</th>
+                                              <th>Cost Ctr Name</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                        ${tableTd}
+                                      </tbody>
+                                  </table>
+                              </div>
+                              <div class="tittle">Mohon agar melengkapi/memperbaiki kelengkapan eksekusi disposalnya untuk dapat diproses lebih lanjut.</div>
+                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                              <div class="tittle foot">
+                                  Terima kasih,
+                              </div>
+                              <div class="tittle foot1">
+                                  Regards,
+                              </div>
+                              <div class="tittle">
+                                  Team Asset
+                              </div>
+                          </body>
+                          `
+                        }
+                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                        if (sendEmail) {
+                          return response(res, 'success reject disposal', { sendEmail })
+                        } else {
+                          return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                        }
                       }
                     }
                   }
@@ -4787,7 +4933,7 @@ module.exports = {
                       list_appr: findDis.kode_plant,
                       keterangan: result.nama_dokumen,
                       response: 'revisi'
-                    }``
+                    }
                     const createNotif = await notif.create(data)
                     if (createNotif) {
                       const tableTd = `
@@ -4799,137 +4945,281 @@ module.exports = {
                         <td>${findDis.cost_center}</td>
                         <td>${findDis.area}</td>
                       </tr>`
-                      const mailOptions = {
-                        from: 'noreply_asset@pinusmerahabadi.co.id',
-                        replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findEmail.email_area_aos}`,
-                        subject: `Reject Dokumen ${ket === 'peng' ? 'Pengajuan' : 'Eksekusi'} Disposal No Asset ${result.no_asset} `,
-                        html: `
-                        <head>
-                          <style type="text/css">
-                          body {
-                              display: flexbox;
-                              flex-direction: column;
+                      if (result.tipe === 'purch') {
+                        const findUser = await user.findOne({
+                          where: {
+                            user_level: 6
                           }
-                          .tittle {
-                              font-size: 15px;
+                        })
+                        if (findUser) {
+                          const mailOptions = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            to: `${findUser.email}`,
+                            subject: `Reject Dokumen ${ket === 'peng' ? 'Pengajuan' : 'Eksekusi'} Disposal No Asset ${result.no_asset} `,
+                            html: `
+                            <head>
+                              <style type="text/css">
+                              body {
+                                  display: flexbox;
+                                  flex-direction: column;
+                              }
+                              .tittle {
+                                  font-size: 15px;
+                              }
+                              .mar {
+                                  margin-bottom: 20px;
+                              }
+                              .mar1 {
+                                  margin-bottom: 10px;
+                              }
+                              .foot {
+                                  margin-top: 20px;
+                                  margin-bottom: 10px;
+                              }
+                              .foot1 {
+                                  margin-bottom: 50px;
+                              }
+                              .position {
+                                  display: flexbox;
+                                  flex-direction: row;
+                                  justify-content: left;
+                                  margin-top: 10px;
+                              }
+                              table {
+                                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                  font-size: 12px;
+                              }
+                              .demo-table {
+                                  border-collapse: collapse;
+                                  font-size: 13px;
+                              }
+                              .demo-table th, 
+                              .demo-table td {
+                                  border-bottom: 1px solid #e1edff;
+                                  border-left: 1px solid #e1edff;
+                                  padding: 7px 17px;
+                              }
+                              .demo-table th, 
+                              .demo-table td:last-child {
+                                  border-right: 1px solid #e1edff;
+                              }
+                              .demo-table td:first-child {
+                                  border-top: 1px solid #e1edff;
+                              }
+                              .demo-table td:last-child{
+                                  border-bottom: 0;
+                              }
+                              caption {
+                                  caption-side: top;
+                                  margin-bottom: 10px;
+                              }
+                              
+                              /* Table Header */
+                              .demo-table thead th {
+                                  background-color: #508abb;
+                                  color: #FFFFFF;
+                                  border-color: #6ea1cc !important;
+                                  text-transform: uppercase;
+                              }
+                              
+                              /* Table Body */
+                              .demo-table tbody td {
+                                  color: #353535;
+                              }
+                              
+                              .demo-table tbody tr:nth-child(odd) td {
+                                  background-color: #f4fbff;
+                              }
+                              .demo-table tbody tr:hover th,
+                              .demo-table tbody tr:hover td {
+                                  background-color: #ffffa2;
+                                  border-color: #ffff0f;
+                                  transition: all .2s;
+                              }
+                          </style>
+                            </head>
+                            <body>
+                                <div class="tittle mar">
+                                    Dear Bapak/Ibu AOS,
+                                </div>
+                                <div class="tittle mar1">
+                                    <div>Mohon untuk revisi dokumen ${result.nama_dokumen} disposal aset dibawah ini:</div>
+                                    <div>Alasan reject: ${results.alasan}</div>
+                                    <div>Direject oleh: ${level === 2 ? 'Team Asset' : level === 12 ? 'BM' : 'Team Purchasing'}</div>
+                                </div>
+                                <div class="position mar1">
+                                    <table class="demo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>No Disposal</th>
+                                                <th>Asset</th>
+                                                <th>Asset description</th>
+                                                <th>Cost Ctr</th>
+                                                <th>Cost Ctr Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                          ${tableTd}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                <div class="tittle foot">
+                                    Terima kasih,
+                                </div>
+                                <div class="tittle foot1">
+                                    Regards,
+                                </div>
+                                <div class="tittle">
+                                    Team Asset
+                                </div>
+                            </body>
+                            `
                           }
-                          .mar {
-                              margin-bottom: 20px;
+                          const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                          if (sendEmail) {
+                            return response(res, 'success reject disposal', { sendEmail })
+                          } else {
+                            return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
                           }
-                          .mar1 {
-                              margin-bottom: 10px;
-                          }
-                          .foot {
-                              margin-top: 20px;
-                              margin-bottom: 10px;
-                          }
-                          .foot1 {
-                              margin-bottom: 50px;
-                          }
-                          .position {
-                              display: flexbox;
-                              flex-direction: row;
-                              justify-content: left;
-                              margin-top: 10px;
-                          }
-                          table {
-                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                              font-size: 12px;
-                          }
-                          .demo-table {
-                              border-collapse: collapse;
-                              font-size: 13px;
-                          }
-                          .demo-table th, 
-                          .demo-table td {
-                              border-bottom: 1px solid #e1edff;
-                              border-left: 1px solid #e1edff;
-                              padding: 7px 17px;
-                          }
-                          .demo-table th, 
-                          .demo-table td:last-child {
-                              border-right: 1px solid #e1edff;
-                          }
-                          .demo-table td:first-child {
-                              border-top: 1px solid #e1edff;
-                          }
-                          .demo-table td:last-child{
-                              border-bottom: 0;
-                          }
-                          caption {
-                              caption-side: top;
-                              margin-bottom: 10px;
-                          }
-                          
-                          /* Table Header */
-                          .demo-table thead th {
-                              background-color: #508abb;
-                              color: #FFFFFF;
-                              border-color: #6ea1cc !important;
-                              text-transform: uppercase;
-                          }
-                          
-                          /* Table Body */
-                          .demo-table tbody td {
-                              color: #353535;
-                          }
-                          
-                          .demo-table tbody tr:nth-child(odd) td {
-                              background-color: #f4fbff;
-                          }
-                          .demo-table tbody tr:hover th,
-                          .demo-table tbody tr:hover td {
-                              background-color: #ffffa2;
-                              border-color: #ffff0f;
-                              transition: all .2s;
-                          }
-                      </style>
-                        </head>
-                        <body>
-                            <div class="tittle mar">
-                                Dear Bapak/Ibu AOS,
-                            </div>
-                            <div class="tittle mar1">
-                                <div>Mohon untuk revisi dokumen ${result.nama_dokumen} disposal aset dibawah ini:</div>
-                                <div>Alasan reject: ${results.alasan}</div>
-                                <div>Direject oleh: ${level === 2 ? 'Team Asset' : level === 12 ? 'BM' : 'Team Purchasing'}</div>
-                            </div>
-                            <div class="position mar1">
-                                <table class="demo-table">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>No Disposal</th>
-                                            <th>Asset</th>
-                                            <th>Asset description</th>
-                                            <th>Cost Ctr</th>
-                                            <th>Cost Ctr Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                      ${tableTd}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                            <div class="tittle foot">
-                                Terima kasih,
-                            </div>
-                            <div class="tittle foot1">
-                                Regards,
-                            </div>
-                            <div class="tittle">
-                                Team Asset
-                            </div>
-                        </body>
-                        `
-                      }
-                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                      if (sendEmail) {
-                        return response(res, 'success reject disposal', { sendEmail })
+                        } else {
+                          return response(res, 'successfully reject dokumen', { result: reject })
+                        }
                       } else {
-                        return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                        const mailOptions = {
+                          from: 'noreply_asset@pinusmerahabadi.co.id',
+                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                          to: `${findEmail.email_area_aos}`,
+                          subject: `Reject Dokumen ${ket === 'peng' ? 'Pengajuan' : 'Eksekusi'} Disposal No Asset ${result.no_asset} `,
+                          html: `
+                          <head>
+                            <style type="text/css">
+                            body {
+                                display: flexbox;
+                                flex-direction: column;
+                            }
+                            .tittle {
+                                font-size: 15px;
+                            }
+                            .mar {
+                                margin-bottom: 20px;
+                            }
+                            .mar1 {
+                                margin-bottom: 10px;
+                            }
+                            .foot {
+                                margin-top: 20px;
+                                margin-bottom: 10px;
+                            }
+                            .foot1 {
+                                margin-bottom: 50px;
+                            }
+                            .position {
+                                display: flexbox;
+                                flex-direction: row;
+                                justify-content: left;
+                                margin-top: 10px;
+                            }
+                            table {
+                                font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                font-size: 12px;
+                            }
+                            .demo-table {
+                                border-collapse: collapse;
+                                font-size: 13px;
+                            }
+                            .demo-table th, 
+                            .demo-table td {
+                                border-bottom: 1px solid #e1edff;
+                                border-left: 1px solid #e1edff;
+                                padding: 7px 17px;
+                            }
+                            .demo-table th, 
+                            .demo-table td:last-child {
+                                border-right: 1px solid #e1edff;
+                            }
+                            .demo-table td:first-child {
+                                border-top: 1px solid #e1edff;
+                            }
+                            .demo-table td:last-child{
+                                border-bottom: 0;
+                            }
+                            caption {
+                                caption-side: top;
+                                margin-bottom: 10px;
+                            }
+                            
+                            /* Table Header */
+                            .demo-table thead th {
+                                background-color: #508abb;
+                                color: #FFFFFF;
+                                border-color: #6ea1cc !important;
+                                text-transform: uppercase;
+                            }
+                            
+                            /* Table Body */
+                            .demo-table tbody td {
+                                color: #353535;
+                            }
+                            
+                            .demo-table tbody tr:nth-child(odd) td {
+                                background-color: #f4fbff;
+                            }
+                            .demo-table tbody tr:hover th,
+                            .demo-table tbody tr:hover td {
+                                background-color: #ffffa2;
+                                border-color: #ffff0f;
+                                transition: all .2s;
+                            }
+                        </style>
+                          </head>
+                          <body>
+                              <div class="tittle mar">
+                                  Dear Bapak/Ibu AOS,
+                              </div>
+                              <div class="tittle mar1">
+                                  <div>Mohon untuk revisi dokumen ${result.nama_dokumen} disposal aset dibawah ini:</div>
+                                  <div>Alasan reject: ${results.alasan}</div>
+                                  <div>Direject oleh: ${level === 2 ? 'Team Asset' : level === 12 ? 'BM' : 'Team Purchasing'}</div>
+                              </div>
+                              <div class="position mar1">
+                                  <table class="demo-table">
+                                      <thead>
+                                          <tr>
+                                              <th>No</th>
+                                              <th>No Disposal</th>
+                                              <th>Asset</th>
+                                              <th>Asset description</th>
+                                              <th>Cost Ctr</th>
+                                              <th>Cost Ctr Name</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                        ${tableTd}
+                                      </tbody>
+                                  </table>
+                              </div>
+                              <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                              <div class="tittle foot">
+                                  Terima kasih,
+                              </div>
+                              <div class="tittle foot1">
+                                  Regards,
+                              </div>
+                              <div class="tittle">
+                                  Team Asset
+                              </div>
+                          </body>
+                          `
+                        }
+                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                        if (sendEmail) {
+                          return response(res, 'success reject disposal', { sendEmail })
+                        } else {
+                          return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                        }
                       }
                     }
                   }
@@ -9726,6 +10016,32 @@ module.exports = {
         }
       } else {
         return response(res, 'failed update status asset', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDocumentPurch: async (req, res) => {
+    try {
+      const findDoc = await docUser.findAll({
+        where: {
+          tipe: 'purch',
+          [Op.or]: [
+            { divisi: '0' },
+            { status: 0 }
+          ]
+        },
+        include: [
+          {
+            model: disposal,
+            as: 'disposal'
+          }
+        ]
+      })
+      if (findDoc) {
+        return response(res, 'success get', { result: { rows: findDoc, count: findDoc.length } })
+      } else {
+        return response(res, 'success get', { result: { rows: findDoc, count: findDoc.length } })
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
