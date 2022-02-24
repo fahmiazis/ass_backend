@@ -111,7 +111,7 @@ module.exports = {
           return response(res, 'failed to get user', {}, 404, false)
         }
       } else if (level === 5) {
-        const result = await asset.findAll({
+        const result = await asset.findAndCountAll({
           where: {
             [Op.and]: [
               { kode_plant: kode },
@@ -142,7 +142,7 @@ module.exports = {
           return response(res, 'failed to get user', {}, 404, false)
         }
       } else if (level === 9) {
-        const result = await asset.findAll({
+        const result = await asset.findAndCountAll({
           where: {
             [Op.and]: [
               { cost_center: cost },
