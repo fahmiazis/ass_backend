@@ -84,7 +84,7 @@ module.exports = {
         page = parseInt(page)
       }
       if (level !== 5 && level !== 9) {
-        const result = await asset.findAll({
+        const result = await asset.findAndCountAll({
           where: {
             [Op.or]: [
               { no_asset: { [Op.like]: `%${searchValue}` } },
@@ -104,9 +104,9 @@ module.exports = {
           limit: limit,
           offset: (page - 1) * limit
         })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.length)
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
         if (result) {
-          return response(res, 'list asset', { result: { rows: result, count: result.length }, pageInfo })
+          return response(res, 'list asset', { result, pageInfo })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
@@ -117,16 +117,10 @@ module.exports = {
               { kode_plant: kode },
               { status: null }
             ],
-            // [Op.or]: [
-            //   ,
-            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
-            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
-            // ],
             [Op.or]: [
               { no_asset: { [Op.like]: `%${searchValue}%` } },
               { nama_asset: { [Op.like]: `%${searchValue}%` } }
             ]
-            // [Op.not]: { status: '0' }
           },
           include: [
             {
@@ -141,9 +135,9 @@ module.exports = {
           limit: limit,
           offset: (page - 1) * limit
         })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.length)
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
         if (result) {
-          return response(res, 'list asset', { result: { rows: result, count: result.length }, pageInfo })
+          return response(res, 'list asset', { result, pageInfo })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
@@ -154,16 +148,10 @@ module.exports = {
               { cost_center: cost },
               { status: null }
             ],
-            // [Op.or]: [
-            //   ,
-            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '1' : null },
-            //   { status: tipe === 'mutasi' ? '11' : tipe === 'disposal' ? '1' : tipe === 'asset' ? '11' : null }
-            // ],
             [Op.or]: [
               { no_asset: { [Op.like]: `%${searchValue}%` } },
               { nama_asset: { [Op.like]: `%${searchValue}%` } }
             ]
-            // [Op.not]: { status: '0' }
           },
           include: [
             {
@@ -178,9 +166,9 @@ module.exports = {
           limit: limit,
           offset: (page - 1) * limit
         })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.length)
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
         if (result) {
-          return response(res, 'list asset', { result: { rows: result, count: result.length }, pageInfo })
+          return response(res, 'list asset', { result, pageInfo })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
