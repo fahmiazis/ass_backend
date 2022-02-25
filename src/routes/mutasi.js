@@ -19,5 +19,6 @@ route.get('/budget/:no', mutasi.submitBudget)
 route.patch('/upstat/:id', mutasi.updateEksekusi)
 route.patch('/changeDate/:no', mutasi.updateDate)
 route.patch('/subedit/:no', mutasi.submitEditMutasi)
+route.delete('/delapp/:no', mutasi.deleteApprove)
 
 module.exports = route
