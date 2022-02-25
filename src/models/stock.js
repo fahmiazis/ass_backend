@@ -26,6 +26,16 @@ module.exports = (sequelize, DataTypes) => {
         as: 'appForm',
         sourceKey: 'no_stock'
       })
+      stock.hasOne(models.asset, {
+        foreignKey: 'no_asset',
+        as: 'dataAsset',
+        sourceKey: 'no_asset'
+      })
+      stock.hasOne(models.depo, {
+        foreignKey: 'kode_plant',
+        sourceKey: 'kode_plant',
+        as: 'depo'
+      })
     }
   };
   stock.init({

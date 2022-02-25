@@ -63,13 +63,10 @@ module.exports = {
             model: asset,
             as: 'dataAsset'
           },
-          // {
-          //   model: docUser,
-          //   as: 'docAsset',
-          //   where: {
-          //     jenis_form: 'disposal'
-          //   }
-          // },
+          {
+            model: docUser,
+            as: 'docAsset'
+          },
           {
             model: depo,
             as: 'depo'

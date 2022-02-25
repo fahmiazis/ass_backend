@@ -2538,7 +2538,12 @@ module.exports = {
             isSap: sap,
             [Op.and]: [
               { fisik: fisik },
-              { kondisi: '' }
+              {
+                [Op.or]: [
+                  { kondisi: null },
+                  { kondisi: '' }
+                ]
+              }
             ]
           }
         })
@@ -2671,8 +2676,18 @@ module.exports = {
               { lokasi: { [Op.like]: `%${searchValue}%` } }
             ]
           },
+          include: [
+            {
+              model: asset,
+              as: 'dataAsset'
+            },
+            {
+              model: depo,
+              as: 'depo'
+            }
+          ],
           order: [[sortValue, 'ASC']],
-          limit: limit,
+          limit: null,
           offset: (page - 1) * limit
         })
         const pageInfo = pagination('/stock/get', req.query, page, limit, result.length)
