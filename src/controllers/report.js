@@ -51,10 +51,10 @@ module.exports = {
         limit: limit,
         offset: (page - 1) * limit,
         include: [
-          // {
-          //   model: ttd,
-          //   as: 'appForm'
-          // },
+          {
+            model: ttd,
+            as: 'appForm'
+          },
           {
             model: ttd,
             as: 'ttdSet'

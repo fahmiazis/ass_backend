@@ -4076,5 +4076,34 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  deleteApprove: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findTtd = await ttd.findAll({
+        where: {
+          no_doc: no
+        }
+      })
+      if (findTtd.length) {
+        const valid = []
+        for (let i = 0; i < findTtd.length; i++) {
+          const find = await ttd.findByPk(findTtd[i].id)
+          if (find) {
+            await find.destroy()
+            valid.push(1)
+          }
+        }
+        if (valid.length === findTtd.length) {
+          return response(res, 'succesfully delete approval')
+        } else {
+          return response(res, 'gagal menghapus', {}, 404, false)        
+        }
+      } else {
+        return response(res, 'approval tidak ditemukan', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
 }
