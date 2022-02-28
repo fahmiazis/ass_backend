@@ -8,8 +8,8 @@ module.exports = {
     const kode = req.user.kode
     const result = await disposal.findAndCountAll({
       where: {
-        kode_plant: kode
-        // [Op.not]: { status_form: 8 }
+        kode_plant: kode,
+        [Op.not]: { no_disposal: null }
       },
       order: [
         ['id', 'DESC'],
@@ -50,7 +50,8 @@ module.exports = {
       const kode = req.user.kode
       const result = await mutasi.findAndCountAll({
         where: {
-          kode_plant: kode
+          kode_plant: kode,
+          [Op.not]: { no_mutasi: null }
         },
         include: [
           {
@@ -119,7 +120,8 @@ module.exports = {
                   [Op.gte]: start
                 }
               }
-            ]
+            ],
+            [Op.not]: { no_stock: null }
           },
           include: [
             {
