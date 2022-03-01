@@ -165,7 +165,7 @@ module.exports = {
                                 cek.push('1')
                               }
                             }
-                            if (cek.length === findNo.length) {
+                            if (cek.length > 0) {
                               for (let i = 0; i < findAsset.length; i++) {
                                 const data = {
                                   status_fisik: null,
@@ -385,7 +385,7 @@ module.exports = {
                                 cek.push('1')
                               }
                             }
-                            if (cek.length === findNo.length) {
+                            if (cek.length > 0) {
                               for (let i = 0; i < findAsset.length; i++) {
                                 const data = {
                                   status_fisik: null,
@@ -679,7 +679,7 @@ module.exports = {
                               cek.push('1')
                             }
                           }
-                          if (cek.length === findNo.length) {
+                          if (cek.length > 0) {
                             for (let i = 0; i < findAsset.length; i++) {
                               const data = {
                                 status_fisik: null,
@@ -898,7 +898,7 @@ module.exports = {
                               cek.push('1')
                             }
                           }
-                          if (cek.length === findNo.length) {
+                          if (cek.length > 0) {
                             for (let i = 0; i < findAsset.length; i++) {
                               const data = {
                                 status_fisik: null,
@@ -2124,7 +2124,11 @@ module.exports = {
                           } else {
                             return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                           }
+                        } else {
+                          return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                         }
+                      } else {
+                        return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                       }
                     }
                   } else {
@@ -2608,100 +2612,103 @@ module.exports = {
     }
   },
   getReportAll: async (req, res) => {
-    try {
-      let { limit, page, search, sort, group } = req.query
-      let searchValue = ''
-      let sortValue = ''
-      if (typeof search === 'object') {
-        searchValue = Object.values(search)[0]
-      } else {
-        searchValue = search || ''
-      }
-      if (typeof sort === 'object') {
-        sortValue = Object.values(sort)[0]
-      } else {
-        sortValue = sort || 'id'
-      }
-      if (!limit) {
-        limit = 1000
-      } else {
-        limit = parseInt(1000)
-      }
-      if (!page) {
-        page = 1
-      } else {
-        page = parseInt(page)
-      }
-      if (!group) {
-        group = ''
-      }
-      const findClose = await clossing.findAll({
-        where: {
-          jenis: 'stock'
-        }
-      })
-      if (findClose.length > 0) {
-        const time = moment().format('L').split('/')
-        let start = ''
-        let end = ''
-        if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-          const next = moment().subtract(1, 'month').format('L').split('/')
-          end = `${time[2]}-${time[0]}-${findClose[0].end}`
-          start = `${next[2]}-${next[0]}-${findClose[0].start}`
-        } else {
-          const next = moment().add(1, 'month').format('L').split('/')
-          start = `${time[2]}-${time[0]}-${findClose[0].start}`
-          end = `${next[2]}-${next[0]}-${findClose[0].end}`
-        }
-        const result = await stock.findAll({
-          where: {
-            grouping: { [Op.like]: `%${group}%` },
-            [Op.and]: [
-              { status_form: 8 },
-              {
-                tanggalStock: {
-                  [Op.lte]: end,
-                  [Op.gte]: start
-                }
-              }
-            ],
-            [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { deskripsi: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } },
-              { merk: { [Op.like]: `%${searchValue}%` } },
-              { satuan: { [Op.like]: `%${searchValue}%` } },
-              { unit: { [Op.like]: `%${searchValue}%` } },
-              { kondisi: { [Op.like]: `%${searchValue}%` } },
-              { lokasi: { [Op.like]: `%${searchValue}%` } }
-            ]
-          },
-          include: [
-            {
-              model: asset,
-              as: 'dataAsset'
-            },
-            {
-              model: depo,
-              as: 'depo'
-            }
-          ],
-          order: [[sortValue, 'ASC']],
-          limit: null,
-          offset: (page - 1) * limit
-        })
-        const pageInfo = pagination('/stock/get', req.query, page, limit, result.length)
-        if (result) {
-          return response(res, 'list stock', { result: { rows: result, count: result.length }, pageInfo })
-        } else {
-          return response(res, 'failed get data stock', {}, 404, false)
-        }
-      } else {
-        return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
-      }
-    } catch (error) {
-      return response(res, error.message, {}, 500, false)
+    // try {
+    let { limit, page, search, sort, group, fisik, sap, kondisi } = req.query
+    let searchValue = ''
+    let sortValue = ''
+    if (typeof search === 'object') {
+      searchValue = Object.values(search)[0]
+    } else {
+      searchValue = search || ''
     }
+    console.log(searchValue)
+    if (typeof sort === 'object') {
+      sortValue = Object.values(sort)[0]
+    } else {
+      sortValue = sort || 'id'
+    }
+    if (!limit) {
+      limit = 1000
+    } else {
+      limit = parseInt(1000)
+    }
+    if (!page) {
+      page = 1
+    } else {
+      page = parseInt(page)
+    }
+    if (!group) {
+      group = ''
+    }
+    if (!fisik) {
+      fisik = ''
+    }
+    if (!sap) {
+      sap = ''
+    }
+    if (!kondisi) {
+      kondisi = ''
+    }
+    const findClose = await clossing.findAll({
+      where: {
+        jenis: 'stock'
+      }
+    })
+    if (findClose.length > 0) {
+      const time = moment().format('L').split('/')
+      let start = ''
+      let end = ''
+      if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+        const next = moment().subtract(1, 'month').format('L').split('/')
+        end = `${time[2]}-${time[0]}-${findClose[0].end}`
+        start = `${next[2]}-${next[0]}-${findClose[0].start}`
+      } else {
+        const next = moment().add(1, 'month').format('L').split('/')
+        start = `${time[2]}-${time[0]}-${findClose[0].start}`
+        end = `${next[2]}-${next[0]}-${findClose[0].end}`
+      }
+      const result = await stock.findAll({
+        where: {
+          grouping: { [Op.like]: `%${group}%` },
+          status_fisik: { [Op.like]: `%${fisik}%` },
+          no_asset: sap === 'null' ? null : { [Op.not]: null },
+          kondisi: { [Op.like]: `%${kondisi}%` },
+          [Op.and]: [
+            { status_form: 8 },
+            {
+              tanggalStock: {
+                [Op.lte]: end,
+                [Op.gte]: start
+              }
+            }
+          ]
+        },
+        include: [
+          {
+            model: asset,
+            as: 'dataAsset'
+          },
+          {
+            model: depo,
+            as: 'depo'
+          }
+        ],
+        order: [[sortValue, 'ASC']],
+        limit: null,
+        offset: (page - 1) * limit
+      })
+      const pageInfo = pagination('/stock/get', req.query, page, limit, result.length)
+      if (result) {
+        return response(res, 'list stock', { result: { rows: result, count: result.length }, pageInfo })
+      } else {
+        return response(res, 'failed get data stock', {}, 404, false)
+      }
+    } else {
+      return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+    }
+    // } catch (error) {
+    //   return response(res, error.message, {}, 500, false)
+    // }
   },
   submitAsset: async (req, res) => {
     try {
