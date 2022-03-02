@@ -1,4 +1,4 @@
-const { asset, sequelize, path } = require('../models')
+const { asset, sequelize, path, depo } = require('../models')
 const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
@@ -111,35 +111,44 @@ module.exports = {
           return response(res, 'failed to get user', {}, 404, false)
         }
       } else if (level === 5) {
-        const result = await asset.findAndCountAll({
+        const findDep = await depo.findOne({
           where: {
-            [Op.and]: [
-              { kode_plant: kode },
-              { status: null }
-            ],
-            [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } }
-            ]
-          },
-          include: [
-            {
-              model: path,
-              as: 'pict'
-            }
-          ],
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: path, as: 'pict' }, 'id', 'ASC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit
+            kode_plant: kode
+          }
         })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
-        if (result) {
-          return response(res, 'list asset', { result, pageInfo })
+        if (findDep) {
+          const result = await asset.findAndCountAll({
+            where: {
+              [Op.and]: [
+                { cost_center: findDep.cost_center },
+                { status: null }
+              ],
+              [Op.or]: [
+                { no_asset: { [Op.like]: `%${searchValue}%` } },
+                { nama_asset: { [Op.like]: `%${searchValue}%` } }
+              ]
+            },
+            include: [
+              {
+                model: path,
+                as: 'pict'
+              }
+            ],
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: path, as: 'pict' }, 'id', 'ASC']
+            ],
+            limit: limit,
+            offset: (page - 1) * limit
+          })
+          const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+          if (result) {
+            return response(res, 'list asset', { result, pageInfo })
+          } else {
+            return response(res, 'failed to get aset', {}, 404, false)
+          }
         } else {
-          return response(res, 'failed to get user', {}, 404, false)
+          return response(res, 'failed to get aset', {}, 404, false)
         }
       } else if (level === 9) {
         const result = await asset.findAndCountAll({
@@ -206,40 +215,49 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const result = await asset.findAndCountAll({
+      const findDep = await depo.findOne({
         where: {
-          [Op.and]: [
-            { kode_plant: kode },
+          kode_plant: kode
+        }
+      })
+      if (findDep) {
+        const result = await asset.findAndCountAll({
+          where: {
+            [Op.and]: [
+              { cost_center: findDep.cost_center },
+              {
+                [Op.or]: [
+                  { status: '1' },
+                  { status: '11' },
+                  { status: null }
+                ]
+              }
+            ],
+            [Op.or]: [
+              { no_asset: { [Op.like]: `%${searchValue}` } },
+              { nama_asset: { [Op.like]: `%${searchValue}` } }
+            ]
+            // [Op.not]: { status: '0' }
+          },
+          include: [
             {
-              [Op.or]: [
-                { status: '1' },
-                { status: '11' },
-                { status: null }
-              ]
+              model: path,
+              as: 'pict'
             }
           ],
-          [Op.or]: [
-            { no_asset: { [Op.like]: `%${searchValue}` } },
-            { nama_asset: { [Op.like]: `%${searchValue}` } }
-          ]
-          // [Op.not]: { status: '0' }
-        },
-        include: [
-          {
-            model: path,
-            as: 'pict'
-          }
-        ],
-        order: [
-          [sortValue, 'ASC'],
-          [{ model: path, as: 'pict' }, 'id', 'ASC']
-        ],
-        limit: limit,
-        offset: (page - 1) * limit
-      })
-      const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
-      if (result) {
-        return response(res, 'list asset', { result, pageInfo })
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: path, as: 'pict' }, 'id', 'ASC']
+          ],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
+        if (result) {
+          return response(res, 'list asset', { result, pageInfo })
+        } else {
+          return response(res, 'failed to get asset', {}, 404, false)
+        }
       } else {
         return response(res, 'failed to get asset', {}, 404, false)
       }

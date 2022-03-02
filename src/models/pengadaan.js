@@ -27,7 +27,17 @@ module.exports = (sequelize, DataTypes) => {
     alasan: DataTypes.STRING,
     no_pengadaan: DataTypes.STRING,
     status_app: DataTypes.INTEGER,
-    status_doc: DataTypes.INTEGER
+    status_doc: DataTypes.INTEGER,
+    ticket_code: DataTypes.STRING,
+    isBudget: DataTypes.STRING,
+    isAsset: DataTypes.STRING,
+    uom: DataTypes.STRING,
+    setup_date: DataTypes.STRING,
+    asset_token: DataTypes.STRING,
+    bidding_harga: DataTypes.STRING,
+    ket_barang: DataTypes.STRING,
+    area: DataTypes.STRING,
+    status_form: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'pengadaan'

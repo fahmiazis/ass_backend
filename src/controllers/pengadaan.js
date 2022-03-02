@@ -361,7 +361,63 @@ module.exports = {
   },
   postApi: async (req, res) => {
     try {
-      return response(res, 'succcess request api', { result: req.body })
+      const data = req.body
+      const findCode = await pengadaan.findOne({
+        where: {
+          ticket_code: data.ticket_code
+        }
+      })
+      if (findCode) {
+        return response(res, 'Pengajuan sedang diproses', { findCode })
+      } else {
+        const valid = []
+        for (let i = 0; i < data.pr_items.length; i++) {
+          const dataSend = {
+            nama: data.pr_items[i].name,
+            qty: data.pr_items[i].qty,
+            price: data.pr_items[i].price,
+            uom: data.pr_items[i].uom,
+            isAsset: data.pr_items[i].isAsset,
+            setup_date: data.pr_items[i].setup_date,
+            kode_plant: data.prinfo.salespoint_code,
+            isBudget: data.prinfo.isBudget,
+            ticket_code: data.ticket_code,
+            asset_token: data.pr_items[i].asset_number_token,
+            bidding_harga: data.pr_items[i].notes_bidding_harga,
+            ket_barang: data.pr_items[i].notes_keterangan_barang,
+            status_form: 1,
+            alasan: data.pr_items[i].notes
+          }
+          const sent = await pengadaan.create(dataSend)
+          if (sent) {
+            valid.push(sent)
+          }
+        }
+        if (valid.length > 0) {
+          const cek = []
+          for (let i = 0; i < data.attachments.length; i++) {
+            const send = {
+              nama_dokumen: data.attachments[i].name,
+              jenis_dokumen: 'all',
+              divisi: 'asset',
+              no_pengadaan: data.attachments[i].url,
+              jenis_form: 'pengadaan',
+              status: 1
+            }
+            const sent = await docUser.create(send)
+            if (sent) {
+              cek.push(sent)
+            }
+          }
+          if (cek.length > 0) {
+            return response(res, 'berhasil melakukan pengajuan io', { result: data })
+          } else {
+            return response(res, 'berhasil melakukan pengajuan io', { result: data })
+          }
+        } else {
+          return response(res, 'failed create data pengadaan')
+        }
+      }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
