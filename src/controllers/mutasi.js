@@ -4097,7 +4097,7 @@ module.exports = {
         if (valid.length === findTtd.length) {
           return response(res, 'succesfully delete approval')
         } else {
-          return response(res, 'gagal menghapus', {}, 404, false)        
+          return response(res, 'gagal menghapus', {}, 404, false)
         }
       } else {
         return response(res, 'approval tidak ditemukan', {}, 404, false)

@@ -12,12 +12,17 @@ module.exports = {
   submit: async (req, res) => {
     try {
       const kode = req.user.kode
+      const findArea = await depo.findOne({
+        where: {
+          kode_plant: kode
+        }
+      })
       const findClose = await clossing.findAll({
         where: {
           jenis: 'stock'
         }
       })
-      if (findClose.length > 0) {
+      if (findClose.length > 0 && findArea) {
         const time = moment().format('L').split('/')
         const start = findClose[0].start
         const end = findClose[0].end
@@ -119,7 +124,7 @@ module.exports = {
                         for (let i = 0; i < result.length; i++) {
                           const data = {
                             kode_plant: kode,
-                            area: result[i].area,
+                            area: findArea.nama_area,
                             deskripsi: result[i].nama_asset,
                             no_asset: result[i].no_asset,
                             merk: result[i].merk,
@@ -339,7 +344,7 @@ module.exports = {
                         for (let i = 0; i < result.length; i++) {
                           const data = {
                             kode_plant: kode,
-                            area: result[i].area,
+                            area: findArea.nama_area,
                             deskripsi: result[i].nama_asset,
                             no_asset: result[i].no_asset,
                             merk: result[i].merk,
@@ -634,7 +639,7 @@ module.exports = {
                       for (let i = 0; i < result.length; i++) {
                         const data = {
                           kode_plant: kode,
-                          area: result[i].area,
+                          area: findArea.nama_area,
                           deskripsi: result[i].nama_asset,
                           no_asset: result[i].no_asset,
                           merk: result[i].merk,
@@ -853,7 +858,7 @@ module.exports = {
                       for (let i = 0; i < result.length; i++) {
                         const data = {
                           kode_plant: kode,
-                          area: result[i].area,
+                          area: findArea.nama_area,
                           deskripsi: result[i].nama_asset,
                           no_asset: result[i].no_asset,
                           merk: result[i].merk,
