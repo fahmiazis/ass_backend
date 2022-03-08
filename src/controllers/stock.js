@@ -300,7 +300,7 @@ module.exports = {
                                         </div>
                                         <div class="position">
                                         </div>
-                                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                         <div class="tittle foot">
                                             Terima kasih,
                                         </div>
@@ -520,7 +520,7 @@ module.exports = {
                                         </div>
                                         <div class="position">
                                         </div>
-                                        <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                         <div class="tittle foot">
                                             Terima kasih,
                                         </div>
@@ -814,7 +814,7 @@ module.exports = {
                                       </div>
                                       <div class="position">
                                       </div>
-                                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                       <div class="tittle foot">
                                           Terima kasih,
                                       </div>
@@ -1033,7 +1033,7 @@ module.exports = {
                                       </div>
                                       <div class="position">
                                       </div>
-                                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                       <div class="tittle foot">
                                           Terima kasih,
                                       </div>
@@ -1937,7 +1937,7 @@ module.exports = {
                                 </div>
                                 <div class="position">
                                 </div>
-                                <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                 <div class="tittle foot">
                                     Terima kasih,
                                 </div>
@@ -2098,7 +2098,7 @@ module.exports = {
                                       </div>
                                       <div class="position">
                                       </div>
-                                      <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                                       <div class="tittle foot">
                                           Terima kasih,
                                       </div>
@@ -2843,7 +2843,7 @@ module.exports = {
                 </div>
                 <div class="position">
                 </div>
-                <a href="http://accounting.pinusmerahabadi.co.id:3000/">Klik link berikut untuk akses web asset</a>
+                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                 <div class="tittle foot">
                     Terima kasih,
                 </div>

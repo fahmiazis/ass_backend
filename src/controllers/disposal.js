@@ -381,10 +381,7 @@ module.exports = {
             },
             {
               model: docUser,
-              as: 'docAsset',
-              where: {
-                jenis_form: 'disposal'
-              }
+              as: 'docAsset'
             }
           ]
         })
@@ -664,10 +661,7 @@ module.exports = {
                 },
                 {
                   model: docUser,
-                  as: 'docAsset',
-                  where: {
-                    jenis_form: 'disposal'
-                  }
+                  as: 'docAsset'
                 }
               ]
             })
@@ -732,10 +726,7 @@ module.exports = {
             },
             {
               model: docUser,
-              as: 'docAsset',
-              where: {
-                jenis_form: 'disposal'
-              }
+              as: 'docAsset'
             }
           ]
         })

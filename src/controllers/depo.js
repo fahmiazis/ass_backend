@@ -172,6 +172,8 @@ module.exports = {
   },
   getDepo: async (req, res) => {
     try {
+      const level = req.user.level
+      const fullname = req.user.name
       let { limit, page, search, sort } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -195,38 +197,64 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const result = await depo.findAndCountAll({
-        where: {
-          [Op.or]: [
-            { kode_plant: { [Op.like]: `%${searchValue}%` } },
-            { nama_area: { [Op.like]: `%${searchValue}%` } },
-            { channel: { [Op.like]: `%${searchValue}%` } },
-            { distribution: { [Op.like]: `%${searchValue}%` } },
-            { status_area: { [Op.like]: `%${searchValue}%` } },
-            { cost_center: { [Op.like]: `%${searchValue}%` } },
-            { profit_center: { [Op.like]: `%${searchValue}%` } },
-            { kode_sap_1: { [Op.like]: `%${searchValue}%` } },
-            { kode_sap_2: { [Op.like]: `%${searchValue}%` } },
-            { kode_plant: { [Op.like]: `%${searchValue}%` } },
-            { nama_nom: { [Op.like]: `%${searchValue}%` } },
-            { nama_om: { [Op.like]: `%${searchValue}%` } },
-            { nama_bm: { [Op.like]: `%${searchValue}%` } },
-            { nama_aos: { [Op.like]: `%${searchValue}%` } },
-            { nama_pic_1: { [Op.like]: `%${searchValue}%` } },
-            { nama_pic_2: { [Op.like]: `%${searchValue}%` } },
-            { nama_pic_3: { [Op.like]: `%${searchValue}%` } },
-            { nama_pic_4: { [Op.like]: `%${searchValue}%` } }
-          ]
-        },
-        order: [[sortValue, 'ASC']],
-        limit: limit,
-        offset: (page - 1) * limit
-      })
-      const pageInfo = pagination('/depo/get', req.query, page, limit, result.count)
-      if (result) {
-        return response(res, 'list users', { result, pageInfo })
+      if (level === 12) {
+        const result = await depo.findAll({
+          where: {
+            nama_bm: fullname
+          }
+        })
+        const pageInfo = pagination('/depo/get', req.query, page, limit, result.length)
+        if (result) {
+          return response(res, 'list users', { result: { count: result.length, rows: result }, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
+      } else if (level === 7) {
+        const result = await depo.findAll({
+          where: {
+            nama_om: fullname
+          }
+        })
+        const pageInfo = pagination('/depo/get', req.query, page, limit, result.length)
+        if (result) {
+          return response(res, 'list users', { result: { count: result.length, rows: result }, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
       } else {
-        return response(res, 'failed to get user', {}, 404, false)
+        const result = await depo.findAndCountAll({
+          where: {
+            [Op.or]: [
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { nama_area: { [Op.like]: `%${searchValue}%` } },
+              { channel: { [Op.like]: `%${searchValue}%` } },
+              { distribution: { [Op.like]: `%${searchValue}%` } },
+              { status_area: { [Op.like]: `%${searchValue}%` } },
+              { cost_center: { [Op.like]: `%${searchValue}%` } },
+              { profit_center: { [Op.like]: `%${searchValue}%` } },
+              { kode_sap_1: { [Op.like]: `%${searchValue}%` } },
+              { kode_sap_2: { [Op.like]: `%${searchValue}%` } },
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { nama_nom: { [Op.like]: `%${searchValue}%` } },
+              { nama_om: { [Op.like]: `%${searchValue}%` } },
+              { nama_bm: { [Op.like]: `%${searchValue}%` } },
+              { nama_aos: { [Op.like]: `%${searchValue}%` } },
+              { nama_pic_1: { [Op.like]: `%${searchValue}%` } },
+              { nama_pic_2: { [Op.like]: `%${searchValue}%` } },
+              { nama_pic_3: { [Op.like]: `%${searchValue}%` } },
+              { nama_pic_4: { [Op.like]: `%${searchValue}%` } }
+            ]
+          },
+          order: [[sortValue, 'ASC']],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/depo/get', req.query, page, limit, result.count)
+        if (result) {
+          return response(res, 'list users', { result, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

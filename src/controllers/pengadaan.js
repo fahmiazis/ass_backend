@@ -7,111 +7,12 @@ const { Op } = require('sequelize')
 const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
 
-const data = [
-  {
-    no_asset: '4300002670',
-    qty: 1,
-    nama: 'Printer Epson L3110 PMA Banyuwangi',
-    price: 2200000,
-    kode_plant: 'P238',
-    kategori: 'budget',
-    jenis: 'it',
-    createdAt: '2021/05/22',
-    no_pengadaan: 'PR3434'
-  },
-  {
-    no_asset: '4300002670',
-    qty: 1,
-    nama: 'Printer Epson L3110 PMA Banyuwangi',
-    price: 2200000,
-    kode_plant: 'P311',
-    kategori: 'budget',
-    jenis: 'it',
-    createdAt: '2021/05/23',
-    no_pengadaan: 'PR3433'
-  }
-]
-
 module.exports = {
   home: async (req, res) => {
     try {
-      // const level = req.user.level
-      const hasil = []
-      for (let i = 0; i < data.length; i++) {
-        // const now = new Date(moment(data[i].createdAt).format('YYYY-MM-DD'))
-        // const tomo = new Date(moment(data[i].createdAt).add(1, 'days').format('YYYY-MM-DD'))
-        const result = await pengadaan.findAll({
-          where: {
-            no_pengadaan: data[i].no_pengadaan
-          }
-        })
-        if (result.length > 0) {
-          const dataDepo = await depo.findAll({
-            where: {
-              kode_plant: data[i].kode_plant
-            }
-          })
-          if (dataDepo) {
-            const tampung = [result[0], dataDepo[0]]
-            hasil.push(tampung)
-          }
-        } else {
-          const results = await depo.findAll({
-            where: {
-              kode_plant: data[i].kode_plant
-            }
-          })
-          const getPeng = await pengadaan.findAll()
-          if (results) {
-            const getAsset = await asset.findAll()
-            if (getAsset && getPeng.length === 0) {
-              const cekNo = []
-              for (let i = 0; i < getAsset.length; i++) {
-                cekNo.push(parseInt(getAsset[i].no_doc))
-              }
-              const send = {
-                no_io: '',
-                no_doc: Math.max(...cekNo) + 1,
-                qty: data[i].qty,
-                nama: data[i].nama,
-                kode_plant: data[i].kode_plant,
-                kategori: data[i].kategori,
-                jenis: data[i].jenis,
-                price: data[i].price,
-                no_pengadaan: data[i].no_pengadaan
-              }
-              const make = await pengadaan.create(send)
-              if (make) {
-                const tampung = [make, results[0]]
-                hasil.push(tampung)
-              }
-            } else {
-              const cekNo = []
-              for (let i = 0; i < getPeng.length; i++) {
-                cekNo.push(parseInt(getPeng[i].no_doc))
-              }
-              const send = {
-                no_io: '',
-                no_doc: Math.max(...cekNo) + 1,
-                qty: data[i].qty,
-                nama: data[i].nama,
-                kode_plant: data[i].kode_plant,
-                kategori: data[i].kategori,
-                jenis: data[i].jenis,
-                price: data[i].price,
-                no_pengadaan: data[i].no_pengadaan
-              }
-              const make = await pengadaan.create(send)
-              if (make) {
-                const tampung = [make, results[0]]
-                hasil.push(tampung)
-              }
-            }
-          }
-        }
-      }
-      if (hasil.length > 0) {
-        return response(res, 'success get', { result: hasil })
+      const result = await pengadaan.findAll()
+      if (result.length > 0) {
+        return response(res, 'success get', { result })
       } else {
         return response(res, 'failed get data', {}, 404, false)
       }
