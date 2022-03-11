@@ -7,6 +7,7 @@ const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
 const wrapMail = require('../helpers/wrapMail')
+// const excel = require('exceljs')
 
 module.exports = {
   submit: async (req, res) => {
@@ -1398,9 +1399,8 @@ module.exports = {
             for (let i = 0; i < findDepo.length; i++) {
               const result = await stock.findAll({
                 where: {
-                  kode_plant: findDepo[i].kode_plant,
                   [Op.and]: [
-                    { status_form: level === 2 ? 9 : 1 },
+                    { kode_plant: findDepo[i].kode_plant },
                     {
                       tanggalStock: {
                         [Op.lte]: end,
@@ -3150,6 +3150,155 @@ module.exports = {
           }
         } else {
           return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  exportStock: async (req, res) => {
+    try {
+      const no = req.params.no
+      const level = req.user.level
+      const fullname = req.user.fullname
+      const { date } = req.query
+      if (no === 'all') {
+        const findClose = await clossing.findAll({
+          where: {
+            jenis: 'stock'
+          }
+        })
+        if (findClose.length > 0) {
+          const time = moment().format('L').split('/')
+          let start = ''
+          let end = ''
+          if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+            const next = moment().subtract(1, 'month').format('L').split('/')
+            end = `${time[2]}-${time[0]}-${findClose[0].end}`
+            start = `${next[2]}-${next[0]}-${findClose[0].start}`
+          } else {
+            const next = moment().add(1, 'month').format('L').split('/')
+            start = `${time[2]}-${time[0]}-${findClose[0].start}`
+            end = `${next[2]}-${next[0]}-${findClose[0].end}`
+          }
+          const findUser = await user.findOne({
+            where: {
+              user_level: level
+            }
+          })
+          if (findUser) {
+            if (level === 2) {
+              const findStock = await stock.findAll({
+                where: {
+                  [Op.and]: [
+                    {
+                      [Op.or]: [
+                        { status_form: level === 2 ? 9 : 1 },
+                        { status_form: level === 2 ? 8 : 1 }
+                      ]
+                    },
+                    {
+                      tanggalStock: {
+                        [Op.lte]: end,
+                        [Op.gte]: start
+                      }
+                    }
+                  ]
+                },
+                include: [
+                  {
+                    model: path,
+                    as: 'pict'
+                  },
+                  {
+                    model: path,
+                    as: 'img'
+                  }
+                ]
+              })
+              if (findStock.length > 0) {
+                return response(res, 'success get stock', { result: findStock })
+              } else {
+                return response(res, 'failed export stock', {}, 404, false)
+              }
+            } else if (level === 7 || level === 12) {
+              const findDepo = await depo.findAll({
+                where: {
+                  [Op.or]: [
+                    { nama_bm: level === 7 ? null : fullname },
+                    { nama_om: level === 12 ? null : fullname }
+                  ]
+                }
+              })
+              if (findDepo.length > 0) {
+                const hasil = []
+                for (let i = 0; i < findDepo.length; i++) {
+                  const result = await stock.findAll({
+                    where: {
+                      [Op.and]: [
+                        { kode_plant: findDepo[i].kode_plant },
+                        {
+                          tanggalStock: {
+                            [Op.lte]: end,
+                            [Op.gte]: start
+                          }
+                        }
+                      ]
+                    },
+                    include: [
+                      {
+                        model: path,
+                        as: 'pict'
+                      },
+                      {
+                        model: path,
+                        as: 'img'
+                      }
+                    ]
+                  })
+                  if (result.length > 0) {
+                    for (let j = 0; j < result.length; j++) {
+                      hasil.push(result[j])
+                    }
+                  }
+                }
+                if (hasil.length > 0) {
+                  return response(res, 'list stock', { result: hasil })
+                } else {
+                  return response(res, 'list stock', { result: hasil })
+                }
+              } else {
+                return response(res, 'failed get data stock', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed to download', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed export stock', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed export stock', {}, 404, false)
+        }
+      } else {
+        const findStock = await stock.findAll({
+          where: {
+            no_stock: no
+          },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            },
+            {
+              model: path,
+              as: 'img'
+            }
+          ]
+        })
+        if (findStock.length > 0) {
+          return response(res, 'success get stock', { result: findStock })
+        } else {
+          return response(res, 'failed export stock', {}, 404, false)
         }
       }
     } catch (error) {
