@@ -2618,7 +2618,7 @@ module.exports = {
   },
   getReportAll: async (req, res) => {
     // try {
-    let { limit, page, search, sort, group, fisik, sap, kondisi } = req.query
+    let { limit, page, search, sort, group, fisik, sap, kondisi, plant } = req.query
     let searchValue = ''
     let sortValue = ''
     if (typeof search === 'object') {
@@ -2654,6 +2654,9 @@ module.exports = {
     if (!kondisi) {
       kondisi = ''
     }
+    if (!plant) {
+      plant = ''
+    }
     const findClose = await clossing.findAll({
       where: {
         jenis: 'stock'
@@ -2674,10 +2677,10 @@ module.exports = {
       }
       const result = await stock.findAll({
         where: {
-          grouping: { [Op.like]: `%${group}%` },
-          status_fisik: { [Op.like]: `%${fisik}%` },
-          no_asset: sap === 'null' ? null : { [Op.not]: null },
-          kondisi: { [Op.like]: `%${kondisi}%` },
+          grouping: group === 'all' ? { [Op.not]: null } : { [Op.like]: `%${group}%` },
+          status_fisik: fisik === 'all' ? { [Op.not]: null } : { [Op.like]: `%${fisik}%` },
+          kode_plant: plant === 'all' ? { [Op.not]: null } : { [Op.like]: `%${plant}%` },
+          kondisi: kondisi === 'all' ? { [Op.not]: 'king' } : { [Op.like]: `%${kondisi}%` },
           [Op.and]: [
             { status_form: 8 },
             {
@@ -2686,6 +2689,10 @@ module.exports = {
                 [Op.gte]: start
               }
             }
+          ],
+          [Op.or]: [
+            { no_asset: sap === 'null' ? null : { [Op.not]: null } },
+            { no_asset: sap === 'all' ? null : sap === 'null' ? null : { [Op.not]: null } }
           ]
         },
         include: [
