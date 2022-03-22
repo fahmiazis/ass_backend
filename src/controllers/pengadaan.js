@@ -1,4 +1,4 @@
-const { approve, ttd, depo, pengadaan, asset, document, docUser } = require('../models')
+const { approve, ttd, depo, pengadaan, document, docUser } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -10,11 +10,99 @@ const uploadHelper = require('../helpers/upload')
 module.exports = {
   home: async (req, res) => {
     try {
-      const result = await pengadaan.findAll()
-      if (result.length > 0) {
-        return response(res, 'success get', { result })
+      const level = req.user.level
+      const kode = req.user.kode
+      const name = req.user.name
+      const fullname = req.user.fullname
+      if (level === 5) {
+        const result = await pengadaan.findAll({
+          where: {
+            kode_plant: kode
+          },
+          include: [
+            {
+              model: depo,
+              as: 'depo'
+            }
+          ],
+          group: ['no_pengadaan']
+        })
+        if (result.length > 0) {
+          return response(res, 'success get', { result })
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
+      } else if (level === 9) {
+        const result = await pengadaan.findAll({
+          where: {
+            kode_plant: name
+          },
+          include: [
+            {
+              model: depo,
+              as: 'depo'
+            }
+          ],
+          group: ['no_pengadaan']
+        })
+        if (result.length > 0) {
+          return response(res, 'success get', { result })
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
+      } else if (level === 12 || level === 7) {
+        const findDepo = await depo.findAll({
+          where: {
+            [Op.or]: [
+              { nama_bm: level === 7 ? null : fullname },
+              { nama_om: level === 12 ? null : fullname }
+            ]
+          }
+        })
+        if (findDepo.length > 0) {
+          const hasil = []
+          for (let i = 0; i < findDepo.length; i++) {
+            const result = await pengadaan.findAll({
+              where: {
+                kode_plant: findDepo[i].kode_plant
+              },
+              include: [
+                {
+                  model: depo,
+                  as: 'depo'
+                }
+              ],
+              group: ['no_pengadaan']
+            })
+            if (result) {
+              for (let j = 0; j < result.length; j++) {
+                hasil.push(result[j])
+              }
+            }
+          }
+          if (hasil.length > 0) {
+            return response(res, 'success get', { result: hasil })
+          } else {
+            return response(res, 'success get', { result: hasil })
+          }
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
       } else {
-        return response(res, 'failed get data', {}, 404, false)
+        const result = await pengadaan.findAll({
+          include: [
+            {
+              model: depo,
+              as: 'depo'
+            }
+          ],
+          group: ['no_pengadaan']
+        })
+        if (result.length > 0) {
+          return response(res, 'success get', { result })
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -107,6 +195,7 @@ module.exports = {
         if (result.length > 0) {
           const getDoc = await document.findAll({
             where: {
+              tipe_dokumen: 'pengadaan',
               [Op.or]: [
                 { jenis_dokumen: result[0].jenis },
                 { jenis_dokumen: 'all' }
@@ -269,8 +358,13 @@ module.exports = {
         }
       })
       if (findCode) {
-        return response(res, 'Pengajuan sedang diproses', { findCode })
+        return response(res, 'Pengajuan sedang diproses', { result: findCode })
       } else {
+        const findDepo = await depo.findOne({
+          where: {
+            kode_sap_1: data.prinfo.salespoint_code
+          }
+        })
         const valid = []
         for (let i = 0; i < data.pr_items.length; i++) {
           const dataSend = {
@@ -280,13 +374,16 @@ module.exports = {
             uom: data.pr_items[i].uom,
             isAsset: data.pr_items[i].isAsset,
             setup_date: data.pr_items[i].setup_date,
-            kode_plant: data.prinfo.salespoint_code,
-            isBudget: data.prinfo.isBudget,
+            kode_plant: findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant,
+            isBudget: `${data.prinfo.isBudget}`,
             ticket_code: data.ticket_code,
+            no_pengadaan: data.ticket_code,
+            kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget',
             asset_token: data.pr_items[i].asset_number_token,
             bidding_harga: data.pr_items[i].notes_bidding_harga,
             ket_barang: data.pr_items[i].notes_keterangan_barang,
             status_form: 1,
+            area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
             alasan: data.pr_items[i].notes
           }
           const sent = await pengadaan.create(dataSend)
@@ -301,7 +398,8 @@ module.exports = {
               nama_dokumen: data.attachments[i].name,
               jenis_dokumen: 'all',
               divisi: 'asset',
-              no_pengadaan: data.attachments[i].url,
+              no_pengadaan: data.ticket_code,
+              path: data.attachments[i].url,
               jenis_form: 'pengadaan',
               status: 1
             }
@@ -318,6 +416,23 @@ module.exports = {
         } else {
           return response(res, 'failed create data pengadaan')
         }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  cekApi: async (req, res) => {
+    try {
+      const { ticket_code } = req.query
+      const findCode = await pengadaan.findOne({
+        where: {
+          ticket_code: ticket_code
+        }
+      })
+      if (findCode) {
+        return response(res, 'Pengajuan sedang diproses', { result: findCode })
+      } else {
+        return response(res, '')
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
