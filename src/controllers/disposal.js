@@ -6221,7 +6221,7 @@ module.exports = {
                   status_app: no
                 }
               })
-              if (findDoc) {
+              if (findDoc.length > 0) {
                 const data = {
                   status_form: 4
                 }
@@ -6230,7 +6230,7 @@ module.exports = {
                   const findAsset = await disposal.findByPk(findDoc[i].id)
                   if (findAsset) {
                     await findAsset.update(data)
-                    valid.push(findDoc[i].kode_plant)
+                    valid.push(findAsset.kode_plant)
                   }
                 }
                 if (valid.length === findDoc.length) {
@@ -6472,6 +6472,8 @@ module.exports = {
                     return response(res, 'success approve fail send email', { cekEmail, noDis })
                   }
                 }
+              } else {
+                return response(res, 'success approve fail send email')
               }
             } else {
               return response(res, 'failed approve disposal', {}, 404, false)

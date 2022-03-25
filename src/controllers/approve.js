@@ -1,4 +1,4 @@
-const { approve, nameApprove, ttd } = require('../models')
+const { approve, nameApprove, ttd, role } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -316,6 +316,103 @@ module.exports = {
         }
       } else {
         return response(res, 'failed to update rom', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  changeName: async (req, res) => {
+    try {
+      const schema = joi.object({
+        nama: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const id = req.params.id
+        const findRole = await role.findOne({
+          where: {
+            nomor: id
+          }
+        })
+        const data = {
+          jabatan: results.nama
+        }
+        const dataRole = {
+          name: results.nama
+        }
+        if (findRole) {
+          const findApprove = await approve.findAll({
+            where: {
+              jabatan: findRole.name
+            }
+          })
+          if (findApprove.length > 0) {
+            const valid = []
+            for (let i = 0; i < findApprove.length; i++) {
+              const result = await approve.findByPk(findApprove[i].id)
+              if (result) {
+                await result.update(data)
+                valid.push(result)
+              }
+            }
+            if (valid.length === findApprove.length) {
+              const findTtd = await ttd.findAll({
+                where: {
+                  jabatan: findRole.name
+                }
+              })
+              if (findTtd.length > 0) {
+                const cek = []
+                for (let i = 0; i < findTtd.length; i++) {
+                  const result = await ttd.findByPk(findTtd[i].id)
+                  if (result) {
+                    await result.update(data)
+                    cek.push(result)
+                  }
+                }
+                if (cek.length === findTtd.length) {
+                  await findRole.update(dataRole)
+                  return response(res, 'success update role')
+                } else {
+                  return response(res, 'failed to update role', {}, 404, false)
+                }
+              } else {
+                return response(res, 'success update role')
+              }
+            } else {
+              return response(res, 'failed to update role', { findRole }, 404, false)
+            }
+          } else {
+            const findTtd = await ttd.findAll({
+              where: {
+                jabatan: findRole.name
+              }
+            })
+            if (findTtd.length > 0) {
+              const cek = []
+              for (let i = 0; i < findTtd.length; i++) {
+                const result = await ttd.findByPk(findTtd[i].id)
+                if (result) {
+                  await result.update(data)
+                  cek.push(result)
+                }
+              }
+              if (cek.length === findTtd.length) {
+                await findRole.update(dataRole)
+                return response(res, 'success update role')
+              } else {
+                return response(res, 'failed to update role', {}, 404, false)
+              }
+            } else {
+              await findRole.update(dataRole)
+              return response(res, 'success update role')
+            }
+          }
+        } else {
+          return response(res, 'failed to update role', { findRole }, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
