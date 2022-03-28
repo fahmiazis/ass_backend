@@ -175,6 +175,7 @@ module.exports = {
                               for (let i = 0; i < findAsset.length; i++) {
                                 const data = {
                                   status_fisik: null,
+                                  keterangan: null,
                                   kondisi: null,
                                   grouping: null
                                 }
@@ -395,6 +396,7 @@ module.exports = {
                               for (let i = 0; i < findAsset.length; i++) {
                                 const data = {
                                   status_fisik: null,
+                                  keterangan: null,
                                   kondisi: null,
                                   grouping: null
                                 }
@@ -689,6 +691,7 @@ module.exports = {
                             for (let i = 0; i < findAsset.length; i++) {
                               const data = {
                                 status_fisik: null,
+                                keterangan: null,
                                 kondisi: null,
                                 grouping: null
                               }
@@ -908,6 +911,7 @@ module.exports = {
                             for (let i = 0; i < findAsset.length; i++) {
                               const data = {
                                 status_fisik: null,
+                                keterangan: null,
                                 kondisi: null,
                                 grouping: null
                               }
