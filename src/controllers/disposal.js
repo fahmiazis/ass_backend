@@ -6457,9 +6457,9 @@ module.exports = {
                             }
                             const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
                             if (sendEmail) {
-                              return response(res, 'success kirim', { sendEmail })
+                              cekEmail.push('success send email')
                             } else {
-                              return response(res, 'berhasil kirim, tidak berhasil kirim notif email 1')
+                              cekEmail.push('failed send email')
                             }
                           }
                         }

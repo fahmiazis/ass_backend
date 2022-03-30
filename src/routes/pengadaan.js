@@ -9,5 +9,7 @@ route.patch('/rejdoc/:id', pengadaan.rejectDokumen)
 route.post('/upload/:id', pengadaan.uploadDocument)
 route.post('/post', pengadaan.postApi)
 route.get('/check', pengadaan.cekApi)
+route.get('/detail/:no', pengadaan.getDetail)
+route.get('/tesemail', pengadaan.tesEmail)
 
 module.exports = route
