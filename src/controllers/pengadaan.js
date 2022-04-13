@@ -114,15 +114,30 @@ module.exports = {
       const no = req.params.no
       const result = await ttd.findAll({
         where: {
-          no_pengadaan: no
+          [Op.or]: [
+            { no_doc: no },
+            { no_pengadaan: no }
+          ]
         }
       })
       if (result.length > 0) {
-        return response(res, 'success get template approve', { result })
+        const penyetuju = []
+        const pembuat = []
+        const pemeriksa = []
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].sebagai === 'pembuat') {
+            pembuat.push(result[i])
+          } else if (result[i].sebagai === 'pemeriksa') {
+            pemeriksa.push(result[i])
+          } else if (result[i].sebagai === 'penyetuju') {
+            penyetuju.push(result[i])
+          }
+        }
+        return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju } })
       } else {
         const result = await pengadaan.findAll({
           where: {
-            no_pengadaan: no
+            no_doc: no
           }
         })
         if (result) {
@@ -410,7 +425,117 @@ module.exports = {
             }
           }
           if (cek.length > 0) {
-            return response(res, 'berhasil melakukan pengajuan io', { result: data })
+            const getApp = await approve.findAll({
+              where: {
+                nama_approve: 'pengadaan io',
+                jenis: 'all',
+                [Op.or]: [
+                  { kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget' },
+                  { kategori: 'all' }
+                ]
+              }
+            })
+            if (getApp) {
+              const hasil = []
+              for (let i = 0; i < getApp.length; i++) {
+                const send = {
+                  jabatan: getApp[i].jabatan,
+                  jenis: getApp[i].jenis,
+                  sebagai: getApp[i].sebagai,
+                  kategori: null,
+                  no_doc: data.ticket_code
+                }
+                const make = await ttd.create(send)
+                if (make) {
+                  hasil.push(make)
+                }
+              }
+              if (hasil.length > 0) {
+                const getTtd = await ttd.findAll({
+                  where: {
+                    no_doc: data.ticket_code
+                  }
+                })
+                if (getTtd.length > 0) {
+                  const cekttd = []
+                  const authors = data.authors
+                  for (let i = 0; i < getTtd.length; i++) {
+                    if (getTtd[i].jabatan === 'area') {
+                      const name = authors.find(({ position }) => position === 'Area Operational Supervisor')
+                      if (name === undefined) {
+                        cekttd.push(1)
+                      } else {
+                        const data = {
+                          nama: name.name,
+                          status: 1
+                        }
+                        const findTtd = await ttd.findByPk(getTtd[i].id)
+                        if (findTtd) {
+                          await findTtd.update(data)
+                          cekttd.push(1)
+                        }
+                      }
+                    } else if (getTtd[i].jabatan === 'NOM') {
+                      const name = authors.find(({ position }) => position === 'National Operation Manager')
+                      if (name === undefined) {
+                        cekttd.push(1)
+                      } else {
+                        const data = {
+                          nama: name.name,
+                          status: 1
+                        }
+                        const findTtd = await ttd.findByPk(getTtd[i].id)
+                        if (findTtd) {
+                          await findTtd.update(data)
+                          cekttd.push(1)
+                        }
+                      }
+                    } else if (getTtd[i].jabatan === 'HEAD OF OPS') {
+                      const name = authors.find(({ position }) => position === 'Deputy Head Operation')
+                      if (name === undefined) {
+                        cekttd.push(1)
+                      } else {
+                        const data = {
+                          nama: name.name,
+                          status: 1
+                        }
+                        const findTtd = await ttd.findByPk(getTtd[i].id)
+                        if (findTtd) {
+                          await findTtd.update(data)
+                          cekttd.push(1)
+                        }
+                      }
+                    } else if (getTtd[i].jabatan === 'NFAM') {
+                      const name = authors.find(({ position }) => position === 'National Finance Accounting Manager')
+                      if (name === undefined) {
+                        cekttd.push(1)
+                      } else {
+                        const data = {
+                          nama: name.name,
+                          status: 1
+                        }
+                        const findTtd = await ttd.findByPk(getTtd[i].id)
+                        if (findTtd) {
+                          await findTtd.update(data)
+                          cekttd.push(1)
+                        }
+                      }
+                    }
+                  }
+                  if (cekttd.length > 0) {
+                    return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                  } else {
+                    return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                  }
+                } else {
+                  return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                }
+              } else {
+                return response(res, 'berhasil melakukan pengajuan io', { result: data })
+              }
+            } else {
+              return response(res, 'berhasil melakukan pengajuan io', { result: data })
+            }
           } else {
             return response(res, 'berhasil melakukan pengajuan io', { result: data })
           }
@@ -445,7 +570,13 @@ module.exports = {
       const result = await pengadaan.findAll({
         where: {
           no_pengadaan: no
-        }
+        },
+        include: [
+          {
+            model: depo,
+            as: 'depo'
+          }
+        ]
       })
       if (result.length > 0) {
         return response(res, 'success get detail', { result })
@@ -644,6 +775,133 @@ module.exports = {
         return response(res, 'success send email')
       } else {
         return response(res, 'failed send email')
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateDataIo: async (req, res) => {
+    try {
+      const id = req.params.id
+      const schema = joi.object({
+        isAsset: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const findData = await pengadaan.findByPk(id)
+        if (findData) {
+          const updateData = await findData.update(results)
+          if (updateData) {
+            return response(res, 'success update isAsset', { updateData })
+          } else {
+            return response(res, 'failed update isAsset', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed update isAsset', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitIsAsset: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findIo = await pengadaan.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findIo.length > 0) {
+        const cek = []
+        for (let i = 0; i < findIo.length; i++) {
+          const findData = await pengadaan.findByPk(findIo[i].id)
+          const data = {
+            status_form: 2
+          }
+          if (findData) {
+            await findData.update(data)
+            cek.push(1)
+          }
+        }
+        if (cek.length > 0) {
+          return response(res, 'success submit')
+        } else {
+          return response(res, 'failed submit', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateNoIo: async (req, res) => {
+    try {
+      const no = req.params.no
+      const schema = joi.object({
+        no_io: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const findIo = await pengadaan.findAll({
+          where: {
+            no_pengadaan: no
+          }
+        })
+        if (findIo.length > 0) {
+          const cek = []
+          for (let i = 0; i < findIo.length; i++) {
+            const findData = await pengadaan.findByPk(findIo[i].id)
+            if (findData) {
+              await findData.update(results)
+              cek.push(1)
+            }
+          }
+          if (cek.length > 0) {
+            return response(res, 'success update')
+          } else {
+            return response(res, 'failed update', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed update', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitBudget: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findIo = await pengadaan.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findIo.length > 0) {
+        const cek = []
+        for (let i = 0; i < findIo.length; i++) {
+          const findData = await pengadaan.findByPk(findIo[i].id)
+          const data = {
+            status_form: 3
+          }
+          if (findData) {
+            await findData.update(data)
+            cek.push(1)
+          }
+        }
+        if (cek.length > 0) {
+          return response(res, 'success submit')
+        } else {
+          return response(res, 'failed submit', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

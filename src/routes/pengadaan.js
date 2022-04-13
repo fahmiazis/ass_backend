@@ -11,5 +11,9 @@ route.post('/post', pengadaan.postApi)
 route.get('/check', pengadaan.cekApi)
 route.get('/detail/:no', pengadaan.getDetail)
 route.get('/tesemail', pengadaan.tesEmail)
+route.patch('/upasset/:id', pengadaan.updateDataIo)
+route.patch('/upnoio/:no', pengadaan.updateNoIo)
+route.patch('/subasset/:no', pengadaan.submitIsAsset)
+route.patch('/subbudget/:no', pengadaan.submitBudget)
 
 module.exports = route
