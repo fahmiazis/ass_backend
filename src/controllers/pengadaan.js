@@ -2628,7 +2628,43 @@ module.exports = {
             }
           })
           if (findTtd.length > 0) {
-            return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+            const cekIo = []
+            for (let i = 0; i < findIo.length; i++) {
+              const result = await pengadaan.findByPk(findIo[i].id)
+              if (result) {
+                await result.destroy()
+                cekIo.push(1)
+              }
+            }
+            if (cekIo.length > 0) {
+              const cekDoc = []
+              for (let i = 0; i < findDoc.length; i++) {
+                const result = await pengadaan.findByPk(findDoc[i].id)
+                if (result) {
+                  await result.destroy()
+                  cekDoc.push(1)
+                }
+              }
+              if (cekDoc.length > 0) {
+                const cekTtd = []
+                for (let i = 0; i < findTtd.length; i++) {
+                  const result = await pengadaan.findByPk(findTtd[i].id)
+                  if (result) {
+                    await result.destroy()
+                    cekTtd.push(1)
+                  }
+                }
+                if (cekTtd.length > 0) {
+                  return response(res, 'success delete transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+                } else {
+                  return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+                }
+              } else {
+                return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+              }
+            } else {
+              return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+            }
           } else {
             return response(res, 'approval transaksi tidak ditemukan', {}, 400, false)
           }
