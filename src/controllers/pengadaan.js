@@ -1113,13 +1113,13 @@ module.exports = {
           order: [['id', 'DESC']],
           limit: 50
         })
-        if (findNo.length > 0) {
+        if (findNo) {
           const cekNo = []
           for (let i = 0; i < findNo.length; i++) {
             const no = findNo[i].no_pengadaan.split('P')
             cekNo.push(parseInt(no[1]))
           }
-          const noIo = Math.max(...cekNo) + 1
+          const noIo = cekNo.length > 0 ? Math.max(...cekNo) + 1 : 1
           const findDepo = await depo.findOne({
             where: {
               kode_sap_1: data.prinfo.salespoint_code
