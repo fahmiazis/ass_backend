@@ -1,12 +1,15 @@
-const { approve, ttd, depo, pengadaan, document, docUser } = require('../models')
+const { email, approve, ttd, depo, pengadaan, document, docUser, role, user, assettemp } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 // const { pagination } = require('../helpers/pagination')
 // const moment = require('moment')
+const readXlsxFile = require('read-excel-file/node')
 const wrapMail = require('../helpers/wrapMail')
+const uploadMaster = require('../helpers/uploadMaster')
 const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
+const fs = require('fs')
 
 module.exports = {
   home: async (req, res) => {
@@ -51,12 +54,13 @@ module.exports = {
         } else {
           return response(res, 'failed get data', {}, 404, false)
         }
-      } else if (level === 12 || level === 7) {
+      } else if (level === 12 || level === 7 || level === 28) {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
               { nama_bm: level === 7 ? null : fullname },
-              { nama_om: level === 12 ? null : fullname }
+              { nama_om: level === 12 ? null : fullname },
+              { nama_nom: level === 12 ? null : fullname }
             ]
           }
         })
@@ -137,22 +141,23 @@ module.exports = {
       } else {
         const result = await pengadaan.findAll({
           where: {
-            no_doc: no
+            no_pengadaan: no
           }
         })
         if (result) {
           const getApp = await approve.findAll({
             where: {
+              nama_approve: 'pengadaan io',
               [Op.and]: [
                 {
                   [Op.or]: [
-                    { jenis: result[0].jenis },
+                    { jenis: result[0].jenis === undefined || result[0].jenis === null ? 'all' : result[0].jenis },
                     { jenis: 'all' }
                   ]
                 },
                 {
                   [Op.or]: [
-                    { kategori: result[0].kategori },
+                    { kategori: result[0].kategori === undefined || result[0].kategori === null ? 'all' : result[0].kategori },
                     { kategori: 'all' }
                   ]
                 }
@@ -167,7 +172,7 @@ module.exports = {
                 jenis: getApp[i].jenis,
                 sebagai: getApp[i].sebagai,
                 kategori: getApp[i].kategori,
-                no_pengadaan: no
+                no_doc: no
               }
               const make = await ttd.create(send)
               if (make) {
@@ -328,38 +333,763 @@ module.exports = {
   },
   approveIo: async (req, res) => {
     try {
-      const id = req.params.id
-      const result = await ttd.findByPk(id)
-      if (result) {
-        const results = await pengadaan.findAll({
+      const level = req.user.level
+      const name = req.user.name
+      const no = req.params.no
+      const result = await role.findAll({
+        where: {
+          nomor: level
+        }
+      })
+      if (result.length > 0) {
+        const find = await ttd.findAll({
           where: {
-            no_pengadaan: result[0].no_pengadaan
+            no_doc: no
           }
         })
-        if (results) {
-          const findDepo = await depo.findAll({
-            where: {
-              kode_plant: results[0].kode_plant
+        if (find.length > 0) {
+          let hasil = 0
+          let arr = null
+          // let position = ''
+          for (let i = 0; i < find.length; i++) {
+            if (result[0].name === find[i].jabatan) {
+              hasil = find[i].id
+              arr = i
+              // position = find[i].jabatan
             }
-          })
-          if (findDepo) {
-            const send = {
-              status: 3
-            }
-            const approve = await result.update(send)
-            if (approve) {
-              return response(res, 'successfully approve form io', { result: approve })
+          }
+          if (hasil !== 0) {
+            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+              return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
             } else {
-              return response(res, 'failed approve form io', {}, 404, false)
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const dataTemp = await pengadaan.findOne({
+                  where: {
+                    no_pengadaan: no
+                  }
+                })
+                if (dataTemp) {
+                  const findDepo = await depo.findOne({
+                    where: {
+                      kode_plant: dataTemp.kode_plant
+                    }
+                  })
+                  if (level !== 5 || (level === 5 && findDepo)) {
+                    const data = {
+                      nama: level === 5 ? findDepo.nama_aos : name,
+                      status: 1,
+                      path: null
+                    }
+                    const findTtd = await ttd.findByPk(hasil)
+                    if (findTtd) {
+                      const sent = await findTtd.update(data)
+                      if (sent) {
+                        if (arr < 2) {
+                          const findDoc = await pengadaan.findOne({
+                            where: {
+                              no_pengadaan: no
+                            }
+                          })
+                          if (findDoc) {
+                            const findRole = await role.findAll({
+                              where: {
+                                name: find[arr + 1].jabatan
+                              }
+                            })
+                            if (findRole.length > 0) {
+                              const findIo = await pengadaan.findAll({
+                                where: {
+                                  no_pengadaan: no
+                                }
+                              })
+                              if (findIo.length > 0) {
+                                const findUser = await user.findOne({
+                                  where: {
+                                    user_level: findRole[0].nomor
+                                  }
+                                })
+                                if (findUser) {
+                                  const findEmail = await email.findOne({
+                                    where: {
+                                      kode_plant: findIo[0].kode_plant
+                                    }
+                                  })
+                                  if (findEmail) {
+                                    let tableTd = ''
+                                    for (let i = 0; i < findIo.length; i++) {
+                                      if (findIo[i].isAsset === 'true') {
+                                        const element = `
+                                        <tr>
+                                          <td>${findIo.indexOf(findIo[i]) + 1}</td>
+                                          <td>${findIo[i].no_pengadaan}</td>
+                                          <td>${findIo[i].nama}</td>
+                                          <td>${findIo[i].price}</td>
+                                          <td>${findIo[i].qty}</td>
+                                          <td>${findIo[i].kode_plant}</td>
+                                          <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
+                                          <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
+                                        </tr>`
+                                        tableTd = tableTd + element
+                                      }
+                                    }
+                                    const mailOptions = {
+                                      from: 'noreply_asset@pinusmerahabadi.co.id',
+                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                      to: `${level === 5 ? findEmail.email_area_om : findEmail.email_nom}`,
+                                      subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
+                                      html: `
+                                      <head>
+                                        <style type="text/css">
+                                          body {
+                                              display: flexbox;
+                                              flex-direction: column;
+                                          }
+                                          .tittle {
+                                              font-size: 15px;
+                                          }
+                                          .mar {
+                                              margin-bottom: 20px;
+                                          }
+                                          .mar1 {
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot {
+                                              margin-top: 20px;
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot1 {
+                                              margin-bottom: 50px;
+                                          }
+                                          .position {
+                                              display: flexbox;
+                                              flex-direction: row;
+                                              justify-content: left;
+                                              margin-top: 10px;
+                                          }
+                                          table {
+                                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                              font-size: 12px;
+                                          }
+                                          .demo-table {
+                                              border-collapse: collapse;
+                                              font-size: 13px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td {
+                                              border-bottom: 1px solid #e1edff;
+                                              border-left: 1px solid #e1edff;
+                                              padding: 7px 17px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td:last-child {
+                                              border-right: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:first-child {
+                                              border-top: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:last-child{
+                                              border-bottom: 0;
+                                          }
+                                          caption {
+                                              caption-side: top;
+                                              margin-bottom: 10px;
+                                          }
+                                          
+                                          /* Table Header */
+                                          .demo-table thead th {
+                                              background-color: #508abb;
+                                              color: #FFFFFF;
+                                              border-color: #6ea1cc !important;
+                                              text-transform: uppercase;
+                                          }
+                                          
+                                          /* Table Body */
+                                          .demo-table tbody td {
+                                              color: #353535;
+                                          }
+                                          
+                                          .demo-table tbody tr:nth-child(odd) td {
+                                              background-color: #f4fbff;
+                                          }
+                                          .demo-table tbody tr:hover th,
+                                          .demo-table tbody tr:hover td {
+                                              background-color: #ffffa2;
+                                              border-color: #ffff0f;
+                                              transition: all .2s;
+                                          }
+                                      </style>
+                                      </head>
+                                      <body>
+                                          <div class="tittle mar">
+                                              Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                          </div>
+                                          <div class="tittle mar1">
+                                              <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
+                                          </div>
+                                          <div class="position">
+                                              <table class="demo-table">
+                                                  <thead>
+                                                      <tr>
+                                                          <th>No</th>
+                                                          <th>No Pengadaan</th>
+                                                          <th>Description</th>
+                                                          <th>Price</th>
+                                                          <th>Qty</th>
+                                                          <th>Kode Plant</th>
+                                                          <th>Cost Ctr</th>
+                                                          <th>Cost Ctr Name</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    ${tableTd}
+                                                  </tbody>
+                                              </table>
+                                          </div>
+                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                          <div class="tittle foot">
+                                              Terima kasih,
+                                          </div>
+                                          <div class="tittle foot1">
+                                              Regards,
+                                          </div>
+                                          <div class="tittle">
+                                              Team Asset
+                                          </div>
+                                      </body>
+                                      `
+                                    }
+                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                    if (sendEmail) {
+                                      return response(res, 'success approve pengajuan io', { result: sendEmail })
+                                    } else {
+                                      return response(res, 'success approve pengajuan io')
+                                    }
+                                  } else {
+                                    return response(res, 'success approve pengajuan io')
+                                  }
+                                } else {
+                                  return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
+                                }
+                              } else {
+                                return response(res, 'failed approve pengadaan', {}, 404, false)
+                              }
+                            }
+                          }
+                        } else {
+                          const results = await ttd.findAll({
+                            where: {
+                              [Op.and]: [
+                                { no_doc: no },
+                                { status: 1 }
+                              ]
+                            }
+                          })
+                          if (results.length === find.length) {
+                            const findDoc = await pengadaan.findAll({
+                              where: {
+                                no_pengadaan: no
+                              }
+                            })
+                            if (findDoc.length > 0) {
+                              const data = {
+                                status_form: 3
+                              }
+                              const valid = []
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const findAsset = await pengadaan.findByPk(findDoc[i].id)
+                                if (findAsset) {
+                                  await findAsset.update(data)
+                                  valid.push(1)
+                                }
+                              }
+                              if (valid.length === findDoc.length) {
+                                const findUser = await user.findOne({
+                                  where: {
+                                    user_level: 8
+                                  }
+                                })
+                                if (findUser) {
+                                  let tableTd = ''
+                                  for (let i = 0; i < findDoc.length; i++) {
+                                    if (findDoc[i].isAsset === 'true') {
+                                      const element = `
+                                      <tr>
+                                        <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                        <td>${findDoc[i].no_pengadaan}</td>
+                                        <td>${findDoc[i].nama}</td>
+                                        <td>${findDoc[i].price}</td>
+                                        <td>${findDoc[i].qty}</td>
+                                        <td>${findDoc[i].kode_plant}</td>
+                                        <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
+                                        <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
+                                      </tr>`
+                                      tableTd = tableTd + element
+                                    }
+                                  }
+                                  const mailOptions = {
+                                    from: 'noreply_asset@pinusmerahabadi.co.id',
+                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                    to: `${findUser.email}`,
+                                    subject: `Pengajuan Pengadaan Asset ${findDoc[0].no_pengadaan} `,
+                                    html: `
+                                      <head>
+                                        <style type="text/css">
+                                          body {
+                                              display: flexbox;
+                                              flex-direction: column;
+                                          }
+                                          .tittle {
+                                              font-size: 15px;
+                                          }
+                                          .mar {
+                                              margin-bottom: 20px;
+                                          }
+                                          .mar1 {
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot {
+                                              margin-top: 20px;
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot1 {
+                                              margin-bottom: 50px;
+                                          }
+                                          .position {
+                                              display: flexbox;
+                                              flex-direction: row;
+                                              justify-content: left;
+                                              margin-top: 10px;
+                                          }
+                                          table {
+                                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                              font-size: 12px;
+                                          }
+                                          .demo-table {
+                                              border-collapse: collapse;
+                                              font-size: 13px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td {
+                                              border-bottom: 1px solid #e1edff;
+                                              border-left: 1px solid #e1edff;
+                                              padding: 7px 17px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td:last-child {
+                                              border-right: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:first-child {
+                                              border-top: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:last-child{
+                                              border-bottom: 0;
+                                          }
+                                          caption {
+                                              caption-side: top;
+                                              margin-bottom: 10px;
+                                          }
+                                          
+                                          /* Table Header */
+                                          .demo-table thead th {
+                                              background-color: #508abb;
+                                              color: #FFFFFF;
+                                              border-color: #6ea1cc !important;
+                                              text-transform: uppercase;
+                                          }
+                                          
+                                          /* Table Body */
+                                          .demo-table tbody td {
+                                              color: #353535;
+                                          }
+                                          
+                                          .demo-table tbody tr:nth-child(odd) td {
+                                              background-color: #f4fbff;
+                                          }
+                                          .demo-table tbody tr:hover th,
+                                          .demo-table tbody tr:hover td {
+                                              background-color: #ffffa2;
+                                              border-color: #ffff0f;
+                                              transition: all .2s;
+                                          }
+                                      </style>
+                                      </head>
+                                      <body>
+                                          <div class="tittle mar">
+                                              Dear Bapak/Ibu Divisi Asset,
+                                          </div>
+                                          <div class="tittle mar1">
+                                              <div>Mohon untuk isi nomor io pengajuan asset berikut ini.</div>
+                                          </div>
+                                          <div class="position">
+                                              <table class="demo-table">
+                                                  <thead>
+                                                      <tr>
+                                                          <th>No</th>
+                                                          <th>No Pengadaan</th>
+                                                          <th>Description</th>
+                                                          <th>Price</th>
+                                                          <th>Qty</th>
+                                                          <th>Kode Plant</th>
+                                                          <th>Cost Ctr</th>
+                                                          <th>Cost Ctr Name</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    ${tableTd}
+                                                  </tbody>
+                                              </table>
+                                          </div>
+                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                          <div class="tittle foot">
+                                              Terima kasih,
+                                          </div>
+                                          <div class="tittle foot1">
+                                              Regards,
+                                          </div>
+                                          <div class="tittle">
+                                              Team Asset
+                                          </div>
+                                      </body>
+                                      `
+                                  }
+                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                  if (sendEmail) {
+                                    return response(res, 'success approve pengajuan io', { result: sendEmail })
+                                  } else {
+                                    return response(res, 'success approve pengajuan io')
+                                  }
+                                } else {
+                                  return response(res, 'success approve pengadaan')
+                                }
+                              } else {
+                                return response(res, 'success approve pengadaan')
+                              }
+                            } else {
+                              return response(res, 'success approve pengadaan')
+                            }
+                          } else {
+                            const findDoc = await pengadaan.findOne({
+                              where: {
+                                no_pengadaan: no
+                              }
+                            })
+                            if (findDoc) {
+                              const findRole = await role.findAll({
+                                where: {
+                                  name: find[arr + 1].jabatan
+                                }
+                              })
+                              if (findRole.length > 0) {
+                                const findIo = await pengadaan.findAll({
+                                  where: {
+                                    no_pengadaan: no
+                                  }
+                                })
+                                if (findIo.length > 0) {
+                                  const findUser = await user.findOne({
+                                    where: {
+                                      user_level: findRole[0].nomor
+                                    }
+                                  })
+                                  if (findUser) {
+                                    let tableTd = ''
+                                    for (let i = 0; i < findIo.length; i++) {
+                                      if (findIo[i].isAsset === 'true') {
+                                        const element = `
+                                        <tr>
+                                          <td>${findIo.indexOf(findIo[i]) + 1}</td>
+                                          <td>${findIo[i].no_pengadaan}</td>
+                                          <td>${findIo[i].nama}</td>
+                                          <td>${findIo[i].price}</td>
+                                          <td>${findIo[i].qty}</td>
+                                          <td>${findIo[i].kode_plant}</td>
+                                          <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
+                                          <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
+                                        </tr>`
+                                        tableTd = tableTd + element
+                                      }
+                                    }
+                                    const mailOptions = {
+                                      from: 'noreply_asset@pinusmerahabadi.co.id',
+                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                      to: `${findUser.email}`,
+                                      subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
+                                      html: `
+                                      <head>
+                                        <style type="text/css">
+                                          body {
+                                              display: flexbox;
+                                              flex-direction: column;
+                                          }
+                                          .tittle {
+                                              font-size: 15px;
+                                          }
+                                          .mar {
+                                              margin-bottom: 20px;
+                                          }
+                                          .mar1 {
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot {
+                                              margin-top: 20px;
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot1 {
+                                              margin-bottom: 50px;
+                                          }
+                                          .position {
+                                              display: flexbox;
+                                              flex-direction: row;
+                                              justify-content: left;
+                                              margin-top: 10px;
+                                          }
+                                          table {
+                                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                              font-size: 12px;
+                                          }
+                                          .demo-table {
+                                              border-collapse: collapse;
+                                              font-size: 13px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td {
+                                              border-bottom: 1px solid #e1edff;
+                                              border-left: 1px solid #e1edff;
+                                              padding: 7px 17px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td:last-child {
+                                              border-right: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:first-child {
+                                              border-top: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:last-child{
+                                              border-bottom: 0;
+                                          }
+                                          caption {
+                                              caption-side: top;
+                                              margin-bottom: 10px;
+                                          }
+                                          
+                                          /* Table Header */
+                                          .demo-table thead th {
+                                              background-color: #508abb;
+                                              color: #FFFFFF;
+                                              border-color: #6ea1cc !important;
+                                              text-transform: uppercase;
+                                          }
+                                          
+                                          /* Table Body */
+                                          .demo-table tbody td {
+                                              color: #353535;
+                                          }
+                                          
+                                          .demo-table tbody tr:nth-child(odd) td {
+                                              background-color: #f4fbff;
+                                          }
+                                          .demo-table tbody tr:hover th,
+                                          .demo-table tbody tr:hover td {
+                                              background-color: #ffffa2;
+                                              border-color: #ffff0f;
+                                              transition: all .2s;
+                                          }
+                                      </style>
+                                      </head>
+                                      <body>
+                                          <div class="tittle mar">
+                                              Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                          </div>
+                                          <div class="tittle mar1">
+                                              <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
+                                          </div>
+                                          <div class="position">
+                                              <table class="demo-table">
+                                                  <thead>
+                                                      <tr>
+                                                          <th>No</th>
+                                                          <th>No Pengadaan</th>
+                                                          <th>Description</th>
+                                                          <th>Price</th>
+                                                          <th>Qty</th>
+                                                          <th>Kode Plant</th>
+                                                          <th>Cost Ctr</th>
+                                                          <th>Cost Ctr Name</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    ${tableTd}
+                                                  </tbody>
+                                              </table>
+                                          </div>
+                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                          <div class="tittle foot">
+                                              Terima kasih,
+                                          </div>
+                                          <div class="tittle foot1">
+                                              Regards,
+                                          </div>
+                                          <div class="tittle">
+                                              Team Asset
+                                          </div>
+                                      </body>
+                                      `
+                                    }
+                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                    if (sendEmail) {
+                                      return response(res, 'success approve pengajuan io', { result: sendEmail })
+                                    } else {
+                                      return response(res, 'success approve pengajuan io')
+                                    }
+                                  } else {
+                                    return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
+                                  }
+                                } else {
+                                  return response(res, 'failed approve pengadaan', {}, 404, false)
+                                }
+                              }
+                            }
+                          }
+                        }
+                      } else {
+                        return response(res, 'failed approve pengadaan', {}, 404, false)
+                      }
+                    } else {
+                      return response(res, 'failed approve pengadaan', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, 'failed approve pengadaan', {}, 404, false)
+                  }
+                } else {
+                  return response(res, 'failed approve pengadaan', {}, 404, false)
+                }
+              } else {
+                return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
+              }
             }
           } else {
-            return response(res, 'failed approve form io', {}, 404, false)
+            return response(res, 'failed approve pengadaan', {}, 404, false)
           }
         } else {
-          return response(res, 'failed approve form io', {}, 404, false)
+          return response(res, 'failed approve pengadaan', {}, 404, false)
         }
       } else {
-        return response(res, 'failed approve form io', {}, 404, false)
+        return response(res, 'failed approve pengadaan', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  rejectIo: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const no = req.params.no
+      const schema = joi.object({
+        alasan: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const result = await role.findAll({
+          where: {
+            nomor: level
+          }
+        })
+        if (result.length > 0) {
+          const find = await ttd.findAll({
+            where: {
+              no_doc: no
+            }
+          })
+          if (find.length > 0) {
+            let hasil = 0
+            let arr = null
+            // let position = ''
+            for (let i = 0; i < find.length; i++) {
+              if (result[0].name === find[i].jabatan) {
+                hasil = find[i].id
+                arr = i
+                // position = find[i].jabatan
+              }
+            }
+            if (hasil !== 0) {
+              if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+                return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
+              } else {
+                if (arr === 0 || find[arr - 1].status === 1) {
+                  const data = {
+                    nama: name,
+                    status: 0,
+                    path: results.alasan
+                  }
+                  const findTtd = await ttd.findByPk(hasil)
+                  if (findTtd) {
+                    const sent = await findTtd.update(data)
+                    if (sent) {
+                      const results = await ttd.findAll({
+                        where: {
+                          [Op.and]: [
+                            { no_doc: no },
+                            { status: 1 }
+                          ]
+                        }
+                      })
+                      if (results) {
+                        const findDoc = await pengadaan.findOne({
+                          where: {
+                            no_pengadaan: no
+                          }
+                        })
+                        if (findDoc) {
+                          const findRole = await role.findAll({
+                            where: {
+                              name: find[arr + 1].jabatan
+                            }
+                          })
+                          if (findRole.length > 0) {
+                            const findDis = await pengadaan.findAll({
+                              where: {
+                                no_pengadaan: no
+                              }
+                            })
+                            if (findDis.length > 0) {
+                              const findUser = await user.findOne({
+                                where: {
+                                  user_level: findRole[0].nomor
+                                }
+                              })
+                              if (findUser) {
+                                return response(res, 'success reject pengadaan')
+                              } else {
+                                return response(res, 'berhasil reject, tidak berhasil kirim notif email 2')
+                              }
+                            } else {
+                              return response(res, 'failed reject pengadaan', {}, 404, false)
+                            }
+                          }
+                        }
+                      }
+                    } else {
+                      return response(res, 'failed reject pengadaan', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, 'failed reject pengadaan', {}, 404, false)
+                  }
+                } else {
+                  return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
+                }
+              }
+            } else {
+              return response(res, 'failed reject pengadaan', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed reject pengadaan', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed reject pengadaan', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -376,157 +1106,331 @@ module.exports = {
       if (findCode) {
         return response(res, 'Pengajuan sedang diproses', { result: findCode })
       } else {
-        const findDepo = await depo.findOne({
+        const findNo = await pengadaan.findAll({
           where: {
-            kode_sap_1: data.prinfo.salespoint_code
-          }
+            [Op.not]: { no_pengadaan: null }
+          },
+          order: [['id', 'DESC']],
+          limit: 50
         })
-        const valid = []
-        for (let i = 0; i < data.pr_items.length; i++) {
-          const dataSend = {
-            nama: data.pr_items[i].name,
-            qty: data.pr_items[i].qty,
-            price: data.pr_items[i].price,
-            uom: data.pr_items[i].uom,
-            isAsset: data.pr_items[i].isAsset,
-            setup_date: data.pr_items[i].setup_date,
-            kode_plant: findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant,
-            isBudget: `${data.prinfo.isBudget}`,
-            ticket_code: data.ticket_code,
-            no_pengadaan: data.ticket_code,
-            kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget',
-            asset_token: data.pr_items[i].asset_number_token,
-            bidding_harga: data.pr_items[i].notes_bidding_harga,
-            ket_barang: data.pr_items[i].notes_keterangan_barang,
-            status_form: 1,
-            area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
-            alasan: data.pr_items[i].notes
+        if (findNo.length > 0) {
+          const cekNo = []
+          for (let i = 0; i < findNo.length; i++) {
+            const no = findNo[i].no_pengadaan.split('P')
+            cekNo.push(parseInt(no[1]))
           }
-          const sent = await pengadaan.create(dataSend)
-          if (sent) {
-            valid.push(sent)
-          }
-        }
-        if (valid.length > 0) {
-          const cek = []
-          for (let i = 0; i < data.attachments.length; i++) {
-            const send = {
-              nama_dokumen: data.attachments[i].name,
-              jenis_dokumen: 'all',
-              divisi: 'asset',
-              no_pengadaan: data.ticket_code,
-              path: data.attachments[i].url,
-              jenis_form: 'pengadaan',
-              status: 1
+          const noIo = Math.max(...cekNo) + 1
+          const findDepo = await depo.findOne({
+            where: {
+              kode_sap_1: data.prinfo.salespoint_code
             }
-            const sent = await docUser.create(send)
+          })
+          const valid = []
+          for (let i = 0; i < data.pr_items.length; i++) {
+            const dataSend = {
+              nama: data.pr_items[i].name,
+              qty: data.pr_items[i].qty,
+              price: data.pr_items[i].price,
+              uom: data.pr_items[i].uom,
+              isAsset: data.pr_items[i].isAsset,
+              setup_date: data.pr_items[i].setup_date,
+              kode_plant: findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant,
+              isBudget: `${data.prinfo.isBudget}`,
+              ticket_code: data.ticket_code,
+              no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
+              kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget',
+              asset_token: data.pr_items[i].asset_number_token,
+              bidding_harga: data.pr_items[i].notes_bidding_harga,
+              ket_barang: data.pr_items[i].notes_keterangan_barang,
+              status_form: 1,
+              area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
+              alasan: data.pr_items[i].notes
+            }
+            const sent = await pengadaan.create(dataSend)
             if (sent) {
-              cek.push(sent)
+              valid.push(sent)
             }
           }
-          if (cek.length > 0) {
-            const getApp = await approve.findAll({
-              where: {
-                nama_approve: 'pengadaan io',
-                jenis: 'all',
-                [Op.or]: [
-                  { kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget' },
-                  { kategori: 'all' }
-                ]
+          if (valid.length > 0) {
+            const cek = []
+            for (let i = 0; i < data.attachments.length; i++) {
+              const send = {
+                nama_dokumen: data.attachments[i].name,
+                jenis_dokumen: 'all',
+                divisi: 'asset',
+                no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
+                path: data.attachments[i].url,
+                jenis_form: 'pengadaan',
+                status: 1
               }
-            })
-            if (getApp) {
-              const hasil = []
-              for (let i = 0; i < getApp.length; i++) {
-                const send = {
-                  jabatan: getApp[i].jabatan,
-                  jenis: getApp[i].jenis,
-                  sebagai: getApp[i].sebagai,
-                  kategori: null,
-                  no_doc: data.ticket_code
-                }
-                const make = await ttd.create(send)
-                if (make) {
-                  hasil.push(make)
-                }
+              const sent = await docUser.create(send)
+              if (sent) {
+                cek.push(sent)
               }
-              if (hasil.length > 0) {
-                const getTtd = await ttd.findAll({
-                  where: {
-                    no_doc: data.ticket_code
+            }
+            if (cek.length > 0) {
+              const getApp = await approve.findAll({
+                where: {
+                  nama_approve: 'pengadaan io',
+                  jenis: 'all',
+                  [Op.or]: [
+                    { kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget' },
+                    { kategori: 'all' }
+                  ]
+                }
+              })
+              if (getApp) {
+                const hasil = []
+                for (let i = 0; i < getApp.length; i++) {
+                  const send = {
+                    jabatan: getApp[i].jabatan,
+                    jenis: getApp[i].jenis,
+                    sebagai: getApp[i].sebagai,
+                    kategori: null,
+                    no_doc: noIo === undefined ? 'P' + 1 : 'P' + noIo
                   }
-                })
-                if (getTtd.length > 0) {
-                  const cekttd = []
-                  const authors = data.authors
-                  for (let i = 0; i < getTtd.length; i++) {
-                    if (getTtd[i].jabatan === 'area') {
-                      const name = authors.find(({ position }) => position === 'Area Operational Supervisor')
-                      if (name === undefined) {
-                        cekttd.push(1)
-                      } else {
-                        const data = {
-                          nama: name.name,
-                          status: 1
-                        }
-                        const findTtd = await ttd.findByPk(getTtd[i].id)
-                        if (findTtd) {
-                          await findTtd.update(data)
-                          cekttd.push(1)
-                        }
-                      }
-                    } else if (getTtd[i].jabatan === 'NOM') {
-                      const name = authors.find(({ position }) => position === 'National Operation Manager')
-                      if (name === undefined) {
-                        cekttd.push(1)
-                      } else {
-                        const data = {
-                          nama: name.name,
-                          status: 1
-                        }
-                        const findTtd = await ttd.findByPk(getTtd[i].id)
-                        if (findTtd) {
-                          await findTtd.update(data)
-                          cekttd.push(1)
-                        }
-                      }
-                    } else if (getTtd[i].jabatan === 'HEAD OF OPS') {
-                      const name = authors.find(({ position }) => position === 'Deputy Head Operation')
-                      if (name === undefined) {
-                        cekttd.push(1)
-                      } else {
-                        const data = {
-                          nama: name.name,
-                          status: 1
-                        }
-                        const findTtd = await ttd.findByPk(getTtd[i].id)
-                        if (findTtd) {
-                          await findTtd.update(data)
-                          cekttd.push(1)
-                        }
-                      }
-                    } else if (getTtd[i].jabatan === 'NFAM') {
-                      const name = authors.find(({ position }) => position === 'National Finance Accounting Manager')
-                      if (name === undefined) {
-                        cekttd.push(1)
-                      } else {
-                        const data = {
-                          nama: name.name,
-                          status: 1
-                        }
-                        const findTtd = await ttd.findByPk(getTtd[i].id)
-                        if (findTtd) {
-                          await findTtd.update(data)
-                          cekttd.push(1)
-                        }
-                      }
+                  const make = await ttd.create(send)
+                  if (make) {
+                    hasil.push(make)
+                  }
+                }
+                if (hasil.length > 0) {
+                  const findEmail = await user.findOne({
+                    where: {
+                      user_level: 2
                     }
-                  }
-                  if (cekttd.length > 0) {
-                    return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                  })
+                  if (findEmail) {
+                    let tableTd = ''
+                    const io = data.pr_items
+                    for (let i = 0; i < io.length; i++) {
+                      const element = `
+                      <tr>
+                        <td>${io.indexOf(io[i]) + 1}</td>
+                        <td>${noIo === undefined ? 'P' + 1 : 'P' + noIo}</td>
+                        <td>${io[i].name}</td>
+                        <td>${io[i].price}</td>
+                        <td>${io[i].qty}</td>
+                        <td>${findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant}</td>
+                        <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? data.prinfo.salespoint_code : findDepo.cost_center}</td>
+                        <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area}</td>
+                      </tr>`
+                      tableTd = tableTd + element
+                    }
+                    const mailOptions = {
+                      from: 'noreply_asset@pinusmerahabadi.co.id',
+                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                      to: `${findEmail.email}`,
+                      subject: `Pengajuan Pengadaan Asset ${noIo === undefined ? 'P' + 1 : 'P' + noIo} `,
+                      html: `
+                      <head>
+                        <style type="text/css">
+                        body {
+                            display: flexbox;
+                            flex-direction: column;
+                        }
+                        .tittle {
+                            font-size: 15px;
+                        }
+                        .mar {
+                            margin-bottom: 20px;
+                        }
+                        .mar1 {
+                            margin-bottom: 10px;
+                        }
+                        .foot {
+                            margin-top: 20px;
+                            margin-bottom: 10px;
+                        }
+                        .foot1 {
+                            margin-bottom: 50px;
+                        }
+                        .position {
+                            display: flexbox;
+                            flex-direction: row;
+                            justify-content: left;
+                            margin-top: 10px;
+                        }
+                        table {
+                            font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                            font-size: 12px;
+                        }
+                        .demo-table {
+                            border-collapse: collapse;
+                            font-size: 13px;
+                        }
+                        .demo-table th, 
+                        .demo-table td {
+                            border-bottom: 1px solid #e1edff;
+                            border-left: 1px solid #e1edff;
+                            padding: 7px 17px;
+                        }
+                        .demo-table th, 
+                        .demo-table td:last-child {
+                            border-right: 1px solid #e1edff;
+                        }
+                        .demo-table td:first-child {
+                            border-top: 1px solid #e1edff;
+                        }
+                        .demo-table td:last-child{
+                            border-bottom: 0;
+                        }
+                        caption {
+                            caption-side: top;
+                            margin-bottom: 10px;
+                        }
+                        
+                        /* Table Header */
+                        .demo-table thead th {
+                            background-color: #508abb;
+                            color: #FFFFFF;
+                            border-color: #6ea1cc !important;
+                            text-transform: uppercase;
+                        }
+                        
+                        /* Table Body */
+                        .demo-table tbody td {
+                            color: #353535;
+                        }
+                        
+                        .demo-table tbody tr:nth-child(odd) td {
+                            background-color: #f4fbff;
+                        }
+                        .demo-table tbody tr:hover th,
+                        .demo-table tbody tr:hover td {
+                            background-color: #ffffa2;
+                            border-color: #ffff0f;
+                            transition: all .2s;
+                        }
+                    </style>
+                      </head>
+                      <body>
+                          <div class="tittle mar">
+                              Dear Bapak/Ibu Divisi Asset,
+                          </div>
+                          <div class="tittle mar1">
+                              <div>Mohon untuk identifikasi barang yang akan diajukan berikut ini.</div>
+                          </div>
+                          <div class="position">
+                              <table class="demo-table">
+                                  <thead>
+                                      <tr>
+                                          <th>No</th>
+                                          <th>No Pengadaan</th>
+                                          <th>Description</th>
+                                          <th>Price</th>
+                                          <th>Qty</th>
+                                          <th>Kode Plant</th>
+                                          <th>Cost Ctr</th>
+                                          <th>Cost Ctr Name</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                    ${tableTd}
+                                  </tbody>
+                              </table>
+                          </div>
+                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                          <div class="tittle foot">
+                              Terima kasih,
+                          </div>
+                          <div class="tittle foot1">
+                              Regards,
+                          </div>
+                          <div class="tittle">
+                              Admin
+                          </div>
+                      </body>
+                      `
+                    }
+                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                    if (sendEmail) {
+                      return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                    } else {
+                      return response(res, 'berhasil melakukan pengajuan io')
+                    }
                   } else {
-                    return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                    return response(res, 'berhasil melakukan pengajuan io')
                   }
+                  // const getTtd = await ttd.findAll({
+                  //   where: {
+                  //     no_doc: noIo === undefined ? 'P' + 1 : 'P' + noIo
+                  //   }
+                  // })
+                  // if (getTtd.length > 0) {
+                  //   const cekttd = []
+                  //   const authors = data.authors
+                  //   for (let i = 0; i < getTtd.length; i++) {
+                  //     if (getTtd[i].jabatan === 'area') {
+                  //       const name = authors.find(({ position }) => position === 'Area Operational Supervisor')
+                  //       if (name === undefined) {
+                  //         cekttd.push(1)
+                  //       } else {
+                  //         const data = {
+                  //           nama: name.name,
+                  //           status: 1
+                  //         }
+                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                  //         if (findTtd) {
+                  //           await findTtd.update(data)
+                  //           cekttd.push(1)
+                  //         }
+                  //       }
+                  //     } else if (getTtd[i].jabatan === 'NOM') {
+                  //       const name = authors.find(({ position }) => position === 'National Operation Manager')
+                  //       if (name === undefined) {
+                  //         cekttd.push(1)
+                  //       } else {
+                  //         const data = {
+                  //           nama: name.name,
+                  //           status: 1
+                  //         }
+                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                  //         if (findTtd) {
+                  //           await findTtd.update(data)
+                  //           cekttd.push(1)
+                  //         }
+                  //       }
+                  //     } else if (getTtd[i].jabatan === 'HEAD OF OPS') {
+                  //       const name = authors.find(({ position }) => position === 'Deputy Head Operation')
+                  //       if (name === undefined) {
+                  //         cekttd.push(1)
+                  //       } else {
+                  //         const data = {
+                  //           nama: name.name,
+                  //           status: 1
+                  //         }
+                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                  //         if (findTtd) {
+                  //           await findTtd.update(data)
+                  //           cekttd.push(1)
+                  //         }
+                  //       }
+                  //     } else if (getTtd[i].jabatan === 'NFAM') {
+                  //       const name = authors.find(({ position }) => position === 'National Finance Accounting Manager')
+                  //       if (name === undefined) {
+                  //         cekttd.push(1)
+                  //       } else {
+                  //         const data = {
+                  //           nama: name.name,
+                  //           status: 1
+                  //         }
+                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                  //         if (findTtd) {
+                  //           await findTtd.update(data)
+                  //           cekttd.push(1)
+                  //         }
+                  //       }
+                  //     }
+                  //   }
+                  //   if (cekttd.length > 0) {
+                  //     return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                  //   } else {
+                  //     return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                  //   }
+                  // } else {
+                  //   return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                  // }
                 } else {
                   return response(res, 'berhasil melakukan pengajuan io', { result: data })
                 }
@@ -537,7 +1441,7 @@ module.exports = {
               return response(res, 'berhasil melakukan pengajuan io', { result: data })
             }
           } else {
-            return response(res, 'berhasil melakukan pengajuan io', { result: data })
+            return response(res, 'failed create data pengadaan')
           }
         } else {
           return response(res, 'failed create data pengadaan')
@@ -582,6 +1486,66 @@ module.exports = {
         return response(res, 'success get detail', { result })
       } else {
         return response(res, 'failed get detail', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getTempAsset: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findTemp = await assettemp.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findTemp.length > 0) {
+        return response(res, 'success get detail', { result: findTemp })
+      } else {
+        const result = await pengadaan.findAll({
+          where: {
+            no_pengadaan: no
+          }
+        })
+        if (result.length > 0) {
+          const cek = []
+          for (let i = 0; i < result.length; i++) {
+            if (result[i].isAsset === 'true') {
+              for (let j = 0; j < parseInt(result[i].qty); j++) {
+                const data = {
+                  no_io: result[i].no_io,
+                  no_asset: result[i].no_asset,
+                  qty: 1,
+                  kode_plant: result[i].kode_plant,
+                  no_pengadaan: result[i].no_pengadaan,
+                  nama: result[i].nama,
+                  price: result[i].price,
+                  idIo: result[i].id
+                }
+                const send = await assettemp.create(data)
+                if (send) {
+                  cek.push(send)
+                }
+              }
+            }
+          }
+          if (cek.length > 0) {
+            const findAsset = await assettemp.findAll({
+              where: {
+                no_pengadaan: no
+              }
+            })
+            if (findAsset.length > 0) {
+              return response(res, 'success get detail', { result: findAsset })
+            } else {
+              return response(res, 'failed get detail', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed get detail', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed get detail', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -784,7 +1748,8 @@ module.exports = {
     try {
       const id = req.params.id
       const schema = joi.object({
-        isAsset: joi.string().required()
+        isAsset: joi.string().required(),
+        jenis: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -827,7 +1792,173 @@ module.exports = {
           }
         }
         if (cek.length > 0) {
-          return response(res, 'success submit')
+          const findDepo = await depo.findOne({
+            where: {
+              kode_plant: findIo[0].kode_plant
+            }
+          })
+          if (findDepo) {
+            const findEmail = await email.findOne({
+              where: {
+                kode_plant: findIo[0].kode_plant
+              }
+            })
+            if (findEmail) {
+              let tableTd = ''
+              for (let i = 0; i < findIo.length; i++) {
+                if (findIo[i].isAsset === 'true') {
+                  const element = `
+                    <tr>
+                      <td>${findIo.indexOf(findIo[i]) + 1}</td>
+                      <td>${findIo[i].no_pengadaan}</td>
+                      <td>${findIo[i].nama}</td>
+                      <td>${findIo[i].price}</td>
+                      <td>${findIo[i].qty}</td>
+                      <td>${findIo[i].kode_plant}</td>
+                      <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
+                      <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
+                    </tr>`
+                  tableTd = tableTd + element
+                }
+              }
+              const mailOptions = {
+                from: 'noreply_asset@pinusmerahabadi.co.id',
+                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                to: `${findEmail.email_area_aos}`,
+                subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
+                html: `
+                <head>
+                  <style type="text/css">
+                    body {
+                        display: flexbox;
+                        flex-direction: column;
+                    }
+                    .tittle {
+                        font-size: 15px;
+                    }
+                    .mar {
+                        margin-bottom: 20px;
+                    }
+                    .mar1 {
+                        margin-bottom: 10px;
+                    }
+                    .foot {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .foot1 {
+                        margin-bottom: 50px;
+                    }
+                    .position {
+                        display: flexbox;
+                        flex-direction: row;
+                        justify-content: left;
+                        margin-top: 10px;
+                    }
+                    table {
+                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                        font-size: 12px;
+                    }
+                    .demo-table {
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }
+                    .demo-table th, 
+                    .demo-table td {
+                        border-bottom: 1px solid #e1edff;
+                        border-left: 1px solid #e1edff;
+                        padding: 7px 17px;
+                    }
+                    .demo-table th, 
+                    .demo-table td:last-child {
+                        border-right: 1px solid #e1edff;
+                    }
+                    .demo-table td:first-child {
+                        border-top: 1px solid #e1edff;
+                    }
+                    .demo-table td:last-child{
+                        border-bottom: 0;
+                    }
+                    caption {
+                        caption-side: top;
+                        margin-bottom: 10px;
+                    }
+                    
+                    /* Table Header */
+                    .demo-table thead th {
+                        background-color: #508abb;
+                        color: #FFFFFF;
+                        border-color: #6ea1cc !important;
+                        text-transform: uppercase;
+                    }
+                    
+                    /* Table Body */
+                    .demo-table tbody td {
+                        color: #353535;
+                    }
+                    
+                    .demo-table tbody tr:nth-child(odd) td {
+                        background-color: #f4fbff;
+                    }
+                    .demo-table tbody tr:hover th,
+                    .demo-table tbody tr:hover td {
+                        background-color: #ffffa2;
+                        border-color: #ffff0f;
+                        transition: all .2s;
+                    }
+                </style>
+                </head>
+                <body>
+                    <div class="tittle mar">
+                        Dear Bapak/Ibu Divisi Budget,
+                    </div>
+                    <div class="tittle mar1">
+                        <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
+                    </div>
+                    <div class="position">
+                        <table class="demo-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>No Pengadaan</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Kode Plant</th>
+                                    <th>Cost Ctr</th>
+                                    <th>Cost Ctr Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              ${tableTd}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                    <div class="tittle foot">
+                        Terima kasih,
+                    </div>
+                    <div class="tittle foot1">
+                        Regards,
+                    </div>
+                    <div class="tittle">
+                        Team Asset
+                    </div>
+                </body>
+                `
+              }
+              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+              if (sendEmail) {
+                return response(res, 'success submit pengajuan io', { result: sendEmail })
+              } else {
+                return response(res, 'success submit pengajuan io')
+              }
+            } else {
+              return response(res, 'success submit pengajuan io')
+            }
+          } else {
+            return response(res, 'success submit pengajuan io')
+          }
         } else {
           return response(res, 'failed submit', {}, 404, false)
         }
@@ -875,6 +2006,92 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  updateNoAsset: async (req, res) => {
+    try {
+      const id = req.params.id
+      const schema = joi.object({
+        no_asset: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const findIo = await pengadaan.findByPk(id)
+        if (findIo) {
+          const updateAsset = await findIo.update(results)
+          if (updateAsset) {
+            return response(res, 'success update')
+          } else {
+            return response(res, 'failed update', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed update', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateTemp: async (req, res) => {
+    try {
+      const id = req.params.id
+      const schema = joi.object({
+        no_asset: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const findIo = await assettemp.findByPk(id)
+        if (findIo) {
+          const updateAsset = await findIo.update(results)
+          if (updateAsset) {
+            const findTemp = await assettemp.findAll({
+              where: {
+                idIo: findIo.idIo
+              }
+            })
+            if (findTemp.length > 0) {
+              const cek = []
+              let data = ''
+              for (let i = 0; i < findTemp.length; i++) {
+                if (findTemp[i].no_pengadaan !== null) {
+                  data += i === findTemp.length - 1 ? findTemp[i].no_asset : `${findTemp[i].no_asset},`
+                  cek.push(1)
+                }
+              }
+              if (cek.length === findTemp.length) {
+                const findAsset = await pengadaan.findByPk(findIo.idIo)
+                if (findAsset) {
+                  const send = {
+                    no_asset: data
+                  }
+                  const updateTemp = await findAsset.update(send)
+                  if (updateTemp) {
+                    return response(res, 'success update 3', { findTemp, cek, data })
+                  } else {
+                    return response(res, 'success update 2', { findTemp, cek, data })
+                  }
+                } else {
+                  return response(res, 'success update 1', { findTemp, cek, data })
+                }
+              } else {
+                return response(res, 'success update', { findTemp, cek, data })
+              }
+            } else {
+              return response(res, 'success update', { findTemp })
+            }
+          } else {
+            return response(res, 'failed update', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed update', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   submitBudget: async (req, res) => {
     try {
       const no = req.params.no
@@ -888,7 +2105,7 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
-            status_form: 3
+            status_form: 9
           }
           if (findData) {
             await findData.update(data)
@@ -896,12 +2113,530 @@ module.exports = {
           }
         }
         if (cek.length > 0) {
-          return response(res, 'success submit')
+          const findDepo = await depo.findOne({
+            where: {
+              kode_plant: findIo[0].kode_plant
+            }
+          })
+          if (findDepo) {
+            const findEmail = await user.findOne({
+              where: {
+                user_level: 2
+              }
+            })
+            if (findEmail) {
+              let tableTd = ''
+              for (let i = 0; i < findIo.length; i++) {
+                if (findIo[i].isAsset === 'true') {
+                  const element = `
+                  <tr>
+                    <td>${findIo.indexOf(findIo[i]) + 1}</td>
+                    <td>${findIo[i].no_pengadaan}</td>
+                    <td>${findIo[i].nama}</td>
+                    <td>${findIo[i].price}</td>
+                    <td>${findIo[i].qty}</td>
+                    <td>${findIo[i].kode_plant}</td>
+                    <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
+                    <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
+                  </tr>`
+                  tableTd = tableTd + element
+                }
+              }
+              const mailOptions = {
+                from: 'noreply_asset@pinusmerahabadi.co.id',
+                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                to: `${findEmail.email}`,
+                subject: `Eksekusi Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
+                html: `
+                <head>
+                  <style type="text/css">
+                    body {
+                        display: flexbox;
+                        flex-direction: column;
+                    }
+                    .tittle {
+                        font-size: 15px;
+                    }
+                    .mar {
+                        margin-bottom: 20px;
+                    }
+                    .mar1 {
+                        margin-bottom: 10px;
+                    }
+                    .foot {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .foot1 {
+                        margin-bottom: 50px;
+                    }
+                    .position {
+                        display: flexbox;
+                        flex-direction: row;
+                        justify-content: left;
+                        margin-top: 10px;
+                    }
+                    table {
+                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                        font-size: 12px;
+                    }
+                    .demo-table {
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }
+                    .demo-table th, 
+                    .demo-table td {
+                        border-bottom: 1px solid #e1edff;
+                        border-left: 1px solid #e1edff;
+                        padding: 7px 17px;
+                    }
+                    .demo-table th, 
+                    .demo-table td:last-child {
+                        border-right: 1px solid #e1edff;
+                    }
+                    .demo-table td:first-child {
+                        border-top: 1px solid #e1edff;
+                    }
+                    .demo-table td:last-child{
+                        border-bottom: 0;
+                    }
+                    caption {
+                        caption-side: top;
+                        margin-bottom: 10px;
+                    }
+                    
+                    /* Table Header */
+                    .demo-table thead th {
+                        background-color: #508abb;
+                        color: #FFFFFF;
+                        border-color: #6ea1cc !important;
+                        text-transform: uppercase;
+                    }
+                    
+                    /* Table Body */
+                    .demo-table tbody td {
+                        color: #353535;
+                    }
+                    
+                    .demo-table tbody tr:nth-child(odd) td {
+                        background-color: #f4fbff;
+                    }
+                    .demo-table tbody tr:hover th,
+                    .demo-table tbody tr:hover td {
+                        background-color: #ffffa2;
+                        border-color: #ffff0f;
+                        transition: all .2s;
+                    }
+                </style>
+                </head>
+                <body>
+                    <div class="tittle mar">
+                        Dear Bapak/Ibu AOS,
+                    </div>
+                    <div class="tittle mar1">
+                        <div>Mohon untuk isi nomor asset pengajuan asset berikut ini.</div>
+                    </div>
+                    <div class="position">
+                        <table class="demo-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>No Pengadaan</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Kode Plant</th>
+                                    <th>Cost Ctr</th>
+                                    <th>Cost Ctr Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              ${tableTd}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                    <div class="tittle foot">
+                        Terima kasih,
+                    </div>
+                    <div class="tittle foot1">
+                        Regards,
+                    </div>
+                    <div class="tittle">
+                        Team Asset
+                    </div>
+                </body>
+                `
+              }
+              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+              if (sendEmail) {
+                return response(res, 'success submit pengajuan io', { result: sendEmail })
+              } else {
+                return response(res, 'success submit pengajuan io')
+              }
+            } else {
+              return response(res, 'success submit pengajuan io')
+            }
+          } else {
+            return response(res, 'success submit pengajuan io')
+          }
         } else {
           return response(res, 'failed submit', {}, 404, false)
         }
       } else {
         return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitEks: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findIo = await pengadaan.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findIo.length > 0) {
+        const cek = []
+        for (let i = 0; i < findIo.length; i++) {
+          const findData = await pengadaan.findByPk(findIo[i].id)
+          const data = {
+            status_form: 8
+          }
+          if (findData) {
+            await findData.update(data)
+            cek.push(1)
+          }
+        }
+        if (cek.length > 0) {
+          const findDepo = await depo.findOne({
+            where: {
+              kode_plant: findIo[0].kode_plant
+            }
+          })
+          if (findDepo) {
+            const findEmail = await email.findOne({
+              where: {
+                kode_plant: findIo[0].kode_plant
+              }
+            })
+            if (findEmail) {
+              let tableTd = ''
+              for (let i = 0; i < findIo.length; i++) {
+                if (findIo[i].isAsset === 'true') {
+                  const element = `
+                  <tr>
+                    <td>${findIo.indexOf(findIo[i]) + 1}</td>
+                    <td>${findIo[i].no_pengadaan}</td>
+                    <td>${findIo[i].nama}</td>
+                    <td>${findIo[i].price}</td>
+                    <td>${findIo[i].qty}</td>
+                    <td>${findIo[i].kode_plant}</td>
+                    <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
+                    <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
+                  </tr>`
+                  tableTd = tableTd + element
+                }
+              }
+              const mailOptions = {
+                from: 'noreply_asset@pinusmerahabadi.co.id',
+                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                to: `${findEmail.email_area_aos}`,
+                subject: `Proses Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} Telah Selesai`,
+                html: `
+                <head>
+                  <style type="text/css">
+                    body {
+                        display: flexbox;
+                        flex-direction: column;
+                    }
+                    .tittle {
+                        font-size: 15px;
+                    }
+                    .mar {
+                        margin-bottom: 20px;
+                    }
+                    .mar1 {
+                        margin-bottom: 10px;
+                    }
+                    .foot {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .foot1 {
+                        margin-bottom: 50px;
+                    }
+                    .position {
+                        display: flexbox;
+                        flex-direction: row;
+                        justify-content: left;
+                        margin-top: 10px;
+                    }
+                    table {
+                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                        font-size: 12px;
+                    }
+                    .demo-table {
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }
+                    .demo-table th, 
+                    .demo-table td {
+                        border-bottom: 1px solid #e1edff;
+                        border-left: 1px solid #e1edff;
+                        padding: 7px 17px;
+                    }
+                    .demo-table th, 
+                    .demo-table td:last-child {
+                        border-right: 1px solid #e1edff;
+                    }
+                    .demo-table td:first-child {
+                        border-top: 1px solid #e1edff;
+                    }
+                    .demo-table td:last-child{
+                        border-bottom: 0;
+                    }
+                    caption {
+                        caption-side: top;
+                        margin-bottom: 10px;
+                    }
+                    
+                    /* Table Header */
+                    .demo-table thead th {
+                        background-color: #508abb;
+                        color: #FFFFFF;
+                        border-color: #6ea1cc !important;
+                        text-transform: uppercase;
+                    }
+                    
+                    /* Table Body */
+                    .demo-table tbody td {
+                        color: #353535;
+                    }
+                    
+                    .demo-table tbody tr:nth-child(odd) td {
+                        background-color: #f4fbff;
+                    }
+                    .demo-table tbody tr:hover th,
+                    .demo-table tbody tr:hover td {
+                        background-color: #ffffa2;
+                        border-color: #ffff0f;
+                        transition: all .2s;
+                    }
+                </style>
+                </head>
+                <body>
+                    <div class="tittle mar">
+                        Dear Bapak/Ibu AOS,
+                    </div>
+                    <div class="tittle mar1">
+                        <div>Proses pengadaan asset berikut ini telah selesai.</div>
+                    </div>
+                    <div class="position">
+                        <table class="demo-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>No Pengadaan</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Kode Plant</th>
+                                    <th>Cost Ctr</th>
+                                    <th>Cost Ctr Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              ${tableTd}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                    <div class="tittle foot">
+                        Terima kasih,
+                    </div>
+                    <div class="tittle foot1">
+                        Regards,
+                    </div>
+                    <div class="tittle">
+                        Team Asset
+                    </div>
+                </body>
+                `
+              }
+              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+              if (sendEmail) {
+                return response(res, 'success submit pengajuan io', { result: sendEmail })
+              } else {
+                return response(res, 'success submit pengajuan io')
+              }
+            } else {
+              return response(res, 'success submit pengajuan io')
+            }
+          } else {
+            return response(res, 'success submit pengajuan io')
+          }
+        } else {
+          return response(res, 'failed submit', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  uploadMasterTemp: async (req, res) => {
+    uploadMaster(req, res, async function (err) {
+      try {
+        const no = req.params.no
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            return response(res, 'fieldname doesnt match', {}, 500, false)
+          }
+          return response(res, err.message, {}, 500, false)
+        } else if (err) {
+          return response(res, err.message, {}, 401, false)
+        }
+        const dokumen = `assets/masters/${req.files[0].filename}`
+        const rows = await readXlsxFile(dokumen)
+        const count = []
+        const cek = ['No', 'No Pengadaan', 'Description', 'Price/unit', 'Total Amount', 'No Asset', 'ID Asset']
+        const valid = rows[0]
+        for (let i = 0; i < cek.length; i++) {
+          if (valid[i] === cek[i]) {
+            count.push(1)
+          }
+        }
+        if (count.length === cek.length) {
+          const arr = []
+          rows.shift()
+          for (let i = 0; i < rows.length; i++) {
+            if (no === rows[i][1]) {
+              const findTemp = await assettemp.findByPk(rows[i][6])
+              if (findTemp && findTemp.nama === rows[i][2]) {
+                const send = {
+                  no_asset: rows[i][5]
+                }
+                const updateAsset = await findTemp.update(send)
+                if (updateAsset) {
+                  arr.push(1)
+                }
+              }
+            }
+          }
+          if (arr.length > 0) {
+            const findData = await pengadaan.findAll({
+              where: {
+                no_pengadaan: no
+              }
+            })
+            if (findData.length > 0) {
+              const cek = []
+              for (let i = 0; i < findData.length; i++) {
+                const findAsset = await assettemp.findAll({
+                  where: {
+                    idIo: findData[i].id
+                  }
+                })
+                if (findAsset.length > 0) {
+                  const valid = []
+                  let text = ''
+                  for (let j = 0; j < findAsset.length; j++) {
+                    if (findAsset[j].no_asset !== null) {
+                      valid.push(1)
+                      text += j === findAsset.length - 1 ? findAsset[j].no_asset : `${findAsset[j].no_asset},`
+                    }
+                  }
+                  if (valid.length > 0) {
+                    const findRes = await pengadaan.findByPk(findData[i].id)
+                    if (findRes) {
+                      const data = {
+                        no_asset: text
+                      }
+                      const update = await findRes.update(data)
+                      if (update) {
+                        cek.push(1)
+                      }
+                    }
+                  }
+                }
+              }
+              if (cek.length > 0) {
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'success upload asset balance', { rows })
+              } else {
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'failed upload asset balance')
+              }
+            } else {
+              fs.unlink(dokumen, function (err) {
+                if (err) throw err
+                console.log('success')
+              })
+              return response(res, 'failed upload asset balance')
+            }
+          } else {
+            fs.unlink(dokumen, function (err) {
+              if (err) throw err
+              console.log('success')
+            })
+            return response(res, 'failed upload asset balance')
+          }
+        } else {
+          fs.unlink(dokumen, function (err) {
+            if (err) throw err
+            console.log('success')
+          })
+          return response(res, 'Failed to upload master file, please use the template provided', {}, 400, false)
+        }
+      } catch (error) {
+        return response(res, error.message, {}, 500, false)
+      }
+    })
+  },
+  deleteTransaksi: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findIo = await pengadaan.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findIo.length) {
+        const findDoc = await docUser.findAll({
+          where: {
+            no_pengadaan: no
+          }
+        })
+        if (findDoc.length > 0) {
+          const findTtd = await ttd.findAll({
+            where: {
+              [Op.or]: [
+                { no_doc: no },
+                { no_pengadaan: no }
+              ]
+            }
+          })
+          if (findTtd.length > 0) {
+            return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+          } else {
+            return response(res, 'approval transaksi tidak ditemukan', {}, 400, false)
+          }
+        } else {
+          return response(res, 'Dokumen transaksi tidak ditemukan', {}, 400, false)
+        }
+      } else {
+        return response(res, 'Transaksi tidak ditemukan', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
