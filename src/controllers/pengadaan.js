@@ -2612,13 +2612,13 @@ module.exports = {
           no_pengadaan: no
         }
       })
-      if (findIo.length > 0) {
+      if (findIo) {
         const findDoc = await docUser.findAll({
           where: {
             no_pengadaan: no
           }
         })
-        if (findDoc.length > 0) {
+        if (findDoc) {
           const findTtd = await ttd.findAll({
             where: {
               [Op.or]: [
@@ -2627,7 +2627,7 @@ module.exports = {
               ]
             }
           })
-          if (findTtd.length > 0) {
+          if (findTtd) {
             const cekIo = []
             for (let i = 0; i < findIo.length; i++) {
               const result = await pengadaan.findByPk(findIo[i].id)
@@ -2636,7 +2636,7 @@ module.exports = {
                 cekIo.push(1)
               }
             }
-            if (cekIo.length > 0) {
+            if (cekIo) {
               const cekDoc = []
               for (let i = 0; i < findDoc.length; i++) {
                 const result = await docUser.findByPk(findDoc[i].id)
@@ -2645,7 +2645,7 @@ module.exports = {
                   cekDoc.push(1)
                 }
               }
-              if (cekDoc.length > 0) {
+              if (cekDoc) {
                 const cekTtd = []
                 for (let i = 0; i < findTtd.length; i++) {
                   const result = await ttd.findByPk(findTtd[i].id)
@@ -2654,7 +2654,7 @@ module.exports = {
                     cekTtd.push(1)
                   }
                 }
-                if (cekTtd.length > 0) {
+                if (cekTtd) {
                   return response(res, 'success delete transaksi', { data: findIo, dok: findDoc, appr: findTtd })
                 } else {
                   return response(res, 'get data transaksi3', { data: findIo, dok: findDoc, appr: findTtd })
