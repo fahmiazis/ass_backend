@@ -2612,65 +2612,8 @@ module.exports = {
           no_pengadaan: no
         }
       })
-      if (findIo) {
-        const findDoc = await docUser.findAll({
-          where: {
-            no_pengadaan: no
-          }
-        })
-        if (findDoc) {
-          const findTtd = await ttd.findAll({
-            where: {
-              [Op.or]: [
-                { no_doc: no },
-                { no_pengadaan: no }
-              ]
-            }
-          })
-          if (findTtd) {
-            const cekIo = []
-            for (let i = 0; i < findIo.length; i++) {
-              const result = await pengadaan.findByPk(findIo[i].id)
-              if (result) {
-                await result.destroy()
-                cekIo.push(1)
-              }
-            }
-            if (cekIo) {
-              const cekDoc = []
-              for (let i = 0; i < findDoc.length; i++) {
-                const result = await docUser.findByPk(findDoc[i].id)
-                if (result) {
-                  await result.destroy()
-                  cekDoc.push(1)
-                }
-              }
-              if (cekDoc) {
-                const cekTtd = []
-                for (let i = 0; i < findTtd.length; i++) {
-                  const result = await ttd.findByPk(findTtd[i].id)
-                  if (result) {
-                    await result.destroy()
-                    cekTtd.push(1)
-                  }
-                }
-                if (cekTtd) {
-                  return response(res, 'success delete transaksi', { data: findIo, dok: findDoc, appr: findTtd })
-                } else {
-                  return response(res, 'get data transaksi3', { data: findIo, dok: findDoc, appr: findTtd })
-                }
-              } else {
-                return response(res, 'get data transaksi2', { data: findIo, dok: findDoc, appr: findTtd })
-              }
-            } else {
-              return response(res, 'get data transaksi1', { data: findIo, dok: findDoc, appr: findTtd })
-            }
-          } else {
-            return response(res, 'approval transaksi tidak ditemukan', {}, 400, false)
-          }
-        } else {
-          return response(res, 'Dokumen transaksi tidak ditemukan', {}, 400, false)
-        }
+      if (findIo.length > 0) {
+        return response(res, 'get data transaksi1', { data: findIo })
       } else {
         return response(res, 'Transaksi tidak ditemukan', {}, 400, false)
       }
