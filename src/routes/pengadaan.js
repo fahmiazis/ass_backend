@@ -22,5 +22,6 @@ route.patch('/subeks/:no', pengadaan.submitEks)
 route.patch('/app/:no', pengadaan.approveIo)
 route.patch('/rej/:no', pengadaan.rejectIo)
 route.post('/master/:no', pengadaan.uploadMasterTemp)
+route.patch('/del/:no', pengadaan.deleteTransaksi)
 
 module.exports = route
