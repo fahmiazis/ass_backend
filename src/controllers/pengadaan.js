@@ -2639,7 +2639,7 @@ module.exports = {
             if (cekIo.length > 0) {
               const cekDoc = []
               for (let i = 0; i < findDoc.length; i++) {
-                const result = await pengadaan.findByPk(findDoc[i].id)
+                const result = await docUser.findByPk(findDoc[i].id)
                 if (result) {
                   await result.destroy()
                   cekDoc.push(1)
@@ -2648,7 +2648,7 @@ module.exports = {
               if (cekDoc.length > 0) {
                 const cekTtd = []
                 for (let i = 0; i < findTtd.length; i++) {
-                  const result = await pengadaan.findByPk(findTtd[i].id)
+                  const result = await ttd.findByPk(findTtd[i].id)
                   if (result) {
                     await result.destroy()
                     cekTtd.push(1)
