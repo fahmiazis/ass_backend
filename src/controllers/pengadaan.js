@@ -2612,7 +2612,7 @@ module.exports = {
           no_pengadaan: no
         }
       })
-      if (findIo.length) {
+      if (findIo.length > 0) {
         const findDoc = await docUser.findAll({
           where: {
             no_pengadaan: no
