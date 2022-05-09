@@ -2657,13 +2657,13 @@ module.exports = {
                 if (cekTtd.length > 0) {
                   return response(res, 'success delete transaksi', { data: findIo, dok: findDoc, appr: findTtd })
                 } else {
-                  return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+                  return response(res, 'get data transaksi3', { data: findIo, dok: findDoc, appr: findTtd })
                 }
               } else {
-                return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+                return response(res, 'get data transaksi2', { data: findIo, dok: findDoc, appr: findTtd })
               }
             } else {
-              return response(res, 'get data transaksi', { data: findIo, dok: findDoc, appr: findTtd })
+              return response(res, 'get data transaksi1', { data: findIo, dok: findDoc, appr: findTtd })
             }
           } else {
             return response(res, 'approval transaksi tidak ditemukan', {}, 400, false)
