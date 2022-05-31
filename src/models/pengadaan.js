@@ -15,6 +15,16 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'kode_plant',
         as: 'depo'
       })
+      pengadaan.hasMany(models.docUser, {
+        foreignKey: 'no_pengadaan',
+        sourceKey: 'id',
+        as: 'doc'
+      })
+      pengadaan.hasMany(models.ttd, {
+        foreignKey: 'no_doc',
+        as: 'appForm',
+        sourceKey: 'no_pengadaan'
+      })
       // define association here
     }
   };
@@ -42,7 +52,9 @@ module.exports = (sequelize, DataTypes) => {
     bidding_harga: DataTypes.STRING,
     ket_barang: DataTypes.STRING,
     area: DataTypes.STRING,
-    status_form: DataTypes.STRING
+    status_form: DataTypes.STRING,
+    tipe: DataTypes.STRING,
+    akta: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'pengadaan'
