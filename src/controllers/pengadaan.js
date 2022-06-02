@@ -3032,9 +3032,9 @@ module.exports = {
             }
           })
           if (findTtd.length > 0) {
-            return response(res, 'Pengajuan sedang diproses cuy', { result: { data: findCode, auth: findTtd } })
+            return response(res, 'Pengajuan sedang diproses', { result: { data: findCode, auth: findTtd } })
           } else {
-            return response(res, 'Pengajuan sedang diproses cuy', { result: findCode })
+            return response(res, 'Pengajuan sedang diproses', { result: findCode })
           }
         } else {
           return response(res, 'Data tidak ditemukan', {}, 404, false)
@@ -4408,14 +4408,14 @@ module.exports = {
             }
             const send = await axios({
               method: 'post',
-              url: 'https://pods.pinusmerahabadi.co.id/api/updateassetnumber',
+              url: 'http://aset.pinusmerahabadi.co.id:8585/ticket/rec',
               data: { data, authors },
-              headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.c_G5Y7CbEKR4UncCqxLmGHtkcZDtibjh2XP_M7fTbAE' }
+              headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzA0LCJsZXZlbCI6Miwia29kZSI6IiIsIm5hbWUiOiJhc3NldCIsImZ1bGxuYW1lIjoiYXNzZXQiLCJyb2xlIjoiYXNzZXQiLCJpYXQiOjE2NTIxNDk3NjB9.9oZHyW7CFv5cHnmFz7P7Q9JCqOUkoq8Y0TS5EOr8Spo' }
             }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
             if (send.status === 200) {
-              return response(res, send.message, { result: send })
+              return response(res, send.message, { result: send.data })
             } else {
-              return response(res, 'gagal kirim ke pods', { send }, 400, false)
+              return response(res, 'gagal kirim ke pods', {}, 400, false)
             }
           } else {
             return response(res, 'failed send api', {}, 400, false)
