@@ -2660,348 +2660,352 @@ module.exports = {
   postApi: async (req, res) => {
     try {
       const data = req.body
-      const findCode = await pengadaan.findAll({
-        where: {
-          ticket_code: data.ticket_code
-        }
-      })
-      if (findCode) {
-        const findTtd = await ttd.findAll({
+      if (data.type === 'request') {
+        const findCode = await pengadaan.findAll({
           where: {
-            no_doc: findCode[0].no_pengadaan
+            ticket_code: data.ticket_code
           }
         })
-        if (findTtd.length > 0) {
-          return response(res, 'Pengajuan sedang diproses', { result: { data: findCode, auth: findTtd } })
-        } else {
-          return response(res, 'Pengajuan sedang diproses', { result: findCode })
-        }
-      } else {
-        const findNo = await pengadaan.findAll({
-          where: {
-            [Op.not]: { no_pengadaan: null }
-          },
-          order: [['id', 'DESC']],
-          limit: 50
-        })
-        if (findNo) {
-          const cekNo = []
-          for (let i = 0; i < findNo.length; i++) {
-            const no = findNo[i].no_pengadaan.split('P')
-            cekNo.push(parseInt(no[1]))
-          }
-          const noIo = cekNo.length > 0 ? Math.max(...cekNo) + 1 : 1
-          const findDepo = await depo.findOne({
+        if (findCode.length > 0) {
+          const findTtd = await ttd.findAll({
             where: {
-              kode_sap_1: data.prinfo.salespoint_code
+              no_doc: findCode[0].no_pengadaan
             }
           })
-          const valid = []
-          for (let i = 0; i < data.pr_items.length; i++) {
-            const dataSend = {
-              nama: data.pr_items[i].name,
-              qty: data.pr_items[i].qty,
-              price: data.pr_items[i].price,
-              uom: data.pr_items[i].uom,
-              isAsset: data.pr_items[i].isAsset,
-              setup_date: data.pr_items[i].setup_date,
-              kode_plant: findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant,
-              isBudget: `${data.prinfo.isBudget}`,
-              ticket_code: data.ticket_code,
-              no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
-              kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget',
-              asset_token: data.pr_items[i].asset_number_token,
-              bidding_harga: data.pr_items[i].notes_bidding_harga,
-              ket_barang: data.pr_items[i].notes_keterangan_barang,
-              status_form: 1,
-              area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
-              alasan: data.pr_items[i].notes
-            }
-            const sent = await pengadaan.create(dataSend)
-            if (sent) {
-              valid.push(sent)
-            }
+          if (findTtd.length > 0) {
+            return response(res, 'Pengajuan sedang diproses', { result: { data: findCode, auth: findTtd } })
+          } else {
+            return response(res, 'Pengajuan sedang diproses', { result: findCode })
           }
-          if (valid.length > 0) {
-            const cek = []
-            for (let i = 0; i < data.attachments.length; i++) {
-              const send = {
-                nama_dokumen: data.attachments[i].name,
-                jenis_dokumen: 'all',
-                divisi: 'asset',
-                no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
-                path: data.attachments[i].url,
-                jenis_form: 'pengadaan',
-                status: 1
+        } else {
+          const findNo = await pengadaan.findAll({
+            where: {
+              [Op.not]: { no_pengadaan: null }
+            },
+            order: [['id', 'DESC']],
+            limit: 50
+          })
+          if (findNo) {
+            const cekNo = []
+            for (let i = 0; i < findNo.length; i++) {
+              const no = findNo[i].no_pengadaan.split('P')
+              cekNo.push(parseInt(no[1]))
+            }
+            const noIo = cekNo.length > 0 ? Math.max(...cekNo) + 1 : 1
+            const findDepo = await depo.findOne({
+              where: {
+                kode_sap_1: data.prinfo.salespoint_code
               }
-              const sent = await docUser.create(send)
+            })
+            const valid = []
+            for (let i = 0; i < data.pr_items.length; i++) {
+              const dataSend = {
+                nama: data.pr_items[i].name,
+                qty: data.pr_items[i].qty,
+                price: data.pr_items[i].price,
+                uom: data.pr_items[i].uom,
+                isAsset: data.pr_items[i].isAsset,
+                setup_date: data.pr_items[i].setup_date,
+                kode_plant: findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant,
+                isBudget: `${data.prinfo.isBudget}`,
+                ticket_code: data.ticket_code,
+                no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
+                kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget',
+                asset_token: data.pr_items[i].asset_number_token,
+                bidding_harga: data.pr_items[i].notes_bidding_harga,
+                ket_barang: data.pr_items[i].notes_keterangan_barang,
+                status_form: 1,
+                area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
+                alasan: data.pr_items[i].notes
+              }
+              const sent = await pengadaan.create(dataSend)
               if (sent) {
-                cek.push(sent)
+                valid.push(sent)
               }
             }
-            if (cek.length > 0) {
-              const getApp = await approve.findAll({
-                where: {
-                  nama_approve: 'pengadaan io',
-                  jenis: 'all',
-                  [Op.or]: [
-                    { kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget' },
-                    { kategori: 'all' }
-                  ]
+            if (valid.length > 0) {
+              const cek = []
+              for (let i = 0; i < data.attachments.length; i++) {
+                const send = {
+                  nama_dokumen: data.attachments[i].name,
+                  jenis_dokumen: 'all',
+                  divisi: 'asset',
+                  no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
+                  path: data.attachments[i].url,
+                  jenis_form: 'pengadaan',
+                  status: 1
                 }
-              })
-              if (getApp) {
-                const hasil = []
-                for (let i = 0; i < getApp.length; i++) {
-                  const send = {
-                    jabatan: getApp[i].jabatan,
-                    jenis: getApp[i].jenis,
-                    sebagai: getApp[i].sebagai,
-                    kategori: null,
-                    no_doc: noIo === undefined ? 'P' + 1 : 'P' + noIo
-                  }
-                  const make = await ttd.create(send)
-                  if (make) {
-                    hasil.push(make)
-                  }
+                const sent = await docUser.create(send)
+                if (sent) {
+                  cek.push(sent)
                 }
-                if (hasil.length > 0) {
-                  const findEmail = await user.findOne({
-                    where: {
-                      user_level: 2
+              }
+              if (cek.length > 0) {
+                const getApp = await approve.findAll({
+                  where: {
+                    nama_approve: 'pengadaan io',
+                    jenis: 'all',
+                    [Op.or]: [
+                      { kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget' },
+                      { kategori: 'all' }
+                    ]
+                  }
+                })
+                if (getApp) {
+                  const hasil = []
+                  for (let i = 0; i < getApp.length; i++) {
+                    const send = {
+                      jabatan: getApp[i].jabatan,
+                      jenis: getApp[i].jenis,
+                      sebagai: getApp[i].sebagai,
+                      kategori: null,
+                      no_doc: noIo === undefined ? 'P' + 1 : 'P' + noIo
                     }
-                  })
-                  if (findEmail) {
-                    let tableTd = ''
-                    const io = data.pr_items
-                    for (let i = 0; i < io.length; i++) {
-                      const element = `
-                      <tr>
-                        <td>${io.indexOf(io[i]) + 1}</td>
-                        <td>${noIo === undefined ? 'P' + 1 : 'P' + noIo}</td>
-                        <td>${io[i].name}</td>
-                        <td>${io[i].price}</td>
-                        <td>${io[i].qty}</td>
-                        <td>${findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant}</td>
-                        <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? data.prinfo.salespoint_code : findDepo.cost_center}</td>
-                        <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area}</td>
-                      </tr>`
-                      tableTd = tableTd + element
+                    const make = await ttd.create(send)
+                    if (make) {
+                      hasil.push(make)
                     }
-                    const mailOptions = {
-                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findEmail.email}`,
-                      subject: `Pengajuan Pengadaan Asset ${noIo === undefined ? 'P' + 1 : 'P' + noIo} `,
-                      html: `
-                      <head>
-                        <style type="text/css">
-                        body {
-                            display: flexbox;
-                            flex-direction: column;
-                        }
-                        .tittle {
-                            font-size: 15px;
-                        }
-                        .mar {
-                            margin-bottom: 20px;
-                        }
-                        .mar1 {
-                            margin-bottom: 10px;
-                        }
-                        .foot {
-                            margin-top: 20px;
-                            margin-bottom: 10px;
-                        }
-                        .foot1 {
-                            margin-bottom: 50px;
-                        }
-                        .position {
-                            display: flexbox;
-                            flex-direction: row;
-                            justify-content: left;
-                            margin-top: 10px;
-                        }
-                        table {
-                            font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                            font-size: 12px;
-                        }
-                        .demo-table {
-                            border-collapse: collapse;
-                            font-size: 13px;
-                        }
-                        .demo-table th, 
-                        .demo-table td {
-                            border-bottom: 1px solid #e1edff;
-                            border-left: 1px solid #e1edff;
-                            padding: 7px 17px;
-                        }
-                        .demo-table th, 
-                        .demo-table td:last-child {
-                            border-right: 1px solid #e1edff;
-                        }
-                        .demo-table td:first-child {
-                            border-top: 1px solid #e1edff;
-                        }
-                        .demo-table td:last-child{
-                            border-bottom: 0;
-                        }
-                        caption {
-                            caption-side: top;
-                            margin-bottom: 10px;
-                        }
-                        
-                        /* Table Header */
-                        .demo-table thead th {
-                            background-color: #508abb;
-                            color: #FFFFFF;
-                            border-color: #6ea1cc !important;
-                            text-transform: uppercase;
-                        }
-                        
-                        /* Table Body */
-                        .demo-table tbody td {
-                            color: #353535;
-                        }
-                        
-                        .demo-table tbody tr:nth-child(odd) td {
-                            background-color: #f4fbff;
-                        }
-                        .demo-table tbody tr:hover th,
-                        .demo-table tbody tr:hover td {
-                            background-color: #ffffa2;
-                            border-color: #ffff0f;
-                            transition: all .2s;
-                        }
-                    </style>
-                      </head>
-                      <body>
-                          <div class="tittle mar">
-                              Dear Bapak/Ibu Divisi Asset,
-                          </div>
-                          <div class="tittle mar1">
-                              <div>Mohon untuk identifikasi barang yang akan diajukan berikut ini.</div>
-                          </div>
-                          <div class="position">
-                              <table class="demo-table">
-                                  <thead>
-                                      <tr>
-                                          <th>No</th>
-                                          <th>No Pengadaan</th>
-                                          <th>Description</th>
-                                          <th>Price</th>
-                                          <th>Qty</th>
-                                          <th>Kode Plant</th>
-                                          <th>Cost Ctr</th>
-                                          <th>Cost Ctr Name</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody>
-                                    ${tableTd}
-                                  </tbody>
-                              </table>
-                          </div>
-                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                          <div class="tittle foot">
-                              Terima kasih,
-                          </div>
-                          <div class="tittle foot1">
-                              Regards,
-                          </div>
-                          <div class="tittle">
-                              Admin
-                          </div>
-                      </body>
-                      `
-                    }
-                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                    if (sendEmail) {
-                      return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                  }
+                  if (hasil.length > 0) {
+                    const findEmail = await user.findOne({
+                      where: {
+                        user_level: 2
+                      }
+                    })
+                    if (findEmail) {
+                      let tableTd = ''
+                      const io = data.pr_items
+                      for (let i = 0; i < io.length; i++) {
+                        const element = `
+                        <tr>
+                          <td>${io.indexOf(io[i]) + 1}</td>
+                          <td>${noIo === undefined ? 'P' + 1 : 'P' + noIo}</td>
+                          <td>${io[i].name}</td>
+                          <td>${io[i].price}</td>
+                          <td>${io[i].qty}</td>
+                          <td>${findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant}</td>
+                          <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? data.prinfo.salespoint_code : findDepo.cost_center}</td>
+                          <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area}</td>
+                        </tr>`
+                        tableTd = tableTd + element
+                      }
+                      const mailOptions = {
+                        from: 'noreply_asset@pinusmerahabadi.co.id',
+                        replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                        to: `${findEmail.email}`,
+                        subject: `Pengajuan Pengadaan Asset ${noIo === undefined ? 'P' + 1 : 'P' + noIo} `,
+                        html: `
+                        <head>
+                          <style type="text/css">
+                          body {
+                              display: flexbox;
+                              flex-direction: column;
+                          }
+                          .tittle {
+                              font-size: 15px;
+                          }
+                          .mar {
+                              margin-bottom: 20px;
+                          }
+                          .mar1 {
+                              margin-bottom: 10px;
+                          }
+                          .foot {
+                              margin-top: 20px;
+                              margin-bottom: 10px;
+                          }
+                          .foot1 {
+                              margin-bottom: 50px;
+                          }
+                          .position {
+                              display: flexbox;
+                              flex-direction: row;
+                              justify-content: left;
+                              margin-top: 10px;
+                          }
+                          table {
+                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                              font-size: 12px;
+                          }
+                          .demo-table {
+                              border-collapse: collapse;
+                              font-size: 13px;
+                          }
+                          .demo-table th, 
+                          .demo-table td {
+                              border-bottom: 1px solid #e1edff;
+                              border-left: 1px solid #e1edff;
+                              padding: 7px 17px;
+                          }
+                          .demo-table th, 
+                          .demo-table td:last-child {
+                              border-right: 1px solid #e1edff;
+                          }
+                          .demo-table td:first-child {
+                              border-top: 1px solid #e1edff;
+                          }
+                          .demo-table td:last-child{
+                              border-bottom: 0;
+                          }
+                          caption {
+                              caption-side: top;
+                              margin-bottom: 10px;
+                          }
+                          
+                          /* Table Header */
+                          .demo-table thead th {
+                              background-color: #508abb;
+                              color: #FFFFFF;
+                              border-color: #6ea1cc !important;
+                              text-transform: uppercase;
+                          }
+                          
+                          /* Table Body */
+                          .demo-table tbody td {
+                              color: #353535;
+                          }
+                          
+                          .demo-table tbody tr:nth-child(odd) td {
+                              background-color: #f4fbff;
+                          }
+                          .demo-table tbody tr:hover th,
+                          .demo-table tbody tr:hover td {
+                              background-color: #ffffa2;
+                              border-color: #ffff0f;
+                              transition: all .2s;
+                          }
+                      </style>
+                        </head>
+                        <body>
+                            <div class="tittle mar">
+                                Dear Bapak/Ibu Divisi Asset,
+                            </div>
+                            <div class="tittle mar1">
+                                <div>Mohon untuk identifikasi barang yang akan diajukan berikut ini.</div>
+                            </div>
+                            <div class="position">
+                                <table class="demo-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>No Pengadaan</th>
+                                            <th>Description</th>
+                                            <th>Price</th>
+                                            <th>Qty</th>
+                                            <th>Kode Plant</th>
+                                            <th>Cost Ctr</th>
+                                            <th>Cost Ctr Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                      ${tableTd}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                            <div class="tittle foot">
+                                Terima kasih,
+                            </div>
+                            <div class="tittle foot1">
+                                Regards,
+                            </div>
+                            <div class="tittle">
+                                Admin
+                            </div>
+                        </body>
+                        `
+                      }
+                      const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      if (sendEmail) {
+                        return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                      } else {
+                        return response(res, 'berhasil melakukan pengajuan io')
+                      }
                     } else {
                       return response(res, 'berhasil melakukan pengajuan io')
                     }
+                    // const getTtd = await ttd.findAll({
+                    //   where: {
+                    //     no_doc: noIo === undefined ? 'P' + 1 : 'P' + noIo
+                    //   }
+                    // })
+                    // if (getTtd.length > 0) {
+                    //   const cekttd = []
+                    //   const authors = data.authors
+                    //   for (let i = 0; i < getTtd.length; i++) {
+                    //     if (getTtd[i].jabatan === 'area') {
+                    //       const name = authors.find(({ position }) => position === 'Area Operational Supervisor')
+                    //       if (name === undefined) {
+                    //         cekttd.push(1)
+                    //       } else {
+                    //         const data = {
+                    //           nama: name.name,
+                    //           status: 1
+                    //         }
+                    //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                    //         if (findTtd) {
+                    //           await findTtd.update(data)
+                    //           cekttd.push(1)
+                    //         }
+                    //       }
+                    //     } else if (getTtd[i].jabatan === 'NOM') {
+                    //       const name = authors.find(({ position }) => position === 'National Operation Manager')
+                    //       if (name === undefined) {
+                    //         cekttd.push(1)
+                    //       } else {
+                    //         const data = {
+                    //           nama: name.name,
+                    //           status: 1
+                    //         }
+                    //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                    //         if (findTtd) {
+                    //           await findTtd.update(data)
+                    //           cekttd.push(1)
+                    //         }
+                    //       }
+                    //     } else if (getTtd[i].jabatan === 'HEAD OF OPS') {
+                    //       const name = authors.find(({ position }) => position === 'Deputy Head Operation')
+                    //       if (name === undefined) {
+                    //         cekttd.push(1)
+                    //       } else {
+                    //         const data = {
+                    //           nama: name.name,
+                    //           status: 1
+                    //         }
+                    //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                    //         if (findTtd) {
+                    //           await findTtd.update(data)
+                    //           cekttd.push(1)
+                    //         }
+                    //       }
+                    //     } else if (getTtd[i].jabatan === 'NFAM') {
+                    //       const name = authors.find(({ position }) => position === 'National Finance Accounting Manager')
+                    //       if (name === undefined) {
+                    //         cekttd.push(1)
+                    //       } else {
+                    //         const data = {
+                    //           nama: name.name,
+                    //           status: 1
+                    //         }
+                    //         const findTtd = await ttd.findByPk(getTtd[i].id)
+                    //         if (findTtd) {
+                    //           await findTtd.update(data)
+                    //           cekttd.push(1)
+                    //         }
+                    //       }
+                    //     }
+                    //   }
+                    //   if (cekttd.length > 0) {
+                    //     return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                    //   } else {
+                    //     return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                    //   }
+                    // } else {
+                    //   return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                    // }
                   } else {
-                    return response(res, 'berhasil melakukan pengajuan io')
+                    return response(res, 'berhasil melakukan pengajuan io', { result: data })
                   }
-                  // const getTtd = await ttd.findAll({
-                  //   where: {
-                  //     no_doc: noIo === undefined ? 'P' + 1 : 'P' + noIo
-                  //   }
-                  // })
-                  // if (getTtd.length > 0) {
-                  //   const cekttd = []
-                  //   const authors = data.authors
-                  //   for (let i = 0; i < getTtd.length; i++) {
-                  //     if (getTtd[i].jabatan === 'area') {
-                  //       const name = authors.find(({ position }) => position === 'Area Operational Supervisor')
-                  //       if (name === undefined) {
-                  //         cekttd.push(1)
-                  //       } else {
-                  //         const data = {
-                  //           nama: name.name,
-                  //           status: 1
-                  //         }
-                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
-                  //         if (findTtd) {
-                  //           await findTtd.update(data)
-                  //           cekttd.push(1)
-                  //         }
-                  //       }
-                  //     } else if (getTtd[i].jabatan === 'NOM') {
-                  //       const name = authors.find(({ position }) => position === 'National Operation Manager')
-                  //       if (name === undefined) {
-                  //         cekttd.push(1)
-                  //       } else {
-                  //         const data = {
-                  //           nama: name.name,
-                  //           status: 1
-                  //         }
-                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
-                  //         if (findTtd) {
-                  //           await findTtd.update(data)
-                  //           cekttd.push(1)
-                  //         }
-                  //       }
-                  //     } else if (getTtd[i].jabatan === 'HEAD OF OPS') {
-                  //       const name = authors.find(({ position }) => position === 'Deputy Head Operation')
-                  //       if (name === undefined) {
-                  //         cekttd.push(1)
-                  //       } else {
-                  //         const data = {
-                  //           nama: name.name,
-                  //           status: 1
-                  //         }
-                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
-                  //         if (findTtd) {
-                  //           await findTtd.update(data)
-                  //           cekttd.push(1)
-                  //         }
-                  //       }
-                  //     } else if (getTtd[i].jabatan === 'NFAM') {
-                  //       const name = authors.find(({ position }) => position === 'National Finance Accounting Manager')
-                  //       if (name === undefined) {
-                  //         cekttd.push(1)
-                  //       } else {
-                  //         const data = {
-                  //           nama: name.name,
-                  //           status: 1
-                  //         }
-                  //         const findTtd = await ttd.findByPk(getTtd[i].id)
-                  //         if (findTtd) {
-                  //           await findTtd.update(data)
-                  //           cekttd.push(1)
-                  //         }
-                  //       }
-                  //     }
-                  //   }
-                  //   if (cekttd.length > 0) {
-                  //     return response(res, 'berhasil melakukan pengajuan io', { result: data })
-                  //   } else {
-                  //     return response(res, 'berhasil melakukan pengajuan io', { result: data })
-                  //   }
-                  // } else {
-                  //   return response(res, 'berhasil melakukan pengajuan io', { result: data })
-                  // }
                 } else {
                   return response(res, 'berhasil melakukan pengajuan io', { result: data })
                 }
@@ -3009,13 +3013,31 @@ module.exports = {
                 return response(res, 'berhasil melakukan pengajuan io', { result: data })
               }
             } else {
-              return response(res, 'berhasil melakukan pengajuan io', { result: data })
+              return response(res, 'failed create data pengadaan')
             }
           } else {
             return response(res, 'failed create data pengadaan')
           }
+        }
+      } else {
+        const findCode = await pengadaan.findAll({
+          where: {
+            ticket_code: data.ticket_code
+          }
+        })
+        if (findCode.length > 0) {
+          const findTtd = await ttd.findAll({
+            where: {
+              no_doc: findCode[0].no_pengadaan
+            }
+          })
+          if (findTtd.length > 0) {
+            return response(res, 'Pengajuan sedang diproses cuy', { result: { data: findCode, auth: findTtd } })
+          } else {
+            return response(res, 'Pengajuan sedang diproses cuy', { result: findCode })
+          }
         } else {
-          return response(res, 'failed create data pengadaan')
+          return response(res, 'Data tidak ditemukan', {}, 404, false)
         }
       }
     } catch (error) {
