@@ -4408,7 +4408,7 @@ module.exports = {
             }
             const send = await axios({
               method: 'post',
-              url: 'http://devpods.pinusmerahabadi.co.id/api/updateassetnumber',
+              url: 'http://pods.pinusmerahabadi.co.id/api/updateassetnumber',
               data: { data, authors },
               headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.c_G5Y7CbEKR4UncCqxLmGHtkcZDtibjh2XP_M7fTbAE' }
             }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
