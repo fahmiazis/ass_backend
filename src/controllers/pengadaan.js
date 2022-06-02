@@ -4415,7 +4415,7 @@ module.exports = {
             if (send.status === 200) {
               return response(res, send.message, { result: send.data.data })
             } else {
-              return response(res, 'gagal kirim ke pods', {}, 400, false)
+              return response(res, 'gagal kirim ke pods', { send }, 400, false)
             }
           } else {
             return response(res, 'failed send api', {}, 400, false)
