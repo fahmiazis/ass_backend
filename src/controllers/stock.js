@@ -13,9 +13,11 @@ module.exports = {
   submit: async (req, res) => {
     try {
       const kode = req.user.kode
+      const cost = req.user.name
+      const level = req.user.level
       const findArea = await depo.findOne({
         where: {
-          kode_plant: kode
+          kode_plant: level === 5 ? kode : cost
         }
       })
       const findClose = await clossing.findAll({
@@ -44,7 +46,7 @@ module.exports = {
           const findStock = await stock.findOne({
             where: {
               [Op.and]: [
-                { kode_plant: kode },
+                { kode_plant: level === 5 ? kode : cost },
                 {
                   tanggalStock: {
                     [Op.lte]: akhir,
@@ -60,7 +62,7 @@ module.exports = {
             } else {
               const result = await asset.findAll({
                 where: {
-                  kode_plant: kode,
+                  cost_center: level === 5 ? findArea.cost_center : cost,
                   [Op.and]: [
                     { [Op.not]: { satuan: null } },
                     { [Op.not]: { unit: null } },
@@ -74,7 +76,7 @@ module.exports = {
               if (result.length > 0) {
                 const findAsset = await asset.findAll({
                   where: {
-                    kode_plant: kode,
+                    cost_center: level === 5 ? findArea.cost_center : cost,
                     [Op.or]: [
                       { status: '1' },
                       { status: '11' },
@@ -85,7 +87,7 @@ module.exports = {
                 if (result.length === findAsset.length) {
                   const findPict = await asset.findAll({
                     where: {
-                      kode_plant: kode
+                      cost_center: level === 5 ? findArea.cost_center : cost
                     },
                     include: [
                       {
@@ -124,7 +126,7 @@ module.exports = {
                         const hasil = []
                         for (let i = 0; i < result.length; i++) {
                           const data = {
-                            kode_plant: kode,
+                            kode_plant: level === 5 ? kode : cost,
                             area: findArea.nama_area,
                             deskripsi: result[i].nama_asset,
                             no_asset: result[i].no_asset,
@@ -148,7 +150,7 @@ module.exports = {
                           const findNo = await stock.findAll({
                             where: {
                               [Op.and]: [
-                                { kode_plant: kode },
+                                { kode_plant: level === 5 ? kode : cost },
                                 {
                                   tanggalStock: {
                                     [Op.lte]: akhir,
@@ -186,7 +188,7 @@ module.exports = {
                               }
                               const findDepo = await depo.findOne({
                                 where: {
-                                  kode_plant: kode
+                                  kode_plant: level === 5 ? kode : cost
                                 }
                               })
                               if (findDepo) {
@@ -197,7 +199,7 @@ module.exports = {
                                 })
                                 if (findRom) {
                                   const data = {
-                                    kode_plant: kode,
+                                    kode_plant: level === 5 ? kode : cost,
                                     jenis: 'stock opname',
                                     no_proses: `O${noDis}`,
                                     list_appr: findRom.username,
@@ -345,7 +347,7 @@ module.exports = {
                         const hasil = []
                         for (let i = 0; i < result.length; i++) {
                           const data = {
-                            kode_plant: kode,
+                            kode_plant: level === 5 ? kode : cost,
                             area: findArea.nama_area,
                             deskripsi: result[i].nama_asset,
                             no_asset: result[i].no_asset,
@@ -369,7 +371,7 @@ module.exports = {
                           const findNo = await stock.findAll({
                             where: {
                               [Op.and]: [
-                                { kode_plant: kode },
+                                { kode_plant: level === 5 ? kode : cost },
                                 {
                                   tanggalStock: {
                                     [Op.lte]: akhir,
@@ -407,7 +409,7 @@ module.exports = {
                               }
                               const findDepo = await depo.findOne({
                                 where: {
-                                  kode_plant: kode
+                                  kode_plant: level === 5 ? kode : cost
                                 }
                               })
                               if (findDepo) {
@@ -418,7 +420,7 @@ module.exports = {
                                 })
                                 if (findRom) {
                                   const data = {
-                                    kode_plant: kode,
+                                    kode_plant: level === 5 ? kode : cost,
                                     jenis: 'stock opname',
                                     no_proses: `O${noDis}`,
                                     list_appr: findRom.username,
@@ -568,16 +570,16 @@ module.exports = {
                     return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
                   }
                 } else {
-                  return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
+                  return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length, findaset: findAsset.length }, 400, false)
                 }
               } else {
-                return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
+                return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length }, 400, false)
               }
             }
           } else {
             const result = await asset.findAll({
               where: {
-                kode_plant: kode,
+                cost_center: level === 5 ? findArea.cost_center : cost,
                 [Op.and]: [
                   { [Op.not]: { satuan: null } },
                   { [Op.not]: { unit: null } },
@@ -591,7 +593,7 @@ module.exports = {
             if (result.length > 0) {
               const findAsset = await asset.findAll({
                 where: {
-                  kode_plant: kode,
+                  cost_center: level === 5 ? findArea.cost_center : cost,
                   [Op.or]: [
                     { status: '1' },
                     { status: '11' },
@@ -602,7 +604,7 @@ module.exports = {
               if (result.length === findAsset.length) {
                 const findPict = await asset.findAll({
                   where: {
-                    kode_plant: kode
+                    cost_center: level === 5 ? findArea.cost_center : cost
                   },
                   include: [
                     {
@@ -641,7 +643,7 @@ module.exports = {
                       const hasil = []
                       for (let i = 0; i < result.length; i++) {
                         const data = {
-                          kode_plant: kode,
+                          kode_plant: level === 5 ? kode : cost,
                           area: findArea.nama_area,
                           deskripsi: result[i].nama_asset,
                           no_asset: result[i].no_asset,
@@ -665,7 +667,7 @@ module.exports = {
                         const findNo = await stock.findAll({
                           where: {
                             [Op.and]: [
-                              { kode_plant: kode },
+                              { kode_plant: level === 5 ? kode : cost },
                               {
                                 tanggalStock: {
                                   [Op.lte]: akhir,
@@ -702,7 +704,7 @@ module.exports = {
                             }
                             const findDepo = await depo.findOne({
                               where: {
-                                kode_plant: kode
+                                kode_plant: level === 5 ? kode : cost
                               }
                             })
                             if (findDepo) {
@@ -713,7 +715,7 @@ module.exports = {
                               })
                               if (findRom) {
                                 const data = {
-                                  kode_plant: kode,
+                                  kode_plant: level === 5 ? kode : cost,
                                   jenis: 'stock opname',
                                   no_proses: `O${noDis}`,
                                   list_appr: findRom.username,
@@ -861,7 +863,7 @@ module.exports = {
                       const hasil = []
                       for (let i = 0; i < result.length; i++) {
                         const data = {
-                          kode_plant: kode,
+                          kode_plant: level === 5 ? kode : cost,
                           area: findArea.nama_area,
                           deskripsi: result[i].nama_asset,
                           no_asset: result[i].no_asset,
@@ -885,7 +887,7 @@ module.exports = {
                         const findNo = await stock.findAll({
                           where: {
                             [Op.and]: [
-                              { kode_plant: kode },
+                              { kode_plant: level === 5 ? kode : cost },
                               {
                                 tanggalStock: {
                                   [Op.lte]: akhir,
@@ -922,7 +924,7 @@ module.exports = {
                             }
                             const findDepo = await depo.findOne({
                               where: {
-                                kode_plant: kode
+                                kode_plant: level === 5 ? kode : cost
                               }
                             })
                             if (findDepo) {
@@ -933,7 +935,7 @@ module.exports = {
                               })
                               if (findRom) {
                                 const data = {
-                                  kode_plant: kode,
+                                  kode_plant: level === 5 ? kode : cost,
                                   jenis: 'stock opname',
                                   no_proses: `O${noDis}`,
                                   list_appr: findRom.username,
@@ -1083,10 +1085,10 @@ module.exports = {
                   return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
                 }
               } else {
-                return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
+                return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length, findaset: findAsset.length }, 400, false)
               }
             } else {
-              return response(res, 'Lengkapi data asset terlebih dahulu', {}, 400, false)
+              return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length }, 400, false)
             }
           }
         }
@@ -1246,6 +1248,8 @@ module.exports = {
   getStock: async (req, res) => {
     try {
       const kode = req.user.kode
+      const cost = req.user.name
+      const level = req.user.level
       let { limit, page, search, sort, status } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -1289,7 +1293,7 @@ module.exports = {
         }
         const result = await stock.findAndCountAll({
           where: {
-            kode_plant: kode,
+            kode_plant: level === 5 ? kode : cost,
             [Op.and]: [
               { status_app: status === 'null' ? null : status },
               {
@@ -1662,9 +1666,6 @@ module.exports = {
             }
           })
           if (getApp && getDepo) {
-            const pembuat = []
-            const pemeriksa = []
-            const penyetuju = []
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
@@ -1674,16 +1675,13 @@ module.exports = {
                 kategori: null,
                 no_doc: no
               }
-              const make = await ttd.create(send)
-              if (make) {
-                // if (make.sebagai === 'pembuat') {
-                //   pembuat.push(make)
-                // } else if (make.sebagai === 'pemeriksa') {
-                //   pemeriksa.push(make)
-                // } else if (make.sebagai === 'penyetuju') {
-                //   penyetuju.push(make)
-                // }
-                hasil.push(make)
+              if (getDepo.kode_plant.split('').length > 4 && getDepo.nama_asman === null && getApp[i].jabatan === 'Asisten Manager') {
+                hasil.push(1)
+              } else {
+                const make = await ttd.create(send)
+                if (make) {
+                  hasil.push(make)
+                }
               }
             }
             if (hasil.length === getApp.length) {
@@ -1723,8 +1721,9 @@ module.exports = {
                     }
                   }
                 }
+              } else {
+                return response(res, 'failed get data', {}, 404, false)
               }
-              return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju } })
             } else {
               return response(res, 'failed get data', {}, 404, false)
             }
@@ -1778,12 +1777,13 @@ module.exports = {
       const level = req.user.level
       const name = req.user.name
       const no = req.params.no
+      const findDiv = await role.findAll()
       const result = await role.findAll({
         where: {
           nomor: level
         }
       })
-      if (result.length > 0) {
+      if (result.length > 0 && findDiv.length > 0) {
         const find = await ttd.findAll({
           where: {
             no_doc: no
@@ -1792,8 +1792,9 @@ module.exports = {
         if (find.length > 0) {
           let hasil = 0
           let arr = null
+          console.log(findDiv.find(({ nomor }) => nomor === '27').name)
           for (let i = 0; i < find.length; i++) {
-            if (result[0].name === find[i].jabatan) {
+            if ((level === 16 || level === 13 ? findDiv.find(({ nomor }) => nomor === '27').name : result[0].name) === find[i].jabatan) {
               hasil = find[i].id
               arr = i
             }
@@ -2141,23 +2142,23 @@ module.exports = {
                       }
                     }
                   } else {
-                    return response(res, 'failed approve disposal', {}, 404, false)
+                    return response(res, 'failed approve disposal 1', {}, 404, false)
                   }
                 } else {
-                  return response(res, 'failed approve disposal', {}, 404, false)
+                  return response(res, 'failed approve disposal 2', {}, 404, false)
                 }
               } else {
                 return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
               }
             }
           } else {
-            return response(res, 'failed approve disposal', {}, 404, false)
+            return response(res, 'failed approve disposal 3', {}, 404, false)
           }
         } else {
-          return response(res, 'failed approve disposal', {}, 404, false)
+          return response(res, 'failed approve disposal 4', {}, 404, false)
         }
       } else {
-        return response(res, 'failed approve disposal', {}, 404, false)
+        return response(res, 'failed approve disposal 5', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -3067,6 +3068,8 @@ module.exports = {
   },
   addStock: async (req, res) => {
     try {
+      const cost = req.user.name
+      const level = req.user.level
       const kode = req.user.kode
       const schema = joi.object({
         area: joi.string().allow(''),
@@ -3112,7 +3115,7 @@ module.exports = {
             const findStock = await stock.findOne({
               where: {
                 [Op.and]: [
-                  { kode_plant: kode },
+                  { kode_plant: level === 5 ? kode : cost },
                   {
                     tanggalStock: {
                       [Op.lte]: akhir,

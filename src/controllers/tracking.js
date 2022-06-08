@@ -6,9 +6,11 @@ const { Op } = require('sequelize')
 module.exports = {
   getTracking: async (req, res) => {
     const kode = req.user.kode
+    const name = req.user.name
+    const level = req.user.level
     const result = await disposal.findAndCountAll({
       where: {
-        kode_plant: kode,
+        kode_plant: level === 5 ? kode : name,
         [Op.not]: { no_disposal: null }
       },
       order: [

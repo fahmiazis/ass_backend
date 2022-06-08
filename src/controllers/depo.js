@@ -265,8 +265,9 @@ module.exports = {
       const id = req.params.id
       const level = req.user.level
       const kode = req.user.kode
-      if (level === 5) {
-        const result = await depo.findOne({ where: { kode_plant: kode } })
+      const cost = req.user.name
+      if (level === 5 || level === 9) {
+        const result = await depo.findOne({ where: { kode_plant: level === 5 ? kode : cost } })
         if (result) {
           return response(res, 'succes get detail depo', { result })
         } else {

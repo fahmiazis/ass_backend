@@ -189,6 +189,8 @@ module.exports = {
   getAssetAll: async (req, res) => {
     try {
       const kode = req.user.kode
+      const cost = req.user.name
+      const level = req.user.level
       let { limit, page, search, sort, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -217,7 +219,7 @@ module.exports = {
       }
       const findDep = await depo.findOne({
         where: {
-          kode_plant: kode
+          kode_plant: level === 5 ? kode : cost
         }
       })
       if (findDep) {

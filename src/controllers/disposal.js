@@ -14,6 +14,7 @@ module.exports = {
     try {
       const no = req.params.no
       const kode = req.user.kode
+      const name = req.user.name
       const level = req.user.level
       const result = await asset.findOne({
         where: {
@@ -28,15 +29,15 @@ module.exports = {
         })
         if (findAsset.length > 0) {
           return response(res, 'success add disposal', { result: findAsset })
-        } else if (result.kode_plant === kode) {
+        } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && name === result.cost_center)) {
           const findDepo = await depo.findAll({
             where: {
-              kode_plant: kode
+              kode_plant: level === 9 ? result.cost_center : kode
             }
           })
           if (findDepo.length > 0) {
             const send = {
-              kode_plant: level === 9 ? result.cost_center : result.kode_plant,
+              kode_plant: findDepo[0].kode_plant,
               area: findDepo[0].nama_area,
               no_doc: result.no_doc,
               no_asset: result.no_asset,
@@ -58,19 +59,19 @@ module.exports = {
               if (update) {
                 return response(res, 'success add disposal', { result: make })
               } else {
-                return response(res, 'failed add disposal', {}, 400, false)
+                return response(res, 'failed add disposal 09', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add disposal', {}, 400, false)
+              return response(res, 'failed add disposal 0', {}, 400, false)
             }
           } else {
-            return response(res, 'failed add disposal', {}, 400, false)
+            return response(res, 'failed add disposal 1', {}, 400, false)
           }
         } else {
-          return response(res, 'failed add disposal', {}, 400, false)
+          return response(res, 'failed add disposal 2', {}, 400, false)
         }
       } else {
-        return response(res, 'failed add disposal', {}, 400, false)
+        return response(res, 'failed add disposal 3', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -78,6 +79,8 @@ module.exports = {
   },
   addSell: async (req, res) => {
     try {
+      const name = req.user.name
+      const level = req.user.level
       const no = req.params.no
       const kode = req.user.kode
       const result = await asset.findOne({
@@ -93,15 +96,15 @@ module.exports = {
         })
         if (findAsset.length > 0) {
           return response(res, 'success add sell', { result: findAsset })
-        } else if (result.kode_plant === kode) {
+        } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && name === result.cost_center)) {
           const findDepo = await depo.findAll({
             where: {
-              kode_plant: kode
+              kode_plant: level === 9 ? result.cost_center : kode
             }
           })
           if (findDepo.length > 0) {
             const send = {
-              kode_plant: result.kode_plant,
+              kode_plant: findDepo[0].kode_plant,
               area: findDepo[0].nama_area,
               no_doc: result.no_doc,
               no_asset: result.no_asset,
@@ -143,10 +146,12 @@ module.exports = {
   getCartDisposal: async (req, res) => {
     try {
       const kode = req.user.kode
+      const name = req.user.name
+      const level = req.user.level
       const result = await disposal.findAndCountAll({
         where: {
           [Op.and]: [
-            { kode_plant: kode },
+            { kode_plant: level === 5 ? kode : name },
             { status_form: 1 }
           ]
         },
@@ -173,6 +178,8 @@ module.exports = {
     try {
       const noAsset = req.params.asset
       const kode = req.user.kode
+      const name = req.user.name
+      const level = req.user.level
       const result = await disposal.findOne({
         where: {
           [Op.and]: [
@@ -182,7 +189,7 @@ module.exports = {
         }
       })
       if (result) {
-        if (result.kode_plant === kode) {
+        if ((level === 5 && result.kode_plant === kode) || (level === 9 && name === result.cost_center)) {
           const findAsset = await asset.findOne({
             where: {
               no_asset: noAsset
@@ -280,80 +287,10 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level !== 5 && level !== 12 && level !== 7 && level !== 13) {
+      if (level === 5 || level === 9) {
         const result = await disposal.findAll({
           where: {
-            [Op.or]: [
-              { kode_plant: { [Op.like]: `%${searchValue}%` } },
-              { no_disposal: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { no_asset: { [Op.like]: `%${searchValue}%` } }
-            ],
-            [Op.or]: [
-              { status_form: status },
-              { status_form: status === 2 ? 9 : status },
-              { status_form: status === 2 ? 26 : status }
-            ]
-          },
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
-            [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit,
-          include: [
-            {
-              model: ttd,
-              as: 'appForm'
-            },
-            {
-              model: path,
-              as: 'pict'
-            },
-            {
-              model: ttd,
-              as: 'ttdSet'
-            },
-            {
-              model: asset,
-              as: 'dataAsset'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
-            }
-          ]
-        })
-        const pageInfo = pagination('/disposal/get', req.query, page, limit, result.length)
-        if (result) {
-          const data = []
-          if (tipe === 'persetujuan') {
-            result.map(x => {
-              return (
-                data.push(x.status_app)
-              )
-            })
-            const set = new Set(data)
-            const noDis = [...set]
-            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
-          } else {
-            result.map(x => {
-              return (
-                data.push(x.no_disposal)
-              )
-            })
-            const set = new Set(data)
-            const noDis = [...set]
-            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
-          }
-        } else {
-          return response(res, 'failed get disposal', {}, 400, false)
-        }
-      } else if (level === 5) {
-        const result = await disposal.findAll({
-          where: {
-            kode_plant: kode,
+            kode_plant: level === 5 ? kode : fullname,
             [Op.or]: [
               { status_form: status },
               { status_form: status === 2 ? 9 : status },
@@ -763,6 +700,76 @@ module.exports = {
           const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
           return response(res, 'success get disposal', { result, pageInfo, noDis })
         }
+      } else {
+        const result = await disposal.findAll({
+          where: {
+            [Op.or]: [
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { no_disposal: { [Op.like]: `%${searchValue}%` } },
+              { nama_asset: { [Op.like]: `%${searchValue}%` } },
+              { no_asset: { [Op.like]: `%${searchValue}%` } }
+            ],
+            [Op.or]: [
+              { status_form: status },
+              { status_form: status === 2 ? 9 : status },
+              { status_form: status === 2 ? 26 : status }
+            ]
+          },
+          order: [
+            [sortValue, 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
+            [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
+          ],
+          limit: limit,
+          offset: (page - 1) * limit,
+          include: [
+            {
+              model: ttd,
+              as: 'appForm'
+            },
+            {
+              model: path,
+              as: 'pict'
+            },
+            {
+              model: ttd,
+              as: 'ttdSet'
+            },
+            {
+              model: asset,
+              as: 'dataAsset'
+            },
+            {
+              model: docUser,
+              as: 'docAsset'
+            }
+          ]
+        })
+        const pageInfo = pagination('/disposal/get', req.query, page, limit, result.length)
+        if (result) {
+          const data = []
+          if (tipe === 'persetujuan') {
+            result.map(x => {
+              return (
+                data.push(x.status_app)
+              )
+            })
+            const set = new Set(data)
+            const noDis = [...set]
+            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
+          } else {
+            result.map(x => {
+              return (
+                data.push(x.no_disposal)
+              )
+            })
+            const set = new Set(data)
+            const noDis = [...set]
+            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
+          }
+        } else {
+          return response(res, 'failed get disposal', {}, 400, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -850,6 +857,26 @@ module.exports = {
                   await find.update(send)
                   temp.push('musnah')
                 }
+              } else {
+                if (find.nilai_jual !== '0') {
+                  const send = {
+                    status_form: 26,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('jual')
+                } else {
+                  const send = {
+                    status_form: 2,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('musnah')
+                }
               }
             }
           }
@@ -870,7 +897,7 @@ module.exports = {
               })
               if (findEmail) {
                 const data = {
-                  kode_plant: kode,
+                  kode_plant: level === 5 ? kode : level === 9 && cost,
                   jenis: 'disposal',
                   no_proses: `D${noDis === undefined ? 1 : noDis}`,
                   list_appr: findEmail.username,
@@ -1026,7 +1053,7 @@ module.exports = {
               }
             }
           } else {
-            return response(res, 'failed submit', {}, 404, false)
+            return response(res, 'failed submit 9', {}, 404, false)
           }
         } else {
           const cekNo = [0]
@@ -1061,6 +1088,26 @@ module.exports = {
                   await find.update(send)
                   temp.push('musnah')
                 }
+              } else {
+                if (find.nilai_jual !== '0') {
+                  const send = {
+                    status_form: 26,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('jual')
+                } else {
+                  const send = {
+                    status_form: 2,
+                    no_disposal: noDis === undefined ? 1 : noDis,
+                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                    tanggalDis: moment()
+                  }
+                  await find.update(send)
+                  temp.push('musnah')
+                }
               }
             }
           }
@@ -1081,7 +1128,7 @@ module.exports = {
               })
               if (findEmail) {
                 const data = {
-                  kode_plant: kode,
+                  kode_plant: level === 5 ? kode : level === 9 && cost,
                   jenis: 'disposal',
                   no_proses: `D${noDis === undefined ? 1 : noDis}`,
                   list_appr: findEmail.username,

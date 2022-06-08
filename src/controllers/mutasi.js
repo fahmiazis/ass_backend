@@ -13,6 +13,8 @@ module.exports = {
       const no = req.params.no
       const plant = req.params.plant
       const kode = req.user.kode
+      const cost = req.user.name
+      const level = req.user.level
       const result = await asset.findOne({
         where: {
           no_asset: no
@@ -22,7 +24,7 @@ module.exports = {
         const findArea = await mutasi.findAll({
           where: {
             [Op.and]: [
-              { kode_plant: kode },
+              { kode_plant: level === '5' ? kode : cost },
               { status_form: 1 }
             ]
           }
@@ -31,7 +33,7 @@ module.exports = {
           const findPlant = await mutasi.findAll({
             where: {
               [Op.and]: [
-                { kode_plant: kode },
+                { kode_plant: level === '5' ? kode : cost },
                 { kode_plant_rec: plant }
               ],
               status_form: 1
@@ -42,16 +44,16 @@ module.exports = {
               where: {
                 [Op.and]: [
                   { no_asset: result.no_asset },
-                  { kode_plant: kode }
+                  { kode_plant: level === '5' ? kode : cost }
                 ]
               }
             })
             if (findAsset.length > 0) {
               return response(res, 'success add mutasi', { result: findAsset })
-            } else if (findAsset.length === 0 && result.kode_plant === kode) {
+            } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && result.cost_center === cost)) {
               const findDepo = await depo.findOne({
                 where: {
-                  kode_plant: kode
+                  kode_plant: level === '5' ? kode : cost
                 }
               })
               if (findDepo) {
@@ -62,7 +64,7 @@ module.exports = {
                 })
                 if (findRec) {
                   const send = {
-                    kode_plant: result.kode_plant,
+                    kode_plant: level === '5' ? kode : cost,
                     area: findDepo.nama_area,
                     no_doc: result.no_doc,
                     no_asset: result.no_asset,
@@ -108,16 +110,16 @@ module.exports = {
             where: {
               [Op.and]: [
                 { no_asset: result.no_asset },
-                { kode_plant: kode }
+                { kode_plant: level === '5' ? kode : cost }
               ]
             }
           })
           if (findAsset.length > 0) {
             return response(res, 'success add mutasi', { result: findAsset })
-          } else if (findAsset.length === 0 && result.kode_plant === kode) {
+          } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && result.cost_center === cost)) {
             const findDepo = await depo.findOne({
               where: {
-                kode_plant: kode
+                kode_plant: level === '5' ? kode : cost
               }
             })
             if (findDepo) {
@@ -128,7 +130,7 @@ module.exports = {
               })
               if (findRec) {
                 const send = {
-                  kode_plant: result.kode_plant,
+                  kode_plant: level === '5' ? kode : cost,
                   area: findDepo.nama_area,
                   no_doc: result.no_doc,
                   no_asset: result.no_asset,
@@ -179,6 +181,7 @@ module.exports = {
       const level = req.user.level
       const kode = req.user.kode
       const fullname = req.user.fullname
+      const cost = req.user.name
       let { limit, page, search, sort, status } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -202,11 +205,11 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level === 5) {
+      if (level === 5 || level === 9) {
         const result = await mutasi.findAndCountAll({
           where: {
             [Op.and]: [
-              { kode_plant: kode },
+              { kode_plant: level === '5' ? kode : cost },
               { status_form: 1 }
             ],
             [Op.or]: [
@@ -595,6 +598,8 @@ module.exports = {
   submitMutasi: async (req, res) => {
     try {
       const kode = req.user.kode
+      const cost = req.user.name
+      const level = req.user.level
       const schema = joi.object({
         alasan: joi.string().required()
       })
@@ -605,7 +610,7 @@ module.exports = {
         const result = await mutasi.findAll({
           where: {
             [Op.and]: [
-              { kode_plant: kode },
+              { kode_plant: level === '5' ? kode : cost },
               { status_form: 1 }
             ]
           }
@@ -642,7 +647,7 @@ module.exports = {
             if (temp.length === result.length) {
               const findDepo = await depo.findOne({
                 where: {
-                  kode_plant: kode
+                  kode_plant: level === '5' ? kode : cost
                 }
               })
               if (findDepo) {
@@ -655,7 +660,7 @@ module.exports = {
                 })
                 if (findEmail) {
                   const data = {
-                    kode_plant: kode,
+                    kode_plant: level === '5' ? kode : cost,
                     jenis: 'mutasi',
                     no_proses: `M${noMut === undefined ? 1 : noMut}`,
                     list_appr: findEmail.username,
@@ -837,7 +842,7 @@ module.exports = {
             if (temp.length === result.length) {
               const findDepo = await depo.findOne({
                 where: {
-                  kode_plant: kode
+                  kode_plant: level === '5' ? kode : cost
                 }
               })
               if (findDepo) {
@@ -850,7 +855,7 @@ module.exports = {
                 })
                 if (findEmail) {
                   const data = {
-                    kode_plant: kode,
+                    kode_plant: level === '5' ? kode : cost,
                     jenis: 'mutasi',
                     no_proses: `M${noMut === undefined ? 1 : noMut}`,
                     list_appr: findEmail.username,
@@ -1378,7 +1383,7 @@ module.exports = {
                   }
                 })
                 const data = {
-                  nama: level === 5 ? findDepo.nama_aos : name,
+                  nama: level === 5 || level === 9 ? findDepo.nama_aos : name,
                   status: 1,
                   path: null
                 }
