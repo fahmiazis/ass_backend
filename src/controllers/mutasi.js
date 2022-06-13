@@ -1930,6 +1930,589 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  approveMutasiHo: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const no = req.params.no
+      const result = await role.findAll({
+        where: {
+          nomor: level
+        }
+      })
+      if (result.length > 0) {
+        const find = await ttd.findAll({
+          where: {
+            no_doc: no
+          }
+        })
+        if (find.length > 0) {
+          let hasil = 0
+          let arr = null
+          for (let i = 0; i < find.length; i++) {
+            if (result[0].name === find[i].jabatan) {
+              hasil = find[i].id
+              arr = i
+            }
+          }
+          if (hasil !== 0) {
+            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+              return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
+            } else {
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const findDepo = await depo.findOne({
+                  where: {
+                    kode_plant: name
+                  }
+                })
+                const data = {
+                  nama: level === 5 || level === 9 ? findDepo.nama_aos : name,
+                  status: 1,
+                  path: null
+                }
+                const findTtd = await ttd.findByPk(hasil)
+                if (findTtd) {
+                  const sent = await findTtd.update(data)
+                  if (sent) {
+                    const results = await ttd.findAll({
+                      where: {
+                        [Op.and]: [
+                          { no_doc: no },
+                          { status: 1 }
+                        ]
+                      }
+                    })
+                    if (results.length === find.length) {
+                      const findDoc = await mutasi.findAll({
+                        where: {
+                          no_mutasi: no
+                        }
+                      })
+                      if (findDoc) {
+                        const data = {
+                          status_form: 9
+                        }
+                        const valid = []
+                        for (let i = 0; i < findDoc.length; i++) {
+                          const findAsset = await mutasi.findByPk(findDoc[i].id)
+                          if (findAsset) {
+                            await findAsset.update(data)
+                            valid.push(1)
+                          }
+                        }
+                        if (valid.length === findDoc.length) {
+                          const findUser = await email.findOne({
+                            where: {
+                              kode_plant: findDoc[0].kode_plant
+                            }
+                          })
+                          if (findUser) {
+                            let tableTd = ''
+                            for (let i = 0; i < findDoc.length; i++) {
+                              const element = `
+                                <tr>
+                                  <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                  <td>${findDoc[i].no_mutasi}</td>
+                                  <td>${findDoc[i].no_asset}</td>
+                                  <td>${findDoc[i].nama_asset}</td>
+                                  <td>${findDoc[i].area}</td>
+                                  <td>${findDoc[i].cost_center}</td>
+                                  <td>${findDoc[i].area_rec}</td>
+                                  <td>${findDoc[i].cost_center_rec}</td>
+                                </tr>`
+                              tableTd = tableTd + element
+                            }
+                            const mailOptions = {
+                              from: 'noreply_asset@pinusmerahabadi.co.id',
+                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                              to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                              subject: `Full Approve Pengajuan Mutasi ${no} (TESTING)`,
+                              html: `
+                              <head>
+                                <style type="text/css">
+                                body {
+                                    display: flexbox;
+                                    flex-direction: column;
+                                }
+                                .tittle {
+                                    font-size: 15px;
+                                }
+                                .mar {
+                                    margin-bottom: 20px;
+                                }
+                                .mar1 {
+                                    margin-bottom: 10px;
+                                }
+                                .foot {
+                                    margin-top: 20px;
+                                    margin-bottom: 10px;
+                                }
+                                .foot1 {
+                                    margin-bottom: 50px;
+                                }
+                                .position {
+                                    display: flexbox;
+                                    flex-direction: row;
+                                    justify-content: left;
+                                    margin-top: 10px;
+                                }
+                                table {
+                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                    font-size: 12px;
+                                }
+                                .demo-table {
+                                    border-collapse: collapse;
+                                    font-size: 13px;
+                                }
+                                .demo-table th, 
+                                .demo-table td {
+                                    border-bottom: 1px solid #e1edff;
+                                    border-left: 1px solid #e1edff;
+                                    padding: 7px 17px;
+                                }
+                                .demo-table th, 
+                                .demo-table td:last-child {
+                                    border-right: 1px solid #e1edff;
+                                }
+                                .demo-table td:first-child {
+                                    border-top: 1px solid #e1edff;
+                                }
+                                .demo-table td:last-child{
+                                    border-bottom: 0;
+                                }
+                                caption {
+                                    caption-side: top;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                /* Table Header */
+                                .demo-table thead th {
+                                    background-color: #508abb;
+                                    color: #FFFFFF;
+                                    border-color: #6ea1cc !important;
+                                    text-transform: uppercase;
+                                }
+                                
+                                /* Table Body */
+                                .demo-table tbody td {
+                                    color: #353535;
+                                }
+                                
+                                .demo-table tbody tr:nth-child(odd) td {
+                                    background-color: #f4fbff;
+                                }
+                                .demo-table tbody tr:hover th,
+                                .demo-table tbody tr:hover td {
+                                    background-color: #ffffa2;
+                                    border-color: #ffff0f;
+                                    transition: all .2s;
+                                }
+                            </style>
+                              </head>
+                              <body>
+                                  <div class="tittle mar">
+                                      Dear Bapak/Ibu Asset,
+                                  </div>
+                                  <div class="tittle mar1">
+                                      <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                  </div>
+                                  <div class="position">
+                                      <table class="demo-table">
+                                          <thead>
+                                              <tr>
+                                                  <th>No</th>
+                                                  <th>No Mutasi</th>
+                                                  <th>Asset</th>
+                                                  <th>Asset description</th>
+                                                  <th>Cabang / Depo</th>
+                                                  <th>Cost Ctr</th>
+                                                  <th>Cabang / Depo Penerima</th>
+                                                  <th>Cost Ctr Penerima</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                            ${tableTd}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
+                                  <div class="tittle foot">
+                                      Terima kasih,
+                                  </div>
+                                  <div class="tittle foot1">
+                                      Regards,
+                                  </div>
+                                  <div class="tittle">
+                                      Team Asset
+                                  </div>                                      
+                              </body>
+                              `
+                            }
+                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                            if (sendEmail) {
+                              return response(res, 'success approve mutasi', { sendEmail })
+                            } else {
+                              return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                            }
+                          } else {
+                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                          }
+                        }
+                      }
+                    } else {
+                      const findDoc = await mutasi.findAll({
+                        where: {
+                          no_mutasi: no
+                        }
+                      })
+                      if (findDoc.length > 0) {
+                        const findRole = await role.findAll({
+                          where: {
+                            name: find[arr + 1].jabatan
+                          }
+                        })
+                        if (findRole.length > 0) {
+                          if (results.length === (find.length - 1)) {
+                            const findUser = await user.findOne({
+                              where: {
+                                username: findDoc[0].kode_plant_rec
+                              }
+                            })
+                            if (findUser) {
+                              let tableTd = ''
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const element = `
+                                  <tr>
+                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                    <td>${findDoc[i].no_mutasi}</td>
+                                    <td>${findDoc[i].no_asset}</td>
+                                    <td>${findDoc[i].nama_asset}</td>
+                                    <td>${findDoc[i].area}</td>
+                                    <td>${findDoc[i].cost_center}</td>
+                                    <td>${findDoc[i].area_rec}</td>
+                                    <td>${findDoc[i].cost_center_rec}</td>
+                                  </tr>`
+                                tableTd = tableTd + element
+                              }
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                to: `${findUser.email}`,
+                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
+                                html: `
+                                <head>
+                                  <style type="text/css">
+                                  body {
+                                      display: flexbox;
+                                      flex-direction: column;
+                                  }
+                                  .tittle {
+                                      font-size: 15px;
+                                  }
+                                  .mar {
+                                      margin-bottom: 20px;
+                                  }
+                                  .mar1 {
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot {
+                                      margin-top: 20px;
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot1 {
+                                      margin-bottom: 50px;
+                                  }
+                                  .position {
+                                      display: flexbox;
+                                      flex-direction: row;
+                                      justify-content: left;
+                                      margin-top: 10px;
+                                  }
+                                  table {
+                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                      font-size: 12px;
+                                  }
+                                  .demo-table {
+                                      border-collapse: collapse;
+                                      font-size: 13px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td {
+                                      border-bottom: 1px solid #e1edff;
+                                      border-left: 1px solid #e1edff;
+                                      padding: 7px 17px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td:last-child {
+                                      border-right: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:first-child {
+                                      border-top: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:last-child{
+                                      border-bottom: 0;
+                                  }
+                                  caption {
+                                      caption-side: top;
+                                      margin-bottom: 10px;
+                                  }
+                                  
+                                  /* Table Header */
+                                  .demo-table thead th {
+                                      background-color: #508abb;
+                                      color: #FFFFFF;
+                                      border-color: #6ea1cc !important;
+                                      text-transform: uppercase;
+                                  }
+                                  
+                                  /* Table Body */
+                                  .demo-table tbody td {
+                                      color: #353535;
+                                  }
+                                  
+                                  .demo-table tbody tr:nth-child(odd) td {
+                                      background-color: #f4fbff;
+                                  }
+                                  .demo-table tbody tr:hover th,
+                                  .demo-table tbody tr:hover td {
+                                      background-color: #ffffa2;
+                                      border-color: #ffff0f;
+                                      transition: all .2s;
+                                  }
+                              </style>
+                                </head>
+                                <body>
+                                    <div class="tittle mar">
+                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                    </div>
+                                    <div class="tittle mar1">
+                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                    </div>
+                                    <div class="position">
+                                        <table class="demo-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>No Mutasi</th>
+                                                    <th>Asset</th>
+                                                    <th>Asset description</th>
+                                                    <th>Cabang / Depo</th>
+                                                    <th>Cost Ctr</th>
+                                                    <th>Cabang / Depo Penerima</th>
+                                                    <th>Cost Ctr Penerima</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                              ${tableTd}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
+                                    <div class="tittle foot">
+                                        Terima kasih,
+                                    </div>
+                                    <div class="tittle foot1">
+                                        Regards,
+                                    </div>
+                                    <div class="tittle">
+                                        Team Asset
+                                    </div>                                      
+                                </body>
+                                `
+                              }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success approve mutasi', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                              }
+                            } else {
+                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                            }
+                          } else {
+                            const findUser = await user.findOne({
+                              where: {
+                                user_level: findRole[0].nomor
+                              }
+                            })
+                            if (findUser) {
+                              let tableTd = ''
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const element = `
+                                  <tr>
+                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                    <td>${findDoc[i].no_mutasi}</td>
+                                    <td>${findDoc[i].no_asset}</td>
+                                    <td>${findDoc[i].nama_asset}</td>
+                                    <td>${findDoc[i].area}</td>
+                                    <td>${findDoc[i].cost_center}</td>
+                                    <td>${findDoc[i].area_rec}</td>
+                                    <td>${findDoc[i].cost_center_rec}</td>
+                                  </tr>`
+                                tableTd = tableTd + element
+                              }
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                to: `${findUser.email}`,
+                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
+                                html: `
+                                <head>
+                                  <style type="text/css">
+                                  body {
+                                      display: flexbox;
+                                      flex-direction: column;
+                                  }
+                                  .tittle {
+                                      font-size: 15px;
+                                  }
+                                  .mar {
+                                      margin-bottom: 20px;
+                                  }
+                                  .mar1 {
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot {
+                                      margin-top: 20px;
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot1 {
+                                      margin-bottom: 50px;
+                                  }
+                                  .position {
+                                      display: flexbox;
+                                      flex-direction: row;
+                                      justify-content: left;
+                                      margin-top: 10px;
+                                  }
+                                  table {
+                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                      font-size: 12px;
+                                  }
+                                  .demo-table {
+                                      border-collapse: collapse;
+                                      font-size: 13px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td {
+                                      border-bottom: 1px solid #e1edff;
+                                      border-left: 1px solid #e1edff;
+                                      padding: 7px 17px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td:last-child {
+                                      border-right: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:first-child {
+                                      border-top: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:last-child{
+                                      border-bottom: 0;
+                                  }
+                                  caption {
+                                      caption-side: top;
+                                      margin-bottom: 10px;
+                                  }
+                                  
+                                  /* Table Header */
+                                  .demo-table thead th {
+                                      background-color: #508abb;
+                                      color: #FFFFFF;
+                                      border-color: #6ea1cc !important;
+                                      text-transform: uppercase;
+                                  }
+                                  
+                                  /* Table Body */
+                                  .demo-table tbody td {
+                                      color: #353535;
+                                  }
+                                  
+                                  .demo-table tbody tr:nth-child(odd) td {
+                                      background-color: #f4fbff;
+                                  }
+                                  .demo-table tbody tr:hover th,
+                                  .demo-table tbody tr:hover td {
+                                      background-color: #ffffa2;
+                                      border-color: #ffff0f;
+                                      transition: all .2s;
+                                  }
+                              </style>
+                                </head>
+                                <body>
+                                    <div class="tittle mar">
+                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                    </div>
+                                    <div class="tittle mar1">
+                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                    </div>
+                                    <div class="position">
+                                        <table class="demo-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>No Mutasi</th>
+                                                    <th>Asset</th>
+                                                    <th>Asset description</th>
+                                                    <th>Cabang / Depo</th>
+                                                    <th>Cost Ctr</th>
+                                                    <th>Cabang / Depo Penerima</th>
+                                                    <th>Cost Ctr Penerima</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                              ${tableTd}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
+                                    <div class="tittle foot">
+                                        Terima kasih,
+                                    </div>
+                                    <div class="tittle foot1">
+                                        Regards,
+                                    </div>
+                                    <div class="tittle">
+                                        Team Asset
+                                    </div>                                      
+                                </body>
+                                `
+                              }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success approve mutasi', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                              }
+                            } else {
+                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                            }
+                          }
+                        }
+                      }
+                    }
+                  } else {
+                    return response(res, 'failed approve mutasi', {}, 404, false)
+                  }
+                } else {
+                  return response(res, 'failed approve mutasi', {}, 404, false)
+                }
+              } else {
+                return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+              }
+            }
+          } else {
+            return response(res, 'failed approve mutasi', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed approve mutasi', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed approve mutasi', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   rejectMutasi: async (req, res) => {
     try {
       const level = req.user.level

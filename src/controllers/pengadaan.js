@@ -977,7 +977,7 @@ module.exports = {
               ],
               [Op.or]: [
                 { tipe: result.tipe === 'gudang' ? 'gudang' : 'pengajuan' },
-                { tipe: result.akta === 'ada' ? 'akta' : 'gudang' }
+                { tipe: result.akta === 'ada' ? 'akta' : null }
               ]
             }
           })

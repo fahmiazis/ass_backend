@@ -556,12 +556,13 @@ module.exports = {
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
         }
-      } else if (level === 12 || level === 7) {
+      } else if (level === 12 || level === 7 || level === 26 || level === 27) {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 7 ? null : fullname },
-              { nama_om: level === 12 ? null : fullname }
+              { nama_bm: level === 12 || level === 27 ? fullname : null },
+              { nama_om: level === 7 ? fullname : null },
+              { nama_asman: level === 26 ? fullname : null }
             ]
           }
         })
@@ -629,65 +630,72 @@ module.exports = {
         } else {
           return response(res, 'failed get disposal', {}, 400, false)
         }
-      } else if (level === 13) {
-        const result = await disposal.findAndCountAll({
-          where: {
-            [Op.or]: [
-              { kode_plant: { [Op.like]: `%${searchValue}%` } },
-              { no_io: { [Op.like]: `%${searchValue}%` } },
-              { no_disposal: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { kategori: { [Op.like]: `%${searchValue}%` } },
-              { keterangan: { [Op.like]: `%${searchValue}%` } }
+      } else if (level === 13 || level === 16) {
+        if (level === 13) {
+          const result = await disposal.findAndCountAll({
+            where: {
+              [Op.or]: [
+                { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                { no_io: { [Op.like]: `%${searchValue}%` } },
+                { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                { kategori: { [Op.like]: `%${searchValue}%` } },
+                { keterangan: { [Op.like]: `%${searchValue}%` } }
+              ],
+              [Op.or]: [
+                { status_form: status },
+                { status_form: status === 2 ? 9 : status },
+                { status_form: status === 2 ? 26 : status }
+              ]
+            },
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
             ],
-            [Op.or]: [
-              { status_form: status },
-              { status_form: status === 2 ? 9 : status },
-              { status_form: status === 2 ? 26 : status }
+            limit: limit,
+            offset: (page - 1) * limit,
+            include: [
+              {
+                model: ttd,
+                as: 'appForm'
+              },
+              {
+                model: path,
+                as: 'pict'
+              },
+              {
+                model: docUser,
+                as: 'docAsset'
+              }
             ]
-          },
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit,
-          include: [
-            {
-              model: ttd,
-              as: 'appForm'
-            },
-            {
-              model: path,
-              as: 'pict'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
-            }
-          ]
-        })
-        if (result.rows.length > 0) {
-          const data = []
-          for (let i = 0; i < result.rows.length; i++) {
-            if (result.rows[i].kategori === 'IT') {
-              data.push(result.rows[i].no_disposal)
-            }
-          }
-          const set = new Set(data)
-          const noDis = [...set]
-          const hasil = []
-          for (let i = 0; i < result.rows.length; i++) {
-            for (let j = 0; j < noDis.length; j++) {
-              if (result.rows[i].no_disposal === noDis[j]) {
-                hasil.push(result.rows[i])
+          })
+          if (result.rows.length > 0) {
+            const data = []
+            for (let i = 0; i < result.rows.length; i++) {
+              if (result.rows[i].kategori === 'IT') {
+                data.push(result.rows[i].no_disposal)
               }
             }
-          }
-          if (hasil.length) {
-            const result = { rows: hasil, count: hasil.length }
-            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-            return response(res, 'success get disposal', { result, pageInfo, noDis })
+            const set = new Set(data)
+            const noDis = [...set]
+            const hasil = []
+            for (let i = 0; i < result.rows.length; i++) {
+              for (let j = 0; j < noDis.length; j++) {
+                if (result.rows[i].no_disposal === noDis[j]) {
+                  hasil.push(result.rows[i])
+                }
+              }
+            }
+            if (hasil.length) {
+              const result = { rows: hasil, count: hasil.length }
+              const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+              return response(res, 'success get disposal', { result, pageInfo, noDis })
+            } else {
+              const result = { rows: [], count: 0 }
+              const noDis = []
+              const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+              return response(res, 'success get disposal', { result, pageInfo, noDis })
+            }
           } else {
             const result = { rows: [], count: 0 }
             const noDis = []
@@ -695,10 +703,7 @@ module.exports = {
             return response(res, 'success get disposal', { result, pageInfo, noDis })
           }
         } else {
-          const result = { rows: [], count: 0 }
-          const noDis = []
-          const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-          return response(res, 'success get disposal', { result, pageInfo, noDis })
+          return response(res, '', {})
         }
       } else {
         const result = await disposal.findAll({

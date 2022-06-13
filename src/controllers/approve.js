@@ -102,27 +102,12 @@ module.exports = {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
         if (level === 1) {
-          const result = await approve.findAll({
-            where: {
-              [Op.and]: [
-                { jabatan: results.jabatan },
-                { nama_approve: results.nama_approve }
-              ],
-              [Op.not]: {
-                id: id
-              }
-            }
-          })
-          if (result.length > 0) {
-            return response(res, 'Telah terdaftar', {}, 404, false)
+          const result = await approve.findByPk(id)
+          if (result) {
+            await result.update(results)
+            return response(res, 'successfully update master approve')
           } else {
-            const result = await approve.findByPk(id)
-            if (result) {
-              await result.update(results)
-              return response(res, 'successfully update master approve')
-            } else {
-              return response(res, 'failed to create', {}, 404, false)
-            }
+            return response(res, 'failed to create', {}, 404, false)
           }
         } else {
           return response(res, "you're not super admin", {}, 400, false)
