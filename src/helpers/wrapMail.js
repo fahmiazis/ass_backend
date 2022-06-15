@@ -6,7 +6,7 @@ async function wrapedSendMail (mailOptions) {
       connectionTimeout: 60000,
       socketTimeout: 120000,
       greetingTimeout: 30000,
-      host: '192.168.35.203',
+      host: 'aset.pinusmerahabadi.co.id',
       secure: false,
       port: 587,
       auth: {

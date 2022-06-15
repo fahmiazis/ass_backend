@@ -1,6 +1,6 @@
-const cekNo = { a: 'b', b: 'c' }
-const findNo = ['b', 'd']
+const cekNo = [1, 2]
+const findNo = [3, 4]
 
-cekNo.findNo = findNo
+const res = cekNo.concat(findNo)
 
-console.log(cekNo)
+console.log(res)

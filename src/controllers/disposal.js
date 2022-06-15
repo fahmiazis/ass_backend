@@ -255,388 +255,324 @@ module.exports = {
     }
   },
   getDisposal: async (req, res) => {
-    try {
-      const level = req.user.level
-      const kode = req.user.kode
-      const fullname = req.user.name
-      let { limit, page, search, sort, status, tipe, form } = req.query
-      let searchValue = ''
-      let sortValue = ''
-      if (typeof search === 'object') {
-        searchValue = Object.values(search)[0]
-      } else {
-        searchValue = search || ''
-      }
-      if (typeof sort === 'object') {
-        sortValue = Object.values(sort)[0]
-      } else {
-        sortValue = sort || 'id'
-      }
-      if (!status) {
-        status = 1
-      } else {
-        status = parseInt(status)
-      }
-      if (limit) {
-        limit = 1000
-      } else {
-        limit = 1000
-      }
-      if (!page) {
-        page = 1
-      } else {
-        page = parseInt(page)
-      }
-      if (level === 5 || level === 9) {
-        const result = await disposal.findAll({
-          where: {
-            kode_plant: level === 5 ? kode : fullname,
-            [Op.or]: [
-              { status_form: status },
-              { status_form: status === 2 ? 9 : status },
-              { status_form: status === 2 ? 26 : status },
-              { status_form: status === 2 ? 3 : status }
-            ]
-          },
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
-            [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
-          ],
-          include: [
-            {
-              model: path,
-              as: 'pict'
-            },
-            {
-              model: ttd,
-              as: 'ttdSet'
-            },
-            {
-              model: ttd,
-              as: 'appForm'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
-            }
+    // try {
+    const level = req.user.level
+    const kode = req.user.kode
+    const fullname = req.user.name
+    let { limit, page, search, sort, status, tipe, form } = req.query
+    let searchValue = ''
+    let sortValue = ''
+    if (typeof search === 'object') {
+      searchValue = Object.values(search)[0]
+    } else {
+      searchValue = search || ''
+    }
+    if (typeof sort === 'object') {
+      sortValue = Object.values(sort)[0]
+    } else {
+      sortValue = sort || 'id'
+    }
+    if (!status) {
+      status = 1
+    } else {
+      status = parseInt(status)
+    }
+    if (limit) {
+      limit = 1000
+    } else {
+      limit = 1000
+    }
+    if (!page) {
+      page = 1
+    } else {
+      page = parseInt(page)
+    }
+    if (level === 5 || level === 9) {
+      const result = await disposal.findAll({
+        where: {
+          kode_plant: level === 5 ? kode : fullname,
+          [Op.or]: [
+            { status_form: status },
+            { status_form: status === 2 ? 9 : status },
+            { status_form: status === 2 ? 26 : status },
+            { status_form: status === 2 ? 3 : status }
           ]
-        })
-        if (result) {
-          if (form === 'editdis' && result.length > 0) {
-            const cekRow = []
+        },
+        order: [
+          [sortValue, 'ASC'],
+          [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
+          [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
+        ],
+        include: [
+          {
+            model: path,
+            as: 'pict'
+          },
+          {
+            model: ttd,
+            as: 'ttdSet'
+          },
+          {
+            model: ttd,
+            as: 'appForm'
+          },
+          {
+            model: docUser,
+            as: 'docAsset'
+          }
+        ]
+      })
+      if (result) {
+        if (form === 'editdis' && result.length > 0) {
+          const cekRow = []
+          for (let i = 0; i < result.length; i++) {
+            if (result[i].status_app !== null) {
+              cekRow.push(result[i])
+            }
+          }
+          if (cekRow.length === 0) {
+            const valid = []
             for (let i = 0; i < result.length; i++) {
-              if (result[i].status_app !== null) {
-                cekRow.push(result[i])
+              if (result[i].appForm.length > 0) {
+                for (let j = 0; j < result[i].appForm.length; j++) {
+                  if (result[i].appForm[j].status === 0) {
+                    valid.push(result[i])
+                  }
+                }
               }
             }
-            if (cekRow.length === 0) {
-              const valid = []
+            if (valid.length > 0) {
+              const hasil = []
               for (let i = 0; i < result.length; i++) {
-                if (result[i].appForm.length > 0) {
-                  for (let j = 0; j < result[i].appForm.length; j++) {
-                    if (result[i].appForm[j].status === 0) {
-                      valid.push(result[i])
+                const findDoc = await docUser.findAll({
+                  where: {
+                    no_pengadaan: result[i].no_asset,
+                    [Op.and]: [
+                      { jenis_form: 'disposal' },
+                      {
+                        [Op.or]: [
+                          { tipe: 'pengajuan' },
+                          { tipe: 'jual' },
+                          { tipe: 'purch' }
+                        ]
+                      }
+                    ]
+                  }
+                })
+                if (findDoc.length > 0) {
+                  const cek = []
+                  for (let j = 0; j < findDoc.length; j++) {
+                    if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                      cek.push(1)
                     }
+                  }
+                  if (cek.length > 0) {
+                    hasil.push(result[i])
                   }
                 }
               }
-              if (valid.length > 0) {
-                const hasil = []
-                for (let i = 0; i < result.length; i++) {
-                  const findDoc = await docUser.findAll({
-                    where: {
-                      no_pengadaan: result[i].no_asset,
-                      [Op.and]: [
-                        { jenis_form: 'disposal' },
-                        {
-                          [Op.or]: [
-                            { tipe: 'pengajuan' },
-                            { tipe: 'jual' },
-                            { tipe: 'purch' }
-                          ]
-                        }
-                      ]
-                    }
-                  })
-                  if (findDoc.length > 0) {
-                    const cek = []
-                    for (let j = 0; j < findDoc.length; j++) {
-                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
-                        cek.push(1)
-                      }
-                    }
-                    if (cek.length > 0) {
-                      hasil.push(result[i])
-                    }
+              if (hasil.length > 0) {
+                const newData = valid.concat(hasil)
+                const filteredArr = newData.reduce((acc, current) => {
+                  const x = acc.find(item => item.id === current.id)
+                  if (!x) {
+                    return acc.concat([current])
+                  } else {
+                    return acc
                   }
-                }
-                if (hasil.length > 0) {
-                  const newData = valid.concat(hasil)
-                  const filteredArr = newData.reduce((acc, current) => {
-                    const x = acc.find(item => item.id === current.id)
-                    if (!x) {
-                      return acc.concat([current])
-                    } else {
-                      return acc
-                    }
-                  }, [])
-                  return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
-                } else {
-                  return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow, result } })
-                }
+                }, [])
+                return response(res, 'success get disposal', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
               } else {
-                const hasil = []
-                for (let i = 0; i < result.length; i++) {
-                  const findDoc = await docUser.findAll({
-                    where: {
-                      no_pengadaan: result[i].no_asset,
-                      [Op.and]: [
-                        { jenis_form: 'disposal' },
-                        {
-                          [Op.or]: [
-                            { tipe: 'pengajuan' },
-                            { tipe: 'jual' },
-                            { tipe: 'purch' }
-                          ]
-                        }
-                      ]
-                    }
-                  })
-                  if (findDoc.length > 0) {
-                    const cek = []
-                    for (let j = 0; j < findDoc.length; j++) {
-                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
-                        cek.push(1)
-                      }
-                    }
-                    if (cek.length > 0) {
-                      hasil.push(result[i])
-                    }
-                  }
-                }
-                if (hasil.length > 0) {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
-                } else {
-                  return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
-                }
+                return response(res, 'success get disposal', { result: { rows: valid, count: valid.length, cekRow, result } })
               }
             } else {
-              const valid = []
+              const hasil = []
               for (let i = 0; i < result.length; i++) {
-                if (result[i].ttdSet.length > 0) {
-                  for (let j = 0; j < result[i].ttdSet.length; j++) {
-                    if (result[i].ttdSet[j].status === 0) {
-                      valid.push(result[i])
+                const findDoc = await docUser.findAll({
+                  where: {
+                    no_pengadaan: result[i].no_asset,
+                    [Op.and]: [
+                      { jenis_form: 'disposal' },
+                      {
+                        [Op.or]: [
+                          { tipe: 'pengajuan' },
+                          { tipe: 'jual' },
+                          { tipe: 'purch' }
+                        ]
+                      }
+                    ]
+                  }
+                })
+                if (findDoc.length > 0) {
+                  const cek = []
+                  for (let j = 0; j < findDoc.length; j++) {
+                    if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                      cek.push(1)
                     }
                   }
-                  for (let j = 0; j < result[i].appForm.length; j++) {
-                    if (result[i].appForm[j].status === 0) {
-                      valid.push(result[i])
-                    }
+                  if (cek.length > 0) {
+                    hasil.push(result[i])
                   }
                 }
               }
-              if (valid.length > 0) {
-                const hasil = []
-                for (let i = 0; i < result.length; i++) {
-                  const findDoc = await docUser.findAll({
-                    where: {
-                      no_pengadaan: result[i].no_asset,
-                      [Op.and]: [
-                        { jenis_form: 'disposal' },
-                        {
-                          [Op.or]: [
-                            { tipe: 'pengajuan' },
-                            { tipe: 'jual' },
-                            { tipe: 'purch' }
-                          ]
-                        }
-                      ]
-                    }
-                  })
-                  if (findDoc.length > 0) {
-                    const cek = []
-                    for (let j = 0; j < findDoc.length; j++) {
-                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
-                        cek.push(1)
-                      }
-                    }
-                    if (cek.length > 0) {
-                      hasil.push(result[i])
-                    }
-                  }
-                }
-                if (hasil.length > 0) {
-                  const newData = valid.concat(hasil)
-                  const filteredArr = newData.reduce((acc, current) => {
-                    const x = acc.find(item => item.id === current.id)
-                    if (!x) {
-                      return acc.concat([current])
-                    } else {
-                      return acc
-                    }
-                  }, [])
-                  return response(res, 'success get disposal status app', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
-                } else {
-                  return response(res, 'success get disposal status app', { result: { rows: valid, count: valid.length, cekRow, result } })
-                }
+              if (hasil.length > 0) {
+                return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
               } else {
-                const hasil = []
-                for (let i = 0; i < result.length; i++) {
-                  const findDoc = await docUser.findAll({
-                    where: {
-                      no_pengadaan: result[i].no_asset,
-                      [Op.and]: [
-                        { jenis_form: 'disposal' },
-                        {
-                          [Op.or]: [
-                            { tipe: 'pengajuan' },
-                            { tipe: 'jual' },
-                            { tipe: 'purch' }
-                          ]
-                        }
-                      ]
-                    }
-                  })
-                  if (findDoc.length > 0) {
-                    const cek = []
-                    for (let j = 0; j < findDoc.length; j++) {
-                      if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
-                        cek.push(1)
-                      }
-                    }
-                    if (cek.length > 0) {
-                      hasil.push(result[i])
-                    }
-                  }
-                }
-                if (hasil.length > 0) {
-                  return response(res, 'success get disposal status app', { result: { rows: hasil, count: hasil.length, cekRow, result } })
-                } else {
-                  return response(res, 'success get disposal status app', { result: { rows: hasil, count: hasil.length, cekRow, result } })
-                }
+                return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length, cekRow, result } })
               }
-            }
-          } else if (form === 'editeks' && result.length > 0) {
-            const hasil = []
-            for (let i = 0; i < result.length; i++) {
-              const findDoc = await docUser.findAll({
-                where: {
-                  [Op.and]: [
-                    { no_pengadaan: result[i].no_asset },
-                    { jenis_form: 'disposal' }
-                  ],
-                  [Op.or]: [
-                    { tipe: result[i].nilai_jual === '0' ? 'dispose' : 'sell' },
-                    { tipe: 'npwp' }
-                  ]
-                }
-              })
-              if (findDoc.length > 0) {
-                const cek = []
-                for (let j = 0; j < findDoc.length; j++) {
-                  if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
-                    cek.push(1)
-                  }
-                }
-                if (cek.length > 0) {
-                  hasil.push(result[i])
-                }
-              }
-            }
-            if (hasil.length > 0) {
-              return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
-            } else {
-              return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
             }
           } else {
-            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, form: form })
+            const valid = []
+            for (let i = 0; i < result.length; i++) {
+              if (result[i].ttdSet.length > 0) {
+                for (let j = 0; j < result[i].ttdSet.length; j++) {
+                  if (result[i].ttdSet[j].status === 0) {
+                    valid.push(result[i])
+                  }
+                }
+                for (let j = 0; j < result[i].appForm.length; j++) {
+                  if (result[i].appForm[j].status === 0) {
+                    valid.push(result[i])
+                  }
+                }
+              }
+            }
+            if (valid.length > 0) {
+              const hasil = []
+              for (let i = 0; i < result.length; i++) {
+                const findDoc = await docUser.findAll({
+                  where: {
+                    no_pengadaan: result[i].no_asset,
+                    [Op.and]: [
+                      { jenis_form: 'disposal' },
+                      {
+                        [Op.or]: [
+                          { tipe: 'pengajuan' },
+                          { tipe: 'jual' },
+                          { tipe: 'purch' }
+                        ]
+                      }
+                    ]
+                  }
+                })
+                if (findDoc.length > 0) {
+                  const cek = []
+                  for (let j = 0; j < findDoc.length; j++) {
+                    if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                      cek.push(1)
+                    }
+                  }
+                  if (cek.length > 0) {
+                    hasil.push(result[i])
+                  }
+                }
+              }
+              if (hasil.length > 0) {
+                const newData = valid.concat(hasil)
+                const filteredArr = newData.reduce((acc, current) => {
+                  const x = acc.find(item => item.id === current.id)
+                  if (!x) {
+                    return acc.concat([current])
+                  } else {
+                    return acc
+                  }
+                }, [])
+                return response(res, 'success get disposal status app', { result: { rows: filteredArr, count: filteredArr.length, cekRow, result } })
+              } else {
+                return response(res, 'success get disposal status app', { result: { rows: valid, count: valid.length, cekRow, result } })
+              }
+            } else {
+              const hasil = []
+              for (let i = 0; i < result.length; i++) {
+                const findDoc = await docUser.findAll({
+                  where: {
+                    no_pengadaan: result[i].no_asset,
+                    [Op.and]: [
+                      { jenis_form: 'disposal' },
+                      {
+                        [Op.or]: [
+                          { tipe: 'pengajuan' },
+                          { tipe: 'jual' },
+                          { tipe: 'purch' }
+                        ]
+                      }
+                    ]
+                  }
+                })
+                if (findDoc.length > 0) {
+                  const cek = []
+                  for (let j = 0; j < findDoc.length; j++) {
+                    if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                      cek.push(1)
+                    }
+                  }
+                  if (cek.length > 0) {
+                    hasil.push(result[i])
+                  }
+                }
+              }
+              if (hasil.length > 0) {
+                return response(res, 'success get disposal status app', { result: { rows: hasil, count: hasil.length, cekRow, result } })
+              } else {
+                return response(res, 'success get disposal status app', { result: { rows: hasil, count: hasil.length, cekRow, result } })
+              }
+            }
           }
-        } else {
-          return response(res, 'failed get disposal', {}, 400, false)
-        }
-      } else if (level === 12 || level === 7 || level === 26 || level === 27) {
-        const findDepo = await depo.findAll({
-          where: {
-            [Op.or]: [
-              { nama_bm: level === 12 || level === 27 ? fullname : null },
-              { nama_om: level === 7 ? fullname : null },
-              { nama_asman: level === 26 ? fullname : null }
-            ]
-          }
-        })
-        if (findDepo.length > 0) {
+        } else if (form === 'editeks' && result.length > 0) {
           const hasil = []
-          for (let i = 0; i < findDepo.length; i++) {
-            const result = await disposal.findAll({
+          for (let i = 0; i < result.length; i++) {
+            const findDoc = await docUser.findAll({
               where: {
-                kode_plant: findDepo[i].kode_plant,
-                [Op.or]: [
-                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
-                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                  { kategori: { [Op.like]: `%${searchValue}%` } },
-                  { keterangan: { [Op.like]: `%${searchValue}%` } }
+                [Op.and]: [
+                  { no_pengadaan: result[i].no_asset },
+                  { jenis_form: 'disposal' }
                 ],
                 [Op.or]: [
-                  { status_form: status },
-                  { status_form: status === 2 ? 9 : status },
-                  { status_form: status === 2 ? 26 : status }
+                  { tipe: result[i].nilai_jual === '0' ? 'dispose' : 'sell' },
+                  { tipe: 'npwp' }
                 ]
-              },
-              order: [
-                [sortValue, 'ASC'],
-                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-              ],
-              include: [
-                {
-                  model: ttd,
-                  as: 'appForm'
-                },
-                {
-                  model: path,
-                  as: 'pict'
-                },
-                {
-                  model: docUser,
-                  as: 'docAsset'
-                }
-              ]
+              }
             })
-            if (result.length > 0) {
-              for (let j = 0; j < result.length; j++) {
-                hasil.push(result[j])
+            if (findDoc.length > 0) {
+              const cek = []
+              for (let j = 0; j < findDoc.length; j++) {
+                if (findDoc[j].divisi === '0' || findDoc[j].status === 0) {
+                  cek.push(1)
+                }
+              }
+              if (cek.length > 0) {
+                hasil.push(result[i])
               }
             }
           }
           if (hasil.length > 0) {
-            const data = []
-            hasil.map(x => {
-              return (
-                data.push(x.no_disposal)
-              )
-            })
-            const set = new Set(data)
-            const noDis = [...set]
-            const result = { rows: hasil, count: hasil.length }
-            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-            return response(res, 'success get disposal', { result, pageInfo, noDis })
+            return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
           } else {
-            const result = { rows: hasil, count: 0 }
-            const noDis = []
-            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-            return response(res, 'success get disposal', { result, pageInfo, noDis })
+            return response(res, 'success get disposal', { result: { rows: hasil, count: hasil.length } })
           }
         } else {
-          return response(res, 'failed get disposal', {}, 400, false)
+          return response(res, 'success get disposal', { result: { rows: result, count: result.length }, form: form })
         }
-      } else if (level === 13 || level === 16) {
-        if (level === 13) {
-          const result = await disposal.findAndCountAll({
+      } else {
+        return response(res, 'failed get disposal', {}, 400, false)
+      }
+    } else if (level === 12 || level === 7 || level === 26 || level === 27) {
+      const findDepo = await depo.findAll({
+        where: {
+          [Op.or]: [
+            { nama_bm: level === 12 || level === 27 ? fullname : null },
+            { nama_om: level === 7 ? fullname : null },
+            { nama_asman: level === 26 ? fullname : null }
+          ]
+        }
+      })
+      if (findDepo.length > 0) {
+        const hasil = []
+        for (let i = 0; i < findDepo.length; i++) {
+          const result = await disposal.findAll({
             where: {
+              kode_plant: findDepo[i].kode_plant,
               [Op.or]: [
-                { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                { no_io: { [Op.like]: `%${searchValue}%` } },
                 { no_disposal: { [Op.like]: `%${searchValue}%` } },
                 { nama_asset: { [Op.like]: `%${searchValue}%` } },
                 { kategori: { [Op.like]: `%${searchValue}%` } },
@@ -652,8 +588,6 @@ module.exports = {
               [sortValue, 'ASC'],
               [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
             ],
-            limit: limit,
-            offset: (page - 1) * limit,
             include: [
               {
                 model: ttd,
@@ -669,27 +603,178 @@ module.exports = {
               }
             ]
           })
-          if (result.rows.length > 0) {
-            const data = []
-            for (let i = 0; i < result.rows.length; i++) {
-              if (result.rows[i].kategori === 'IT') {
-                data.push(result.rows[i].no_disposal)
-              }
+          if (result.length > 0) {
+            for (let j = 0; j < result.length; j++) {
+              hasil.push(result[j])
             }
-            const set = new Set(data)
-            const noDis = [...set]
-            const hasil = []
-            for (let i = 0; i < result.rows.length; i++) {
-              for (let j = 0; j < noDis.length; j++) {
-                if (result.rows[i].no_disposal === noDis[j]) {
-                  hasil.push(result.rows[i])
+          }
+        }
+        if (hasil.length > 0) {
+          const data = []
+          hasil.map(x => {
+            return (
+              data.push(x.no_disposal)
+            )
+          })
+          const set = new Set(data)
+          const noDis = [...set]
+          const result = { rows: hasil, count: hasil.length }
+          const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+          return response(res, 'success get disposal', { result, pageInfo, noDis })
+        } else {
+          const result = { rows: hasil, count: 0 }
+          const noDis = []
+          const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+          return response(res, 'success get disposal', { result, pageInfo, noDis })
+        }
+      } else {
+        return response(res, 'failed get disposal', {}, 400, false)
+      }
+    } else if (level === 13 || level === 16) {
+      const findRole = await role.findOne({
+        where: {
+          nomor: '27'
+        }
+      })
+      const findDepo = await depo.findAll({
+        where: {
+          [Op.or]: [
+            { nama_bm: fullname },
+            { nama_om: fullname }
+          ]
+        }
+      })
+      if (findDepo.length > 0 && findRole) {
+        const hasil = []
+        for (let i = 0; i < findDepo.length; i++) {
+          const result = await disposal.findAll({
+            where: {
+              kode_plant: findDepo[i].kode_plant,
+              [Op.or]: [
+                { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                { kategori: { [Op.like]: `%${searchValue}%` } },
+                { keterangan: { [Op.like]: `%${searchValue}%` } }
+              ],
+              [Op.or]: [
+                { status_form: status },
+                { status_form: status === 2 ? 9 : status },
+                { status_form: status === 2 ? 26 : status }
+              ]
+            },
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+            ],
+            include: [
+              {
+                model: ttd,
+                as: 'appForm'
+              },
+              {
+                model: path,
+                as: 'pict'
+              },
+              {
+                model: docUser,
+                as: 'docAsset'
+              }
+            ]
+          })
+          if (result.length > 0) {
+            for (let j = 0; j < result.length; j++) {
+              hasil.push(result[j])
+            }
+          }
+        }
+        if (hasil.length > 0) {
+          const tempDis = []
+          hasil.map(x => {
+            return (
+              tempDis.push(x.no_disposal)
+            )
+          })
+          const setDis = new Set(tempDis)
+          const noSet = [...setDis]
+          if (level === 13) {
+            const result = await disposal.findAndCountAll({
+              where: {
+                kategori: 'IT',
+                [Op.or]: [
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { no_io: { [Op.like]: `%${searchValue}%` } },
+                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                  { kategori: { [Op.like]: `%${searchValue}%` } },
+                  { keterangan: { [Op.like]: `%${searchValue}%` } }
+                ],
+                [Op.or]: [
+                  { status_form: status },
+                  { status_form: status === 2 ? 9 : status },
+                  { status_form: status === 2 ? 26 : status }
+                ]
+              },
+              order: [
+                [sortValue, 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              limit: limit,
+              offset: (page - 1) * limit,
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                },
+                {
+                  model: docUser,
+                  as: 'docAsset'
+                }
+              ],
+              group: 'no_disposal'
+            })
+            if (result.rows.length > 0) {
+              const data = []
+              for (let i = 0; i < result.rows.length; i++) {
+                if (result.rows[i].appForm.length > 0) {
+                  const app = result.rows[i].appForm
+                  // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+                  if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                    data.push(result.rows[i].no_disposal)
+                  } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                    data.push(result.rows[i].no_disposal)
+                  }
                 }
               }
-            }
-            if (hasil.length) {
-              const result = { rows: hasil, count: hasil.length }
-              const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-              return response(res, 'success get disposal', { result, pageInfo, noDis })
+              const set = new Set(data)
+              const noDis = [...set]
+              const newData = []
+              for (let i = 0; i < result.rows.length; i++) {
+                for (let j = 0; j < noDis.length; j++) {
+                  if (result.rows[i].no_disposal === noDis[j]) {
+                    newData.push(result.rows[i])
+                  }
+                }
+              }
+              const tempAll = hasil.concat(newData)
+              const setMerge = new Set(tempAll)
+              const mergeData = [...setMerge]
+              const tempNo = noDis.concat(noSet)
+              const setNo = new Set(tempNo)
+              const mergeNo = [...setNo]
+              if (newData.length) {
+                const result = { rows: mergeData, count: mergeData.length }
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis: mergeNo })
+              } else {
+                const result = { rows: [], count: 0 }
+                const noDis = []
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis })
+              }
             } else {
               const result = { rows: [], count: 0 }
               const noDis = []
@@ -697,88 +782,340 @@ module.exports = {
               return response(res, 'success get disposal', { result, pageInfo, noDis })
             }
           } else {
-            const result = { rows: [], count: 0 }
-            const noDis = []
-            const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-            return response(res, 'success get disposal', { result, pageInfo, noDis })
+            const result = await disposal.findAndCountAll({
+              where: {
+                [Op.or]: [
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { no_io: { [Op.like]: `%${searchValue}%` } },
+                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                  { kategori: { [Op.like]: `%${searchValue}%` } },
+                  { keterangan: { [Op.like]: `%${searchValue}%` } }
+                ],
+                [Op.or]: [
+                  { status_form: status },
+                  { status_form: status === 2 ? 9 : status },
+                  { status_form: status === 2 ? 26 : status }
+                ]
+              },
+              order: [
+                [sortValue, 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              limit: limit,
+              offset: (page - 1) * limit,
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                },
+                {
+                  model: docUser,
+                  as: 'docAsset'
+                }
+              ],
+              group: 'no_disposal'
+            })
+            if (result.rows.length > 0) {
+              const data = []
+              for (let i = 0; i < result.rows.length; i++) {
+                if (result.rows[i].appForm.length > 0) {
+                  const app = result.rows[i].appForm
+                  if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                    data.push(result.rows[i].no_disposal)
+                  } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                    data.push(result.rows[i].no_disposal)
+                  }
+                }
+              }
+              const set = new Set(data)
+              const noDis = [...set]
+              const newData = []
+              for (let i = 0; i < result.rows.length; i++) {
+                for (let j = 0; j < noDis.length; j++) {
+                  if (result.rows[i].no_disposal === noDis[j]) {
+                    newData.push(result.rows[i])
+                  }
+                }
+              }
+              const tempAll = hasil.concat(newData)
+              const setMerge = new Set(tempAll)
+              const mergeData = [...setMerge]
+              const tempNo = noDis.concat(noSet)
+              const setNo = new Set(tempNo)
+              const mergeNo = [...setNo]
+              if (newData.length) {
+                const result = { rows: mergeData, count: mergeData.length }
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis: mergeNo })
+              } else {
+                const result = { rows: [], count: 0 }
+                const noDis = []
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis })
+              }
+            } else {
+              const result = { rows: [], count: 0 }
+              const noDis = []
+              const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+              return response(res, 'success get disposal', { result, pageInfo, noDis })
+            }
           }
         } else {
-          return response(res, '', {})
+          const tempDis = []
+          const setDis = new Set(tempDis)
+          const noSet = [...setDis]
+          if (level === 13) {
+            const result = await disposal.findAndCountAll({
+              where: {
+                kategori: 'IT',
+                [Op.or]: [
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { no_io: { [Op.like]: `%${searchValue}%` } },
+                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                  { kategori: { [Op.like]: `%${searchValue}%` } },
+                  { keterangan: { [Op.like]: `%${searchValue}%` } }
+                ],
+                [Op.or]: [
+                  { status_form: status },
+                  { status_form: status === 2 ? 9 : status },
+                  { status_form: status === 2 ? 26 : status }
+                ]
+              },
+              order: [
+                [sortValue, 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              limit: limit,
+              offset: (page - 1) * limit,
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                },
+                {
+                  model: docUser,
+                  as: 'docAsset'
+                }
+              ],
+              group: 'no_disposal'
+            })
+            if (result.rows.length > 0) {
+              const data = []
+              for (let i = 0; i < result.rows.length; i++) {
+                if (result.rows[i].appForm.length > 0) {
+                  const app = result.rows[i].appForm
+                  // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+                  if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                    data.push(result.rows[i].no_disposal)
+                  } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                    data.push(result.rows[i].no_disposal)
+                  }
+                }
+              }
+              const set = new Set(data)
+              const noDis = [...set]
+              const newData = []
+              for (let i = 0; i < result.rows.length; i++) {
+                for (let j = 0; j < noDis.length; j++) {
+                  if (result.rows[i].no_disposal === noDis[j]) {
+                    newData.push(result.rows[i])
+                  }
+                }
+              }
+              const tempAll = hasil.concat(newData)
+              const setMerge = new Set(tempAll)
+              const mergeData = [...setMerge]
+              const tempNo = noDis.concat(noSet)
+              const setNo = new Set(tempNo)
+              const mergeNo = [...setNo]
+              if (newData.length) {
+                const result = { rows: mergeData, count: mergeData.length }
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis: mergeNo })
+              } else {
+                const result = { rows: [], count: 0 }
+                const noDis = []
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis })
+              }
+            } else {
+              const result = { rows: [], count: 0 }
+              const noDis = []
+              const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+              return response(res, 'success get disposal', { result, pageInfo, noDis })
+            }
+          } else {
+            const result = await disposal.findAndCountAll({
+              where: {
+                [Op.or]: [
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { no_io: { [Op.like]: `%${searchValue}%` } },
+                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                  { kategori: { [Op.like]: `%${searchValue}%` } },
+                  { keterangan: { [Op.like]: `%${searchValue}%` } }
+                ],
+                [Op.or]: [
+                  { status_form: status },
+                  { status_form: status === 2 ? 9 : status },
+                  { status_form: status === 2 ? 26 : status }
+                ]
+              },
+              order: [
+                [sortValue, 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              limit: limit,
+              offset: (page - 1) * limit,
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                },
+                {
+                  model: docUser,
+                  as: 'docAsset'
+                }
+              ],
+              group: 'no_disposal'
+            })
+            if (result.rows.length > 0) {
+              const data = []
+              for (let i = 0; i < result.rows.length; i++) {
+                if (result.rows[i].appForm.length > 0) {
+                  const app = result.rows[i].appForm
+                  if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                    data.push(result.rows[i].no_disposal)
+                  } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                    data.push(result.rows[i].no_disposal)
+                  }
+                }
+              }
+              const set = new Set(data)
+              const noDis = [...set]
+              const newData = []
+              for (let i = 0; i < result.rows.length; i++) {
+                for (let j = 0; j < noDis.length; j++) {
+                  if (result.rows[i].no_disposal === noDis[j]) {
+                    newData.push(result.rows[i])
+                  }
+                }
+              }
+              const tempAll = hasil.concat(newData)
+              const setMerge = new Set(tempAll)
+              const mergeData = [...setMerge]
+              const tempNo = noDis.concat(noSet)
+              const setNo = new Set(tempNo)
+              const mergeNo = [...setNo]
+              if (newData.length) {
+                const result = { rows: mergeData, count: mergeData.length }
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis: mergeNo })
+              } else {
+                const result = { rows: [], count: 0 }
+                const noDis = []
+                const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+                return response(res, 'success get disposal', { result, pageInfo, noDis })
+              }
+            } else {
+              const result = { rows: [], count: 0 }
+              const noDis = []
+              const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
+              return response(res, 'success get disposal', { result, pageInfo, noDis })
+            }
+          }
         }
       } else {
-        const result = await disposal.findAll({
-          where: {
-            [Op.or]: [
-              { kode_plant: { [Op.like]: `%${searchValue}%` } },
-              { no_disposal: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } },
-              { no_asset: { [Op.like]: `%${searchValue}%` } }
-            ],
-            [Op.or]: [
-              { status_form: status },
-              { status_form: status === 2 ? 9 : status },
-              { status_form: status === 2 ? 26 : status }
-            ]
-          },
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
-            [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit,
-          include: [
-            {
-              model: ttd,
-              as: 'appForm'
-            },
-            {
-              model: path,
-              as: 'pict'
-            },
-            {
-              model: ttd,
-              as: 'ttdSet'
-            },
-            {
-              model: asset,
-              as: 'dataAsset'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
-            }
-          ]
-        })
-        const pageInfo = pagination('/disposal/get', req.query, page, limit, result.length)
-        if (result) {
-          const data = []
-          if (tipe === 'persetujuan') {
-            result.map(x => {
-              return (
-                data.push(x.status_app)
-              )
-            })
-            const set = new Set(data)
-            const noDis = [...set]
-            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
-          } else {
-            result.map(x => {
-              return (
-                data.push(x.no_disposal)
-              )
-            })
-            const set = new Set(data)
-            const noDis = [...set]
-            return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
-          }
-        } else {
-          return response(res, 'failed get disposal', {}, 400, false)
-        }
+        return response(res, 'failed get disposal', {}, 400, false)
       }
-    } catch (error) {
-      return response(res, error.message, {}, 500, false)
+    } else {
+      const result = await disposal.findAll({
+        where: {
+          [Op.or]: [
+            { kode_plant: { [Op.like]: `%${searchValue}%` } },
+            { no_disposal: { [Op.like]: `%${searchValue}%` } },
+            { nama_asset: { [Op.like]: `%${searchValue}%` } },
+            { no_asset: { [Op.like]: `%${searchValue}%` } }
+          ],
+          [Op.or]: [
+            { status_form: status },
+            { status_form: status === 2 ? 9 : status },
+            { status_form: status === 2 ? 26 : status }
+          ]
+        },
+        order: [
+          [sortValue, 'ASC'],
+          [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
+          [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
+        ],
+        limit: limit,
+        offset: (page - 1) * limit,
+        include: [
+          {
+            model: ttd,
+            as: 'appForm'
+          },
+          {
+            model: path,
+            as: 'pict'
+          },
+          {
+            model: ttd,
+            as: 'ttdSet'
+          },
+          {
+            model: asset,
+            as: 'dataAsset'
+          },
+          {
+            model: docUser,
+            as: 'docAsset'
+          }
+        ]
+      })
+      const pageInfo = pagination('/disposal/get', req.query, page, limit, result.length)
+      if (result) {
+        const data = []
+        if (tipe === 'persetujuan') {
+          result.map(x => {
+            return (
+              data.push(x.status_app)
+            )
+          })
+          const set = new Set(data)
+          const noDis = [...set]
+          return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
+        } else {
+          result.map(x => {
+            return (
+              data.push(x.no_disposal)
+            )
+          })
+          const set = new Set(data)
+          const noDis = [...set]
+          return response(res, 'success get disposal', { result: { rows: result, count: result.length }, pageInfo, noDis })
+        }
+      } else {
+        return response(res, 'failed get disposal', {}, 400, false)
+      }
     }
+    // } catch (error) {
+    //   return response(res, error.message, {}, 500, false)
+    // }
   },
   uploadImage: async (req, res) => {
     const asset = req.params.asset
@@ -786,7 +1123,7 @@ module.exports = {
       try {
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
-            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            // console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
             return response(res, 'fieldname doesnt match', {}, 500, false)
           }
           return response(res, err.message, {}, 500, false)
@@ -1476,17 +1813,25 @@ module.exports = {
           }
         })
         if (find.length > 0) {
+          const divisi = (level === 13 || level === 16) && 'Manager'
           let hasil = 0
+          let div = 0
           let arr = null
+          // let num = null
+          // let post = ''
           let position = ''
           for (let i = 0; i < find.length; i++) {
             if (result[0].name === find[i].jabatan) {
               hasil = find[i].id
               arr = i
               position = find[i].jabatan
+            } else if ((level === 13 || level === 16) && divisi === find[i].jabatan) {
+              div = find[i].id
+              // num = i
+              // post = find[i].jabatan
             }
           }
-          if (position === 'BM' || position === 'asset') {
+          if (level === 2 || level === 12) {
             if (hasil !== 0) {
               if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
                 return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
@@ -1753,6 +2098,430 @@ module.exports = {
                       }
                     } else {
                       return response(res, 'approve dokumen lampiran pengajuan terlebih dahulu', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, 'failed approve disposal', {}, 404, false)
+                  }
+                } else {
+                  return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
+                }
+              }
+            } else {
+              return response(res, 'failed approve disposal', {}, 404, false)
+            }
+          } else if (level === 13 || level === 16) {
+            if (hasil !== 0) {
+              if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+                return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
+              } else {
+                const findDis = await disposal.findOne({
+                  where: {
+                    no_disposal: no
+                  }
+                })
+                if (findDis) {
+                  const data = {
+                    nama: name,
+                    status: 1,
+                    path: null
+                  }
+                  const findTtd = await ttd.findByPk(hasil)
+                  if (findTtd && findDis.kode_plant.split('').length > 4) {
+                    const findTd = await ttd.findByPk(div)
+                    const upTd = await findTd.update(data)
+                    const sent = await findTtd.update(data)
+                    if (sent && upTd) {
+                      const results = await ttd.findAll({
+                        where: {
+                          [Op.and]: [
+                            { no_doc: no },
+                            { status: 1 }
+                          ]
+                        }
+                      })
+                      if (results.length === find.length) {
+                        const findDoc = await disposal.findAll({
+                          where: {
+                            no_disposal: no
+                          }
+                        })
+                        if (findDoc) {
+                          const data = {
+                            status_form: 9
+                          }
+                          const valid = []
+                          for (let i = 0; i < findDoc.length; i++) {
+                            const findAsset = await disposal.findByPk(findDoc[i].id)
+                            if (findAsset) {
+                              await findAsset.update(data)
+                              valid.push(1)
+                            }
+                          }
+                          if (valid.length === findDoc.length) {
+                            const findUser = await user.findOne({
+                              where: {
+                                user_level: 2
+                              }
+                            })
+                            if (findUser) {
+                              const data = {
+                                list_appr: findUser.username,
+                                response: 'full'
+                              }
+                              const findNotif = await notif.findOne({
+                                where: {
+                                  [Op.and]: [
+                                    { no_proses: 'D' + no },
+                                    { kode_plant: findDoc[0].kode_plant }
+                                  ]
+                                }
+                              })
+                              if (findNotif) {
+                                const createNotif = await findNotif.update(data)
+                                if (createNotif) {
+                                  let tableTd = ''
+                                  for (let i = 0; i < findDoc.length; i++) {
+                                    const element = `
+                                      <tr>
+                                        <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                        <td>D${findDoc[i].no_disposal}</td>
+                                        <td>${findDoc[i].no_asset}</td>
+                                        <td>${findDoc[i].nama_asset}</td>
+                                        <td>${findDoc[i].cost_center}</td>
+                                        <td>${findDoc[i].area}</td>
+                                      </tr>`
+                                    tableTd = tableTd + element
+                                  }
+                                  const mailOptions = {
+                                    from: 'noreply_asset@pinusmerahabadi.co.id',
+                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                    to: `${findUser.email}`,
+                                    subject: `Full Approve Pengajuan Disposal D${no} `,
+                                    html: `
+                                    <head>
+                                      <style type="text/css">
+                                      body {
+                                          display: flexbox;
+                                          flex-direction: column;
+                                      }
+                                      .tittle {
+                                          font-size: 15px;
+                                      }
+                                      .mar {
+                                          margin-bottom: 20px;
+                                      }
+                                      .mar1 {
+                                          margin-bottom: 10px;
+                                      }
+                                      .foot {
+                                          margin-top: 20px;
+                                          margin-bottom: 10px;
+                                      }
+                                      .foot1 {
+                                          margin-bottom: 50px;
+                                      }
+                                      .position {
+                                          display: flexbox;
+                                          flex-direction: row;
+                                          justify-content: left;
+                                          margin-top: 10px;
+                                      }
+                                      table {
+                                          font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                          font-size: 12px;
+                                      }
+                                      .demo-table {
+                                          border-collapse: collapse;
+                                          font-size: 13px;
+                                      }
+                                      .demo-table th, 
+                                      .demo-table td {
+                                          border-bottom: 1px solid #e1edff;
+                                          border-left: 1px solid #e1edff;
+                                          padding: 7px 17px;
+                                      }
+                                      .demo-table th, 
+                                      .demo-table td:last-child {
+                                          border-right: 1px solid #e1edff;
+                                      }
+                                      .demo-table td:first-child {
+                                          border-top: 1px solid #e1edff;
+                                      }
+                                      .demo-table td:last-child{
+                                          border-bottom: 0;
+                                      }
+                                      caption {
+                                          caption-side: top;
+                                          margin-bottom: 10px;
+                                      }
+                                      
+                                      /* Table Header */
+                                      .demo-table thead th {
+                                          background-color: #508abb;
+                                          color: #FFFFFF;
+                                          border-color: #6ea1cc !important;
+                                          text-transform: uppercase;
+                                      }
+                                      
+                                      /* Table Body */
+                                      .demo-table tbody td {
+                                          color: #353535;
+                                      }
+                                      
+                                      .demo-table tbody tr:nth-child(odd) td {
+                                          background-color: #f4fbff;
+                                      }
+                                      .demo-table tbody tr:hover th,
+                                      .demo-table tbody tr:hover td {
+                                          background-color: #ffffa2;
+                                          border-color: #ffff0f;
+                                          transition: all .2s;
+                                      }
+                                  </style>
+                                    </head>
+                                    <body>
+                                        <div class="tittle mar">
+                                            Dear Bapak/Ibu Asset,
+                                        </div>
+                                        <div class="tittle mar1">
+                                            <div>Mohon lanjutkan proses pengajuan disposal area sbb.</div>
+                                        </div>
+                                        <div class="position">
+                                            <table class="demo-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>No</th>
+                                                        <th>No Disposal</th>
+                                                        <th>Asset</th>
+                                                        <th>Asset description</th>
+                                                        <th>Cost Ctr</th>
+                                                        <th>Cost Ctr Name</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                  ${tableTd}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                        <div class="tittle foot">
+                                            Terima kasih,
+                                        </div>
+                                        <div class="tittle foot1">
+                                            Regards,
+                                        </div>
+                                        <div class="tittle">
+                                            Team Asset
+                                        </div>                                      
+                                    </body>
+                                    `
+                                  }
+                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                  if (sendEmail) {
+                                    return response(res, 'success approve disposal', { sendEmail })
+                                  } else {
+                                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      } else {
+                        const findDoc = await disposal.findOne({
+                          where: {
+                            no_disposal: no
+                          }
+                        })
+                        if (findDoc) {
+                          const findRole = await role.findAll({
+                            where: {
+                              name: find[arr + 1].jabatan
+                            }
+                          })
+                          if (findRole.length > 0) {
+                            const findDis = await disposal.findAll({
+                              where: {
+                                no_disposal: no
+                              }
+                            })
+                            if (findDis.length > 0) {
+                              const findUser = await user.findOne({
+                                where: {
+                                  user_level: findRole[0].nomor
+                                }
+                              })
+                              if (findUser) {
+                                const data = {
+                                  list_appr: findUser.username
+                                }
+                                const findNotif = await notif.findOne({
+                                  where: {
+                                    [Op.and]: [
+                                      { no_proses: 'D' + no },
+                                      { kode_plant: findDis[0].kode_plant }
+                                    ]
+                                  }
+                                })
+                                if (findNotif) {
+                                  const createNotif = await findNotif.update(data)
+                                  if (createNotif) {
+                                    let tableTd = ''
+                                    for (let i = 0; i < findDis.length; i++) {
+                                      const element = `
+                                        <tr>
+                                          <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                          <td>D${findDis[i].no_disposal}</td>
+                                          <td>${findDis[i].no_asset}</td>
+                                          <td>${findDis[i].nama_asset}</td>
+                                          <td>${findDis[i].cost_center}</td>
+                                          <td>${findDis[i].area}</td>
+                                        </tr>`
+                                      tableTd = tableTd + element
+                                    }
+                                    const mailOptions = {
+                                      from: 'noreply_asset@pinusmerahabadi.co.id',
+                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                      to: `${findUser.email}`,
+                                      subject: `Approve Pengajuan Disposal D${no} `,
+                                      html: `
+                                      <head>
+                                        <style type="text/css">
+                                        body {
+                                            display: flexbox;
+                                            flex-direction: column;
+                                        }
+                                        .tittle {
+                                            font-size: 15px;
+                                        }
+                                        .mar {
+                                            margin-bottom: 20px;
+                                        }
+                                        .mar1 {
+                                            margin-bottom: 10px;
+                                        }
+                                        .foot {
+                                            margin-top: 20px;
+                                            margin-bottom: 10px;
+                                        }
+                                        .foot1 {
+                                            margin-bottom: 50px;
+                                        }
+                                        .position {
+                                            display: flexbox;
+                                            flex-direction: row;
+                                            justify-content: left;
+                                            margin-top: 10px;
+                                        }
+                                        table {
+                                            font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                            font-size: 12px;
+                                        }
+                                        .demo-table {
+                                            border-collapse: collapse;
+                                            font-size: 13px;
+                                        }
+                                        .demo-table th, 
+                                        .demo-table td {
+                                            border-bottom: 1px solid #e1edff;
+                                            border-left: 1px solid #e1edff;
+                                            padding: 7px 17px;
+                                        }
+                                        .demo-table th, 
+                                        .demo-table td:last-child {
+                                            border-right: 1px solid #e1edff;
+                                        }
+                                        .demo-table td:first-child {
+                                            border-top: 1px solid #e1edff;
+                                        }
+                                        .demo-table td:last-child{
+                                            border-bottom: 0;
+                                        }
+                                        caption {
+                                            caption-side: top;
+                                            margin-bottom: 10px;
+                                        }
+                                        
+                                        /* Table Header */
+                                        .demo-table thead th {
+                                            background-color: #508abb;
+                                            color: #FFFFFF;
+                                            border-color: #6ea1cc !important;
+                                            text-transform: uppercase;
+                                        }
+                                        
+                                        /* Table Body */
+                                        .demo-table tbody td {
+                                            color: #353535;
+                                        }
+                                        
+                                        .demo-table tbody tr:nth-child(odd) td {
+                                            background-color: #f4fbff;
+                                        }
+                                        .demo-table tbody tr:hover th,
+                                        .demo-table tbody tr:hover td {
+                                            background-color: #ffffa2;
+                                            border-color: #ffff0f;
+                                            transition: all .2s;
+                                        }
+                                    </style>
+                                      </head>
+                                      <body>
+                                          <div class="tittle mar">
+                                              Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                          </div>
+                                          <div class="tittle mar1">
+                                              <div>Mohon untuk approve pengajuan disposal asset area.</div>
+                                          </div>
+                                          <div class="position">
+                                              <table class="demo-table">
+                                                  <thead>
+                                                      <tr>
+                                                          <th>No</th>
+                                                          <th>No Disposal</th>
+                                                          <th>Asset</th>
+                                                          <th>Asset description</th>
+                                                          <th>Cost Ctr</th>
+                                                          <th>Cost Ctr Name</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    ${tableTd}
+                                                  </tbody>
+                                              </table>
+                                          </div>
+                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                          <div class="tittle foot">
+                                              Terima kasih,
+                                          </div>
+                                          <div class="tittle foot1">
+                                              Regards,
+                                          </div>
+                                          <div class="tittle">
+                                              Team Asset
+                                          </div>                                      
+                                      </body>
+                                      `
+                                    }
+                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                    if (sendEmail) {
+                                      return response(res, 'success approve disposal', { sendEmail })
+                                    } else {
+                                      return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                                    }
+                                  }
+                                }
+                              } else {
+                                return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                              }
+                            } else {
+                              return response(res, 'failed approve disposal', {}, 404, false)
+                            }
+                          }
+                        }
+                      }
+                    } else {
+                      return response(res, 'failed approve disposal', {}, 404, false)
                     }
                   } else {
                     return response(res, 'failed approve disposal', {}, 404, false)
@@ -3293,7 +4062,7 @@ module.exports = {
       try {
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
-            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            // console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
             return response(res, 'fieldname doesnt match', {}, 500, false)
           }
           return response(res, err.message, {}, 500, false)
