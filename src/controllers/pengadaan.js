@@ -12,6 +12,9 @@ const uploadHelper = require('../helpers/upload')
 const fs = require('fs')
 const axios = require('axios')
 
+const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
+const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+
 module.exports = {
   home: async (req, res) => {
     try {
@@ -661,7 +664,8 @@ module.exports = {
                 const mailOptions = {
                   from: 'noreply_asset@pinusmerahabadi.co.id',
                   replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                  to: `${findEmail.email}`,
+                  // to: `${findEmail.email}`,
+                  to: `${emailAss}, ${emailAss2}`,
                   subject: `Pengajuan Pengadaan Asset ${noIo === undefined ? 'P' + 1 : 'P' + noIo} `,
                   html: `
                   <head>
@@ -1205,7 +1209,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${level === 5 ? findEmail.email_area_om : findEmail.email_nom}`,
+                                      // to: `${level === 5 ? findEmail.email_area_om : findEmail.email_nom}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
                                       html: `
                                       <head>
@@ -1399,7 +1404,8 @@ module.exports = {
                                   const mailOptions = {
                                     from: 'noreply_asset@pinusmerahabadi.co.id',
                                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    to: `${findUser.email}`,
+                                    // to: `${findUser.email}`,
+                                    to: `${emailAss}, ${emailAss2}`,
                                     subject: `Pengajuan Pengadaan Asset ${findDoc[0].no_pengadaan} `,
                                     html: `
                                       <head>
@@ -1582,7 +1588,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${findUser.email}`,
+                                      // to: `${findUser.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
                                       html: `
                                       <head>
@@ -1857,7 +1864,8 @@ module.exports = {
                                       const mailOptions = {
                                         from: 'noreply_asset@pinusmerahabadi.co.id',
                                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                        to: `${level === 5 ? findEmail.email_area_om : findEmail.email_nom}`,
+                                        // to: `${level === 5 ? findEmail.email_area_om : findEmail.email_nom}`,
+                                        to: `${emailAss}, ${emailAss2}`,
                                         subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
                                         html: `
                                       <head>
@@ -2051,7 +2059,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${findUser.email}`,
+                                      // to: `${findUser.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Pengajuan Pengadaan Asset ${findDoc[0].no_pengadaan} `,
                                       html: `
                                       <head>
@@ -2234,7 +2243,8 @@ module.exports = {
                                       const mailOptions = {
                                         from: 'noreply_asset@pinusmerahabadi.co.id',
                                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                        to: `${findUser.email}`,
+                                        // to: `${findUser.email}`,
+                                        to: `${emailAss}, ${emailAss2}`,
                                         subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
                                         html: `
                                       <head>
@@ -2792,7 +2802,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findEmail.email}`,
+                        // to: `${findEmail.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Pengajuan Pengadaan Asset ${noIo === undefined ? 'P' + 1 : 'P' + noIo} `,
                         html: `
                         <head>
@@ -3440,7 +3451,8 @@ module.exports = {
               const mailOptions = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                to: `${findEmail.email_area_aos}`,
+                // to: `${findEmail.email_area_aos}`,
+                to: `${emailAss}, ${emailAss2}`,
                 subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
                 html: `
                 <head>
@@ -3800,7 +3812,8 @@ module.exports = {
               const mailOptions = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                to: `${findEmail.email}`,
+                // to: `${findEmail.email}`,
+                to: `${emailAss}, ${emailAss2}`,
                 subject: `Eksekusi Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
                 html: `
                 <head>
@@ -3998,7 +4011,8 @@ module.exports = {
               const mailOptions = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                to: `${findEmail.email_area_aos}`,
+                // to: `${findEmail.email_area_aos}`,
+                to: `${emailAss}, ${emailAss2}`,
                 subject: `Proses Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} Telah Selesai`,
                 html: `
                 <head>

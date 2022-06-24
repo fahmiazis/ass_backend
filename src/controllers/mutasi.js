@@ -7,6 +7,9 @@ const wrapMail = require('../helpers/wrapMail')
 const moment = require('moment')
 const axios = require('axios')
 
+const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
+const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+
 module.exports = {
   addMutasi: async (req, res) => {
     try {
@@ -443,6 +446,8 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
+      const cost = req.user.name
+      const fullname = req.user.fullname
       let { limit, page, search, sort, tipe } = req.query
       let searchValue = ''
       let sortValue = ''
@@ -466,12 +471,12 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level === 5) {
+      if (level === 5 || level === 9) {
         if (tipe === 'editdoc') {
           const result = await mutasi.findAndCountAll({
             where: {
               [Op.and]: [
-                { kode_plant_rec: kode },
+                { kode_plant_rec: level === '5' ? kode : cost },
                 { status_form: 9 }
               ],
               [Op.or]: [
@@ -517,7 +522,7 @@ module.exports = {
           const result = await mutasi.findAndCountAll({
             where: {
               [Op.and]: [
-                { kode_plant_rec: kode },
+                { kode_plant_rec: level === '5' ? kode : cost },
                 { status_form: 2 }
               ],
               [Op.or]: [
@@ -560,8 +565,81 @@ module.exports = {
             return response(res, 'failed to get mutasi', {}, 404, false)
           }
         }
-      } else {
-        return response(res, 'failed to get mutasi', {}, 404, false)
+      } else if (level === 27 || level === 13 || level === 16) {
+        const findRole = await role.findOne({
+          where: {
+            nomor: '27'
+          }
+        })
+        const findDepo = await depo.findAll({
+          where: {
+            [Op.or]: [
+              { nama_bm: fullname },
+              { nama_om: fullname }
+            ]
+          }
+        })
+        if (findRole && findDepo.length > 0) {
+          const hasil = []
+          for (let i = 0; i < findDepo.length; i++) {
+            const result = await mutasi.findAll({
+              where: {
+                kode_plant_rec: findDepo[i].kode_plant,
+                status_form: 2
+                // [Op.or]: [
+                //   { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                //   { cost_center: { [Op.like]: `%${searchValue}%` } },
+                //   { area: { [Op.like]: `%${searchValue}%` } },
+                //   { no_asset: { [Op.like]: `%${searchValue}%` } },
+                //   { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+                // ]
+              },
+              order: [
+                [sortValue, 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                },
+                {
+                  model: docUser,
+                  as: 'docAsset'
+                }
+              ]
+            })
+            if (result.length > 0) {
+              for (let j = 0; j < result.length; j++) {
+                hasil.push(result[j])
+              }
+            }
+          }
+          if (hasil.length > 0) {
+            const data = []
+            hasil.map(x => {
+              return (
+                data.push(x.no_mutasi)
+              )
+            })
+            const set = new Set(data)
+            const noMut = [...set]
+            const result = { rows: hasil, count: hasil.length }
+            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          } else {
+            const result = { rows: hasil, count: 0 }
+            const noMut = []
+            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          }
+        } else {
+          return response(res, 'failed get mutasi', {}, 400, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -687,7 +765,8 @@ module.exports = {
                     const mailOptions = {
                       from: 'noreply_asset@pinusmerahabadi.co.id',
                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findEmail.email}`,
+                      // to: `${findEmail.email}`,
+                      to: `${emailAss}, ${emailAss2}`,
                       subject: `Approve Pengajuan Mutasi M${noMut === undefined ? 1 : noMut} (TESTING)`,
                       html: `
                     <head>
@@ -882,7 +961,8 @@ module.exports = {
                     const mailOptions = {
                       from: 'noreply_asset@pinusmerahabadi.co.id',
                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findEmail.email}`,
+                      // to: `${findEmail.email}`,
+                      to: `${emailAss}, ${emailAss2}`,
                       subject: `Approve Pengajuan Mutasi M${noMut === undefined ? 1 : noMut} (TESTING)`,
                       html: `
                     <head>
@@ -1442,7 +1522,8 @@ module.exports = {
                             const mailOptions = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                              // to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                              to: `${emailAss}, ${emailAss2}`,
                               subject: `Full Approve Pengajuan Mutasi ${no} (TESTING)`,
                               html: `
                               <head>
@@ -1614,7 +1695,8 @@ module.exports = {
                               const mailOptions = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${findUser.email}`,
+                                // to: `${findUser.email}`,
+                                to: `${emailAss}, ${emailAss2}`,
                                 subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
                                 html: `
                                 <head>
@@ -1771,7 +1853,8 @@ module.exports = {
                               const mailOptions = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${findUser.email}`,
+                                // to: `${findUser.email}`,
+                                to: `${emailAss}, ${emailAss2}`,
                                 subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
                                 html: `
                                 <head>
@@ -2025,7 +2108,8 @@ module.exports = {
                             const mailOptions = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                              // to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                              to: `${emailAss}, ${emailAss2}`,
                               subject: `Full Approve Pengajuan Mutasi ${no} (TESTING)`,
                               html: `
                               <head>
@@ -2197,7 +2281,8 @@ module.exports = {
                               const mailOptions = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${findUser.email}`,
+                                // to: `${findUser.email}`,
+                                to: `${emailAss}, ${emailAss2}`,
                                 subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
                                 html: `
                                 <head>
@@ -2354,7 +2439,8 @@ module.exports = {
                               const mailOptions = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${findUser.email}`,
+                                // to: `${findUser.email}`,
+                                to: `${emailAss}, ${emailAss2}`,
                                 subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
                                 html: `
                                 <head>
@@ -2651,7 +2737,8 @@ module.exports = {
                                 const mailOptions = {
                                   from: 'noreply_asset@pinusmerahabadi.co.id',
                                   replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                  to: `${draftEmail}`,
+                                  // to: `${draftEmail}`,
+                                  to: `${emailAss}, ${emailAss2}`,
                                   subject: 'Reject Mutasi Asset (TESTING WEB ASET)',
                                   html: `
                                     <head>
@@ -2786,7 +2873,8 @@ module.exports = {
                               const mailOptions = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${draftEmail}`,
+                                // to: `${draftEmail}`,
+                                to: `${emailAss}, ${emailAss2}`,
                                 subject: 'Reject Mutasi Asset (TESTING WEB ASET)',
                                 html: `
                                   <head>
@@ -3132,7 +3220,8 @@ module.exports = {
                   const mailOptions = {
                     from: 'noreply_asset@pinusmerahabadi.co.id',
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                    to: `${draftEmail}`,
+                    // to: `${draftEmail}`,
+                    to: `${emailAss}, ${emailAss2}`,
                     subject: 'Reject Mutasi Asset (TESTING WEB ASET)',
                     html: `
                     <head>
@@ -3349,7 +3438,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findEmail.email_area_aos}`,
+                        // to: `${findEmail.email_area_aos}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
                         subject: `REJECT KELENGKAPAN MUTASI ASSET ${findDis[0].area} (TESTING)`,
                         html: `
@@ -3549,7 +3639,8 @@ module.exports = {
             const mailOptions = {
               from: 'noreply_asset@pinusmerahabadi.co.id',
               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-              to: `${findUser.email}`,
+              // to: `${findUser.email}`,
+              to: `${emailAss}, ${emailAss2}`,
               // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
               subject: `PERMINTAAN RUBAH COST CENTER MUTASI ASSET ${findBud[0].area} (TESTING)`,
               html: `
@@ -3863,7 +3954,8 @@ module.exports = {
               const mailOptions = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                to: `${findUser.email_area_aos}`,
+                // to: `${findUser.email_area_aos}`,
+                to: `${emailAss}, ${emailAss2}`,
                 // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
                 subject: `SELESAI MUTASI ASSET ${findMut[0].area} (TESTING)`,
                 html: `
@@ -4111,7 +4203,8 @@ module.exports = {
             const mailOptions = {
               from: 'noreply_asset@pinusmerahabadi.co.id',
               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-              to: `${findUser.email}`,
+              // to: `${findUser.email}`,
+              to: `${emailAss}, ${emailAss2}`,
               // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
               subject: `${level === 2 ? `PERMINTAAN PENGEMBALIAN COST CENTER MUTASI ASSET ${findBud[0].area}` : `COST CENTER MUTASI ASSET TELAH DIUBAH ${findBud[0].area}`} (TESTING)`,
               html: `
@@ -4240,7 +4333,8 @@ module.exports = {
             const mailOptionsArea = {
               from: 'noreply_asset@pinusmerahabadi.co.id',
               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-              to: `${findEmail.email_area_aos}`,
+              // to: `${findEmail.email_area_aos}`,
+              to: `${emailAss}, ${emailAss2}`,
               // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
               subject: `SELESAI MUTASI ASSET ${findBud[0].area} (TESTING)`,
               html: `
@@ -4519,7 +4613,8 @@ module.exports = {
               const mailOptions = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                to: `${emailAss}, ${emailAss2}`,
                 // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
                 subject: `SELESAI REVISI DOKUMEN BA SERAH TERIMA MUTASI ${findMut[0].no_mutasi} (TESTING)`,
                 html: `

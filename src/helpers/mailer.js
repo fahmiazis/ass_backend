@@ -5,7 +5,7 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 60000,
   socketTimeout: 120000,
   greetingTimeout: 30000,
-  host: 'aset.pinusmerahabadi.co.id',
+  host: '192.168.35.203',
   secure: false,
   port: 587,
   auth: {

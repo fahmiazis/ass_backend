@@ -9,6 +9,9 @@ const moment = require('moment')
 const wrapMail = require('../helpers/wrapMail')
 const axios = require('axios')
 
+const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
+const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+
 module.exports = {
   addDisposal: async (req, res) => {
     try {
@@ -1264,7 +1267,8 @@ module.exports = {
                   const mailOptions = {
                     from: 'noreply_asset@pinusmerahabadi.co.id',
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                    to: `${findEmail.email}`,
+                    // to: `${findEmail.email}`,
+                    to: `${emailAss}, ${emailAss2}`,
                     subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} `,
                     html: `
                   <head>
@@ -1494,7 +1498,8 @@ module.exports = {
                   const mailOptions = {
                     from: 'noreply_asset@pinusmerahabadi.co.id',
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                    to: `${findEmail.email}`,
+                    // to: `${findEmail.email}`,
+                    to: `${emailAss}, ${emailAss2}`,
                     subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} `,
                     html: `
                   <head>
@@ -1952,7 +1957,8 @@ module.exports = {
                                         const mailOptions = {
                                           from: 'noreply_asset@pinusmerahabadi.co.id',
                                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                          to: `${findUser.email}`,
+                                          // to: `${findUser.email}`,
+                                          to: `${emailAss}, ${emailAss2}`,
                                           subject: `Approve Pengajuan Disposal D${no} `,
                                           html: `
                                           <head>
@@ -2195,7 +2201,8 @@ module.exports = {
                                   const mailOptions = {
                                     from: 'noreply_asset@pinusmerahabadi.co.id',
                                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    to: `${findUser.email}`,
+                                    // to: `${findUser.email}`,
+                                    to: `${emailAss}, ${emailAss2}`,
                                     subject: `Full Approve Pengajuan Disposal D${no} `,
                                     html: `
                                     <head>
@@ -2382,7 +2389,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${findUser.email}`,
+                                      // to: `${findUser.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Approve Pengajuan Disposal D${no} `,
                                       html: `
                                       <head>
@@ -2612,7 +2620,8 @@ module.exports = {
                                   const mailOptions = {
                                     from: 'noreply_asset@pinusmerahabadi.co.id',
                                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    to: `${findUser.email}`,
+                                    // to: `${findUser.email}`,
+                                    to: `${emailAss}, ${emailAss2}`,
                                     subject: `Full Approve Pengajuan Disposal D${no} `,
                                     html: `
                                     <head>
@@ -2799,7 +2808,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${findUser.email}`,
+                                      // to: `${findUser.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Approve Pengajuan Disposal D${no} `,
                                       html: `
                                       <head>
@@ -3114,7 +3124,8 @@ module.exports = {
                                 const mailOptions = {
                                   from: 'noreply_asset@pinusmerahabadi.co.id',
                                   replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                  to: `${draftEmail}`,
+                                  // to: `${draftEmail}`,
+                                  to: `${emailAss}, ${emailAss2}`,
                                   subject: 'Reject Pembatalan Disposal Asset ',
                                   html: `
                                           <head>
@@ -3318,7 +3329,8 @@ module.exports = {
                               const mailOptions = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${draftEmail}`,
+                                // to: `${draftEmail}`,
+                                to: `${emailAss}, ${emailAss2}`,
                                 subject: 'Reject Perbaikan Disposal Asset ',
                                 html: `
                                   <head>
@@ -4132,7 +4144,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findUser.email}`,
+                        // to: `${findUser.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
@@ -4266,7 +4279,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findUser.email}`,
+                        // to: `${findUser.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
@@ -4435,7 +4449,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findUser.email}`,
+                        // to: `${findUser.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
@@ -4569,7 +4584,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findUser.email}`,
+                        // to: `${findUser.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Revisi Dokumen Pengajuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
@@ -4748,7 +4764,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findUser.email}`,
+                        // to: `${findUser.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Revisi Dokumen Persetujuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
@@ -4882,7 +4899,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findUser.email}`,
+                        // to: `${findUser.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Revisi Dokumen Persetujuan Disposal D${findDis.no_disposal} `,
                         html: `
                       <head>
@@ -5066,8 +5084,9 @@ module.exports = {
                     const mailOptions = {
                       from: 'noreply_asset@pinusmerahabadi.co.id',
                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
-                      cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+                      // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                      to: `${emailAss}, ${emailAss2}`,
+                      // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
                       subject: `REVISI KELENGKAPAN EKSEKUSI DISPOSAL ASSET ${findDis.area} `,
                       html: `
                     <head>
@@ -5201,8 +5220,9 @@ module.exports = {
                     const mailOptions = {
                       from: 'noreply_asset@pinusmerahabadi.co.id',
                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
-                      cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+                      // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                      to: `${emailAss}, ${emailAss2}`,
+                      // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
                       subject: `REVISI KELENGKAPAN EKSEKUSI DISPOSAL ASSET ${findDis.area} `,
                       html: `
                     <head>
@@ -5437,8 +5457,9 @@ module.exports = {
                           const mailOptions = {
                             from: 'noreply_asset@pinusmerahabadi.co.id',
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                            to: `${findUser.email}`,
-                            cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+                            // to: `${findUser.email}`,
+                            to: `${emailAss}, ${emailAss2}`,
+                            // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
                             subject: `REJECT KELENGKAPAN ${ket === 'peng' ? 'PENGAJUAN' : 'EKSEKUSI'} DISPOSAL ASSET ${findDis.area} `,
                             html: `
                             <head>
@@ -5575,8 +5596,9 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email_area_aos}`,
-                          cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
+                          // to: `${findEmail.email_area_aos}`,
+                          to: `${emailAss}, ${emailAss2}`,
+                          // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
                           subject: `REJECT KELENGKAPAN ${ket === 'peng' ? 'PENGAJUAN' : 'EKSEKUSI'} DISPOSAL ASSET ${findDis.area} `,
                           html: `
                           <head>
@@ -5767,7 +5789,8 @@ module.exports = {
                           const mailOptions = {
                             from: 'noreply_asset@pinusmerahabadi.co.id',
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                            to: `${findUser.email}`,
+                            // to: `${findUser.email}`,
+                            to: `${emailAss}, ${emailAss2}`,
                             subject: `Reject Dokumen ${ket === 'peng' ? 'Pengajuan' : 'Eksekusi'} Disposal No Asset ${result.no_asset} `,
                             html: `
                             <head>
@@ -5903,7 +5926,8 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email_area_aos}`,
+                          // to: `${findEmail.email_area_aos}`,
+                          to: `${emailAss}, ${emailAss2}`,
                           subject: `Reject Dokumen ${ket === 'peng' ? 'Pengajuan' : 'Eksekusi'} Disposal No Asset ${result.no_asset} `,
                           html: `
                           <head>
@@ -6099,8 +6123,9 @@ module.exports = {
             const mailOptions = {
               from: 'noreply_asset@pinusmerahabadi.co.id',
               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-              to: `${findUser.email}`,
-              cc: tipe === 'tax' ? `${ccTax}` : tipe === 'finance' && (result.kategori === 'IT' || result.kategori === 'it') ? `${ccFinIt}` : `${ccFin}`,
+              // to: `${findUser.email}`,
+              to: `${emailAss}, ${emailAss2}`,
+              // cc: tipe === 'tax' ? `${ccTax}` : tipe === 'finance' && (result.kategori === 'IT' || result.kategori === 'it') ? `${ccFinIt}` : `${ccFin}`,
               subject: `REJECT ${tipe === 'finance' ? 'JURNAL UANG MASUK' : 'FAKTUR PAJAK'} DISPOSAL ASSET ${result.area} `,
               html: `
               <head>
@@ -6357,8 +6382,9 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
-                          cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccTaxIt}` : `${ccTax}`,
+                          // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                          to: `${emailAss}, ${emailAss2}`,
+                          // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccTaxIt}` : `${ccTax}`,
                           subject: `REVISI FAKTUR PAJAK DISPOSAL ASSET ${result.area} `,
                           html: `
                         <head>
@@ -6556,8 +6582,9 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
-                          cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
+                          // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                          to: `${emailAss}, ${emailAss2}`,
+                          // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
                           subject: `REVISI JURNAL UANG MASUK DISPOSAL ASSET ${result.area} `,
                           html: `
                         <head>
@@ -6755,8 +6782,9 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
-                          cc: (level === 3 && result.kategori === 'IT') || (level === 3 && result.kategori === 'it') ? `${ccTaxIt}` : (level === 4 && result.kategori === 'IT') || (level === 4 && result.kategori === 'it') ? `${ccFinIt}` : (level === 3 && result.kategori !== 'IT') || (level === 3 && result.kategori !== 'it') ? `${ccTax}` : (level === 4 && result.kategori !== 'IT') || (level === 4 && result.kategori !== 'it') ? `${ccFin}` : '',
+                          to: `${emailAss}, ${emailAss2}`,
+                          // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                          // cc: (level === 3 && result.kategori === 'IT') || (level === 3 && result.kategori === 'it') ? `${ccTaxIt}` : (level === 4 && result.kategori === 'IT') || (level === 4 && result.kategori === 'it') ? `${ccFinIt}` : (level === 3 && result.kategori !== 'IT') || (level === 3 && result.kategori !== 'it') ? `${ccTax}` : (level === 4 && result.kategori !== 'IT') || (level === 4 && result.kategori !== 'it') ? `${ccFin}` : '',
                           subject: `REVISI ${level === 3 ? 'FAKTUR PAJAK' : 'JURNAL UANG MASUK'} DISPOSAL ASSET ${result.area} `,
                           html: `
                         <head>
@@ -7107,8 +7135,9 @@ module.exports = {
                             const mailOptions = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              to: `${findEmail.email_area_aos}`,
-                              cc: findDis.find(({ kategori }) => kategori === 'IT') === undefined && findDis.find(({ kategori }) => kategori === 'it') === undefined ? `${cc}` : `${ccIt}`,
+                              // to: `${findEmail.email_area_aos}`,
+                              to: `${emailAss}, ${emailAss2}`,
+                              // cc: findDis.find(({ kategori }) => kategori === 'IT') === undefined && findDis.find(({ kategori }) => kategori === 'it') === undefined ? `${cc}` : `${ccIt}`,
                               subject: `DISPOSAL ASSET ${findDis[0].area} `,
                               html: `
                                 <head>
@@ -7404,7 +7433,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${findUser.email}`,
+                                      // to: `${findUser.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Approve Persetujuan Disposal ${no} `,
                                       html: `
                                       <head>
@@ -7741,7 +7771,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${draftEmail}`,
+                                      // to: `${draftEmail}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: 'Reject Pembatalan Form Persetujuan Disposal Asset ',
                                       html: `
                                         <head>
@@ -7962,7 +7993,8 @@ module.exports = {
                           const mailOptions = {
                             from: 'noreply_asset@pinusmerahabadi.co.id',
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                            to: `${draftEmail}`,
+                            // to: `${draftEmail}`,
+                            to: `${emailAss}, ${emailAss2}`,
                             subject: 'Reject Perbaikan Disposal Asset ',
                             html: `
                               <head>
@@ -8181,7 +8213,8 @@ module.exports = {
               const mailOptions = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                to: `${findUser.email}`,
+                // to: `${findUser.email}`,
+                to: `${emailAss}, ${emailAss2}`,
                 subject: `Approve Persetujuan Disposal ${noDis === undefined ? 1 : noDis} `,
                 html: `
                 <head>
@@ -8476,8 +8509,9 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findUser.email_area_aos}`,
-                          cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
+                          to: `${emailAss}, ${emailAss2}`,
+                          // to: `${findUser.email_area_aos}`,
+                          // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
                           subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} `,
                           html: `
                             <head>
@@ -8670,7 +8704,8 @@ module.exports = {
                       const mailOptions = {
                         from: 'noreply_asset@pinusmerahabadi.co.id',
                         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                        to: `${findUser.email}`,
+                        // to: `${findUser.email}`,
+                        to: `${emailAss}, ${emailAss2}`,
                         subject: `Eksekusi Disposal No Asset ${result.no_asset} `,
                         html: `
                         <head>
@@ -8914,8 +8949,9 @@ module.exports = {
                               const mailOptions = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${findUser.email}`,
-                                cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
+                                to: `${emailAss}, ${emailAss2}`,
+                                // to: `${findUser.email}`,
+                                // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
                                 subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} `,
                                 html: `
                               <head>
@@ -9043,8 +9079,9 @@ module.exports = {
                               const mailOptionsTax = {
                                 from: 'noreply_asset@pinusmerahabadi.co.id',
                                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                to: `${findTax.email}`,
-                                cc: `${ccTax}`,
+                                // to: `${findTax.email}`,
+                                // cc: `${ccTax}`,
+                                to: `${emailAss}, ${emailAss2}`,
                                 subject: `Permintaan FP disposal asset ${result.no_asset} `,
                                 html: `
                               <head>
@@ -9231,7 +9268,8 @@ module.exports = {
                             const mailOptions = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              to: `${findUser.email}`,
+                              // to: `${findUser.email}`,
+                              to: `${emailAss}, ${emailAss2}`,
                               subject: `Eksekusi Disposal No Asset ${result.no_asset} `,
                               html: `
                               <head>
@@ -9464,8 +9502,9 @@ module.exports = {
                           const mailOptions = {
                             from: 'noreply_asset@pinusmerahabadi.co.id',
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                            to: `${findUser.email}`,
-                            cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
+                            // to: `${findUser.email}`,
+                            to: `${emailAss}, ${emailAss2}`,
+                            // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
                             subject: `Konfirmasi uang masuk disposal asset ${result.no_asset} `,
                             html: `
                           <head>
@@ -9593,8 +9632,9 @@ module.exports = {
                           const mailOptionsTax = {
                             from: 'noreply_asset@pinusmerahabadi.co.id',
                             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                            to: `${findTax.email}`,
-                            cc: `${ccTax}`,
+                            to: `${emailAss}, ${emailAss2}`,
+                            // to: `${findTax.email}`,
+                            // cc: `${ccTax}`,
                             subject: `Permintaan FP disposal asset ${result.no_asset} `,
                             html: `
                           <head>
@@ -9781,7 +9821,8 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findUser.email}`,
+                          // to: `${findUser.email}`,
+                          to: `${emailAss}, ${emailAss2}`,
                           subject: `Eksekusi Disposal No Asset ${result.no_asset} `,
                           html: `
                           <head>
@@ -10018,8 +10059,9 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
-                          cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
+                          to: `${emailAss}, ${emailAss2}`,
+                          // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                          // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccFinIt}` : `${ccFin}`,
                           subject: `Hasil jurnal uang masuk disposal asset ${result.no_asset} `,
                           html: `
                           <head>
@@ -10145,8 +10187,9 @@ module.exports = {
                         const mailOptionsTax = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
-                          cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccTaxIt}` : `${ccTax}`,
+                          to: `${emailAss}, ${emailAss2}`,
+                          // to: `${findEmail.email_staff_asset1}, ${findEmail.email_staff_asset2}`,
+                          // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccTaxIt}` : `${ccTax}`,
                           subject: `Done permintaan FP disposal asset ${result.no_asset} `,
                           html: `
                           <head>
@@ -10384,8 +10427,9 @@ module.exports = {
                   const mailOptions = {
                     from: 'noreply_asset@pinusmerahabadi.co.id',
                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                    to: `${findUser.email_area_aos}, ${findUser.email_spv_tax}, ${findUser.email_staff_tax}`,
-                    cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
+                    to: `${emailAss}, ${emailAss2}`,
+                    // to: `${findUser.email_area_aos}, ${findUser.email_spv_tax}, ${findUser.email_staff_tax}`,
+                    // cc: result.kategori === 'IT' || result.kategori === 'it' ? `${ccIt}` : `${cc}`,
                     subject: `Hasil jurnal disposal asset ${result.area} ${result.no_asset} `,
                     html: `
                       <head>
@@ -10652,7 +10696,8 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${findEmail.email}`,
+                          // to: `${findEmail.email}`,
+                          to: `${emailAss}, ${emailAss2}`,
                           subject: `Approve Pengajuan Disposal D${result.no_disposal} `,
                           html: `
                             <head>

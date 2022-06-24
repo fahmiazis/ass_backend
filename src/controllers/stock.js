@@ -9,6 +9,9 @@ const uploadHelper = require('../helpers/upload')
 const wrapMail = require('../helpers/wrapMail')
 // const excel = require('exceljs')
 
+const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
+const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+
 module.exports = {
   submit: async (req, res) => {
     try {
@@ -211,7 +214,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${findRom.email}`,
+                                      // to: `${findRom.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
                                       html: `
                                     <head>
@@ -432,7 +436,8 @@ module.exports = {
                                     const mailOptions = {
                                       from: 'noreply_asset@pinusmerahabadi.co.id',
                                       replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      to: `${findRom.email}`,
+                                      // to: `${findRom.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
                                       subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
                                       html: `
                                     <head>
@@ -727,7 +732,8 @@ module.exports = {
                                   const mailOptions = {
                                     from: 'noreply_asset@pinusmerahabadi.co.id',
                                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    to: `${findRom.email}`,
+                                    // to: `${findRom.email}`,
+                                    to: `${emailAss}, ${emailAss2}`,
                                     subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
                                     html: `
                                   <head>
@@ -947,7 +953,8 @@ module.exports = {
                                   const mailOptions = {
                                     from: 'noreply_asset@pinusmerahabadi.co.id',
                                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    to: `${findRom.email}`,
+                                    // to: `${findRom.email}`,
+                                    to: `${emailAss}, ${emailAss2}`,
                                     subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
                                     html: `
                                   <head>
@@ -1393,12 +1400,13 @@ module.exports = {
           start = `${time[2]}-${time[0]}-${findClose[0].start}`
           end = `${next[2]}-${next[0]}-${findClose[0].end}`
         }
-        if (level === 12 || level === 7) {
+        if (level === 12 || level === 7 || level === 26 || level === 27 || level === 13 || level === 16) {
           const findDepo = await depo.findAll({
             where: {
               [Op.or]: [
-                { nama_bm: level === 7 ? null : fullname },
-                { nama_om: level === 12 ? null : fullname }
+                { nama_bm: level === 12 || level === 27 || level === 13 || level === 16 ? fullname : null },
+                { nama_om: level === 7 ? fullname : null },
+                { nama_asman: level === 26 ? fullname : null }
               ]
             }
           })
@@ -1525,6 +1533,10 @@ module.exports = {
             {
               model: path,
               as: 'pict'
+            },
+            {
+              model: ttd,
+              as: 'appForm'
             }
           ]
         })
@@ -1849,7 +1861,8 @@ module.exports = {
                             const mailOptions = {
                               from: 'noreply_asset@pinusmerahabadi.co.id',
                               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                              // to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                              to: `${emailAss}, ${emailAss2}`,
                               subject: `Full Approve Pengajuan Stock Opname ${no} (TESTING)`,
                               html: `
                             <head>
@@ -2010,7 +2023,8 @@ module.exports = {
                                   const mailOptions = {
                                     from: 'noreply_asset@pinusmerahabadi.co.id',
                                     replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    to: `${find[arr + 1].jabatan === 'BM' || find[arr + 1].jabatan === 'ROM' ? findRom.email : findUser.email}`,
+                                    // to: `${find[arr + 1].jabatan === 'BM' || find[arr + 1].jabatan === 'ROM' ? findRom.email : findUser.email}`,
+                                    to: `${emailAss}, ${emailAss2}`,
                                     subject: `Approve Pengajuan Stock Opname ${no} (TESTING)`,
                                     html: `
                                   <head>
@@ -2269,7 +2283,8 @@ module.exports = {
                         const mailOptions = {
                           from: 'noreply_asset@pinusmerahabadi.co.id',
                           replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          to: `${draftEmail}`,
+                          // to: `${draftEmail}`,
+                          to: `${emailAss}, ${emailAss2}`,
                           subject: `Reject Stock Opname Asset ${no} (TESTING WEB ASET)`,
                           html: `
                           <head>
@@ -2762,7 +2777,8 @@ module.exports = {
             const mailOptions = {
               from: 'noreply_asset@pinusmerahabadi.co.id',
               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-              to: `${findEmail.email_area_aos}`,
+              // to: `${findEmail.email_area_aos}`,
+              to: `${emailAss}, ${emailAss2}`,
               subject: `Proses Stock Opname ${no} Telah Selesai (TESTING)`,
               html: `
             <head>
@@ -2924,7 +2940,8 @@ module.exports = {
               const mailOptions = {
                 from: 'noreply_asset@pinusmerahabadi.co.id',
                 replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                to: `${findUser.email}`,
+                // to: `${findUser.email}`,
+                to: `${emailAss}, ${emailAss2}`,
                 subject: `Revisi Stock Opname ${findStock.no_stock} (TESTING WEB ASET)`,
                 html: `
                 <head>

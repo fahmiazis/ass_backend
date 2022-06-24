@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     no_proses: DataTypes.STRING,
     list_appr: DataTypes.STRING,
     keterangan: DataTypes.STRING,
-    response: DataTypes.ENUM('request', 'reject', 'full', 'revisi')
+    response: DataTypes.ENUM('request', 'reject', 'full', 'revisi'),
+    status: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'notif'
