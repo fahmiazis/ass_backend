@@ -1824,12 +1824,12 @@ module.exports = {
           let arr = null
           // let num = null
           // let post = ''
-          let position = ''
+          // let position = ''
           for (let i = 0; i < find.length; i++) {
             if (result[0].name === find[i].jabatan) {
               hasil = find[i].id
               arr = i
-              position = find[i].jabatan
+              // position = find[i].jabatan
             } else if ((level === 13 || level === 16) && divisi === find[i].jabatan) {
               div = find[i].id
               // num = i
@@ -1867,7 +1867,7 @@ module.exports = {
                         }
                       })
                       if (findFile.length > 0) {
-                        if (position === 'BM') {
+                        if (level === 12) {
                           for (let j = 0; j < findFile.length; j++) {
                             dataLength.push(1)
                             if (findFile[j].status === 3) {
@@ -2116,7 +2116,7 @@ module.exports = {
               return response(res, 'failed approve disposal', {}, 404, false)
             }
           } else if (level === 13 || level === 16) {
-            if (hasil !== 0) {
+            if (hasil !== 0 || div !== 0) {
               if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
                 return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
               } else {
@@ -2131,9 +2131,9 @@ module.exports = {
                     status: 1,
                     path: null
                   }
-                  const findTtd = await ttd.findByPk(hasil)
-                  if (findTtd && findDis.kode_plant.split('').length > 4) {
-                    const findTd = await ttd.findByPk(div)
+                  const findTtd = await ttd.findByPk(hasil === 0 ? div : hasil)
+                  if (findTtd && findDis) {
+                    const findTd = await ttd.findByPk(div === 0 ? hasil : div)
                     const upTd = await findTd.update(data)
                     const sent = await findTtd.update(data)
                     if (sent && upTd) {
@@ -2145,196 +2145,7 @@ module.exports = {
                           ]
                         }
                       })
-                      if (results.length === find.length) {
-                        const findDoc = await disposal.findAll({
-                          where: {
-                            no_disposal: no
-                          }
-                        })
-                        if (findDoc) {
-                          const data = {
-                            status_form: 9
-                          }
-                          const valid = []
-                          for (let i = 0; i < findDoc.length; i++) {
-                            const findAsset = await disposal.findByPk(findDoc[i].id)
-                            if (findAsset) {
-                              await findAsset.update(data)
-                              valid.push(1)
-                            }
-                          }
-                          if (valid.length === findDoc.length) {
-                            const findUser = await user.findOne({
-                              where: {
-                                user_level: 2
-                              }
-                            })
-                            if (findUser) {
-                              const data = {
-                                list_appr: findUser.username,
-                                response: 'full'
-                              }
-                              const findNotif = await notif.findOne({
-                                where: {
-                                  [Op.and]: [
-                                    { no_proses: 'D' + no },
-                                    { kode_plant: findDoc[0].kode_plant }
-                                  ]
-                                }
-                              })
-                              if (findNotif) {
-                                const createNotif = await findNotif.update(data)
-                                if (createNotif) {
-                                  let tableTd = ''
-                                  for (let i = 0; i < findDoc.length; i++) {
-                                    const element = `
-                                      <tr>
-                                        <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                        <td>D${findDoc[i].no_disposal}</td>
-                                        <td>${findDoc[i].no_asset}</td>
-                                        <td>${findDoc[i].nama_asset}</td>
-                                        <td>${findDoc[i].cost_center}</td>
-                                        <td>${findDoc[i].area}</td>
-                                      </tr>`
-                                    tableTd = tableTd + element
-                                  }
-                                  const mailOptions = {
-                                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    // to: `${findUser.email}`,
-                                    to: `${emailAss}, ${emailAss2}`,
-                                    subject: `Full Approve Pengajuan Disposal D${no} `,
-                                    html: `
-                                    <head>
-                                      <style type="text/css">
-                                      body {
-                                          display: flexbox;
-                                          flex-direction: column;
-                                      }
-                                      .tittle {
-                                          font-size: 15px;
-                                      }
-                                      .mar {
-                                          margin-bottom: 20px;
-                                      }
-                                      .mar1 {
-                                          margin-bottom: 10px;
-                                      }
-                                      .foot {
-                                          margin-top: 20px;
-                                          margin-bottom: 10px;
-                                      }
-                                      .foot1 {
-                                          margin-bottom: 50px;
-                                      }
-                                      .position {
-                                          display: flexbox;
-                                          flex-direction: row;
-                                          justify-content: left;
-                                          margin-top: 10px;
-                                      }
-                                      table {
-                                          font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                          font-size: 12px;
-                                      }
-                                      .demo-table {
-                                          border-collapse: collapse;
-                                          font-size: 13px;
-                                      }
-                                      .demo-table th, 
-                                      .demo-table td {
-                                          border-bottom: 1px solid #e1edff;
-                                          border-left: 1px solid #e1edff;
-                                          padding: 7px 17px;
-                                      }
-                                      .demo-table th, 
-                                      .demo-table td:last-child {
-                                          border-right: 1px solid #e1edff;
-                                      }
-                                      .demo-table td:first-child {
-                                          border-top: 1px solid #e1edff;
-                                      }
-                                      .demo-table td:last-child{
-                                          border-bottom: 0;
-                                      }
-                                      caption {
-                                          caption-side: top;
-                                          margin-bottom: 10px;
-                                      }
-                                      
-                                      /* Table Header */
-                                      .demo-table thead th {
-                                          background-color: #508abb;
-                                          color: #FFFFFF;
-                                          border-color: #6ea1cc !important;
-                                          text-transform: uppercase;
-                                      }
-                                      
-                                      /* Table Body */
-                                      .demo-table tbody td {
-                                          color: #353535;
-                                      }
-                                      
-                                      .demo-table tbody tr:nth-child(odd) td {
-                                          background-color: #f4fbff;
-                                      }
-                                      .demo-table tbody tr:hover th,
-                                      .demo-table tbody tr:hover td {
-                                          background-color: #ffffa2;
-                                          border-color: #ffff0f;
-                                          transition: all .2s;
-                                      }
-                                  </style>
-                                    </head>
-                                    <body>
-                                        <div class="tittle mar">
-                                            Dear Bapak/Ibu Asset,
-                                        </div>
-                                        <div class="tittle mar1">
-                                            <div>Mohon lanjutkan proses pengajuan disposal area sbb.</div>
-                                        </div>
-                                        <div class="position">
-                                            <table class="demo-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>No</th>
-                                                        <th>No Disposal</th>
-                                                        <th>Asset</th>
-                                                        <th>Asset description</th>
-                                                        <th>Cost Ctr</th>
-                                                        <th>Cost Ctr Name</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                  ${tableTd}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                        <div class="tittle foot">
-                                            Terima kasih,
-                                        </div>
-                                        <div class="tittle foot1">
-                                            Regards,
-                                        </div>
-                                        <div class="tittle">
-                                            Team Asset
-                                        </div>                                      
-                                    </body>
-                                    `
-                                  }
-                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                  if (sendEmail) {
-                                    return response(res, 'success approve disposal', { sendEmail })
-                                  } else {
-                                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      } else {
+                      if (results.length > 0) {
                         const findDoc = await disposal.findOne({
                           where: {
                             no_disposal: no
@@ -2371,175 +2182,185 @@ module.exports = {
                                   }
                                 })
                                 if (findNotif) {
-                                  const createNotif = await findNotif.update(data)
-                                  if (createNotif) {
-                                    let tableTd = ''
-                                    for (let i = 0; i < findDis.length; i++) {
-                                      const element = `
-                                        <tr>
-                                          <td>${findDis.indexOf(findDis[i]) + 1}</td>
-                                          <td>D${findDis[i].no_disposal}</td>
-                                          <td>${findDis[i].no_asset}</td>
-                                          <td>${findDis[i].nama_asset}</td>
-                                          <td>${findDis[i].cost_center}</td>
-                                          <td>${findDis[i].area}</td>
-                                        </tr>`
-                                      tableTd = tableTd + element
-                                    }
-                                    const mailOptions = {
-                                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      // to: `${findUser.email}`,
-                                      to: `${emailAss}, ${emailAss2}`,
-                                      subject: `Approve Pengajuan Disposal D${no} `,
-                                      html: `
-                                      <head>
-                                        <style type="text/css">
-                                        body {
-                                            display: flexbox;
-                                            flex-direction: column;
-                                        }
-                                        .tittle {
-                                            font-size: 15px;
-                                        }
-                                        .mar {
-                                            margin-bottom: 20px;
-                                        }
-                                        .mar1 {
-                                            margin-bottom: 10px;
-                                        }
-                                        .foot {
-                                            margin-top: 20px;
-                                            margin-bottom: 10px;
-                                        }
-                                        .foot1 {
-                                            margin-bottom: 50px;
-                                        }
-                                        .position {
-                                            display: flexbox;
-                                            flex-direction: row;
-                                            justify-content: left;
-                                            margin-top: 10px;
-                                        }
-                                        table {
-                                            font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                            font-size: 12px;
-                                        }
-                                        .demo-table {
-                                            border-collapse: collapse;
-                                            font-size: 13px;
-                                        }
-                                        .demo-table th, 
-                                        .demo-table td {
-                                            border-bottom: 1px solid #e1edff;
-                                            border-left: 1px solid #e1edff;
-                                            padding: 7px 17px;
-                                        }
-                                        .demo-table th, 
-                                        .demo-table td:last-child {
-                                            border-right: 1px solid #e1edff;
-                                        }
-                                        .demo-table td:first-child {
-                                            border-top: 1px solid #e1edff;
-                                        }
-                                        .demo-table td:last-child{
-                                            border-bottom: 0;
-                                        }
-                                        caption {
-                                            caption-side: top;
-                                            margin-bottom: 10px;
-                                        }
-                                        
-                                        /* Table Header */
-                                        .demo-table thead th {
-                                            background-color: #508abb;
-                                            color: #FFFFFF;
-                                            border-color: #6ea1cc !important;
-                                            text-transform: uppercase;
-                                        }
-                                        
-                                        /* Table Body */
-                                        .demo-table tbody td {
-                                            color: #353535;
-                                        }
-                                        
-                                        .demo-table tbody tr:nth-child(odd) td {
-                                            background-color: #f4fbff;
-                                        }
-                                        .demo-table tbody tr:hover th,
-                                        .demo-table tbody tr:hover td {
-                                            background-color: #ffffa2;
-                                            border-color: #ffff0f;
-                                            transition: all .2s;
-                                        }
-                                    </style>
-                                      </head>
-                                      <body>
-                                          <div class="tittle mar">
-                                              Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                          </div>
-                                          <div class="tittle mar1">
-                                              <div>Mohon untuk approve pengajuan disposal asset area.</div>
-                                          </div>
-                                          <div class="position">
-                                              <table class="demo-table">
-                                                  <thead>
-                                                      <tr>
-                                                          <th>No</th>
-                                                          <th>No Disposal</th>
-                                                          <th>Asset</th>
-                                                          <th>Asset description</th>
-                                                          <th>Cost Ctr</th>
-                                                          <th>Cost Ctr Name</th>
-                                                      </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    ${tableTd}
-                                                  </tbody>
-                                              </table>
-                                          </div>
-                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                          <div class="tittle foot">
-                                              Terima kasih,
-                                          </div>
-                                          <div class="tittle foot1">
-                                              Regards,
-                                          </div>
-                                          <div class="tittle">
-                                              Team Asset
-                                          </div>                                      
-                                      </body>
-                                      `
-                                    }
-                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                    if (sendEmail) {
-                                      return response(res, 'success approve disposal', { sendEmail })
-                                    } else {
-                                      return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
-                                    }
+                                  await findNotif.update(data)
+                                } else {
+                                  const data = {
+                                    kode_plant: findDis[0].kode_plant,
+                                    jenis: 'disposal',
+                                    no_proses: `D${findDis[0].no_disposal}`,
+                                    list_appr: findUser.username,
+                                    keterangan: 'pengajuan',
+                                    response: 'request'
                                   }
+                                  await notif.create(data)
+                                }
+                                let tableTd = ''
+                                for (let i = 0; i < findDis.length; i++) {
+                                  const element = `
+                                    <tr>
+                                      <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                      <td>D${findDis[i].no_disposal}</td>
+                                      <td>${findDis[i].no_asset}</td>
+                                      <td>${findDis[i].nama_asset}</td>
+                                      <td>${findDis[i].cost_center}</td>
+                                      <td>${findDis[i].area}</td>
+                                    </tr>`
+                                  tableTd = tableTd + element
+                                }
+                                const mailOptions = {
+                                  from: 'noreply_asset@pinusmerahabadi.co.id',
+                                  replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                  // to: `${findUser.email}`,
+                                  to: `${emailAss}, ${emailAss2}`,
+                                  subject: `Approve Pengajuan Disposal D${no} `,
+                                  html: `
+                                        <head>
+                                          <style type="text/css">
+                                          body {
+                                              display: flexbox;
+                                              flex-direction: column;
+                                          }
+                                          .tittle {
+                                              font-size: 15px;
+                                          }
+                                          .mar {
+                                              margin-bottom: 20px;
+                                          }
+                                          .mar1 {
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot {
+                                              margin-top: 20px;
+                                              margin-bottom: 10px;
+                                          }
+                                          .foot1 {
+                                              margin-bottom: 50px;
+                                          }
+                                          .position {
+                                              display: flexbox;
+                                              flex-direction: row;
+                                              justify-content: left;
+                                              margin-top: 10px;
+                                          }
+                                          table {
+                                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                              font-size: 12px;
+                                          }
+                                          .demo-table {
+                                              border-collapse: collapse;
+                                              font-size: 13px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td {
+                                              border-bottom: 1px solid #e1edff;
+                                              border-left: 1px solid #e1edff;
+                                              padding: 7px 17px;
+                                          }
+                                          .demo-table th, 
+                                          .demo-table td:last-child {
+                                              border-right: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:first-child {
+                                              border-top: 1px solid #e1edff;
+                                          }
+                                          .demo-table td:last-child{
+                                              border-bottom: 0;
+                                          }
+                                          caption {
+                                              caption-side: top;
+                                              margin-bottom: 10px;
+                                          }
+                                          
+                                          /* Table Header */
+                                          .demo-table thead th {
+                                              background-color: #508abb;
+                                              color: #FFFFFF;
+                                              border-color: #6ea1cc !important;
+                                              text-transform: uppercase;
+                                          }
+                                          
+                                          /* Table Body */
+                                          .demo-table tbody td {
+                                              color: #353535;
+                                          }
+                                          
+                                          .demo-table tbody tr:nth-child(odd) td {
+                                              background-color: #f4fbff;
+                                          }
+                                          .demo-table tbody tr:hover th,
+                                          .demo-table tbody tr:hover td {
+                                              background-color: #ffffa2;
+                                              border-color: #ffff0f;
+                                              transition: all .2s;
+                                          }
+                                      </style>
+                                        </head>
+                                        <body>
+                                            <div class="tittle mar">
+                                                Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                            </div>
+                                            <div class="tittle mar1">
+                                                <div>Mohon untuk approve pengajuan disposal asset area.</div>
+                                            </div>
+                                            <div class="position">
+                                                <table class="demo-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>No</th>
+                                                            <th>No Disposal</th>
+                                                            <th>Asset</th>
+                                                            <th>Asset description</th>
+                                                            <th>Cost Ctr</th>
+                                                            <th>Cost Ctr Name</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                      ${tableTd}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                                            <div class="tittle foot">
+                                                Terima kasih,
+                                            </div>
+                                            <div class="tittle foot1">
+                                                Regards,
+                                            </div>
+                                            <div class="tittle">
+                                                Team Asset
+                                            </div>                                      
+                                        </body>
+                                        `
+                                }
+                                const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                if (sendEmail) {
+                                  return response(res, 'success approve disposal', { sendEmail })
+                                } else {
+                                  return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
                                 }
                               } else {
                                 return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                               }
                             } else {
-                              return response(res, 'failed approve disposal', {}, 404, false)
+                              return response(res, 'failed approve disposal 1', {}, 404, false)
                             }
                           }
                         }
+                      } else {
+                        return response(res, 'failed approve disposal 2', {}, 404, false)
                       }
                     } else {
-                      return response(res, 'failed approve disposal', {}, 404, false)
+                      return response(res, 'failed approve disposal 3', {}, 404, false)
                     }
                   } else {
-                    return response(res, 'failed approve disposal', {}, 404, false)
+                    return response(res, 'failed approve disposal 4', {}, 404, false)
                   }
                 } else {
                   return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
                 }
               }
             } else {
-              return response(res, 'failed approve disposal', {}, 404, false)
+              return response(res, 'failed approve disposal 5', {}, 404, false)
             }
           } else {
             if (hasil !== 0) {

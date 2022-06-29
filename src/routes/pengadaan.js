@@ -35,5 +35,6 @@ route.get('/doccart/:no', pengadaan.getDocumentCart)
 route.patch('/appall', pengadaan.approveAll)
 route.patch('/uprecent/:no', pengadaan.updateAlasan)
 route.get('/rev', pengadaan.getRevisi)
+route.get('/tpods', pengadaan.tesApiPods)
 
 module.exports = route

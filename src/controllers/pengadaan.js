@@ -4451,5 +4451,21 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  tesApiPods: async (req, res) => {
+    try {
+      const send = await axios({
+        method: 'post',
+        url: 'https://devpods.pinusmerahabadi.co.id/api/testapi',
+        headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.c_G5Y7CbEKR4UncCqxLmGHtkcZDtibjh2XP_M7fTbAE' }
+      }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+      if (send.status === 200) {
+        return response(res, 'Success connect to pods', { result: send.data })
+      } else {
+        return response(res, 'Failed connect to pods', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
 }

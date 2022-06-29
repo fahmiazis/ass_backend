@@ -254,12 +254,13 @@ module.exports = {
         } else {
           return response(res, 'failed to get mutasi', {}, 404, false)
         }
-      } else if (level === 12 || level === 7) {
+      } else if (level === 12 || level === 7 || level === 26 || level === 27) {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 7 ? null : fullname },
-              { nama_om: level === 12 ? null : fullname }
+              { nama_bm: level === 12 || level === 27 ? fullname : fullname },
+              { nama_om: level === 7 ? fullname : fullname },
+              { nama_asman: level === 26 ? fullname : fullname }
             ]
           }
         })
@@ -324,71 +325,396 @@ module.exports = {
         } else {
           return response(res, 'failed get mutasi', {}, 400, false)
         }
-      } else if (level === 13) {
-        const result = await mutasi.findAndCountAll({
+      } else if (level === 13 || level === 16) {
+        const findRole = await role.findOne({
+          where: {
+            nomor: '27'
+          }
+        })
+        const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { kode_plant: { [Op.like]: `%${searchValue}%` } },
-              { cost_center: { [Op.like]: `%${searchValue}%` } },
-              { area: { [Op.like]: `%${searchValue}%` } },
-              { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { no_mutasi: { [Op.like]: `%${searchValue}%` } }
-            ],
-            status_form: 2
-          },
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit,
-          include: [
-            {
-              model: ttd,
-              as: 'appForm'
-            },
-            {
-              model: path,
-              as: 'pict'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
-            }
-          ]
-        })
-        if (result.rows.length > 0) {
-          const data = []
-          for (let i = 0; i < result.rows.length; i++) {
-            if (result.rows[i].kategori === 'IT') {
-              data.push(result.rows[i].no_mutasi)
-            }
+              { nama_bm: fullname },
+              { nama_om: fullname }
+            ]
           }
-          const set = new Set(data)
-          const noMut = [...set]
+        })
+        if (findRole && findDepo.length > 0) {
           const hasil = []
-          for (let i = 0; i < result.rows.length; i++) {
-            for (let j = 0; j < noMut.length; j++) {
-              if (result.rows[i].no_mutasi === noMut[j]) {
-                hasil.push(result.rows[i])
+          for (let i = 0; i < findDepo.length; i++) {
+            const result = await mutasi.findAll({
+              where: {
+                kode_plant: findDepo[i].kode_plant,
+                [Op.or]: [
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { cost_center: { [Op.like]: `%${searchValue}%` } },
+                  { area: { [Op.like]: `%${searchValue}%` } },
+                  { no_asset: { [Op.like]: `%${searchValue}%` } },
+                  { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+                ],
+                status_form: 2
+              },
+              order: [
+                [sortValue, 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              include: [
+                {
+                  model: ttd,
+                  as: 'appForm'
+                },
+                {
+                  model: path,
+                  as: 'pict'
+                },
+                {
+                  model: docUser,
+                  as: 'docAsset'
+                }
+              ]
+            })
+            if (result.length > 0) {
+              for (let j = 0; j < result.length; j++) {
+                hasil.push(result[j])
               }
             }
           }
-          if (hasil.length) {
-            const result = { rows: hasil, count: hasil.length }
-            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          if (hasil.length > 0) {
+            const tempDis = []
+            hasil.map(x => {
+              return (
+                tempDis.push(x.no_mutasi)
+              )
+            })
+            const setDis = new Set(tempDis)
+            const noSet = [...setDis]
+            if (level === 13) {
+              const result = await mutasi.findAndCountAll({
+                where: {
+                  kategori: 'IT',
+                  [Op.or]: [
+                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                    { cost_center: { [Op.like]: `%${searchValue}%` } },
+                    { area: { [Op.like]: `%${searchValue}%` } },
+                    { no_asset: { [Op.like]: `%${searchValue}%` } },
+                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+                  ],
+                  status_form: 2
+                },
+                order: [
+                  [sortValue, 'ASC'],
+                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+                ],
+                limit: limit,
+                offset: (page - 1) * limit,
+                include: [
+                  {
+                    model: ttd,
+                    as: 'appForm'
+                  },
+                  {
+                    model: path,
+                    as: 'pict'
+                  },
+                  {
+                    model: docUser,
+                    as: 'docAsset'
+                  }
+                ],
+                group: 'no_mutasi'
+              })
+              if (result.rows.length > 0) {
+                const data = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  if (result.rows[i].appForm.length > 0) {
+                    const app = result.rows[i].appForm
+                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                      data.push(result.rows[i].no_mutasi)
+                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                      data.push(result.rows[i].no_mutasi)
+                    }
+                  }
+                }
+                const set = new Set(data)
+                const noMut = [...set]
+                const newData = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  for (let j = 0; j < noMut.length; j++) {
+                    if (result.rows[i].no_mutasi === noMut[j]) {
+                      newData.push(result.rows[i])
+                    }
+                  }
+                }
+                const tempAll = hasil.concat(newData)
+                const setMerge = new Set(tempAll)
+                const mergeData = [...setMerge]
+                const tempNo = noMut.concat(noSet)
+                const setNo = new Set(tempNo)
+                const mergeNo = [...setNo]
+                if (newData.length) {
+                  const result = { rows: mergeData, count: mergeData.length }
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+                } else {
+                  const result = { rows: [], count: 0 }
+                  const noMut = []
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
+                }
+              } else {
+                const result = { rows: [], count: 0 }
+                const noMut = []
+                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                return response(res, 'success get mutasi', { result, pageInfo, noMut })
+              }
+            } else {
+              const result = await mutasi.findAndCountAll({
+                where: {
+                  [Op.or]: [
+                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                    { cost_center: { [Op.like]: `%${searchValue}%` } },
+                    { area: { [Op.like]: `%${searchValue}%` } },
+                    { no_asset: { [Op.like]: `%${searchValue}%` } },
+                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+                  ],
+                  status_form: 2
+                },
+                order: [
+                  [sortValue, 'ASC'],
+                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+                ],
+                limit: limit,
+                offset: (page - 1) * limit,
+                include: [
+                  {
+                    model: ttd,
+                    as: 'appForm'
+                  },
+                  {
+                    model: path,
+                    as: 'pict'
+                  },
+                  {
+                    model: docUser,
+                    as: 'docAsset'
+                  }
+                ],
+                group: 'no_mutasi'
+              })
+              if (result.rows.length > 0) {
+                const data = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  if (result.rows[i].appForm.length > 0) {
+                    const app = result.rows[i].appForm
+                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                      data.push(result.rows[i].no_mutasi)
+                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                      data.push(result.rows[i].no_mutasi)
+                    }
+                  }
+                }
+                const set = new Set(data)
+                const noMut = [...set]
+                const newData = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  for (let j = 0; j < noMut.length; j++) {
+                    if (result.rows[i].no_mutasi === noMut[j]) {
+                      newData.push(result.rows[i])
+                    }
+                  }
+                }
+                const tempAll = hasil.concat(newData)
+                const setMerge = new Set(tempAll)
+                const mergeData = [...setMerge]
+                const tempNo = noMut.concat(noSet)
+                const setNo = new Set(tempNo)
+                const mergeNo = [...setNo]
+                if (newData.length) {
+                  const result = { rows: mergeData, count: mergeData.length }
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+                } else {
+                  const result = { rows: [], count: 0 }
+                  const noMut = []
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
+                }
+              } else {
+                const result = { rows: [], count: 0 }
+                const noMut = []
+                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                return response(res, 'success get mutasi', { result, pageInfo, noMut })
+              }
+            }
           } else {
-            const result = { rows: [], count: 0 }
-            const noMut = []
-            const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-            return response(res, 'success get mutasi', { result, pageInfo, noMut })
+            const tempDis = []
+            const setDis = new Set(tempDis)
+            const noSet = [...setDis]
+            if (level === 13) {
+              const result = await mutasi.findAndCountAll({
+                where: {
+                  kategori: 'IT',
+                  [Op.or]: [
+                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                    { cost_center: { [Op.like]: `%${searchValue}%` } },
+                    { area: { [Op.like]: `%${searchValue}%` } },
+                    { no_asset: { [Op.like]: `%${searchValue}%` } },
+                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+                  ],
+                  status_form: 2
+                },
+                order: [
+                  [sortValue, 'ASC'],
+                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+                ],
+                limit: limit,
+                offset: (page - 1) * limit,
+                include: [
+                  {
+                    model: ttd,
+                    as: 'appForm'
+                  },
+                  {
+                    model: path,
+                    as: 'pict'
+                  },
+                  {
+                    model: docUser,
+                    as: 'docAsset'
+                  }
+                ],
+                group: 'no_mutasi'
+              })
+              if (result.rows.length > 0) {
+                const data = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  if (result.rows[i].appForm.length > 0) {
+                    const app = result.rows[i].appForm
+                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                      data.push(result.rows[i].no_mutasi)
+                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                      data.push(result.rows[i].no_mutasi)
+                    }
+                  }
+                }
+                const set = new Set(data)
+                const noMut = [...set]
+                const newData = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  for (let j = 0; j < noMut.length; j++) {
+                    if (result.rows[i].no_mutasi === noMut[j]) {
+                      newData.push(result.rows[i])
+                    }
+                  }
+                }
+                const tempAll = hasil.concat(newData)
+                const setMerge = new Set(tempAll)
+                const mergeData = [...setMerge]
+                const tempNo = noMut.concat(noSet)
+                const setNo = new Set(tempNo)
+                const mergeNo = [...setNo]
+                if (newData.length) {
+                  const result = { rows: mergeData, count: mergeData.length }
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+                } else {
+                  const result = { rows: [], count: 0 }
+                  const noMut = []
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
+                }
+              } else {
+                const result = { rows: [], count: 0 }
+                const noMut = []
+                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                return response(res, 'success get mutasi', { result, pageInfo, noMut })
+              }
+            } else {
+              const result = await mutasi.findAndCountAll({
+                where: {
+                  [Op.or]: [
+                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                    { cost_center: { [Op.like]: `%${searchValue}%` } },
+                    { area: { [Op.like]: `%${searchValue}%` } },
+                    { no_asset: { [Op.like]: `%${searchValue}%` } },
+                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+                  ],
+                  status_form: 2
+                },
+                order: [
+                  [sortValue, 'ASC'],
+                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+                ],
+                limit: limit,
+                offset: (page - 1) * limit,
+                include: [
+                  {
+                    model: ttd,
+                    as: 'appForm'
+                  },
+                  {
+                    model: path,
+                    as: 'pict'
+                  },
+                  {
+                    model: docUser,
+                    as: 'docAsset'
+                  }
+                ],
+                group: 'no_mutasi'
+              })
+              if (result.rows.length > 0) {
+                const data = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  if (result.rows[i].appForm.length > 0) {
+                    const app = result.rows[i].appForm
+                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+                      data.push(result.rows[i].no_mutasi)
+                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+                      data.push(result.rows[i].no_mutasi)
+                    }
+                  }
+                }
+                const set = new Set(data)
+                const noMut = [...set]
+                const newData = []
+                for (let i = 0; i < result.rows.length; i++) {
+                  for (let j = 0; j < noMut.length; j++) {
+                    if (result.rows[i].no_mutasi === noMut[j]) {
+                      newData.push(result.rows[i])
+                    }
+                  }
+                }
+                const tempAll = hasil.concat(newData)
+                const setMerge = new Set(tempAll)
+                const mergeData = [...setMerge]
+                const tempNo = noMut.concat(noSet)
+                const setNo = new Set(tempNo)
+                const mergeNo = [...setNo]
+                if (newData.length) {
+                  const result = { rows: mergeData, count: mergeData.length }
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+                } else {
+                  const result = { rows: [], count: 0 }
+                  const noMut = []
+                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
+                }
+              } else {
+                const result = { rows: [], count: 0 }
+                const noMut = []
+                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+                return response(res, 'success get mutasi', { result, pageInfo, noMut })
+              }
+            }
           }
         } else {
-          const result = { rows: [], count: 0 }
-          const noMut = []
-          const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-          return response(res, 'success get mutasi', { result, pageInfo, noMut })
+          return response(res, 'failed get mutasi', {}, 404, false)
         }
       } else {
         const result = await mutasi.findAndCountAll({
@@ -565,7 +891,7 @@ module.exports = {
             return response(res, 'failed to get mutasi', {}, 404, false)
           }
         }
-      } else if (level === 27 || level === 13 || level === 16) {
+      } else if (level === 27 || level === 13 || level === 16 || level === 12) {
         const findRole = await role.findOne({
           where: {
             nomor: '27'
@@ -1313,13 +1639,20 @@ module.exports = {
           no_doc: no
         }
       })
-      if (result.length > 0) {
+      const findRole = await role.findOne({
+        where: {
+          nomor: '27'
+        }
+      })
+      if (result.length > 0 && findRole) {
         const penyetuju = []
         const pembuat = []
         const pemeriksa = []
         const penerima = []
         for (let i = 0; i < result.length; i++) {
-          if (result[i].sebagai === 'pembuat') {
+          if ((result[i].sebagai === 'pembuat' || result[i].sebagai === 'penerima') && result[i].jabatan === findRole.name) {
+            pemeriksa.push(result[i])
+          } else if (result[i].sebagai === 'pembuat') {
             pembuat.push(result[i])
           } else if (result[i].sebagai === 'pemeriksa') {
             pemeriksa.push(result[i])
@@ -1398,14 +1731,16 @@ module.exports = {
                       const pemeriksa = []
                       const penerima = []
                       for (let i = 0; i < findRes.length; i++) {
-                        if (findRes[i].sebagai === 'pembuat') {
+                        if ((findRes[i].sebagai === 'pembuat' || findRes[i].sebagai === 'penerima') && findRes[i].jabatan === findRole.name) {
+                          pemeriksa.push(findRes[i])
+                        } else if (findRes[i].sebagai === 'pembuat') {
                           pembuat.push(findRes[i])
                         } else if (findRes[i].sebagai === 'pemeriksa') {
                           pemeriksa.push(findRes[i])
                         } else if (findRes[i].sebagai === 'penyetuju') {
                           penyetuju.push(findRes[i])
-                        } else if (result[i].sebagai === 'penerima') {
-                          penerima.push(result[i])
+                        } else if (findRes[i].sebagai === 'penerima') {
+                          penerima.push(findRes[i])
                         }
                       }
                       return response(res, 'success get template approve', { result: { pembuat, penerima, pemeriksa, penyetuju } })
@@ -1432,631 +1767,80 @@ module.exports = {
       const level = req.user.level
       const name = req.user.name
       const no = req.params.no
+      const findMut = await mutasi.findOne({
+        where: {
+          no_mutasi: no
+        }
+      })
       const result = await role.findAll({
         where: {
           nomor: level
         }
       })
-      if (result.length > 0) {
+      if (result.length > 0 && findMut) {
         const find = await ttd.findAll({
           where: {
             no_doc: no
           }
         })
         if (find.length > 0) {
+          const author = level === 13 || level === 16 || level === 12 || level === 27
+          const divisi = author && 'Manager'
           let hasil = 0
+          let div = 0
           let arr = null
-          for (let i = 0; i < find.length; i++) {
-            if (result[0].name === find[i].jabatan) {
-              hasil = find[i].id
-              arr = i
-            }
-          }
-          if (hasil !== 0) {
-            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
-              return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
+          let who = 0
+          // let position = ''
+          if (author) {
+            const findPlant = await depo.findOne({
+              where: {
+                kode_plant: findMut.kode_plant
+              }
+            })
+            if (findPlant && (findPlant.nama_bm === name)) {
+              who = 1
             } else {
-              if (arr === 0 || find[arr - 1].status === 1) {
-                const findDepo = await depo.findOne({
-                  where: {
-                    kode_plant: name
-                  }
-                })
-                const data = {
-                  nama: level === 5 || level === 9 ? findDepo.nama_aos : name,
-                  status: 1,
-                  path: null
+              const findPlantRec = await depo.findOne({
+                where: {
+                  kode_plant: findMut.kode_plant_rec
                 }
-                const findTtd = await ttd.findByPk(hasil)
-                if (findTtd) {
-                  const sent = await findTtd.update(data)
-                  if (sent) {
-                    const results = await ttd.findAll({
-                      where: {
-                        [Op.and]: [
-                          { no_doc: no },
-                          { status: 1 }
-                        ]
-                      }
-                    })
-                    if (results.length === find.length) {
-                      const findDoc = await mutasi.findAll({
-                        where: {
-                          no_mutasi: no
-                        }
-                      })
-                      if (findDoc) {
-                        const data = {
-                          status_form: 9
-                        }
-                        const valid = []
-                        for (let i = 0; i < findDoc.length; i++) {
-                          const findAsset = await mutasi.findByPk(findDoc[i].id)
-                          if (findAsset) {
-                            await findAsset.update(data)
-                            valid.push(1)
-                          }
-                        }
-                        if (valid.length === findDoc.length) {
-                          const findUser = await email.findOne({
-                            where: {
-                              kode_plant: findDoc[0].kode_plant
-                            }
-                          })
-                          if (findUser) {
-                            let tableTd = ''
-                            for (let i = 0; i < findDoc.length; i++) {
-                              const element = `
-                                <tr>
-                                  <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                  <td>${findDoc[i].no_mutasi}</td>
-                                  <td>${findDoc[i].no_asset}</td>
-                                  <td>${findDoc[i].nama_asset}</td>
-                                  <td>${findDoc[i].area}</td>
-                                  <td>${findDoc[i].cost_center}</td>
-                                  <td>${findDoc[i].area_rec}</td>
-                                  <td>${findDoc[i].cost_center_rec}</td>
-                                </tr>`
-                              tableTd = tableTd + element
-                            }
-                            const mailOptions = {
-                              from: 'noreply_asset@pinusmerahabadi.co.id',
-                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              // to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
-                              to: `${emailAss}, ${emailAss2}`,
-                              subject: `Full Approve Pengajuan Mutasi ${no} (TESTING)`,
-                              html: `
-                              <head>
-                                <style type="text/css">
-                                body {
-                                    display: flexbox;
-                                    flex-direction: column;
-                                }
-                                .tittle {
-                                    font-size: 15px;
-                                }
-                                .mar {
-                                    margin-bottom: 20px;
-                                }
-                                .mar1 {
-                                    margin-bottom: 10px;
-                                }
-                                .foot {
-                                    margin-top: 20px;
-                                    margin-bottom: 10px;
-                                }
-                                .foot1 {
-                                    margin-bottom: 50px;
-                                }
-                                .position {
-                                    display: flexbox;
-                                    flex-direction: row;
-                                    justify-content: left;
-                                    margin-top: 10px;
-                                }
-                                table {
-                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                    font-size: 12px;
-                                }
-                                .demo-table {
-                                    border-collapse: collapse;
-                                    font-size: 13px;
-                                }
-                                .demo-table th, 
-                                .demo-table td {
-                                    border-bottom: 1px solid #e1edff;
-                                    border-left: 1px solid #e1edff;
-                                    padding: 7px 17px;
-                                }
-                                .demo-table th, 
-                                .demo-table td:last-child {
-                                    border-right: 1px solid #e1edff;
-                                }
-                                .demo-table td:first-child {
-                                    border-top: 1px solid #e1edff;
-                                }
-                                .demo-table td:last-child{
-                                    border-bottom: 0;
-                                }
-                                caption {
-                                    caption-side: top;
-                                    margin-bottom: 10px;
-                                }
-                                
-                                /* Table Header */
-                                .demo-table thead th {
-                                    background-color: #508abb;
-                                    color: #FFFFFF;
-                                    border-color: #6ea1cc !important;
-                                    text-transform: uppercase;
-                                }
-                                
-                                /* Table Body */
-                                .demo-table tbody td {
-                                    color: #353535;
-                                }
-                                
-                                .demo-table tbody tr:nth-child(odd) td {
-                                    background-color: #f4fbff;
-                                }
-                                .demo-table tbody tr:hover th,
-                                .demo-table tbody tr:hover td {
-                                    background-color: #ffffa2;
-                                    border-color: #ffff0f;
-                                    transition: all .2s;
-                                }
-                            </style>
-                              </head>
-                              <body>
-                                  <div class="tittle mar">
-                                      Dear Bapak/Ibu Asset,
-                                  </div>
-                                  <div class="tittle mar1">
-                                      <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
-                                  </div>
-                                  <div class="position">
-                                      <table class="demo-table">
-                                          <thead>
-                                              <tr>
-                                                  <th>No</th>
-                                                  <th>No Mutasi</th>
-                                                  <th>Asset</th>
-                                                  <th>Asset description</th>
-                                                  <th>Cabang / Depo</th>
-                                                  <th>Cost Ctr</th>
-                                                  <th>Cabang / Depo Penerima</th>
-                                                  <th>Cost Ctr Penerima</th>
-                                              </tr>
-                                          </thead>
-                                          <tbody>
-                                            ${tableTd}
-                                          </tbody>
-                                      </table>
-                                  </div>
-                                  <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
-                                  <div class="tittle foot">
-                                      Terima kasih,
-                                  </div>
-                                  <div class="tittle foot1">
-                                      Regards,
-                                  </div>
-                                  <div class="tittle">
-                                      Team Asset
-                                  </div>                                      
-                              </body>
-                              `
-                            }
-                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                            if (sendEmail) {
-                              return response(res, 'success approve mutasi', { sendEmail })
-                            } else {
-                              return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                            }
-                          } else {
-                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
-                          }
-                        }
-                      }
-                    } else {
-                      const findDoc = await mutasi.findAll({
-                        where: {
-                          no_mutasi: no
-                        }
-                      })
-                      if (findDoc.length > 0) {
-                        const findRole = await role.findAll({
-                          where: {
-                            name: find[arr + 1].jabatan
-                          }
-                        })
-                        if (findRole.length > 0) {
-                          if (results.length === (find.length - 1)) {
-                            const findUser = await user.findOne({
-                              where: {
-                                username: findDoc[0].kode_plant_rec
-                              }
-                            })
-                            if (findUser) {
-                              let tableTd = ''
-                              for (let i = 0; i < findDoc.length; i++) {
-                                const element = `
-                                  <tr>
-                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                    <td>${findDoc[i].no_mutasi}</td>
-                                    <td>${findDoc[i].no_asset}</td>
-                                    <td>${findDoc[i].nama_asset}</td>
-                                    <td>${findDoc[i].area}</td>
-                                    <td>${findDoc[i].cost_center}</td>
-                                    <td>${findDoc[i].area_rec}</td>
-                                    <td>${findDoc[i].cost_center_rec}</td>
-                                  </tr>`
-                                tableTd = tableTd + element
-                              }
-                              const mailOptions = {
-                                from: 'noreply_asset@pinusmerahabadi.co.id',
-                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                // to: `${findUser.email}`,
-                                to: `${emailAss}, ${emailAss2}`,
-                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
-                                html: `
-                                <head>
-                                  <style type="text/css">
-                                  body {
-                                      display: flexbox;
-                                      flex-direction: column;
-                                  }
-                                  .tittle {
-                                      font-size: 15px;
-                                  }
-                                  .mar {
-                                      margin-bottom: 20px;
-                                  }
-                                  .mar1 {
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot {
-                                      margin-top: 20px;
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot1 {
-                                      margin-bottom: 50px;
-                                  }
-                                  .position {
-                                      display: flexbox;
-                                      flex-direction: row;
-                                      justify-content: left;
-                                      margin-top: 10px;
-                                  }
-                                  table {
-                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                      font-size: 12px;
-                                  }
-                                  .demo-table {
-                                      border-collapse: collapse;
-                                      font-size: 13px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td {
-                                      border-bottom: 1px solid #e1edff;
-                                      border-left: 1px solid #e1edff;
-                                      padding: 7px 17px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td:last-child {
-                                      border-right: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:first-child {
-                                      border-top: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:last-child{
-                                      border-bottom: 0;
-                                  }
-                                  caption {
-                                      caption-side: top;
-                                      margin-bottom: 10px;
-                                  }
-                                  
-                                  /* Table Header */
-                                  .demo-table thead th {
-                                      background-color: #508abb;
-                                      color: #FFFFFF;
-                                      border-color: #6ea1cc !important;
-                                      text-transform: uppercase;
-                                  }
-                                  
-                                  /* Table Body */
-                                  .demo-table tbody td {
-                                      color: #353535;
-                                  }
-                                  
-                                  .demo-table tbody tr:nth-child(odd) td {
-                                      background-color: #f4fbff;
-                                  }
-                                  .demo-table tbody tr:hover th,
-                                  .demo-table tbody tr:hover td {
-                                      background-color: #ffffa2;
-                                      border-color: #ffff0f;
-                                      transition: all .2s;
-                                  }
-                              </style>
-                                </head>
-                                <body>
-                                    <div class="tittle mar">
-                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                    </div>
-                                    <div class="tittle mar1">
-                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
-                                    </div>
-                                    <div class="position">
-                                        <table class="demo-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>No Mutasi</th>
-                                                    <th>Asset</th>
-                                                    <th>Asset description</th>
-                                                    <th>Cabang / Depo</th>
-                                                    <th>Cost Ctr</th>
-                                                    <th>Cabang / Depo Penerima</th>
-                                                    <th>Cost Ctr Penerima</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                              ${tableTd}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
-                                    <div class="tittle foot">
-                                        Terima kasih,
-                                    </div>
-                                    <div class="tittle foot1">
-                                        Regards,
-                                    </div>
-                                    <div class="tittle">
-                                        Team Asset
-                                    </div>                                      
-                                </body>
-                                `
-                              }
-                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                              if (sendEmail) {
-                                return response(res, 'success approve mutasi', { sendEmail })
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
-                            }
-                          } else {
-                            const findUser = await user.findOne({
-                              where: {
-                                user_level: findRole[0].nomor
-                              }
-                            })
-                            if (findUser) {
-                              let tableTd = ''
-                              for (let i = 0; i < findDoc.length; i++) {
-                                const element = `
-                                  <tr>
-                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                    <td>${findDoc[i].no_mutasi}</td>
-                                    <td>${findDoc[i].no_asset}</td>
-                                    <td>${findDoc[i].nama_asset}</td>
-                                    <td>${findDoc[i].area}</td>
-                                    <td>${findDoc[i].cost_center}</td>
-                                    <td>${findDoc[i].area_rec}</td>
-                                    <td>${findDoc[i].cost_center_rec}</td>
-                                  </tr>`
-                                tableTd = tableTd + element
-                              }
-                              const mailOptions = {
-                                from: 'noreply_asset@pinusmerahabadi.co.id',
-                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                // to: `${findUser.email}`,
-                                to: `${emailAss}, ${emailAss2}`,
-                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
-                                html: `
-                                <head>
-                                  <style type="text/css">
-                                  body {
-                                      display: flexbox;
-                                      flex-direction: column;
-                                  }
-                                  .tittle {
-                                      font-size: 15px;
-                                  }
-                                  .mar {
-                                      margin-bottom: 20px;
-                                  }
-                                  .mar1 {
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot {
-                                      margin-top: 20px;
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot1 {
-                                      margin-bottom: 50px;
-                                  }
-                                  .position {
-                                      display: flexbox;
-                                      flex-direction: row;
-                                      justify-content: left;
-                                      margin-top: 10px;
-                                  }
-                                  table {
-                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                      font-size: 12px;
-                                  }
-                                  .demo-table {
-                                      border-collapse: collapse;
-                                      font-size: 13px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td {
-                                      border-bottom: 1px solid #e1edff;
-                                      border-left: 1px solid #e1edff;
-                                      padding: 7px 17px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td:last-child {
-                                      border-right: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:first-child {
-                                      border-top: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:last-child{
-                                      border-bottom: 0;
-                                  }
-                                  caption {
-                                      caption-side: top;
-                                      margin-bottom: 10px;
-                                  }
-                                  
-                                  /* Table Header */
-                                  .demo-table thead th {
-                                      background-color: #508abb;
-                                      color: #FFFFFF;
-                                      border-color: #6ea1cc !important;
-                                      text-transform: uppercase;
-                                  }
-                                  
-                                  /* Table Body */
-                                  .demo-table tbody td {
-                                      color: #353535;
-                                  }
-                                  
-                                  .demo-table tbody tr:nth-child(odd) td {
-                                      background-color: #f4fbff;
-                                  }
-                                  .demo-table tbody tr:hover th,
-                                  .demo-table tbody tr:hover td {
-                                      background-color: #ffffa2;
-                                      border-color: #ffff0f;
-                                      transition: all .2s;
-                                  }
-                              </style>
-                                </head>
-                                <body>
-                                    <div class="tittle mar">
-                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                    </div>
-                                    <div class="tittle mar1">
-                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
-                                    </div>
-                                    <div class="position">
-                                        <table class="demo-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>No Mutasi</th>
-                                                    <th>Asset</th>
-                                                    <th>Asset description</th>
-                                                    <th>Cabang / Depo</th>
-                                                    <th>Cost Ctr</th>
-                                                    <th>Cabang / Depo Penerima</th>
-                                                    <th>Cost Ctr Penerima</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                              ${tableTd}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
-                                    <div class="tittle foot">
-                                        Terima kasih,
-                                    </div>
-                                    <div class="tittle foot1">
-                                        Regards,
-                                    </div>
-                                    <div class="tittle">
-                                        Team Asset
-                                    </div>                                      
-                                </body>
-                                `
-                              }
-                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                              if (sendEmail) {
-                                return response(res, 'success approve mutasi', { sendEmail })
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
-                            }
-                          }
-                        }
-                      }
-                    }
-                  } else {
-                    return response(res, 'failed approve mutasi', {}, 404, false)
-                  }
-                } else {
-                  return response(res, 'failed approve mutasi', {}, 404, false)
-                }
-              } else {
-                return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+              })
+              if (findPlantRec && (findPlantRec.nama_bm === name)) {
+                who = 2
               }
             }
-          } else {
-            return response(res, 'failed approve mutasi', {}, 404, false)
           }
-        } else {
-          return response(res, 'failed approve mutasi', {}, 404, false)
-        }
-      } else {
-        return response(res, 'failed approve mutasi', {}, 404, false)
-      }
-    } catch (error) {
-      return response(res, error.message, {}, 500, false)
-    }
-  },
-  approveMutasiHo: async (req, res) => {
-    try {
-      const level = req.user.level
-      const name = req.user.name
-      const no = req.params.no
-      const result = await role.findAll({
-        where: {
-          nomor: level
-        }
-      })
-      if (result.length > 0) {
-        const find = await ttd.findAll({
-          where: {
-            no_doc: no
-          }
-        })
-        if (find.length > 0) {
-          let hasil = 0
-          let arr = null
           for (let i = 0; i < find.length; i++) {
             if (result[0].name === find[i].jabatan) {
               hasil = find[i].id
               arr = i
+              // position = find[i].jabatan
+            } else if (who === 1 && author && divisi === find[i].jabatan && find[i].sebagai === 'pembuat') {
+              div = find[i].id
+              // num = i
+              // post = find[i].jabatan
+            } else if (who === 2 && author && divisi === find[i].jabatan && find[i].sebagai === 'penerima') {
+              div = find[i].id
+              // num = i
+              // post = find[i].jabatan
             }
           }
-          if (hasil !== 0) {
-            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+          if (hasil !== 0 || (hasil === 0 && author)) {
+            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0) && !author) {
               return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
             } else {
-              if (arr === 0 || find[arr - 1].status === 1) {
-                const findDepo = await depo.findOne({
-                  where: {
-                    kode_plant: name
-                  }
-                })
+              if (author) {
                 const data = {
-                  nama: level === 5 || level === 9 ? findDepo.nama_aos : name,
+                  nama: name,
                   status: 1,
                   path: null
                 }
-                const findTtd = await ttd.findByPk(hasil)
-                if (findTtd) {
+                const findTtd = await ttd.findByPk(hasil === 0 ? div : hasil)
+                if (findTtd && findMut) {
+                  const findTd = await ttd.findByPk(div === 0 ? hasil : div)
+                  const upTd = await findTd.update(data)
                   const sent = await findTtd.update(data)
-                  if (sent) {
+                  if (sent && upTd) {
                     const results = await ttd.findAll({
                       where: {
                         [Op.and]: [
@@ -2065,34 +1849,29 @@ module.exports = {
                         ]
                       }
                     })
-                    if (results.length === find.length) {
+                    if (result.length > 0) {
                       const findDoc = await mutasi.findAll({
                         where: {
                           no_mutasi: no
                         }
                       })
-                      if (findDoc) {
-                        const data = {
-                          status_form: 9
-                        }
-                        const valid = []
-                        for (let i = 0; i < findDoc.length; i++) {
-                          const findAsset = await mutasi.findByPk(findDoc[i].id)
-                          if (findAsset) {
-                            await findAsset.update(data)
-                            valid.push(1)
+                      if (findDoc.length > 0) {
+                        const findRole = await role.findAll({
+                          where: {
+                            name: find[arr + 1].jabatan
                           }
-                        }
-                        if (valid.length === findDoc.length) {
-                          const findUser = await email.findOne({
-                            where: {
-                              kode_plant: findDoc[0].kode_plant
-                            }
-                          })
-                          if (findUser) {
-                            let tableTd = ''
-                            for (let i = 0; i < findDoc.length; i++) {
-                              const element = `
+                        })
+                        if (findRole.length > 0) {
+                          if (results.length === (find.length - 1)) {
+                            const findUser = await user.findOne({
+                              where: {
+                                username: findDoc[0].kode_plant_rec
+                              }
+                            })
+                            if (findUser) {
+                              let tableTd = ''
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const element = `
                                 <tr>
                                   <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
                                   <td>${findDoc[i].no_mutasi}</td>
@@ -2103,15 +1882,383 @@ module.exports = {
                                   <td>${findDoc[i].area_rec}</td>
                                   <td>${findDoc[i].cost_center_rec}</td>
                                 </tr>`
-                              tableTd = tableTd + element
+                                tableTd = tableTd + element
+                              }
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                // to: `${findUser.email}`,
+                                to: `${emailAss}, ${emailAss2}`,
+                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
+                                html: `
+                              <head>
+                                <style type="text/css">
+                                body {
+                                    display: flexbox;
+                                    flex-direction: column;
+                                }
+                                .tittle {
+                                    font-size: 15px;
+                                }
+                                .mar {
+                                    margin-bottom: 20px;
+                                }
+                                .mar1 {
+                                    margin-bottom: 10px;
+                                }
+                                .foot {
+                                    margin-top: 20px;
+                                    margin-bottom: 10px;
+                                }
+                                .foot1 {
+                                    margin-bottom: 50px;
+                                }
+                                .position {
+                                    display: flexbox;
+                                    flex-direction: row;
+                                    justify-content: left;
+                                    margin-top: 10px;
+                                }
+                                table {
+                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                    font-size: 12px;
+                                }
+                                .demo-table {
+                                    border-collapse: collapse;
+                                    font-size: 13px;
+                                }
+                                .demo-table th, 
+                                .demo-table td {
+                                    border-bottom: 1px solid #e1edff;
+                                    border-left: 1px solid #e1edff;
+                                    padding: 7px 17px;
+                                }
+                                .demo-table th, 
+                                .demo-table td:last-child {
+                                    border-right: 1px solid #e1edff;
+                                }
+                                .demo-table td:first-child {
+                                    border-top: 1px solid #e1edff;
+                                }
+                                .demo-table td:last-child{
+                                    border-bottom: 0;
+                                }
+                                caption {
+                                    caption-side: top;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                /* Table Header */
+                                .demo-table thead th {
+                                    background-color: #508abb;
+                                    color: #FFFFFF;
+                                    border-color: #6ea1cc !important;
+                                    text-transform: uppercase;
+                                }
+                                
+                                /* Table Body */
+                                .demo-table tbody td {
+                                    color: #353535;
+                                }
+                                
+                                .demo-table tbody tr:nth-child(odd) td {
+                                    background-color: #f4fbff;
+                                }
+                                .demo-table tbody tr:hover th,
+                                .demo-table tbody tr:hover td {
+                                    background-color: #ffffa2;
+                                    border-color: #ffff0f;
+                                    transition: all .2s;
+                                }
+                            </style>
+                              </head>
+                              <body>
+                                  <div class="tittle mar">
+                                      Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                  </div>
+                                  <div class="tittle mar1">
+                                      <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                  </div>
+                                  <div class="position">
+                                      <table class="demo-table">
+                                          <thead>
+                                              <tr>
+                                                  <th>No</th>
+                                                  <th>No Mutasi</th>
+                                                  <th>Asset</th>
+                                                  <th>Asset description</th>
+                                                  <th>Cabang / Depo</th>
+                                                  <th>Cost Ctr</th>
+                                                  <th>Cabang / Depo Penerima</th>
+                                                  <th>Cost Ctr Penerima</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                            ${tableTd}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
+                                  <div class="tittle foot">
+                                      Terima kasih,
+                                  </div>
+                                  <div class="tittle foot1">
+                                      Regards,
+                                  </div>
+                                  <div class="tittle">
+                                      Team Asset
+                                  </div>                                      
+                              </body>
+                              `
+                              }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success approve mutasi', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                              }
+                            } else {
+                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                             }
-                            const mailOptions = {
-                              from: 'noreply_asset@pinusmerahabadi.co.id',
-                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              // to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
-                              to: `${emailAss}, ${emailAss2}`,
-                              subject: `Full Approve Pengajuan Mutasi ${no} (TESTING)`,
-                              html: `
+                          } else {
+                            const findUser = await user.findOne({
+                              where: {
+                                user_level: findRole[0].nomor
+                              }
+                            })
+                            if (findUser) {
+                              let tableTd = ''
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const element = `
+                                <tr>
+                                  <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                  <td>${findDoc[i].no_mutasi}</td>
+                                  <td>${findDoc[i].no_asset}</td>
+                                  <td>${findDoc[i].nama_asset}</td>
+                                  <td>${findDoc[i].area}</td>
+                                  <td>${findDoc[i].cost_center}</td>
+                                  <td>${findDoc[i].area_rec}</td>
+                                  <td>${findDoc[i].cost_center_rec}</td>
+                                </tr>`
+                                tableTd = tableTd + element
+                              }
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                // to: `${findUser.email}`,
+                                to: `${emailAss}, ${emailAss2}`,
+                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
+                                html: `
+                              <head>
+                                <style type="text/css">
+                                body {
+                                    display: flexbox;
+                                    flex-direction: column;
+                                }
+                                .tittle {
+                                    font-size: 15px;
+                                }
+                                .mar {
+                                    margin-bottom: 20px;
+                                }
+                                .mar1 {
+                                    margin-bottom: 10px;
+                                }
+                                .foot {
+                                    margin-top: 20px;
+                                    margin-bottom: 10px;
+                                }
+                                .foot1 {
+                                    margin-bottom: 50px;
+                                }
+                                .position {
+                                    display: flexbox;
+                                    flex-direction: row;
+                                    justify-content: left;
+                                    margin-top: 10px;
+                                }
+                                table {
+                                    font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                    font-size: 12px;
+                                }
+                                .demo-table {
+                                    border-collapse: collapse;
+                                    font-size: 13px;
+                                }
+                                .demo-table th, 
+                                .demo-table td {
+                                    border-bottom: 1px solid #e1edff;
+                                    border-left: 1px solid #e1edff;
+                                    padding: 7px 17px;
+                                }
+                                .demo-table th, 
+                                .demo-table td:last-child {
+                                    border-right: 1px solid #e1edff;
+                                }
+                                .demo-table td:first-child {
+                                    border-top: 1px solid #e1edff;
+                                }
+                                .demo-table td:last-child{
+                                    border-bottom: 0;
+                                }
+                                caption {
+                                    caption-side: top;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                /* Table Header */
+                                .demo-table thead th {
+                                    background-color: #508abb;
+                                    color: #FFFFFF;
+                                    border-color: #6ea1cc !important;
+                                    text-transform: uppercase;
+                                }
+                                
+                                /* Table Body */
+                                .demo-table tbody td {
+                                    color: #353535;
+                                }
+                                
+                                .demo-table tbody tr:nth-child(odd) td {
+                                    background-color: #f4fbff;
+                                }
+                                .demo-table tbody tr:hover th,
+                                .demo-table tbody tr:hover td {
+                                    background-color: #ffffa2;
+                                    border-color: #ffff0f;
+                                    transition: all .2s;
+                                }
+                            </style>
+                              </head>
+                              <body>
+                                  <div class="tittle mar">
+                                      Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                  </div>
+                                  <div class="tittle mar1">
+                                      <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                  </div>
+                                  <div class="position">
+                                      <table class="demo-table">
+                                          <thead>
+                                              <tr>
+                                                  <th>No</th>
+                                                  <th>No Mutasi</th>
+                                                  <th>Asset</th>
+                                                  <th>Asset description</th>
+                                                  <th>Cabang / Depo</th>
+                                                  <th>Cost Ctr</th>
+                                                  <th>Cabang / Depo Penerima</th>
+                                                  <th>Cost Ctr Penerima</th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                            ${tableTd}
+                                          </tbody>
+                                      </table>
+                                  </div>
+                                  <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
+                                  <div class="tittle foot">
+                                      Terima kasih,
+                                  </div>
+                                  <div class="tittle foot1">
+                                      Regards,
+                                  </div>
+                                  <div class="tittle">
+                                      Team Asset
+                                  </div>                                      
+                              </body>
+                              `
+                              }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success approve mutasi', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                              }
+                            } else {
+                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                            }
+                          }
+                        }
+                      }
+                    } else {
+                      return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 3')
+                    }
+                  } else {
+                    return response(res, 'failed approve mutasi', {}, 404, false)
+                  }
+                }
+              } else {
+                if (arr === 0 || find[arr - 1].status === 1) {
+                  const findDepo = await depo.findOne({
+                    where: {
+                      kode_plant: name
+                    }
+                  })
+                  const data = {
+                    nama: level === 5 || level === 9 ? findDepo.nama_aos : name,
+                    status: 1,
+                    path: null
+                  }
+                  const findTtd = await ttd.findByPk(hasil)
+                  if (findTtd) {
+                    const sent = await findTtd.update(data)
+                    if (sent) {
+                      const results = await ttd.findAll({
+                        where: {
+                          [Op.and]: [
+                            { no_doc: no },
+                            { status: 1 }
+                          ]
+                        }
+                      })
+                      if (results.length === find.length) {
+                        const findDoc = await mutasi.findAll({
+                          where: {
+                            no_mutasi: no
+                          }
+                        })
+                        if (findDoc) {
+                          const data = {
+                            status_form: 9
+                          }
+                          const valid = []
+                          for (let i = 0; i < findDoc.length; i++) {
+                            const findAsset = await mutasi.findByPk(findDoc[i].id)
+                            if (findAsset) {
+                              await findAsset.update(data)
+                              valid.push(1)
+                            }
+                          }
+                          if (valid.length === findDoc.length) {
+                            const findUser = await email.findOne({
+                              where: {
+                                kode_plant: findDoc[0].kode_plant
+                              }
+                            })
+                            if (findUser) {
+                              let tableTd = ''
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const element = `
+                                <tr>
+                                  <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                  <td>${findDoc[i].no_mutasi}</td>
+                                  <td>${findDoc[i].no_asset}</td>
+                                  <td>${findDoc[i].nama_asset}</td>
+                                  <td>${findDoc[i].area}</td>
+                                  <td>${findDoc[i].cost_center}</td>
+                                  <td>${findDoc[i].area_rec}</td>
+                                  <td>${findDoc[i].cost_center_rec}</td>
+                                </tr>`
+                                tableTd = tableTd + element
+                              }
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                // to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
+                                to: `${emailAss}, ${emailAss2}`,
+                                subject: `Full Approve Pengajuan Mutasi ${no} (TESTING)`,
+                                html: `
                               <head>
                                 <style type="text/css">
                                 body {
@@ -2231,359 +2378,360 @@ module.exports = {
                                   </div>                                      
                               </body>
                               `
-                            }
-                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                            if (sendEmail) {
-                              return response(res, 'success approve mutasi', { sendEmail })
+                              }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success approve mutasi', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                              }
                             } else {
-                              return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                             }
-                          } else {
-                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                          }
+                        }
+                      } else {
+                        const findDoc = await mutasi.findAll({
+                          where: {
+                            no_mutasi: no
+                          }
+                        })
+                        if (findDoc.length > 0) {
+                          const findRole = await role.findAll({
+                            where: {
+                              name: find[arr + 1].jabatan
+                            }
+                          })
+                          if (findRole.length > 0) {
+                            if (results.length === (find.length - 1)) {
+                              const findUser = await user.findOne({
+                                where: {
+                                  username: findDoc[0].kode_plant_rec
+                                }
+                              })
+                              if (findUser) {
+                                let tableTd = ''
+                                for (let i = 0; i < findDoc.length; i++) {
+                                  const element = `
+                                  <tr>
+                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                    <td>${findDoc[i].no_mutasi}</td>
+                                    <td>${findDoc[i].no_asset}</td>
+                                    <td>${findDoc[i].nama_asset}</td>
+                                    <td>${findDoc[i].area}</td>
+                                    <td>${findDoc[i].cost_center}</td>
+                                    <td>${findDoc[i].area_rec}</td>
+                                    <td>${findDoc[i].cost_center_rec}</td>
+                                  </tr>`
+                                  tableTd = tableTd + element
+                                }
+                                const mailOptions = {
+                                  from: 'noreply_asset@pinusmerahabadi.co.id',
+                                  replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                  // to: `${findUser.email}`,
+                                  to: `${emailAss}, ${emailAss2}`,
+                                  subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
+                                  html: `
+                                <head>
+                                  <style type="text/css">
+                                  body {
+                                      display: flexbox;
+                                      flex-direction: column;
+                                  }
+                                  .tittle {
+                                      font-size: 15px;
+                                  }
+                                  .mar {
+                                      margin-bottom: 20px;
+                                  }
+                                  .mar1 {
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot {
+                                      margin-top: 20px;
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot1 {
+                                      margin-bottom: 50px;
+                                  }
+                                  .position {
+                                      display: flexbox;
+                                      flex-direction: row;
+                                      justify-content: left;
+                                      margin-top: 10px;
+                                  }
+                                  table {
+                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                      font-size: 12px;
+                                  }
+                                  .demo-table {
+                                      border-collapse: collapse;
+                                      font-size: 13px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td {
+                                      border-bottom: 1px solid #e1edff;
+                                      border-left: 1px solid #e1edff;
+                                      padding: 7px 17px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td:last-child {
+                                      border-right: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:first-child {
+                                      border-top: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:last-child{
+                                      border-bottom: 0;
+                                  }
+                                  caption {
+                                      caption-side: top;
+                                      margin-bottom: 10px;
+                                  }
+                                  
+                                  /* Table Header */
+                                  .demo-table thead th {
+                                      background-color: #508abb;
+                                      color: #FFFFFF;
+                                      border-color: #6ea1cc !important;
+                                      text-transform: uppercase;
+                                  }
+                                  
+                                  /* Table Body */
+                                  .demo-table tbody td {
+                                      color: #353535;
+                                  }
+                                  
+                                  .demo-table tbody tr:nth-child(odd) td {
+                                      background-color: #f4fbff;
+                                  }
+                                  .demo-table tbody tr:hover th,
+                                  .demo-table tbody tr:hover td {
+                                      background-color: #ffffa2;
+                                      border-color: #ffff0f;
+                                      transition: all .2s;
+                                  }
+                              </style>
+                                </head>
+                                <body>
+                                    <div class="tittle mar">
+                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                    </div>
+                                    <div class="tittle mar1">
+                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                    </div>
+                                    <div class="position">
+                                        <table class="demo-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>No Mutasi</th>
+                                                    <th>Asset</th>
+                                                    <th>Asset description</th>
+                                                    <th>Cabang / Depo</th>
+                                                    <th>Cost Ctr</th>
+                                                    <th>Cabang / Depo Penerima</th>
+                                                    <th>Cost Ctr Penerima</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                              ${tableTd}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
+                                    <div class="tittle foot">
+                                        Terima kasih,
+                                    </div>
+                                    <div class="tittle foot1">
+                                        Regards,
+                                    </div>
+                                    <div class="tittle">
+                                        Team Asset
+                                    </div>                                      
+                                </body>
+                                `
+                                }
+                                const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                if (sendEmail) {
+                                  return response(res, 'success approve mutasi', { sendEmail })
+                                } else {
+                                  return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                                }
+                              } else {
+                                return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                              }
+                            } else {
+                              const findUser = await user.findOne({
+                                where: {
+                                  user_level: findRole[0].nomor
+                                }
+                              })
+                              if (findUser) {
+                                let tableTd = ''
+                                for (let i = 0; i < findDoc.length; i++) {
+                                  const element = `
+                                  <tr>
+                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                    <td>${findDoc[i].no_mutasi}</td>
+                                    <td>${findDoc[i].no_asset}</td>
+                                    <td>${findDoc[i].nama_asset}</td>
+                                    <td>${findDoc[i].area}</td>
+                                    <td>${findDoc[i].cost_center}</td>
+                                    <td>${findDoc[i].area_rec}</td>
+                                    <td>${findDoc[i].cost_center_rec}</td>
+                                  </tr>`
+                                  tableTd = tableTd + element
+                                }
+                                const mailOptions = {
+                                  from: 'noreply_asset@pinusmerahabadi.co.id',
+                                  replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                  // to: `${findUser.email}`,
+                                  to: `${emailAss}, ${emailAss2}`,
+                                  subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
+                                  html: `
+                                <head>
+                                  <style type="text/css">
+                                  body {
+                                      display: flexbox;
+                                      flex-direction: column;
+                                  }
+                                  .tittle {
+                                      font-size: 15px;
+                                  }
+                                  .mar {
+                                      margin-bottom: 20px;
+                                  }
+                                  .mar1 {
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot {
+                                      margin-top: 20px;
+                                      margin-bottom: 10px;
+                                  }
+                                  .foot1 {
+                                      margin-bottom: 50px;
+                                  }
+                                  .position {
+                                      display: flexbox;
+                                      flex-direction: row;
+                                      justify-content: left;
+                                      margin-top: 10px;
+                                  }
+                                  table {
+                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                                      font-size: 12px;
+                                  }
+                                  .demo-table {
+                                      border-collapse: collapse;
+                                      font-size: 13px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td {
+                                      border-bottom: 1px solid #e1edff;
+                                      border-left: 1px solid #e1edff;
+                                      padding: 7px 17px;
+                                  }
+                                  .demo-table th, 
+                                  .demo-table td:last-child {
+                                      border-right: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:first-child {
+                                      border-top: 1px solid #e1edff;
+                                  }
+                                  .demo-table td:last-child{
+                                      border-bottom: 0;
+                                  }
+                                  caption {
+                                      caption-side: top;
+                                      margin-bottom: 10px;
+                                  }
+                                  
+                                  /* Table Header */
+                                  .demo-table thead th {
+                                      background-color: #508abb;
+                                      color: #FFFFFF;
+                                      border-color: #6ea1cc !important;
+                                      text-transform: uppercase;
+                                  }
+                                  
+                                  /* Table Body */
+                                  .demo-table tbody td {
+                                      color: #353535;
+                                  }
+                                  
+                                  .demo-table tbody tr:nth-child(odd) td {
+                                      background-color: #f4fbff;
+                                  }
+                                  .demo-table tbody tr:hover th,
+                                  .demo-table tbody tr:hover td {
+                                      background-color: #ffffa2;
+                                      border-color: #ffff0f;
+                                      transition: all .2s;
+                                  }
+                              </style>
+                                </head>
+                                <body>
+                                    <div class="tittle mar">
+                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
+                                    </div>
+                                    <div class="tittle mar1">
+                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
+                                    </div>
+                                    <div class="position">
+                                        <table class="demo-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>No Mutasi</th>
+                                                    <th>Asset</th>
+                                                    <th>Asset description</th>
+                                                    <th>Cabang / Depo</th>
+                                                    <th>Cost Ctr</th>
+                                                    <th>Cabang / Depo Penerima</th>
+                                                    <th>Cost Ctr Penerima</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                              ${tableTd}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
+                                    <div class="tittle foot">
+                                        Terima kasih,
+                                    </div>
+                                    <div class="tittle foot1">
+                                        Regards,
+                                    </div>
+                                    <div class="tittle">
+                                        Team Asset
+                                    </div>                                      
+                                </body>
+                                `
+                                }
+                                const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                if (sendEmail) {
+                                  return response(res, 'success approve mutasi', { sendEmail })
+                                } else {
+                                  return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                                }
+                              } else {
+                                return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                              }
+                            }
                           }
                         }
                       }
                     } else {
-                      const findDoc = await mutasi.findAll({
-                        where: {
-                          no_mutasi: no
-                        }
-                      })
-                      if (findDoc.length > 0) {
-                        const findRole = await role.findAll({
-                          where: {
-                            name: find[arr + 1].jabatan
-                          }
-                        })
-                        if (findRole.length > 0) {
-                          if (results.length === (find.length - 1)) {
-                            const findUser = await user.findOne({
-                              where: {
-                                username: findDoc[0].kode_plant_rec
-                              }
-                            })
-                            if (findUser) {
-                              let tableTd = ''
-                              for (let i = 0; i < findDoc.length; i++) {
-                                const element = `
-                                  <tr>
-                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                    <td>${findDoc[i].no_mutasi}</td>
-                                    <td>${findDoc[i].no_asset}</td>
-                                    <td>${findDoc[i].nama_asset}</td>
-                                    <td>${findDoc[i].area}</td>
-                                    <td>${findDoc[i].cost_center}</td>
-                                    <td>${findDoc[i].area_rec}</td>
-                                    <td>${findDoc[i].cost_center_rec}</td>
-                                  </tr>`
-                                tableTd = tableTd + element
-                              }
-                              const mailOptions = {
-                                from: 'noreply_asset@pinusmerahabadi.co.id',
-                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                // to: `${findUser.email}`,
-                                to: `${emailAss}, ${emailAss2}`,
-                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
-                                html: `
-                                <head>
-                                  <style type="text/css">
-                                  body {
-                                      display: flexbox;
-                                      flex-direction: column;
-                                  }
-                                  .tittle {
-                                      font-size: 15px;
-                                  }
-                                  .mar {
-                                      margin-bottom: 20px;
-                                  }
-                                  .mar1 {
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot {
-                                      margin-top: 20px;
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot1 {
-                                      margin-bottom: 50px;
-                                  }
-                                  .position {
-                                      display: flexbox;
-                                      flex-direction: row;
-                                      justify-content: left;
-                                      margin-top: 10px;
-                                  }
-                                  table {
-                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                      font-size: 12px;
-                                  }
-                                  .demo-table {
-                                      border-collapse: collapse;
-                                      font-size: 13px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td {
-                                      border-bottom: 1px solid #e1edff;
-                                      border-left: 1px solid #e1edff;
-                                      padding: 7px 17px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td:last-child {
-                                      border-right: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:first-child {
-                                      border-top: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:last-child{
-                                      border-bottom: 0;
-                                  }
-                                  caption {
-                                      caption-side: top;
-                                      margin-bottom: 10px;
-                                  }
-                                  
-                                  /* Table Header */
-                                  .demo-table thead th {
-                                      background-color: #508abb;
-                                      color: #FFFFFF;
-                                      border-color: #6ea1cc !important;
-                                      text-transform: uppercase;
-                                  }
-                                  
-                                  /* Table Body */
-                                  .demo-table tbody td {
-                                      color: #353535;
-                                  }
-                                  
-                                  .demo-table tbody tr:nth-child(odd) td {
-                                      background-color: #f4fbff;
-                                  }
-                                  .demo-table tbody tr:hover th,
-                                  .demo-table tbody tr:hover td {
-                                      background-color: #ffffa2;
-                                      border-color: #ffff0f;
-                                      transition: all .2s;
-                                  }
-                              </style>
-                                </head>
-                                <body>
-                                    <div class="tittle mar">
-                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                    </div>
-                                    <div class="tittle mar1">
-                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
-                                    </div>
-                                    <div class="position">
-                                        <table class="demo-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>No Mutasi</th>
-                                                    <th>Asset</th>
-                                                    <th>Asset description</th>
-                                                    <th>Cabang / Depo</th>
-                                                    <th>Cost Ctr</th>
-                                                    <th>Cabang / Depo Penerima</th>
-                                                    <th>Cost Ctr Penerima</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                              ${tableTd}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
-                                    <div class="tittle foot">
-                                        Terima kasih,
-                                    </div>
-                                    <div class="tittle foot1">
-                                        Regards,
-                                    </div>
-                                    <div class="tittle">
-                                        Team Asset
-                                    </div>                                      
-                                </body>
-                                `
-                              }
-                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                              if (sendEmail) {
-                                return response(res, 'success approve mutasi', { sendEmail })
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
-                            }
-                          } else {
-                            const findUser = await user.findOne({
-                              where: {
-                                user_level: findRole[0].nomor
-                              }
-                            })
-                            if (findUser) {
-                              let tableTd = ''
-                              for (let i = 0; i < findDoc.length; i++) {
-                                const element = `
-                                  <tr>
-                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                    <td>${findDoc[i].no_mutasi}</td>
-                                    <td>${findDoc[i].no_asset}</td>
-                                    <td>${findDoc[i].nama_asset}</td>
-                                    <td>${findDoc[i].area}</td>
-                                    <td>${findDoc[i].cost_center}</td>
-                                    <td>${findDoc[i].area_rec}</td>
-                                    <td>${findDoc[i].cost_center_rec}</td>
-                                  </tr>`
-                                tableTd = tableTd + element
-                              }
-                              const mailOptions = {
-                                from: 'noreply_asset@pinusmerahabadi.co.id',
-                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                // to: `${findUser.email}`,
-                                to: `${emailAss}, ${emailAss2}`,
-                                subject: `Approve Pengajuan Mutasi ${no} (TESTING)`,
-                                html: `
-                                <head>
-                                  <style type="text/css">
-                                  body {
-                                      display: flexbox;
-                                      flex-direction: column;
-                                  }
-                                  .tittle {
-                                      font-size: 15px;
-                                  }
-                                  .mar {
-                                      margin-bottom: 20px;
-                                  }
-                                  .mar1 {
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot {
-                                      margin-top: 20px;
-                                      margin-bottom: 10px;
-                                  }
-                                  .foot1 {
-                                      margin-bottom: 50px;
-                                  }
-                                  .position {
-                                      display: flexbox;
-                                      flex-direction: row;
-                                      justify-content: left;
-                                      margin-top: 10px;
-                                  }
-                                  table {
-                                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                      font-size: 12px;
-                                  }
-                                  .demo-table {
-                                      border-collapse: collapse;
-                                      font-size: 13px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td {
-                                      border-bottom: 1px solid #e1edff;
-                                      border-left: 1px solid #e1edff;
-                                      padding: 7px 17px;
-                                  }
-                                  .demo-table th, 
-                                  .demo-table td:last-child {
-                                      border-right: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:first-child {
-                                      border-top: 1px solid #e1edff;
-                                  }
-                                  .demo-table td:last-child{
-                                      border-bottom: 0;
-                                  }
-                                  caption {
-                                      caption-side: top;
-                                      margin-bottom: 10px;
-                                  }
-                                  
-                                  /* Table Header */
-                                  .demo-table thead th {
-                                      background-color: #508abb;
-                                      color: #FFFFFF;
-                                      border-color: #6ea1cc !important;
-                                      text-transform: uppercase;
-                                  }
-                                  
-                                  /* Table Body */
-                                  .demo-table tbody td {
-                                      color: #353535;
-                                  }
-                                  
-                                  .demo-table tbody tr:nth-child(odd) td {
-                                      background-color: #f4fbff;
-                                  }
-                                  .demo-table tbody tr:hover th,
-                                  .demo-table tbody tr:hover td {
-                                      background-color: #ffffa2;
-                                      border-color: #ffff0f;
-                                      transition: all .2s;
-                                  }
-                              </style>
-                                </head>
-                                <body>
-                                    <div class="tittle mar">
-                                        Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                    </div>
-                                    <div class="tittle mar1">
-                                        <div>Mohon lanjutkan proses pengajuan mutasi area sbb.</div>
-                                    </div>
-                                    <div class="position">
-                                        <table class="demo-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>No Mutasi</th>
-                                                    <th>Asset</th>
-                                                    <th>Asset description</th>
-                                                    <th>Cabang / Depo</th>
-                                                    <th>Cost Ctr</th>
-                                                    <th>Cabang / Depo Penerima</th>
-                                                    <th>Cost Ctr Penerima</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                              ${tableTd}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <a href="http://aset.pinusmerahabadi.co.id/mutasi">Klik link berikut untuk akses web asset</a>
-                                    <div class="tittle foot">
-                                        Terima kasih,
-                                    </div>
-                                    <div class="tittle foot1">
-                                        Regards,
-                                    </div>
-                                    <div class="tittle">
-                                        Team Asset
-                                    </div>                                      
-                                </body>
-                                `
-                              }
-                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                              if (sendEmail) {
-                                return response(res, 'success approve mutasi', { sendEmail })
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
-                            }
-                          }
-                        }
-                      }
+                      return response(res, 'failed approve mutasi', {}, 404, false)
                     }
                   } else {
                     return response(res, 'failed approve mutasi', {}, 404, false)
                   }
                 } else {
-                  return response(res, 'failed approve mutasi', {}, 404, false)
+                  return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
                 }
-              } else {
-                return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
               }
             }
           } else {
