@@ -2,6 +2,7 @@ const route = require('express').Router()
 const pengadaan = require('../controllers/pengadaan')
 
 route.get('/get', pengadaan.home)
+route.get('/track', pengadaan.tracking)
 route.get('/approve/:no', pengadaan.getApproveIo)
 route.get('/document/:no', pengadaan.getDocumentIo)
 route.patch('/appdoc/:id', pengadaan.approveDokumen)

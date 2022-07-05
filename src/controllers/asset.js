@@ -83,34 +83,7 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level !== 5 && level !== 9) {
-        const result = await asset.findAndCountAll({
-          where: {
-            [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}` } },
-              { area: { [Op.like]: `%${searchValue}` } },
-              { kode_plant: { [Op.like]: `%${searchValue}` } },
-              { nama_asset: { [Op.like]: `%${searchValue}` } }
-            ],
-            [Op.not]: { status: '0' }
-          },
-          include: [
-            {
-              model: path,
-              as: 'pict'
-            }
-          ],
-          order: [[sortValue, 'ASC']],
-          limit: limit,
-          offset: (page - 1) * limit
-        })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
-        if (result) {
-          return response(res, 'list asset', { result, pageInfo })
-        } else {
-          return response(res, 'failed to get user', {}, 404, false)
-        }
-      } else if (level === 5) {
+      if (level === 5) {
         const findDep = await depo.findOne({
           where: {
             kode_plant: kode
@@ -172,6 +145,37 @@ module.exports = {
             [sortValue, 'ASC'],
             [{ model: path, as: 'pict' }, 'id', 'ASC']
           ],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
+        if (result) {
+          return response(res, 'list asset', { result, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
+      } else {
+        const result = await asset.findAndCountAll({
+          where: {
+            [Op.or]: [
+              { no_asset: { [Op.like]: `%${searchValue}` } },
+              { area: { [Op.like]: `%${searchValue}` } },
+              { kode_plant: { [Op.like]: `%${searchValue}` } },
+              { nama_asset: { [Op.like]: `%${searchValue}` } }
+            ],
+            [Op.or]: [
+              { status: '1' },
+              { status: '11' },
+              { status: null }
+            ]
+          },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            }
+          ],
+          order: [[sortValue, 'ASC']],
           limit: limit,
           offset: (page - 1) * limit
         })

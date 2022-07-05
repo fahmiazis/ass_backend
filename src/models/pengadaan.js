@@ -54,7 +54,10 @@ module.exports = (sequelize, DataTypes) => {
     area: DataTypes.STRING,
     status_form: DataTypes.STRING,
     tipe: DataTypes.STRING,
-    akta: DataTypes.STRING
+    akta: DataTypes.STRING,
+    start: DataTypes.DATE,
+    end: DataTypes.DATE,
+    tglIo: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'pengadaan'

@@ -3,7 +3,7 @@ const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 // const { pagination } = require('../helpers/pagination')
-// const moment = require('moment')
+const moment = require('moment')
 const readXlsxFile = require('read-excel-file/node')
 const wrapMail = require('../helpers/wrapMail')
 const uploadMaster = require('../helpers/uploadMaster')
@@ -23,58 +23,10 @@ module.exports = {
       const name = req.user.name
       const fullname = req.user.fullname
       const { status } = req.query
-      if (level === 5) {
+      if (level === 5 || level === 9) {
         const result = await pengadaan.findAll({
           where: {
-            kode_plant: kode,
-            status_form: { [Op.like]: `%${status}%` },
-            status_app: null
-          },
-          include: [
-            {
-              model: depo,
-              as: 'depo'
-            }
-          ],
-          order: [
-            ['id', 'ASC']
-          ],
-          group: [
-            ['no_pengadaan']
-          ]
-        })
-        if (result.length > 0) {
-          const data = []
-          for (let i = 0; i < result.length; i++) {
-            const temp = result[i]
-            const appForm = await ttd.findAll({
-              where: {
-                no_doc: result[i].no_pengadaan
-              },
-              order: [
-                ['id', 'DESC']
-              ]
-            })
-            if (appForm.length > 0) {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            } else {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            }
-          }
-          if (data.length > 0) {
-            return response(res, 'success get', { result: data })
-          } else {
-            return response(res, 'success get', { result: data })
-          }
-        } else {
-          return response(res, 'failed get data', {}, 404, false)
-        }
-      } else if (level === 9) {
-        const result = await pengadaan.findAll({
-          where: {
-            kode_plant: name,
+            kode_plant: level === 5 ? kode : name,
             status_form: { [Op.like]: `%${status}%` },
             status_app: null
           },
@@ -123,9 +75,9 @@ module.exports = {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 7 ? null : fullname },
-              { nama_om: level === 12 ? null : fullname },
-              { nama_nom: level === 12 ? null : fullname }
+              { nama_bm: level === 12 ? fullname : null },
+              { nama_om: level === 7 ? fullname : null },
+              { nama_nom: level === 28 ? fullname : null }
             ]
           }
         })
@@ -193,6 +145,178 @@ module.exports = {
           where: {
             status_form: { [Op.like]: `%${status}%` },
             status_app: null
+          },
+          include: [
+            {
+              model: depo,
+              as: 'depo'
+            }
+          ],
+          order: [
+            ['id', 'ASC']
+          ],
+          group: [
+            ['no_pengadaan']
+          ]
+        })
+        if (result.length > 0) {
+          const data = []
+          for (let i = 0; i < result.length; i++) {
+            const temp = result[i]
+            const appForm = await ttd.findAll({
+              where: {
+                no_doc: result[i].no_pengadaan
+              },
+              order: [
+                ['id', 'DESC']
+              ]
+            })
+            if (appForm.length > 0) {
+              temp.dataValues.appForm = appForm
+              data.push(temp)
+            } else {
+              temp.dataValues.appForm = appForm
+              data.push(temp)
+            }
+          }
+          if (data.length > 0) {
+            return response(res, 'success get', { result: data })
+          } else {
+            return response(res, 'success get', { result: data })
+          }
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  tracking: async (req, res) => {
+    try {
+      const level = req.user.level
+      const kode = req.user.kode
+      const name = req.user.name
+      const fullname = req.user.fullname
+      if (level === 5 || level === 9) {
+        const result = await pengadaan.findAll({
+          where: {
+            kode_plant: level === 5 ? kode : name,
+            no_pengadaan: { [Op.not]: null }
+          },
+          include: [
+            {
+              model: depo,
+              as: 'depo'
+            }
+          ],
+          order: [
+            ['id', 'ASC']
+          ],
+          group: [
+            ['no_pengadaan']
+          ]
+        })
+        if (result.length > 0) {
+          const data = []
+          for (let i = 0; i < result.length; i++) {
+            const temp = result[i]
+            const appForm = await ttd.findAll({
+              where: {
+                no_doc: result[i].no_pengadaan
+              },
+              order: [
+                ['id', 'DESC']
+              ]
+            })
+            if (appForm.length > 0) {
+              temp.dataValues.appForm = appForm
+              data.push(temp)
+            } else {
+              temp.dataValues.appForm = appForm
+              data.push(temp)
+            }
+          }
+          if (data.length > 0) {
+            return response(res, 'success get', { result: data })
+          } else {
+            return response(res, 'success get', { result: data })
+          }
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
+      } else if (level === 12 || level === 7 || level === 28) {
+        const findDepo = await depo.findAll({
+          where: {
+            [Op.or]: [
+              { nama_bm: level === 12 ? fullname : null },
+              { nama_om: level === 7 ? fullname : null },
+              { nama_nom: level === 28 ? fullname : null }
+            ]
+          }
+        })
+        if (findDepo.length > 0) {
+          const hasil = []
+          for (let i = 0; i < findDepo.length; i++) {
+            const result = await pengadaan.findAll({
+              where: {
+                kode_plant: findDepo[i].kode_plant,
+                no_pengadaan: { [Op.not]: null }
+              },
+              include: [
+                {
+                  model: depo,
+                  as: 'depo'
+                }
+              ],
+              order: [
+                ['id', 'ASC']
+              ],
+              group: [
+                ['no_pengadaan']
+              ]
+            })
+            if (result) {
+              for (let j = 0; j < result.length; j++) {
+                hasil.push(result[j])
+              }
+            }
+          }
+          if (hasil.length > 0) {
+            const data = []
+            for (let i = 0; i < hasil.length; i++) {
+              const temp = hasil[i]
+              const appForm = await ttd.findAll({
+                where: {
+                  no_doc: hasil[i].no_pengadaan
+                },
+                order: [
+                  ['id', 'DESC']
+                ]
+              })
+              if (appForm.length > 0) {
+                temp.dataValues.appForm = appForm
+                data.push(temp)
+              } else {
+                temp.dataValues.appForm = appForm
+                data.push(temp)
+              }
+            }
+            if (data.length > 0) {
+              return response(res, 'success get', { result: data })
+            } else {
+              return response(res, 'success get', { result: data })
+            }
+          } else {
+            return response(res, 'success get', { result: hasil })
+          }
+        } else {
+          return response(res, 'failed get data', {}, 404, false)
+        }
+      } else {
+        const result = await pengadaan.findAll({
+          where: {
+            no_pengadaan: { [Op.not]: null }
           },
           include: [
             {
@@ -473,7 +597,9 @@ module.exports = {
         price: joi.string().required(),
         kategori: joi.string().required(),
         tipe: joi.string().required(),
-        akta: joi.string().allow('')
+        akta: joi.string().allow(''),
+        start: joi.string().allow(''),
+        end: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -505,7 +631,9 @@ module.exports = {
               kode_plant: kode,
               area: findDepo.nama_area,
               tipe: results.tipe,
-              akta: results.akta === '' ? null : results.akta
+              akta: results.akta === '' ? null : results.akta,
+              start: results.start === null || results.start === '' ? null : results.start,
+              end: results.end === null || results.end === '' ? null : results.end
             }
             const sent = await pengadaan.create(data)
             if (sent) {
@@ -632,7 +760,8 @@ module.exports = {
               const findData = await pengadaan.findByPk(findIo[i].id)
               const data = {
                 status_form: 1,
-                no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo
+                no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
+                tglIo: moment()
               }
               if (findData) {
                 await findData.update(data)
@@ -2725,6 +2854,7 @@ module.exports = {
                 bidding_harga: data.pr_items[i].notes_bidding_harga,
                 ket_barang: data.pr_items[i].notes_keterangan_barang,
                 status_form: 1,
+                tglIo: moment(),
                 area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
                 alasan: data.pr_items[i].notes
               }
