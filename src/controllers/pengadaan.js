@@ -4552,7 +4552,7 @@ module.exports = {
             }
             const send = await axios({
               method: 'post',
-              url: 'http://devpods.pinusmerahabadi.co.id/api/updateassetnumber',
+              url: 'https://192.168.35.164/api/updateassetnumber',
               data: { data, authors },
               headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.c_G5Y7CbEKR4UncCqxLmGHtkcZDtibjh2XP_M7fTbAE' }
             }).then(response => { console.log(response); return (response) }).catch(err => { console.log(err); return (err) })
