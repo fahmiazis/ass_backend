@@ -4552,14 +4552,14 @@ module.exports = {
             }
             const send = await axios({
               method: 'post',
-              url: 'http://aset.pinusmerahabadi.co.id:8585/ticket/rec',
+              url: 'http://devpods.pinusmerahabadi.co.id/api/updateassetnumber',
               data: { data, authors },
-              headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzA0LCJsZXZlbCI6Miwia29kZSI6IiIsIm5hbWUiOiJhc3NldCIsImZ1bGxuYW1lIjoiYXNzZXQiLCJyb2xlIjoiYXNzZXQiLCJpYXQiOjE2NTIxNDk3NjB9.9oZHyW7CFv5cHnmFz7P7Q9JCqOUkoq8Y0TS5EOr8Spo' }
-            }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+              headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.c_G5Y7CbEKR4UncCqxLmGHtkcZDtibjh2XP_M7fTbAE' }
+            }).then(response => { console.log(response); return (response) }).catch(err => { console.log(err); return (err) })
             if (send.status === 200) {
               return response(res, send.message, { result: send.data })
             } else {
-              return response(res, 'gagal kirim ke pods', {}, 400, false)
+              return response(res, 'gagal kirim ke pods', { send }, 400, false)
             }
           } else {
             return response(res, 'failed send api', {}, 400, false)
