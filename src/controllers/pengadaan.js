@@ -2811,10 +2811,12 @@ module.exports = {
               no_doc: findCode[0].no_pengadaan
             }
           })
+          const temp = findCode[0].status_form
+          const status = temp === '1' ? 'Proses identifikasi barang oleh asset' : temp === '2' ? 'Proses approval' : temp === '3' ? 'Proses isi nomor io oleh budget' : temp === '9' ? 'Proses isi nomor asset oleh asset' : temp === '8' ? 'Selesai' : 'Pengajuan sedang diproses'
           if (findTtd.length > 0) {
-            return response(res, 'Pengajuan sedang diproses', { result: { data: findCode, auth: findTtd } })
+            return response(res, status, { result: { data: findCode, auth: findTtd } })
           } else {
-            return response(res, 'Pengajuan sedang diproses', { result: findCode })
+            return response(res, status, { result: findCode })
           }
         } else {
           const findNo = await pengadaan.findAll({
@@ -3058,12 +3060,12 @@ module.exports = {
                       }
                       const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
                       if (sendEmail) {
-                        return response(res, 'berhasil melakukan pengajuan io', { result: data })
+                        return response(res, 'Berhasil melakukan pengajuan io', { result: data })
                       } else {
-                        return response(res, 'berhasil melakukan pengajuan io')
+                        return response(res, 'Berhasil melakukan pengajuan io')
                       }
                     } else {
-                      return response(res, 'berhasil melakukan pengajuan io')
+                      return response(res, 'Berhasil melakukan pengajuan io')
                     }
                     // const getTtd = await ttd.findAll({
                     //   where: {
@@ -3172,10 +3174,12 @@ module.exports = {
               no_doc: findCode[0].no_pengadaan
             }
           })
+          const temp = findCode[0].status_form
+          const status = temp === '1' ? 'Proses identifikasi barang oleh asset' : temp === '2' ? 'Proses approval' : temp === '3' ? 'Proses isi nomor io oleh budget' : temp === '9' ? 'Proses isi nomor asset oleh asset' : temp === '8' ? 'Selesai' : 'Pengajuan sedang diproses'
           if (findTtd.length > 0) {
-            return response(res, 'Pengajuan sedang diproses', { result: { data: findCode, auth: findTtd } })
+            return response(res, status, { result: { data: findCode, auth: findTtd } })
           } else {
-            return response(res, 'Pengajuan sedang diproses', { result: findCode })
+            return response(res, status, { result: findCode })
           }
         } else {
           return response(res, 'Data tidak ditemukan', {}, 404, false)
