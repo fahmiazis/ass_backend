@@ -2812,7 +2812,7 @@ module.exports = {
             }
           })
           const temp = findCode[0].status_form
-          const status = temp === '1' ? 'Proses identifikasi barang oleh asset' : temp === '2' ? 'Proses approval' : temp === '3' ? 'Proses isi nomor io oleh budget' : temp === '9' ? 'Proses isi nomor asset oleh asset' : temp === '8' ? 'Selesai' : 'Pengajuan sedang diproses'
+          const status = temp === '0' ? 'Transaksi dibatalkan karena item tidak termasuk kategori aset' : temp === '1' ? 'Proses identifikasi barang oleh asset' : temp === '2' ? 'Proses approval' : temp === '3' ? 'Proses isi nomor io oleh budget' : temp === '9' ? 'Proses isi nomor asset oleh asset' : temp === '8' ? 'Selesai' : 'Pengajuan sedang diproses'
           if (findTtd.length > 0) {
             return response(res, status, { result: { data: findCode, auth: findTtd } })
           } else {
