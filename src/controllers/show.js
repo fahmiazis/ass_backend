@@ -32,10 +32,11 @@ module.exports = {
           if (findIo && findIo.asset_token !== null) {
             const arr = result.path.split('localhost:8000')
             const spl = result.path.split('/')
+            const cekPr = result.path.search('printPR')
             if (arr.length >= 2) {
               const url = 'https://devpods.pinusmerahabadi.co.id' + arr[1]
               const ext = result.path.split('.')[result.path.split('.').length - 1]
-              const name = new Date().getTime().toString().concat('.').concat(ext)
+              const name = new Date().getTime().toString().concat('.').concat(cekPr !== -1 ? 'pdf' : ext)
               const newurl = `assets/documents/${name}`
               const file = fs.createWriteStream(`${newurl}`)
               const down = https.get(url, response => {
@@ -46,12 +47,9 @@ module.exports = {
                   path: newurl
                 }
                 const upRes = await result.update(data)
-                console.log('update')
                 if (upRes) {
                   const find = await docUser.findByPk(id)
-                  console.log('get')
                   if (find) {
-                    console.log('send')
                     fs.readFile(find.path, function (err, data) {
                       if (err) {
                         console.log(err)
@@ -79,7 +77,7 @@ module.exports = {
               })
             } else {
               const ext = result.path.split('.')[result.path.split('.').length - 1]
-              const name = new Date().getTime().toString().concat('.').concat(ext)
+              const name = new Date().getTime().toString().concat('.').concat(cekPr !== -1 ? 'pdf' : ext)
               const newurl = `assets/documents/${name}`
               const file = fs.createWriteStream(`${newurl}`)
               const down = https.get(result.path, response => {
