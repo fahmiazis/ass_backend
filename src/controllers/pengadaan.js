@@ -4509,6 +4509,205 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  submitNotAsset: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findIo = await pengadaan.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findIo.length > 0) {
+        const cek = []
+        for (let i = 0; i < findIo.length; i++) {
+          const findData = await pengadaan.findByPk(findIo[i].id)
+          const data = {
+            status_form: 0
+          }
+          if (findData) {
+            await findData.update(data)
+            cek.push(1)
+          }
+        }
+        if (cek.length > 0) {
+          const findDepo = await depo.findOne({
+            where: {
+              kode_plant: findIo[0].kode_plant
+            }
+          })
+          if (findDepo) {
+            const findEmail = await email.findOne({
+              where: {
+                kode_plant: findIo[0].kode_plant
+              }
+            })
+            if (findEmail) {
+              let tableTd = ''
+              for (let i = 0; i < findIo.length; i++) {
+                if (findIo[i].isAsset === 'true') {
+                  const element = `
+                    <tr>
+                      <td>${findIo.indexOf(findIo[i]) + 1}</td>
+                      <td>${findIo[i].no_pengadaan}</td>
+                      <td>${findIo[i].nama}</td>
+                      <td>${findIo[i].price}</td>
+                      <td>${findIo[i].qty}</td>
+                      <td>${findIo[i].kode_plant}</td>
+                      <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
+                      <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
+                    </tr>`
+                  tableTd = tableTd + element
+                }
+              }
+              const mailOptions = {
+                from: 'noreply_asset@pinusmerahabadi.co.id',
+                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                // to: `${findEmail.email_area_aos}`,
+                to: `${emailAss}, ${emailAss2}`,
+                subject: `Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} Telah dibatalkan karena item tidak termasuk kategori aset`,
+                html: `
+                <head>
+                  <style type="text/css">
+                    body {
+                        display: flexbox;
+                        flex-direction: column;
+                    }
+                    .tittle {
+                        font-size: 15px;
+                    }
+                    .mar {
+                        margin-bottom: 20px;
+                    }
+                    .mar1 {
+                        margin-bottom: 10px;
+                    }
+                    .foot {
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .foot1 {
+                        margin-bottom: 50px;
+                    }
+                    .position {
+                        display: flexbox;
+                        flex-direction: row;
+                        justify-content: left;
+                        margin-top: 10px;
+                    }
+                    table {
+                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                        font-size: 12px;
+                    }
+                    .demo-table {
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }
+                    .demo-table th, 
+                    .demo-table td {
+                        border-bottom: 1px solid #e1edff;
+                        border-left: 1px solid #e1edff;
+                        padding: 7px 17px;
+                    }
+                    .demo-table th, 
+                    .demo-table td:last-child {
+                        border-right: 1px solid #e1edff;
+                    }
+                    .demo-table td:first-child {
+                        border-top: 1px solid #e1edff;
+                    }
+                    .demo-table td:last-child{
+                        border-bottom: 0;
+                    }
+                    caption {
+                        caption-side: top;
+                        margin-bottom: 10px;
+                    }
+                    
+                    /* Table Header */
+                    .demo-table thead th {
+                        background-color: #508abb;
+                        color: #FFFFFF;
+                        border-color: #6ea1cc !important;
+                        text-transform: uppercase;
+                    }
+                    
+                    /* Table Body */
+                    .demo-table tbody td {
+                        color: #353535;
+                    }
+                    
+                    .demo-table tbody tr:nth-child(odd) td {
+                        background-color: #f4fbff;
+                    }
+                    .demo-table tbody tr:hover th,
+                    .demo-table tbody tr:hover td {
+                        background-color: #ffffa2;
+                        border-color: #ffff0f;
+                        transition: all .2s;
+                    }
+                </style>
+                </head>
+                <body>
+                    <div class="tittle mar">
+                        Dear Bapak/Ibu AOS,
+                    </div>
+                    <div class="tittle mar1">
+                        <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
+                    </div>
+                    <div class="position">
+                        <table class="demo-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>No Pengadaan</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Kode Plant</th>
+                                    <th>Cost Ctr</th>
+                                    <th>Cost Ctr Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              ${tableTd}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                    <div class="tittle foot">
+                        Terima kasih,
+                    </div>
+                    <div class="tittle foot1">
+                        Regards,
+                    </div>
+                    <div class="tittle">
+                        Team Asset
+                    </div>
+                </body>
+                `
+              }
+              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+              if (sendEmail) {
+                return response(res, 'success submit pengajuan io', { result: sendEmail })
+              } else {
+                return response(res, 'success submit pengajuan io')
+              }
+            } else {
+              return response(res, 'success submit pengajuan io')
+            }
+          } else {
+            return response(res, 'success submit pengajuan io')
+          }
+        } else {
+          return response(res, 'failed submit', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   podsSend: async (req, res) => {
     try {
       const no = req.params.no

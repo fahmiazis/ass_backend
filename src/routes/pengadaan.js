@@ -37,5 +37,6 @@ route.patch('/appall', pengadaan.approveAll)
 route.patch('/uprecent/:no', pengadaan.updateAlasan)
 route.get('/rev', pengadaan.getRevisi)
 route.get('/tpods', pengadaan.tesApiPods)
+route.patch('/subnot', pengadaan.submitNotAsset)
 
 module.exports = route
