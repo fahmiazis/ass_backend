@@ -1,5 +1,5 @@
 const response = require('../helpers/response')
-const { notif } = require('../models')
+const { notif, disposal, ttd, docuser } = require('../models')
 const { Op } = require('sequelize')
 
 module.exports = {
@@ -127,5 +127,42 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  createNotifDis: async (req, res) => {
+    try {
+      const { tipe, act } = req.query
+      const no = req.params.no
+      const name = req.user.name
+      if (tipe === 'approve') {
+        
+      } else if (tipe === 'reject') {
+        
+      } else if (tipe === 'rejdoc') {
+
+      } else if (tipe === 'proses') {
+
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
+  // ,
+  // createNotifMut: async (req, res) => {
+  //   try {
+  //   } catch (error) {
+  //     return response(res, error.message, {}, 500, false)
+  //   }
+  // },
+  // createNotifIo: async (req, res) => {
+  //   try {
+  //   } catch (error) {
+  //     return response(res, error.message, {}, 500, false)
+  //   }
+  // },
+  // createNotifStock: async (req, res) => {
+  //   try {
+  //   } catch (error) {
+  //     return response(res, error.message, {}, 500, false)
+  //   }
+  // }
 }

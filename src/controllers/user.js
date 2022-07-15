@@ -312,7 +312,7 @@ module.exports = {
   },
   getUser: async (req, res) => {
     try {
-      let { limit, page, search, sort } = req.query
+      let { limit, page, search, sort, filter } = req.query
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -335,23 +335,56 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const result = await user.findAndCountAll({
-        where: {
-          [Op.or]: [
-            { username: { [Op.like]: `%${searchValue}%` } },
-            { kode_plant: { [Op.like]: `%${searchValue}%` } }
-          ],
-          [Op.not]: { user_level: 1 }
-        },
-        order: [[sortValue, 'ASC']],
-        limit: limit,
-        offset: (page - 1) * limit
-      })
-      const pageInfo = pagination('/user/get', req.query, page, limit, result.count)
-      if (result) {
-        return response(res, 'list user', { result, pageInfo })
+      console.log(filter)
+      if (filter === 'null' || filter === undefined) {
+        const result = await user.findAndCountAll({
+          where: {
+            [Op.or]: [
+              { username: { [Op.like]: `%${searchValue}%` } },
+              { fullname: { [Op.like]: `%${searchValue}%` } },
+              { email: { [Op.like]: `%${searchValue}%` } },
+              { kode_plant: { [Op.like]: `%${searchValue}%` } }
+            ],
+            [Op.not]: { user_level: 1 }
+          },
+          order: [[sortValue, 'ASC']],
+          limit: limit,
+          offset: (page - 1) * limit
+        })
+        const pageInfo = pagination('/user/get', req.query, page, limit, result.count)
+        if (result) {
+          return response(res, 'list user', { result, pageInfo })
+        } else {
+          return response(res, 'failed to get user', {}, 404, false)
+        }
       } else {
-        return response(res, 'failed to get user', {}, 404, false)
+        console.log('masuk id')
+        const findRole = await role.findByPk(filter)
+        if (findRole) {
+          const result = await user.findAndCountAll({
+            where: {
+              user_level: findRole.nomor,
+              [Op.or]: [
+                { username: { [Op.like]: `%${searchValue}%` } },
+                { fullname: { [Op.like]: `%${searchValue}%` } },
+                { email: { [Op.like]: `%${searchValue}%` } },
+                { kode_plant: { [Op.like]: `%${searchValue}%` } }
+              ],
+              [Op.not]: { user_level: 1 }
+            },
+            order: [[sortValue, 'ASC']],
+            limit: limit,
+            offset: (page - 1) * limit
+          })
+          const pageInfo = pagination('/user/get', req.query, page, limit, result.count)
+          if (result) {
+            return response(res, 'list user', { result, pageInfo })
+          } else {
+            return response(res, 'failed to get user', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed to get user1', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

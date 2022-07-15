@@ -2813,10 +2813,16 @@ module.exports = {
           })
           const temp = findCode[0].status_form
           const status = temp === '0' ? 'Transaksi dibatalkan karena item tidak termasuk kategori aset' : temp === '1' ? 'Proses identifikasi barang oleh asset' : temp === '2' ? 'Proses approval' : temp === '3' ? 'Proses isi nomor io oleh budget' : temp === '9' ? 'Proses isi nomor asset oleh asset' : temp === '8' ? 'Selesai' : 'Pengajuan sedang diproses'
+          const info = {
+            kode_area: findCode[0].kode_plant,
+            area: findCode[0].area,
+            no_pengadaan: findCode[0].no_pengadaan,
+            tanggal_pengajuan: findCode[0].createdAt
+          }
           if (findTtd.length > 0) {
-            return response(res, status, { result: { detailInfo: { kode_area: findCode[0].kode_plant, area: findCode[0].area, no_pengadaan: findCode[0].no_pengadaan, tanggal_pengajuan: findCode[0].createdAt }, data: findCode, auth: findTtd } })
+            return response(res, status, { result: { detailInfo: info, data: findCode, auth: findTtd } })
           } else {
-            return response(res, status, { result: { detailInfo: { kode_area: findCode[0].kode_plant, area: findCode[0].area, no_pengadaan: findCode[0].no_pengadaan, tanggal_pengajuan: findCode[0].createdAt }, findCode } })
+            return response(res, status, { result: { detailInfo: info, findCode } })
           }
         } else {
           const findNo = await pengadaan.findAll({
@@ -3176,10 +3182,16 @@ module.exports = {
           })
           const temp = findCode[0].status_form
           const status = temp === '0' ? 'Transaksi dibatalkan karena item tidak termasuk kategori aset' : temp === '1' ? 'Proses identifikasi barang oleh asset' : temp === '2' ? 'Proses approval' : temp === '3' ? 'Proses isi nomor io oleh budget' : temp === '9' ? 'Proses isi nomor asset oleh asset' : temp === '8' ? 'Selesai' : 'Pengajuan sedang diproses'
+          const info = {
+            kode_area: findCode[0].kode_plant,
+            area: findCode[0].area,
+            no_pengadaan: findCode[0].no_pengadaan,
+            tanggal_pengajuan: findCode[0].createdAt
+          }
           if (findTtd.length > 0) {
-            return response(res, status, { result: { detailInfo: { kode_area: findCode[0].kode_plant, area: findCode[0].area, no_pengadaan: findCode[0].no_pengadaan, tanggal_pengajuan: findCode[0].createdAt }, data: findCode, auth: findTtd } })
+            return response(res, status, { result: { detailInfo: info, data: findCode, auth: findTtd } })
           } else {
-            return response(res, status, { result: findCode })
+            return response(res, status, { result: { detailInfo: info, findCode } })
           }
         } else {
           return response(res, 'Data tidak ditemukan', {}, 404, false)
