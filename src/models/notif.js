@@ -20,7 +20,8 @@ module.exports = (sequelize, DataTypes) => {
     list_appr: DataTypes.STRING,
     keterangan: DataTypes.STRING,
     response: DataTypes.ENUM('request', 'reject', 'full', 'revisi'),
-    status: DataTypes.INTEGER
+    status: DataTypes.INTEGER,
+    route: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'notif'

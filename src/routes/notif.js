@@ -6,5 +6,6 @@ route.patch('/update/:id', notif.updateNotif)
 route.patch('/upall', notif.updateAllNotif)
 route.delete('/delete/:id', notif.deleteNotif)
 route.delete('/delall', notif.deleteAllNotif)
+route.patch('/disposal/:no', notif.createNotifDis)
 
 module.exports = route

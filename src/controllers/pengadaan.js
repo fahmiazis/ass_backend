@@ -75,9 +75,9 @@ module.exports = {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 12 ? fullname : null },
-              { nama_om: level === 7 ? fullname : null },
-              { nama_nom: level === 28 ? fullname : null }
+              { nama_bm: level === 12 ? fullname : 'undefined' },
+              { nama_om: level === 7 ? fullname : 'undefined' },
+              { nama_nom: level === 28 ? fullname : 'undefined' }
             ]
           }
         })
@@ -249,9 +249,9 @@ module.exports = {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 12 ? fullname : null },
-              { nama_om: level === 7 ? fullname : null },
-              { nama_nom: level === 28 ? fullname : null }
+              { nama_bm: level === 12 ? fullname : 'undefined' },
+              { nama_om: level === 7 ? fullname : 'undefined' },
+              { nama_nom: level === 28 ? fullname : 'undefined' }
             ]
           }
         })
@@ -471,9 +471,9 @@ module.exports = {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 7 ? null : fullname },
-              { nama_om: level === 12 ? null : fullname },
-              { nama_nom: level === 12 ? null : fullname }
+              { nama_bm: level === 12 ? fullname : 'undefined' },
+              { nama_om: level === 7 ? fullname : 'undefined' },
+              { nama_nom: level === 28 ? fullname : 'undefined' }
             ]
           }
         })

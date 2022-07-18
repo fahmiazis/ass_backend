@@ -258,9 +258,9 @@ module.exports = {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 12 || level === 27 ? fullname : fullname },
-              { nama_om: level === 7 ? fullname : fullname },
-              { nama_asman: level === 26 ? fullname : fullname }
+              { nama_bm: level === 12 || level === 27 ? fullname : 'undefined' },
+              { nama_om: level === 7 ? fullname : 'undefined' },
+              { nama_asman: level === 26 ? fullname : 'undefined' }
             ]
           }
         })

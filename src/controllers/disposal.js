@@ -338,7 +338,7 @@ module.exports = {
             for (let i = 0; i < result.length; i++) {
               if (result[i].appForm.length > 0) {
                 for (let j = 0; j < result[i].appForm.length; j++) {
-                  if (result[i].appForm[j].status === 0) {
+                  if (result[i].appForm[j].status === 0 && result[i].appForm[j].path !== null) {
                     valid.push(result[i])
                   }
                 }
@@ -355,8 +355,7 @@ module.exports = {
                       {
                         [Op.or]: [
                           { tipe: 'pengajuan' },
-                          { tipe: 'jual' },
-                          { tipe: 'purch' }
+                          { tipe: 'jual' }
                         ]
                       }
                     ]
@@ -399,8 +398,7 @@ module.exports = {
                       {
                         [Op.or]: [
                           { tipe: 'pengajuan' },
-                          { tipe: 'jual' },
-                          { tipe: 'purch' }
+                          { tipe: 'jual' }
                         ]
                       }
                     ]
@@ -429,12 +427,12 @@ module.exports = {
             for (let i = 0; i < result.length; i++) {
               if (result[i].ttdSet.length > 0) {
                 for (let j = 0; j < result[i].ttdSet.length; j++) {
-                  if (result[i].ttdSet[j].status === 0) {
+                  if (result[i].ttdSet[j].status === 0 && result[i].ttdSet[j].path !== null ) {
                     valid.push(result[i])
                   }
                 }
                 for (let j = 0; j < result[i].appForm.length; j++) {
-                  if (result[i].appForm[j].status === 0) {
+                  if (result[i].appForm[j].status === 0 && result[i].appForm[j].path !== null) {
                     valid.push(result[i])
                   }
                 }
@@ -451,8 +449,7 @@ module.exports = {
                       {
                         [Op.or]: [
                           { tipe: 'pengajuan' },
-                          { tipe: 'jual' },
-                          { tipe: 'purch' }
+                          { tipe: 'jual' }
                         ]
                       }
                     ]
@@ -495,8 +492,7 @@ module.exports = {
                       {
                         [Op.or]: [
                           { tipe: 'pengajuan' },
-                          { tipe: 'jual' },
-                          { tipe: 'purch' }
+                          { tipe: 'jual' }
                         ]
                       }
                     ]
@@ -563,9 +559,9 @@ module.exports = {
       const findDepo = await depo.findAll({
         where: {
           [Op.or]: [
-            { nama_bm: level === 12 || level === 27 ? fullname : null },
-            { nama_om: level === 7 ? fullname : null },
-            { nama_asman: level === 26 ? fullname : null }
+            { nama_bm: level === 12 || level === 27 ? fullname : 'undefined' },
+            { nama_om: level === 7 ? fullname : 'undefined' },
+            { nama_asman: level === 26 ? fullname : 'undefined' }
           ]
         }
       })
@@ -623,12 +619,12 @@ module.exports = {
           const noDis = [...set]
           const result = { rows: hasil, count: hasil.length }
           const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-          return response(res, 'success get disposal', { result, pageInfo, noDis })
+          return response(res, 'success get disposal', { result, pageInfo, noDis, findDepo })
         } else {
           const result = { rows: hasil, count: 0 }
           const noDis = []
           const pageInfo = pagination('/disposal/get', req.query, page, limit, result.count)
-          return response(res, 'success get disposal', { result, pageInfo, noDis })
+          return response(res, 'success get disposal', { result, pageInfo, noDis, findDepo })
         }
       } else {
         return response(res, 'failed get disposal', {}, 400, false)
@@ -1247,7 +1243,8 @@ module.exports = {
                   no_proses: `D${noDis === undefined ? 1 : noDis}`,
                   list_appr: findEmail.username,
                   keterangan: 'pengajuan',
-                  response: 'request'
+                  response: 'request',
+                  route: temp.find(element => element === 'jual') ? 'purchdis' : 'disposal'
                 }
                 const createNotif = await notif.create(data)
                 if (createNotif) {
@@ -1478,7 +1475,9 @@ module.exports = {
                   jenis: 'disposal',
                   no_proses: `D${noDis === undefined ? 1 : noDis}`,
                   list_appr: findEmail.username,
-                  keterangan: 'pengajuan'
+                  keterangan: 'pengajuan',
+                  response: 'request',
+                  route: temp.find(element => element === 'jual') ? 'purchdis' : 'disposal'
                 }
                 const createNotif = await notif.create(data)
                 if (createNotif) {
@@ -1927,40 +1926,41 @@ module.exports = {
                                     }
                                   })
                                   if (findUser) {
-                                    const data = {
-                                      list_appr: findUser.username
+                                    // const data = {
+                                    //   list_appr: findUser.username
+                                    // }
+                                    // const findNotif = await notif.findOne({
+                                    //   where: {
+                                    //     [Op.and]: [
+                                    //       { list_appr: findUser.username }
+                                    //       { no_proses: 'D' + no },
+                                    //       { kode_plant: findDis[0].kode_plant }
+                                    //     ]
+                                    //   }
+                                    // })
+                                    // if (findNotif) {
+                                    //   const createNotif = await findNotif.update(data)
+                                    // if (createNotif) {
+                                    let tableTd = ''
+                                    for (let i = 0; i < findDis.length; i++) {
+                                      const element = `
+                                        <tr>
+                                          <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                          <td>D${findDis[i].no_disposal}</td>
+                                          <td>${findDis[i].no_asset}</td>
+                                          <td>${findDis[i].nama_asset}</td>
+                                          <td>${findDis[i].cost_center}</td>
+                                          <td>${findDis[i].area}</td>
+                                        </tr>`
+                                      tableTd = tableTd + element
                                     }
-                                    const findNotif = await notif.findOne({
-                                      where: {
-                                        [Op.and]: [
-                                          { no_proses: 'D' + no },
-                                          { kode_plant: findDis[0].kode_plant }
-                                        ]
-                                      }
-                                    })
-                                    if (findNotif) {
-                                      const createNotif = await findNotif.update(data)
-                                      if (createNotif) {
-                                        let tableTd = ''
-                                        for (let i = 0; i < findDis.length; i++) {
-                                          const element = `
-                                              <tr>
-                                                <td>${findDis.indexOf(findDis[i]) + 1}</td>
-                                                <td>D${findDis[i].no_disposal}</td>
-                                                <td>${findDis[i].no_asset}</td>
-                                                <td>${findDis[i].nama_asset}</td>
-                                                <td>${findDis[i].cost_center}</td>
-                                                <td>${findDis[i].area}</td>
-                                              </tr>`
-                                          tableTd = tableTd + element
-                                        }
-                                        const mailOptions = {
-                                          from: 'noreply_asset@pinusmerahabadi.co.id',
-                                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                          // to: `${findUser.email}`,
-                                          to: `${emailAss}, ${emailAss2}`,
-                                          subject: `Approve Pengajuan Disposal D${no} `,
-                                          html: `
+                                    const mailOptions = {
+                                      from: 'noreply_asset@pinusmerahabadi.co.id',
+                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                      // to: `${findUser.email}`,
+                                      to: `${emailAss}, ${emailAss2}`,
+                                      subject: `Approve Pengajuan Disposal D${no} `,
+                                      html: `
                                           <head>
                                             <style type="text/css">
                                             body {
@@ -2078,15 +2078,15 @@ module.exports = {
                                               </div>
                                           </body>
                                           `
-                                        }
-                                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                        if (sendEmail) {
-                                          return response(res, 'success approve disposal', { sendEmail })
-                                        } else {
-                                          return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1')
-                                        }
-                                      }
                                     }
+                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                    if (sendEmail) {
+                                      return response(res, 'success approve disposal', { sendEmail })
+                                    } else {
+                                      return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 1')
+                                    }
+                                    // }
+                                    // }
                                   } else {
                                     return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                                   }
@@ -2170,30 +2170,30 @@ module.exports = {
                                 }
                               })
                               if (findUser) {
-                                const data = {
-                                  list_appr: findUser.username
-                                }
-                                const findNotif = await notif.findOne({
-                                  where: {
-                                    [Op.and]: [
-                                      { no_proses: 'D' + no },
-                                      { kode_plant: findDis[0].kode_plant }
-                                    ]
-                                  }
-                                })
-                                if (findNotif) {
-                                  await findNotif.update(data)
-                                } else {
-                                  const data = {
-                                    kode_plant: findDis[0].kode_plant,
-                                    jenis: 'disposal',
-                                    no_proses: `D${findDis[0].no_disposal}`,
-                                    list_appr: findUser.username,
-                                    keterangan: 'pengajuan',
-                                    response: 'request'
-                                  }
-                                  await notif.create(data)
-                                }
+                                // const data = {
+                                //   list_appr: findUser.username
+                                // }
+                                // const findNotif = await notif.findOne({
+                                //   where: {
+                                //     [Op.and]: [
+                                //       { no_proses: 'D' + no },
+                                //       { kode_plant: findDis[0].kode_plant }
+                                //     ]
+                                //   }
+                                // })
+                                // if (findNotif) {
+                                //   await findNotif.update(data)
+                                // } else {
+                                //   const data = {
+                                //     kode_plant: findDis[0].kode_plant,
+                                //     jenis: 'disposal',
+                                //     no_proses: `D${findDis[0].no_disposal}`,
+                                //     list_appr: findUser.username,
+                                //     keterangan: 'pengajuan',
+                                //     response: 'request'
+                                //   }
+                                //   await notif.create(data)
+                                // }
                                 let tableTd = ''
                                 for (let i = 0; i < findDis.length; i++) {
                                   const element = `
@@ -2410,41 +2410,41 @@ module.exports = {
                               }
                             })
                             if (findUser) {
-                              const data = {
-                                list_appr: findUser.username,
-                                response: 'full'
+                              // const data = {
+                              //   list_appr: findUser.username,
+                              //   response: 'full'
+                              // }
+                              // const findNotif = await notif.findOne({
+                              //   where: {
+                              //     [Op.and]: [
+                              //       { no_proses: 'D' + no },
+                              //       { kode_plant: findDoc[0].kode_plant }
+                              //     ]
+                              //   }
+                              // })
+                              // if (findNotif) {
+                              // const createNotif = await findNotif.update(data)
+                              // if (createNotif) {
+                              let tableTd = ''
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const element = `
+                                  <tr>
+                                    <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
+                                    <td>D${findDoc[i].no_disposal}</td>
+                                    <td>${findDoc[i].no_asset}</td>
+                                    <td>${findDoc[i].nama_asset}</td>
+                                    <td>${findDoc[i].cost_center}</td>
+                                    <td>${findDoc[i].area}</td>
+                                  </tr>`
+                                tableTd = tableTd + element
                               }
-                              const findNotif = await notif.findOne({
-                                where: {
-                                  [Op.and]: [
-                                    { no_proses: 'D' + no },
-                                    { kode_plant: findDoc[0].kode_plant }
-                                  ]
-                                }
-                              })
-                              if (findNotif) {
-                                const createNotif = await findNotif.update(data)
-                                if (createNotif) {
-                                  let tableTd = ''
-                                  for (let i = 0; i < findDoc.length; i++) {
-                                    const element = `
-                                      <tr>
-                                        <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                        <td>D${findDoc[i].no_disposal}</td>
-                                        <td>${findDoc[i].no_asset}</td>
-                                        <td>${findDoc[i].nama_asset}</td>
-                                        <td>${findDoc[i].cost_center}</td>
-                                        <td>${findDoc[i].area}</td>
-                                      </tr>`
-                                    tableTd = tableTd + element
-                                  }
-                                  const mailOptions = {
-                                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    // to: `${findUser.email}`,
-                                    to: `${emailAss}, ${emailAss2}`,
-                                    subject: `Full Approve Pengajuan Disposal D${no} `,
-                                    html: `
+                              const mailOptions = {
+                                from: 'noreply_asset@pinusmerahabadi.co.id',
+                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                // to: `${findUser.email}`,
+                                to: `${emailAss}, ${emailAss2}`,
+                                subject: `Full Approve Pengajuan Disposal D${no} `,
+                                html: `
                                     <head>
                                       <style type="text/css">
                                       body {
@@ -2562,15 +2562,15 @@ module.exports = {
                                         </div>                                      
                                     </body>
                                     `
-                                  }
-                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                  if (sendEmail) {
-                                    return response(res, 'success approve disposal', { sendEmail })
-                                  } else {
-                                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
-                                  }
-                                }
                               }
+                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                              if (sendEmail) {
+                                return response(res, 'success approve disposal', { sendEmail })
+                              } else {
+                                return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                              }
+                              // }
+                              // }
                             }
                           }
                         }
@@ -2599,23 +2599,23 @@ module.exports = {
                                 }
                               })
                               if (findUser) {
-                                const data = {
-                                  list_appr: findUser.username
-                                }
-                                const findNotif = await notif.findOne({
-                                  where: {
-                                    [Op.and]: [
-                                      { no_proses: 'D' + no },
-                                      { kode_plant: findDis[0].kode_plant }
-                                    ]
-                                  }
-                                })
-                                if (findNotif) {
-                                  const createNotif = await findNotif.update(data)
-                                  if (createNotif) {
-                                    let tableTd = ''
-                                    for (let i = 0; i < findDis.length; i++) {
-                                      const element = `
+                                // const data = {
+                                //   list_appr: findUser.username
+                                // }
+                                // const findNotif = await notif.findOne({
+                                //   where: {
+                                //     [Op.and]: [
+                                //       { no_proses: 'D' + no },
+                                //       { kode_plant: findDis[0].kode_plant }
+                                //     ]
+                                //   }
+                                // })
+                                // if (findNotif) {
+                                // const createNotif = await findNotif.update(data)
+                                // if (createNotif) {
+                                let tableTd = ''
+                                for (let i = 0; i < findDis.length; i++) {
+                                  const element = `
                                         <tr>
                                           <td>${findDis.indexOf(findDis[i]) + 1}</td>
                                           <td>D${findDis[i].no_disposal}</td>
@@ -2624,15 +2624,15 @@ module.exports = {
                                           <td>${findDis[i].cost_center}</td>
                                           <td>${findDis[i].area}</td>
                                         </tr>`
-                                      tableTd = tableTd + element
-                                    }
-                                    const mailOptions = {
-                                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      // to: `${findUser.email}`,
-                                      to: `${emailAss}, ${emailAss2}`,
-                                      subject: `Approve Pengajuan Disposal D${no} `,
-                                      html: `
+                                  tableTd = tableTd + element
+                                }
+                                const mailOptions = {
+                                  from: 'noreply_asset@pinusmerahabadi.co.id',
+                                  replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                                  // to: `${findUser.email}`,
+                                  to: `${emailAss}, ${emailAss2}`,
+                                  subject: `Approve Pengajuan Disposal D${no} `,
+                                  html: `
                                       <head>
                                         <style type="text/css">
                                         body {
@@ -2750,15 +2750,15 @@ module.exports = {
                                           </div>                                      
                                       </body>
                                       `
-                                    }
-                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                    if (sendEmail) {
-                                      return response(res, 'success approve disposal', { sendEmail })
-                                    } else {
-                                      return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
-                                    }
-                                  }
                                 }
+                                const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                                if (sendEmail) {
+                                  return response(res, 'success approve disposal', { sendEmail })
+                                } else {
+                                  return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
+                                }
+                                // }
+                                // }
                               } else {
                                 return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
                               }
@@ -3119,41 +3119,41 @@ module.exports = {
                               }
                             }
                           }
-                          const data = {
-                            list_appr: findDis[0].kode_plant,
-                            response: 'reject'
+                          // const data = {
+                          //   list_appr: findDis[0].kode_plant,
+                          //   response: 'reject'
+                          // }
+                          // const findNotif = await notif.findOne({
+                          //   where: {
+                          //     [Op.and]: [
+                          //       { no_proses: 'D' + no },
+                          //       { kode_plant: findDis[0].kode_plant }
+                          //     ]
+                          //   }
+                          // })
+                          // if (findNotif) {
+                          //   const createNotif = await findNotif.update(data)
+                          //   if (createNotif) {
+                          let tableTd = ''
+                          for (let i = 0; i < findDis.length; i++) {
+                            const element = `
+                              <tr>
+                                <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                                <td>D${findDis[i].no_disposal}</td>
+                                <td>${findDis[i].no_asset}</td>
+                                <td>${findDis[i].nama_asset}</td>
+                                <td>${findDis[i].cost_center}</td>
+                                <td>${findDis[i].area}</td>
+                              </tr>`
+                            tableTd = tableTd + element
                           }
-                          const findNotif = await notif.findOne({
-                            where: {
-                              [Op.and]: [
-                                { no_proses: 'D' + no },
-                                { kode_plant: findDis[0].kode_plant }
-                              ]
-                            }
-                          })
-                          if (findNotif) {
-                            const createNotif = await findNotif.update(data)
-                            if (createNotif) {
-                              let tableTd = ''
-                              for (let i = 0; i < findDis.length; i++) {
-                                const element = `
-                                <tr>
-                                  <td>${findDis.indexOf(findDis[i]) + 1}</td>
-                                  <td>D${findDis[i].no_disposal}</td>
-                                  <td>${findDis[i].no_asset}</td>
-                                  <td>${findDis[i].nama_asset}</td>
-                                  <td>${findDis[i].cost_center}</td>
-                                  <td>${findDis[i].area}</td>
-                                </tr>`
-                                tableTd = tableTd + element
-                              }
-                              const mailOptions = {
-                                from: 'noreply_asset@pinusmerahabadi.co.id',
-                                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                // to: `${draftEmail}`,
-                                to: `${emailAss}, ${emailAss2}`,
-                                subject: 'Reject Perbaikan Disposal Asset ',
-                                html: `
+                          const mailOptions = {
+                            from: 'noreply_asset@pinusmerahabadi.co.id',
+                            replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                            // to: `${draftEmail}`,
+                            to: `${emailAss}, ${emailAss2}`,
+                            subject: 'Reject Perbaikan Disposal Asset ',
+                            html: `
                                   <head>
                                   <style type="text/css">
                                     body {
@@ -3272,15 +3272,15 @@ module.exports = {
                                   </div>
                               </body>
                           `
-                              }
-                              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                              if (sendEmail) {
-                                return response(res, 'success reject disposal', { sendEmail })
-                              } else {
-                                return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
-                              }
-                            }
                           }
+                          const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                          if (sendEmail) {
+                            return response(res, 'success reject disposal', { sendEmail })
+                          } else {
+                            return response(res, 'berhasil reject disposal, tidak berhasil kirim notif email 1')
+                          }
+                          // }
+                          // }
                         }
                       } else {
                         return response(res, 'failed reject disposal', {}, 404, false)
@@ -8014,7 +8014,8 @@ module.exports = {
               no_proses: noDis === undefined ? 1 : noDis,
               list_appr: findUser.username,
               keterangan: 'persetujuan',
-              response: 'request'
+              response: 'request approve',
+              route: 'setdis'
             }
             const createNotif = await notif.create(data)
             if (createNotif) {
@@ -10722,6 +10723,56 @@ module.exports = {
         return response(res, 'success get', { result: { rows: findDoc, count: findDoc.length } })
       } else {
         return response(res, 'success get', { result: { rows: findDoc, count: findDoc.length } })
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitEditDis: async (req, res) => {
+    try {
+      const no = req.params.no
+      const findDis = await disposal.findOne({
+        where: {
+          no_disposal: no
+        },
+        order: [
+          [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
+          [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
+        ]
+      })
+      if (findDis) {
+        const valid = []
+        for (let j = 0; j < findDis[0].appForm.length; j++) {
+          if (findDis[0].appForm[j].status === 0 && findDis[0].appForm[j].path !== null) {
+            const findApp = await ttd.findByPk(findDis[0].appForm[j].id)
+            if (findApp) {
+              const data = {
+                path: null
+              }
+              await findApp.update(data)
+              valid.push(findDis[0])
+            }
+          }
+        }
+        for (let j = 0; j < findDis[0].ttdSet.length; j++) {
+          if (findDis[0].ttdSet[j].status === 0 && findDis[0].ttdSet[j].path !== null) {
+            const findApp = await ttd.findByPk(findDis[0].ttdSet[j].id)
+            if (findApp) {
+              const data = {
+                path: null
+              }
+              await findApp.update(data)
+              valid.push(findDis[0])
+            }
+          }
+        }
+        if (valid.length > 0) {
+          return response(res, 'succes submit edit disposal', {}, 404, false)
+        } else {
+          return response(res, 'failed submit edit disposal', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit edit disposal', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
