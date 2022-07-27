@@ -185,7 +185,7 @@ module.exports = {
             return response(res, 'success get', { result: data })
           }
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data', {})
         }
       }
     } catch (error) {

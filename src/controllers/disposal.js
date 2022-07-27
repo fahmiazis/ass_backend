@@ -2385,13 +2385,13 @@ module.exports = {
                           ]
                         }
                       })
-                      if (results.length === find.length) {
+                      if ((results.length === find.length) || level === 11) {
                         const findDoc = await disposal.findAll({
                           where: {
                             no_disposal: no
                           }
                         })
-                        if (findDoc) {
+                        if (findDoc.length > 0) {
                           const data = {
                             status_form: 9
                           }
@@ -2403,7 +2403,7 @@ module.exports = {
                               valid.push(1)
                             }
                           }
-                          if (valid.length === findDoc.length) {
+                          if (valid.length > 0) {
                             const findUser = await user.findOne({
                               where: {
                                 user_level: 2

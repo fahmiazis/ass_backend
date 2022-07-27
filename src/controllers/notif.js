@@ -1,5 +1,5 @@
 const response = require('../helpers/response')
-const { notif, disposal, ttd, docuser, role, depo, user } = require('../models')
+const { notif, disposal, ttd, docuser, role, depo, user, stock } = require('../models')
 // const { Op } = require('sequelize')
 
 module.exports = {
@@ -311,33 +311,39 @@ module.exports = {
                     }
                   })
                   if (findUser.length > 0) {
-                    const findNotif = await notif.findOne({
-                      where: {
-                        kode_plant: findDis[0].kode_plant,
-                        no_proses: `D${findDis[0].no_disposal}`,
-                        list_appr: findUser[0].username,
-                        jenis: 'disposal',
-                        keterangan: 'selesai proses pengajuan'
+                    const valid = []
+                    for (let i = 0; i < findUser.length; i++) {
+                      const findNotif = await notif.findOne({
+                        where: {
+                          kode_plant: findDis[0].kode_plant,
+                          no_proses: `D${findDis[0].no_disposal}`,
+                          list_appr: findUser[i].username,
+                          jenis: 'disposal',
+                          keterangan: 'Mohon untuk submit persetujuan'
+                        }
+                      })
+                      if (findNotif) {
+                        valid.push(1)
+                      } else {
+                        const data = {
+                          kode_plant: findDis[0].kode_plant,
+                          jenis: 'disposal',
+                          no_proses: `D${findDis[0].no_disposal}`,
+                          list_appr: findUser[i].username,
+                          keterangan: 'Mohon untuk submit persetujuan',
+                          response: 'request',
+                          route: 'disposal'
+                        }
+                        const createNot = await notif.create(data)
+                        if (createNot) {
+                          valid.push(1)
+                        }
                       }
-                    })
-                    if (findNotif) {
+                    }
+                    if (valid.length > 0) {
                       return response(res, 'success create notif', { hasil })
                     } else {
-                      const data = {
-                        kode_plant: findDis[0].kode_plant,
-                        jenis: 'disposal',
-                        no_proses: `D${findDis[0].no_disposal}`,
-                        list_appr: findUser[0].username,
-                        keterangan: 'selesai proses pengajuan',
-                        response: 'request submit persetujuan',
-                        route: 'disposal'
-                      }
-                      const createNot = await notif.create(data)
-                      if (createNot) {
-                        return response(res, 'success create notif', { hasil })
-                      } else {
-                        return response(res, 'failed create notif', {}, 404, false)
-                      }
+                      return response(res, 'failed create notif', {})
                     }
                   } else {
                     return response(res, 'data not found', {}, 404, false)
@@ -566,6 +572,209 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  createNotifStock: async (req, res) => {
+    try {
+      const { tipe, act, apptipe, status } = req.query
+      const no = req.params.no
+      const name = req.user.name
+      const level = req.user.level
+      const findRole = await role.findOne({
+        where: {
+          nomor: level
+        }
+      })
+      const findStock = await stock.findAll({
+        where: {
+          no_stock: no
+        }
+      })
+      if (findStock.length > 0 && findRole) {
+        const findDepo = await depo.findOne({
+          where: {
+            kode_plant: findStock[0].kode_plant
+          }
+        })
+        if (findDepo) {
+          if (tipe === 'approve') {
+            const findApp = await ttd.findAll({
+              where: {
+                no_doc: no
+              }
+            })
+            if (findApp.length > 0) {
+              let hasil = 0
+              let arr = null
+              for (let i = 0; i < findApp.length; i++) {
+                if (findRole.name === findApp[i].jabatan) {
+                  hasil = findApp[i].id
+                  arr = i
+                }
+              }
+              if (level === 11) {
+                const findUser = await user.findAll({
+                  where: {
+                    user_level: 2
+                  }
+                })
+                if (findUser.length > 0) {
+                  const findNotif = await notif.findOne({
+                    where: {
+                      kode_plant: findStock[0].kode_plant,
+                      no_proses: findStock[0].no_mutasi,
+                      list_appr: findUser[0].username,
+                      jenis: 'disposal',
+                      keterangan: 'selesai proses pengajuan'
+                    }
+                  })
+                  if (findNotif) {
+                    return response(res, 'success create notif', { hasil })
+                  } else {
+                    const data = {
+                      kode_plant: findStock[0].kode_plant,
+                      jenis: 'disposal',
+                      no_proses: findStock[0].no_mutasi,
+                      list_appr: findUser[0].username,
+                      keterangan: 'selesai proses pengajuan',
+                      response: 'request submit persetujuan',
+                      route: 'disposal'
+                    }
+                    const createNot = await notif.create(data)
+                    if (createNot) {
+                      return response(res, 'success create notif', { hasil })
+                    } else {
+                      return response(res, 'failed create notif', {}, 404, false)
+                    }
+                  }
+                } else {
+                  return response(res, 'data not found', {}, 404, false)
+                }
+              } else {
+                if (apptipe === 'area') {
+                  const findDiv = await role.findOne({
+                    where: {
+                      name: findApp[arr + 1].jabatan
+                    }
+                  })
+                  if (findDiv) {
+                    const findUser = await user.findAll({
+                      where: {
+                        user_level: parseInt(findDiv.nomor)
+                      }
+                    })
+                    if (findUser.length > 0) {
+                      const cek = []
+                      for (let i = 0; i < findUser.length; i++) {
+                        if (findUser[i].username === findDepo.nama_bm) {
+                          cek.push(findUser[i])
+                        } else if (findUser[i].username === findDepo.nama_nom) {
+                          cek.push(findUser[i])
+                        } else if (findUser[i].username === findDepo.nama_om) {
+                          cek.push(findUser[i])
+                        } else if (findUser[i].username === findDepo.nama_asman) {
+                          cek.push(findUser[i])
+                        }
+                      }
+                      if (cek.length > 0) {
+                        const findNotif = await notif.findOne({
+                          where: {
+                            kode_plant: findStock[0].kode_plant,
+                            no_proses: findStock[0].no_mutasi,
+                            list_appr: cek[0].username,
+                            jenis: 'disposal',
+                            keterangan: 'approve pengajuan'
+                          }
+                        })
+                        if (findNotif) {
+                          return response(res, 'success create notif', { hasil })
+                        } else {
+                          const data = {
+                            kode_plant: findStock[0].kode_plant,
+                            jenis: 'disposal',
+                            no_proses: findStock[0].no_mutasi,
+                            list_appr: cek[0].username,
+                            keterangan: 'approve pengajuan',
+                            response: 'request',
+                            route: 'disposal'
+                          }
+                          const createNot = await notif.create(data)
+                          if (createNot) {
+                            return response(res, 'success create notif', { hasil })
+                          } else {
+                            return response(res, 'failed create notif', {}, 404, false)
+                          }
+                        }
+                      } else {
+                        return response(res, 'data not found', {}, 404, false)
+                      }
+                    } else {
+                      return response(res, 'data not found', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, 'data not found', {}, 404, false)
+                  }
+                } else {
+                  const findDiv = await role.findOne({
+                    where: {
+                      name: findApp[arr + 1].jabatan
+                    }
+                  })
+                  if (findDiv) {
+                    const findUser = await user.findAll({
+                      where: {
+                        user_level: parseInt(findDiv.nomor)
+                      }
+                    })
+                    if (findUser.length > 0) {
+                      const findNotif = await notif.findOne({
+                        where: {
+                          kode_plant: findStock[0].kode_plant,
+                          no_proses: findStock[0].no_mutasi,
+                          list_appr: findUser[0].username,
+                          jenis: 'disposal',
+                          keterangan: 'approve pengajuan'
+                        }
+                      })
+                      if (findNotif) {
+                        return response(res, 'success create notif', { hasil })
+                      } else {
+                        const data = {
+                          kode_plant: findStock[0].kode_plant,
+                          jenis: 'disposal',
+                          no_proses: findStock[0].no_mutasi,
+                          list_appr: findUser[0].username,
+                          keterangan: 'approve pengajuan',
+                          response: 'request',
+                          route: 'disposal'
+                        }
+                        const createNot = await notif.create(data)
+                        if (createNot) {
+                          return response(res, 'success create notif', { hasil })
+                        } else {
+                          return response(res, 'failed create notif', {}, 404, false)
+                        }
+                      }
+                    } else {
+                      return response(res, 'data not found', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, 'data not found', {}, 404, false)
+                  }
+                }
+              }
+            } else {
+              return response(res, 'data not found', {}, 404, false)
+            }
+          }
+        } else {
+          return response(res, 'data not found', {}, 404, false)
+        }
+      } else {
+        return response(res, 'data not found', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
   // ,
   // createNotifMut: async (req, res) => {
@@ -575,12 +784,6 @@ module.exports = {
   //   }
   // },
   // createNotifIo: async (req, res) => {
-  //   try {
-  //   } catch (error) {
-  //     return response(res, error.message, {}, 500, false)
-  //   }
-  // },
-  // createNotifStock: async (req, res) => {
   //   try {
   //   } catch (error) {
   //     return response(res, error.message, {}, 500, false)
