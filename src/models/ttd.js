@@ -23,7 +23,8 @@ module.exports = (sequelize, DataTypes) => {
     no_doc: DataTypes.STRING,
     no_pengadaan: DataTypes.STRING,
     status: DataTypes.INTEGER,
-    no_set: DataTypes.STRING
+    no_set: DataTypes.STRING,
+    recent: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'ttd'

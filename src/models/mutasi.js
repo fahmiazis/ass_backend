@@ -61,7 +61,8 @@ module.exports = (sequelize, DataTypes) => {
     no_io: DataTypes.STRING,
     cost_centerawal: DataTypes.STRING,
     tgl_mutasifisik: DataTypes.DATE,
-    tgl_mutasisap: DataTypes.DATE
+    tgl_mutasisap: DataTypes.DATE,
+    isreject: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'mutasi'
