@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       disposal.hasMany(models.ttd, {
         foreignKey: 'no_set',
         as: 'ttdSet',
-        sourceKey: 'status_app'
+        sourceKey: 'no_persetujuan'
       })
       disposal.hasOne(models.asset, {
         foreignKey: 'no_asset',
@@ -58,8 +58,8 @@ module.exports = (sequelize, DataTypes) => {
     nilai_buku: DataTypes.STRING,
     nilai_jual: DataTypes.STRING,
     keterangan: DataTypes.STRING,
-    status_app: DataTypes.INTEGER,
-    status_doc: DataTypes.INTEGER,
+    no_persetujuan: DataTypes.INTEGER,
+    status_reject: DataTypes.INTEGER,
     status_form: DataTypes.INTEGER,
     nominal: DataTypes.STRING,
     no_sap: DataTypes.STRING, // no document sap finance
@@ -70,7 +70,8 @@ module.exports = (sequelize, DataTypes) => {
     doc_clearing: DataTypes.STRING,
     nilai_buku_eks: DataTypes.STRING,
     tgl_eksekusi: DataTypes.DATE,
-    isreject: DataTypes.INTEGER
+    isreject: DataTypes.INTEGER,
+    reason: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'disposal'

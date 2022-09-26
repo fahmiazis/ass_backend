@@ -142,7 +142,7 @@ module.exports = {
       if (status === 'persetujuan') {
         const findDis = await disposal.findAll({
           where: {
-            status_app: no
+            no_persetujuan: no
           }
         })
         if (findDis.length > 0 && findRole) {
@@ -172,7 +172,7 @@ module.exports = {
                     const findPkDis = await disposal.findOne({
                       where: {
                         kode_plant: noDis[i],
-                        status_app: no
+                        no_persetujuan: no
                       }
                     })
                     if (findPkDis) {
@@ -1145,12 +1145,21 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  createNotifIo: async (req, res) => {
+    try {
+      const { tipe, act, apptipe, status } = req.query
+      const no = req.params.no
+      const name = req.user.name
+      const level = req.user.level
+      const list = Object.values(req.body)
+      if (tipe === 'approve') {
+        
+      } else if (tipe === 'reject') {
+        
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
-  // ,
-  // createNotifIo: async (req, res) => {
-  //   try {
-  //   } catch (error) {
-  //     return response(res, error.message, {}, 500, false)
-  //   }
-  // }
 }

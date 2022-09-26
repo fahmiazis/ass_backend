@@ -55,7 +55,8 @@ module.exports = (sequelize, DataTypes) => {
     status_doc: DataTypes.TINYINT,
     status_form: DataTypes.TINYINT,
     tanggalStock: DataTypes.DATE,
-    status_fisik: DataTypes.STRING
+    status_fisik: DataTypes.STRING,
+    reason: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'stock'

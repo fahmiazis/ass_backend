@@ -159,7 +159,7 @@ module.exports = {
             ['no_pengadaan']
           ]
         })
-        if (result.length > 0) {
+        if (result) {
           const data = []
           for (let i = 0; i < result.length; i++) {
             const temp = result[i]

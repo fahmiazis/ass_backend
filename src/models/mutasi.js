@@ -62,7 +62,8 @@ module.exports = (sequelize, DataTypes) => {
     cost_centerawal: DataTypes.STRING,
     tgl_mutasifisik: DataTypes.DATE,
     tgl_mutasisap: DataTypes.DATE,
-    isreject: DataTypes.INTEGER
+    isreject: DataTypes.INTEGER,
+    reason: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'mutasi'
