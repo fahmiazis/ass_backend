@@ -1,8 +1,8 @@
 {
   "development": {
-    "username": "fahmi",
-    "password": "fahmi",
-    "database": "asset_development",
+    "username": "root",
+    "password": null,
+    "database": "aset_dev",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
