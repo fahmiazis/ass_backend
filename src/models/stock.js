@@ -56,7 +56,12 @@ module.exports = (sequelize, DataTypes) => {
     status_form: DataTypes.TINYINT,
     tanggalStock: DataTypes.DATE,
     status_fisik: DataTypes.STRING,
-    reason: DataTypes.STRING
+    reason: DataTypes.STRING,
+    status_reject: DataTypes.INTEGER,
+    isreject: DataTypes.INTEGER,
+    menu_rev: DataTypes.STRING,
+    user_reject: DataTypes.INTEGER,
+    history: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'stock'

@@ -71,7 +71,10 @@ module.exports = (sequelize, DataTypes) => {
     nilai_buku_eks: DataTypes.STRING,
     tgl_eksekusi: DataTypes.DATE,
     isreject: DataTypes.INTEGER,
-    reason: DataTypes.STRING
+    reason: DataTypes.STRING,
+    menu_rev: DataTypes.STRING,
+    user_reject: DataTypes.INTEGER,
+    history: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'disposal'

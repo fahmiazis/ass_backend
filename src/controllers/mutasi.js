@@ -7,8 +7,8 @@ const wrapMail = require('../helpers/wrapMail')
 const moment = require('moment')
 const axios = require('axios')
 
-const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
-const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
+const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
 module.exports = {
   addMutasi: async (req, res) => {
@@ -208,12 +208,13 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
+
       if (level === 5 || level === 9) {
         const result = await mutasi.findAndCountAll({
           where: {
             [Op.and]: [
               { kode_plant: level === '5' ? kode : cost },
-              { status_form: 1 }
+              { status_form: status }
             ],
             [Op.or]: [
               { kode_plant_rec: { [Op.like]: `%${searchValue}%` } }
@@ -990,10 +991,10 @@ module.exports = {
           await findAsset.update(send)
           return response(res, 'successfully delete item mutasi')
         } else {
-          return response(res, 'failed delete item mutasi', {}, 404, false)
+          return response(res, 'failed delete item mutasi 1', {}, 404, false)
         }
       } else {
-        return response(res, 'failed delete item mutasi', {}, 404, false)
+        return response(res, 'failed delete item mutasi 2', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -2853,7 +2854,7 @@ module.exports = {
                             })
                             if (result) {
                               draf.push(result)
-                              draftEmail += result.email + ', '
+                              draftEmail += result.email + ', ' // eslint-disable-line
                             }
                           }
                         }
@@ -3347,7 +3348,7 @@ module.exports = {
                   })
                   if (result) {
                     draf.push(result)
-                    draftEmail += result.email + ', '
+                    draftEmail += result.email + ', ' // eslint-disable-line
                   }
                 }
               }

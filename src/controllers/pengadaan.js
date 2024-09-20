@@ -12,23 +12,26 @@ const uploadHelper = require('../helpers/upload')
 const fs = require('fs')
 const axios = require('axios')
 
-const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
-const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
+const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
 module.exports = {
-  home: async (req, res) => {
+  getPengadaan: async (req, res) => {
     try {
       const level = req.user.level
       const kode = req.user.kode
       const name = req.user.name
       const fullname = req.user.fullname
       const { status } = req.query
+      const statTrans = status === 'undefined' || status === null ? 'all' : status
       if (level === 5 || level === 9) {
         const result = await pengadaan.findAll({
           where: {
             kode_plant: level === 5 ? kode : name,
-            status_form: { [Op.like]: `%${status}%` },
-            status_app: null
+            [Op.and]: [
+              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
+            ],
+            [Op.not]: { no_pengadaan: null }
           },
           include: [
             {
@@ -375,8 +378,8 @@ module.exports = {
         const result = await pengadaan.findAll({
           where: {
             kode_plant: kode,
-            status_form: { [Op.like]: `%${status}%` },
-            status_app: { [Op.not]: null }
+            status_reject: 1,
+            menu_rev: 'Revisi Area'
           },
           include: [
             {
@@ -392,30 +395,7 @@ module.exports = {
           ]
         })
         if (result.length > 0) {
-          const data = []
-          for (let i = 0; i < result.length; i++) {
-            const temp = result[i]
-            const appForm = await ttd.findAll({
-              where: {
-                no_doc: result[i].no_pengadaan
-              },
-              order: [
-                ['id', 'DESC']
-              ]
-            })
-            if (appForm.length > 0) {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            } else {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            }
-          }
-          if (data.length > 0) {
-            return response(res, 'success get', { result: data })
-          } else {
-            return response(res, 'success get', { result: data })
-          }
+          return response(res, 'success get', { result })
         } else {
           return response(res, 'failed get data', {}, 404, false)
         }
@@ -483,8 +463,10 @@ module.exports = {
             const result = await pengadaan.findAll({
               where: {
                 status_form: { [Op.like]: `%${status}%` },
-                status_app: { [Op.not]: null },
-                kode_plant: findDepo[i].kode_plant
+                kode_plant: findDepo[i].kode_plant,
+                [Op.not]: [
+                  { status_app: null }
+                ]
               },
               include: [
                 {
@@ -2551,126 +2533,164 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
+      // const no = req.params.no
       const schema = joi.object({
         alasan: joi.string().required(),
-        status: joi.number().required()
+        no: joi.string().required(),
+        status: joi.number().required(),
+        menu: joi.string().required(),
+        list: joi.array(),
+        type: joi.string(),
+        type_reject: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 404, false)
       } else {
+        const no = results.no
+        const listId = results.list
+        const histRev = `reject perbaikan by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}; reason: ${results.alasan}`
+        const histBatal = `reject pembatalan by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}; reason: ${results.alasan}`
         const result = await role.findAll({
           where: {
             nomor: level
           }
         })
         if (result.length > 0) {
-          const find = await ttd.findAll({
+          const findDis = await pengadaan.findAll({
             where: {
-              no_doc: no
+              no_pengadaan: no
             }
           })
-          if (find.length > 0) {
-            let hasil = 0
-            let arr = null
-            // let position = ''
-            for (let i = 0; i < find.length; i++) {
-              if (result[0].name === find[i].jabatan) {
-                hasil = find[i].id
-                arr = i
-                // position = find[i].jabatan
+          if (findDis.length > 0) {
+            if (results.type === 'verif') {
+              const temp = []
+              for (let i = 0; i < findDis.length; i++) {
+                const send = {
+                  status_form: results.typeReject === 'pembatalan' ? 0 : findDis[i].status_form,
+                  status_reject: 1,
+                  isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
+                  reason: results.alasan,
+                  menu_rev: results.menu,
+                  user_reject: level,
+                  history: `${findDis[i].history}, ${results.typeReject === 'pembatalan' ? histBatal : histRev}`
+                }
+                const findData = await pengadaan.findByPk(findDis[i].id)
+                if (findData) {
+                  await findData.update(send)
+                  temp.push(findData)
+                }
               }
-            }
-            if (hasil !== 0) {
-              if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
-                return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
+              if (temp.length) {
+                return response(res, 'success reject ops', {})
               } else {
-                if (arr === 0 || find[arr - 1].status === 1) {
-                  const data = {
-                    nama: name,
-                    status: 0,
-                    path: results.alasan
+                return response(res, 'success reject ops', {})
+              }
+            } else {
+              const find = await ttd.findAll({
+                where: {
+                  no_doc: no
+                }
+              })
+              if (find.length > 0) {
+                let hasil = 0
+                let arr = null
+                // let position = ''
+                for (let i = 0; i < find.length; i++) {
+                  if (result[0].name === find[i].jabatan) {
+                    hasil = find[i].id
+                    arr = i
+                    // position = find[i].jabatan
                   }
-                  const findTtd = await ttd.findByPk(hasil)
-                  if (findTtd) {
-                    const sent = await findTtd.update(data)
-                    if (sent) {
-                      const findTtd = await ttd.findAll({
-                        where: {
-                          [Op.and]: [
-                            { no_doc: no },
-                            { status: 1 }
-                          ]
-                        }
-                      })
+                }
+                if (hasil !== 0) {
+                  if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+                    return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
+                  } else {
+                    if (arr === 0 || find[arr - 1].status === 1) {
+                      const data = {
+                        nama: name,
+                        status: 0,
+                        path: results.alasan
+                      }
+                      const findTtd = await ttd.findByPk(hasil)
                       if (findTtd) {
-                        const findDoc = await pengadaan.findOne({
-                          where: {
-                            no_pengadaan: no
-                          }
-                        })
-                        if (findDoc) {
-                          const findRole = await role.findAll({
+                        const sent = await findTtd.update(data)
+                        if (sent) {
+                          const findTtd = await ttd.findAll({
                             where: {
-                              name: find[arr + 1].jabatan
+                              [Op.and]: [
+                                { no_doc: no },
+                                { status: 1 }
+                              ]
                             }
                           })
-                          if (findRole.length > 0) {
-                            const findDis = await pengadaan.findAll({
+                          if (findTtd) {
+                            const findDoc = await pengadaan.findOne({
                               where: {
                                 no_pengadaan: no
                               }
                             })
-                            if (findDis.length > 0) {
-                              const cek = []
-                              for (let i = 0; i < findDis.length; i++) {
-                                const findIo = await pengadaan.findByPk(findDis[i].id)
-                                const data = {
-                                  status_app: results.status
+                            if (findDoc) {
+                              const findRole = await role.findAll({
+                                where: {
+                                  name: find[arr + 1].jabatan
                                 }
-                                if (findIo) {
-                                  const updateIo = await findIo.update(data)
-                                  if (updateIo) {
-                                    cek.push(1)
+                              })
+                              if (findRole.length > 0) {
+                                const cek = []
+                                for (let i = 0; i < findDis.length; i++) {
+                                  const findIo = await pengadaan.findByPk(findDis[i].id)
+                                  const data = {
+                                    status_form: results.typeReject === 'pembatalan' ? 0 : findDis[i].status_form,
+                                    status_reject: 1,
+                                    isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
+                                    reason: results.alasan,
+                                    menu_rev: results.menu,
+                                    user_reject: level,
+                                    history: `${findDis[i].history}, ${results.typeReject === 'pembatalan' ? histBatal : histRev}`
+                                  }
+                                  if (findIo) {
+                                    const updateIo = await findIo.update(data)
+                                    if (updateIo) {
+                                      cek.push(1)
+                                    }
                                   }
                                 }
-                              }
-                              if (cek.length > 0) {
-                                const findUser = await user.findOne({
-                                  where: {
-                                    user_level: findRole[0].nomor
+                                if (cek.length > 0) {
+                                  const findUser = await user.findOne({
+                                    where: {
+                                      user_level: findRole[0].nomor
+                                    }
+                                  })
+                                  if (findUser) {
+                                    return response(res, 'success reject pengadaan')
+                                  } else {
+                                    return response(res, 'berhasil reject, tidak berhasil kirim notif email 2')
                                   }
-                                })
-                                if (findUser) {
-                                  return response(res, 'success reject pengadaan')
                                 } else {
-                                  return response(res, 'berhasil reject, tidak berhasil kirim notif email 2')
+                                  return response(res, 'success reject pengadaan')
                                 }
-                              } else {
-                                return response(res, 'success reject pengadaan')
                               }
-                            } else {
-                              return response(res, 'failed reject pengadaan', {}, 404, false)
                             }
                           }
+                        } else {
+                          return response(res, 'failed reject pengadaan', {}, 404, false)
                         }
+                      } else {
+                        return response(res, 'failed reject pengadaan', {}, 404, false)
                       }
                     } else {
-                      return response(res, 'failed reject pengadaan', {}, 404, false)
+                      return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
                     }
-                  } else {
-                    return response(res, 'failed reject pengadaan', {}, 404, false)
                   }
                 } else {
-                  return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
+                  return response(res, 'failed reject pengadaan', {}, 404, false)
                 }
+              } else {
+                return response(res, 'failed reject pengadaan', {}, 404, false)
               }
-            } else {
-              return response(res, 'failed reject pengadaan', {}, 404, false)
             }
-          } else {
-            return response(res, 'failed reject pengadaan', {}, 404, false)
           }
         } else {
           return response(res, 'failed reject pengadaan', {}, 404, false)
@@ -3203,7 +3223,7 @@ module.exports = {
   },
   cekApi: async (req, res) => {
     try {
-      const { ticket_code } = req.query
+      const { ticket_code } = req.query // eslint-disable-line
       const findCode = await pengadaan.findOne({
         where: {
           ticket_code: ticket_code

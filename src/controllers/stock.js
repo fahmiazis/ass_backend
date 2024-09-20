@@ -9,8 +9,8 @@ const uploadHelper = require('../helpers/upload')
 const wrapMail = require('../helpers/wrapMail')
 // const excel = require('exceljs')
 
-const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
-const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
+const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
 module.exports = {
   submit: async (req, res) => {
