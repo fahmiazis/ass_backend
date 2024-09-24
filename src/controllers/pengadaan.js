@@ -89,9 +89,11 @@ module.exports = {
           for (let i = 0; i < findDepo.length; i++) {
             const result = await pengadaan.findAll({
               where: {
-                status_form: { [Op.like]: `%${status}%` },
-                status_app: null,
-                kode_plant: findDepo[i].kode_plant
+                kode_plant: findDepo[i].kode_plant,
+                [Op.and]: [
+                  statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
+                ],
+                [Op.not]: { no_pengadaan: null }
               },
               include: [
                 {
@@ -133,9 +135,9 @@ module.exports = {
               }
             }
             if (data.length > 0) {
-              return response(res, 'success get', { result: data })
+              return response(res, 'success get', { result: data, findDepo })
             } else {
-              return response(res, 'success get', { result: data })
+              return response(res, 'success get', { result: data, findDepo })
             }
           } else {
             return response(res, 'success get', { result: hasil })
@@ -146,8 +148,10 @@ module.exports = {
       } else {
         const result = await pengadaan.findAll({
           where: {
-            status_form: { [Op.like]: `%${status}%` },
-            status_app: null
+            [Op.and]: [
+              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
+            ],
+            [Op.not]: { no_pengadaan: null }
           },
           include: [
             {
