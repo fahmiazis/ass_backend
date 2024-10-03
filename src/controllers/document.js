@@ -1,5 +1,5 @@
 const { pagination } = require('../helpers/pagination')
-const { document, sequelize, depo } = require('../models')
+const { document, sequelize, depo, docUser } = require('../models')
 const { Op, QueryTypes } = require('sequelize')
 const response = require('../helpers/response')
 const joi = require('joi')
@@ -9,6 +9,7 @@ const uploadMaster = require('../helpers/uploadMaster')
 const fs = require('fs')
 const excel = require('exceljs')
 const vs = require('fs-extra')
+const moment = require('moment')
 const { APP_URL } = process.env
 
 module.exports = {
@@ -424,6 +425,139 @@ module.exports = {
         }
       } else {
         return response(res, 'failed', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  approveDoc: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const id = req.params.id
+      const schema = joi.object({
+        list: joi.array()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const list = results.list
+        if (list.length > 0) {
+          const cek = []
+          for (let i = 0; i < list.length; i++) {
+            const result = await docUser.findByPk(list[i])
+            if (result) {
+              const data = {
+                status_dokumen: `${result.status_dokumen}, level ${level}; status approve; by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+                status: 3
+              }
+              const updateData = await result.update(data)
+              if (updateData) {
+                cek.push(updateData)
+              }
+            }
+          }
+          if (cek.length > 0) {
+            return response(res, 'success approve dokumen', { result: cek })
+          } else {
+            return response(res, 'failed to approve dokumen', {}, 404, false)
+          }
+        } else {
+          const result = await docUser.findByPk(id)
+          if (result) {
+            const data = {
+              status_dokumen: `${result.status_dokumen}, level ${level}; status approve; by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+              status: 3
+            }
+            const updateData = await result.update(data)
+            if (updateData) {
+              return response(res, 'success approve dokumen', { result: updateData })
+            } else {
+              return response(res, 'failed to approve dokumen', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed to approve dokumen', {}, 404, false)
+          }
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  rejectDoc: async (req, res) => {
+    try {
+      const level = req.user.level
+      const name = req.user.name
+      const id = req.params.id
+      const schema = joi.object({
+        list: joi.array()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const list = results.list
+        if (list.length > 0) {
+          const cek = []
+          for (let i = 0; i < list.length; i++) {
+            const result = await docUser.findByPk(list[i])
+            if (result) {
+              const data = {
+                status_dokumen: `${result.status_dokumen}, level ${level}; status reject; by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+                status: 0
+              }
+              const updateData = await result.update(data)
+              if (updateData) {
+                cek.push(updateData)
+              }
+            }
+          }
+          if (cek.length > 0) {
+            return response(res, 'success reject dokumen', { result: cek })
+          } else {
+            return response(res, 'failed to reject dokumen', {}, 404, false)
+          }
+        } else {
+          const result = await docUser.findByPk(id)
+          if (result) {
+            const data = {
+              status_dokumen: `${result.status_dokumen}, level ${level}; status reject; by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+              status: 0
+            }
+            const updateData = await result.update(data)
+            if (updateData) {
+              return response(res, 'success reject dokumen', { updateData })
+            } else {
+              return response(res, 'failed to reject dokumen', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed to get dokumen', {}, 404, false)
+          }
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDocuser: async (req, res) => {
+    try {
+      const { no, jenis } = req.body
+      const finJenis = jenis === undefined || jenis === 'undefined' || jenis === null || jenis === '' ? 'all' : jenis
+      console.log(no)
+      console.log(jenis)
+      const result = await docUser.findAll({
+        where: {
+          [Op.and]: [
+            { no_pengadaan: no },
+            jenis === 'all' ? { [Op.not]: { id: null } } : { jenis_form: finJenis }
+          ]
+        }
+      })
+      if (result.length > 0) {
+        return response(res, 'success get document', { result, no, jenis })
+      } else {
+        return response(res, 'success get document', { result, no, jenis })
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

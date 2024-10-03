@@ -37,39 +37,43 @@ module.exports = {
             {
               model: depo,
               as: 'depo'
+            },
+            {
+              model: ttd,
+              as: 'appForm'
             }
           ],
           order: [
-            ['id', 'ASC']
+            ['id', 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
           ],
-          group: [
-            ['no_pengadaan']
-          ]
+          group: ['pengadaan.no_pengadaan'],
+          distinct: true
         })
         if (result.length > 0) {
-          const data = []
-          for (let i = 0; i < result.length; i++) {
-            const temp = result[i]
-            const appForm = await ttd.findAll({
-              where: {
-                no_doc: result[i].no_pengadaan
-              },
-              order: [
-                ['id', 'DESC']
-              ]
-            })
-            if (appForm.length > 0) {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            } else {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            }
-          }
-          if (data.length > 0) {
-            return response(res, 'success get', { result: data })
+          // const data = []
+          // for (let i = 0; i < result.length; i++) {
+          //   const temp = result[i]
+          //   const appForm = await ttd.findAll({
+          //     where: {
+          //       no_doc: result[i].no_pengadaan
+          //     },
+          //     order: [
+          //       ['id', 'DESC']
+          //     ]
+          //   })
+          //   if (appForm.length > 0) {
+          //     temp.dataValues.appForm = appForm
+          //     data.push(temp)
+          //   } else {
+          //     temp.dataValues.appForm = appForm
+          //     data.push(temp)
+          //   }
+          // }
+          if (result.length > 0) {
+            return response(res, 'success get', { result })
           } else {
-            return response(res, 'success get', { result: data })
+            return response(res, 'success get', { result })
           }
         } else {
           return response(res, 'failed get data', {}, 404, false)
@@ -1145,6 +1149,7 @@ module.exports = {
   },
   uploadDocument: async (req, res) => {
     const id = req.params.id
+    const name = req.user.name
     uploadHelper(req, res, async function (err) {
       try {
         if (err instanceof multer.MulterError) {
@@ -1160,7 +1165,9 @@ module.exports = {
         const result = await docUser.findByPk(id)
         if (result) {
           const send = {
-            path: dokumen
+            path: dokumen,
+            status_dokumen: `${result.status}, upload by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+            desc: req.file.originalname
           }
           await result.update(send)
           return response(res, 'successfully upload dokumen', { send })
@@ -4330,7 +4337,6 @@ module.exports = {
   uploadMasterTemp: async (req, res) => {
     uploadMaster(req, res, async function (err) {
       try {
-        const no = req.params.no
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
             console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
@@ -4343,7 +4349,7 @@ module.exports = {
         const dokumen = `assets/masters/${req.files[0].filename}`
         const rows = await readXlsxFile(dokumen)
         const count = []
-        const cek = ['No', 'No Pengadaan', 'Description', 'Price/unit', 'Total Amount', 'No Asset', 'ID Asset']
+        const cek = ['NO', 'No Pengadaan', 'Description', 'Price/unit', 'Total Amount', 'No Asset', 'ID Asset']
         const valid = rows[0]
         for (let i = 0; i < cek.length; i++) {
           if (valid[i] === cek[i]) {
@@ -4352,91 +4358,56 @@ module.exports = {
         }
         if (count.length === cek.length) {
           const arr = []
+          const cek = []
           rows.shift()
           for (let i = 0; i < rows.length; i++) {
-            if (no === rows[i][1]) {
-              const findTemp = await assettemp.findByPk(rows[i][6])
-              if (findTemp && findTemp.nama === rows[i][2]) {
+            const data = rows[i]
+            const findTemp = await assettemp.findByPk(data[6])
+            if (findTemp && findTemp.nama === data[2] && findTemp.no_pengadaan === data[1]) {
+              const noAsset = data[5]
+              const dataNominal = (noAsset.toString().split('').filter((item) => isNaN(parseFloat(item))).length > 0)
+                ? { mess: `Pastikan No Aset Diisi dengan Sesuai Pada Data Baris ${[i + 1]}` }
+                : null
+              if (dataNominal !== null) {
+                cek.push(dataNominal)
+              } else {
                 const send = {
-                  no_asset: rows[i][5]
+                  no_asset: noAsset
                 }
                 const updateAsset = await findTemp.update(send)
                 if (updateAsset) {
                   arr.push(1)
                 }
               }
+            } else {
+              cek.push({ mess: `No Pengadaan Tidak Sesuai Dengan ID Data Yang Dilampirkan Pada Baris ${[i + 1]}` })
             }
           }
-          if (arr.length > 0) {
-            const findData = await pengadaan.findAll({
-              where: {
-                no_pengadaan: no
+          if (cek.length === 0) {
+            fs.unlink(dokumen, function (err) {
+              if (err) {
+                return response(res, 'success upload asset balance', { rows, err })
+              } else {
+                return response(res, 'success upload asset balance', { rows })
               }
             })
-            if (findData.length > 0) {
-              const cek = []
-              for (let i = 0; i < findData.length; i++) {
-                const findAsset = await assettemp.findAll({
-                  where: {
-                    idIo: findData[i].id
-                  }
-                })
-                if (findAsset.length > 0) {
-                  const valid = []
-                  let text = ''
-                  for (let j = 0; j < findAsset.length; j++) {
-                    if (findAsset[j].no_asset !== null) {
-                      valid.push(1)
-                      text += j === findAsset.length - 1 ? findAsset[j].no_asset : `${findAsset[j].no_asset},`
-                    }
-                  }
-                  if (valid.length > 0) {
-                    const findRes = await pengadaan.findByPk(findData[i].id)
-                    if (findRes) {
-                      const data = {
-                        no_asset: text
-                      }
-                      const update = await findRes.update(data)
-                      if (update) {
-                        cek.push(1)
-                      }
-                    }
-                  }
-                }
-              }
-              if (cek.length > 0) {
-                fs.unlink(dokumen, function (err) {
-                  if (err) throw err
-                  console.log('success')
-                })
-                return response(res, 'success upload asset balance', { rows })
-              } else {
-                fs.unlink(dokumen, function (err) {
-                  if (err) throw err
-                  console.log('success')
-                })
-                return response(res, 'failed upload asset balance')
-              }
-            } else {
-              fs.unlink(dokumen, function (err) {
-                if (err) throw err
-                console.log('success')
-              })
-              return response(res, 'failed upload asset balance')
-            }
           } else {
             fs.unlink(dokumen, function (err) {
-              if (err) throw err
-              console.log('success')
+              if (err) {
+                return response(res, 'failed upload asset balance', { result: cek, err }, 400, false)
+              } else {
+                return response(res, 'failed upload asset balance', { result: cek }, 400, false)
+              }
             })
-            return response(res, 'failed upload asset balance')
           }
         } else {
           fs.unlink(dokumen, function (err) {
-            if (err) throw err
-            console.log('success')
+            if (err) {
+              return response(res, 'Failed upload', { result: [{ mess: 'Gunakan Template Upload Yang Sudah Disediakan' }], err }, 400, false)
+            } else {
+              return response(res, 'Failed upload', { result: [{ mess: 'Gunakan Template Upload Yang Sudah Disediakan' }] }, 400, false)
+            }
           })
-          return response(res, 'Failed to upload master file, please use the template provided', {}, 400, false)
         }
       } catch (error) {
         return response(res, error.message, {}, 500, false)
