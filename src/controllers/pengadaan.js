@@ -1,4 +1,4 @@
-const { email, approve, ttd, depo, pengadaan, document, docUser, role, user, assettemp } = require('../models')
+const { email, approve, ttd, depo, pengadaan, document, docUser, role, user, assettemp, reservoir } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -713,6 +713,198 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  submitIo: async (req, res) => {
+    try {
+      const timeV1 = moment().startOf('month')
+      const timeV2 = moment().endOf('month').add(1, 'd')
+      const kode = req.user.kode
+      const findNo = await reservoir.findAll({
+        where: {
+          transaksi: 'pengadaan',
+          tipe: 'area',
+          createdAt: {
+            [Op.gte]: timeV1,
+            [Op.lt]: timeV2
+          }
+        },
+        order: [['id', 'DESC']],
+        limit: 50
+      })
+      const cekNo = []
+      if (findNo.length > 0) {
+        for (let i = 0; i < findNo.length; i++) {
+          const no = findNo[i].no_transaksi.split('/')
+          cekNo.push(parseInt(no[0]))
+        }
+      } else {
+        cekNo.push(0)
+      }
+      const noIo = Math.max(...cekNo) + 1
+      const findIo = await pengadaan.findAll({
+        where: {
+          kode_plant: kode,
+          [Op.or]: [
+            { status_form: null }
+          ]
+        }
+      })
+      if (findIo.length > 0) {
+        const temp = []
+        const change = noIo.toString().split('')
+        const notrans = change.length === 2 ? '00' + noIo : change.length === 1 ? '000' + noIo : change.length === 3 ? '0' + noIo : noIo
+        const month = parseInt(moment().format('MM'))
+        const year = moment().format('YYYY')
+        let rome = ''
+        if (month === 1) {
+          rome = 'I'
+        } else if (month === 2) {
+          rome = 'II'
+        } else if (month === 3) {
+          rome = 'III'
+        } else if (month === 4) {
+          rome = 'IV'
+        } else if (month === 5) {
+          rome = 'V'
+        } else if (month === 6) {
+          rome = 'VI'
+        } else if (month === 7) {
+          rome = 'VII'
+        } else if (month === 8) {
+          rome = 'VIII'
+        } else if (month === 9) {
+          rome = 'IX'
+        } else if (month === 10) {
+          rome = 'X'
+        } else if (month === 11) {
+          rome = 'XI'
+        } else if (month === 12) {
+          rome = 'XII'
+        }
+        const tempData = findIo.find(({no_pengadaan}) => no_pengadaan !== null) // eslint-disable-line
+        const cekData = tempData === undefined ? 'ya' : 'no'
+        const noTrans = `${notrans}/${kode}/${rome}/${year}-IO`
+        const data = {
+          no_pengadaan: noTrans
+        }
+        for (let i = 0; i < findIo.length; i++) {
+          const findDraft = await pengadaan.findByPk(findIo[i].id)
+          if (findDraft) {
+            const upIo = await findDraft.update(data)
+            if (upIo) {
+              temp.push(1)
+            }
+          }
+        }
+        if (temp.length) {
+          if (cekData === 'no') {
+            const findReser = await reservoir.findOne({
+              where: {
+                no_transaksi: tempData.no_pengadaan
+              }
+            })
+            const findNewReser = await reservoir.findOne({
+              where: {
+                no_transaksi: noTrans
+              }
+            })
+            const upDataReser = {
+              status: 'expired'
+            }
+            const creDataReser = {
+              no_transaksi: noTrans,
+              kode_plant: kode,
+              transaksi: 'pengadaan',
+              tipe: 'area',
+              status: 'delayed'
+            }
+            if (findReser && !findNewReser) {
+              await findReser.update(upDataReser)
+              await reservoir.create(creDataReser)
+              return response(res, 'success submit cart', { noIo: noTrans })
+            } else {
+              return response(res, 'success submit cart', { noIo: noTrans })
+            }
+          } else {
+            const findNewReser = await reservoir.findOne({
+              where: {
+                no_transaksi: noTrans
+              }
+            })
+            if (findNewReser) {
+              return response(res, 'success submit cart', { noIo: noTrans })
+            } else {
+              const creDataReser = {
+                no_transaksi: noTrans,
+                kode_plant: kode,
+                transaksi: 'pengadaan',
+                tipe: 'area',
+                status: 'delayed'
+              }
+              await reservoir.create(creDataReser)
+              return response(res, 'success submit cart', { noIo: noTrans })
+            }
+          }
+        } else {
+          return response(res, 'failed submit cart', { noIo: noTrans })
+        }
+      } else {
+        return response(res, 'failed submit cart', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitIoFinal: async (req, res) => {
+    try {
+      const { no } = req.body
+      const kode = req.user.kode
+      const findIo = await pengadaan.findAll({
+        where: {
+          no_pengadaan: no,
+          kode_plant: kode,
+          status_form: null
+        }
+      })
+      if (findIo) {
+        const temp = []
+        for (let i = 0; i < findIo.length; i++) {
+          const data = {
+            status_form: 1,
+            history: `submit pengajuan klaim by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+            tglIo: moment()
+          }
+          const findData = await pengadaan.findByPk(findIo[i].id)
+          if (findData) {
+            await findData.update(data)
+            temp.push(findData)
+          }
+        }
+        if (temp.length > 0) {
+          const findNewReser = await reservoir.findOne({
+            where: {
+              no_transaksi: no
+            }
+          })
+          if (findNewReser) {
+            const upDataReser = {
+              status: 'used',
+              createdAt: moment()
+            }
+            await findNewReser.update(upDataReser)
+            return response(res, 'success submit cart')
+          } else {
+            return response(res, 'success submit cart')
+          }
+        } else {
+          return response(res, 'failed submit cart', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit cart', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   submitCart: async (req, res) => {
     try {
       const kode = req.user.kode
@@ -934,7 +1126,7 @@ module.exports = {
   },
   getApproveIo: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const result = await ttd.findAll({
         where: {
           [Op.or]: [
@@ -1016,7 +1208,7 @@ module.exports = {
   },
   getDocumentIo: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const result = await docUser.findAll({
         where: {
           [Op.and]: [
@@ -1077,11 +1269,11 @@ module.exports = {
   },
   getDocumentCart: async (req, res) => {
     try {
-      const no = req.params.no
+      const id = req.params.id
       const result = await docUser.findAll({
         where: {
           [Op.and]: [
-            { no_pengadaan: no },
+            { no_pengadaan: id },
             { jenis_form: 'pengadaan' }
           ]
         }
@@ -1089,7 +1281,7 @@ module.exports = {
       if (result.length > 0) {
         return response(res, 'success get document', { result })
       } else {
-        const result = await pengadaan.findByPk(no)
+        const result = await pengadaan.findByPk(id)
         if (result) {
           const getDoc = await document.findAll({
             where: {
@@ -1111,7 +1303,7 @@ module.exports = {
                 nama_dokumen: getDoc[i].nama_dokumen,
                 jenis_dokumen: getDoc[i].jenis_dokumen,
                 divisi: getDoc[i].divisi,
-                no_pengadaan: no,
+                no_pengadaan: id,
                 jenis_form: 'pengadaan'
               }
               const make = await docUser.create(send)
@@ -1123,7 +1315,7 @@ module.exports = {
               const result = await docUser.findAll({
                 where: {
                   [Op.and]: [
-                    { no_pengadaan: no },
+                    { no_pengadaan: id },
                     { jenis_form: 'pengadaan' }
                   ]
                 }
@@ -1231,7 +1423,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
+      const { no } = req.body
       const result = await role.findAll({
         where: {
           nomor: level
@@ -1305,165 +1497,7 @@ module.exports = {
                                   }
                                 })
                                 if (findUser) {
-                                  const findEmail = await email.findOne({
-                                    where: {
-                                      kode_plant: findIo[0].kode_plant
-                                    }
-                                  })
-                                  if (findEmail) {
-                                    let tableTd = ''
-                                    for (let i = 0; i < findIo.length; i++) {
-                                      if (findIo[i].isAsset === 'true') {
-                                        const element = `
-                                        <tr>
-                                          <td>${findIo.indexOf(findIo[i]) + 1}</td>
-                                          <td>${findIo[i].no_pengadaan}</td>
-                                          <td>${findIo[i].nama}</td>
-                                          <td>${findIo[i].price}</td>
-                                          <td>${findIo[i].qty}</td>
-                                          <td>${findIo[i].kode_plant}</td>
-                                          <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
-                                          <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
-                                        </tr>`
-                                        tableTd = tableTd + element
-                                      }
-                                    }
-                                    const mailOptions = {
-                                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      // to: `${level === 5 ? findEmail.email_area_om : findEmail.email_nom}`,
-                                      to: `${emailAss}, ${emailAss2}`,
-                                      subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
-                                      html: `
-                                      <head>
-                                        <style type="text/css">
-                                          body {
-                                              display: flexbox;
-                                              flex-direction: column;
-                                          }
-                                          .tittle {
-                                              font-size: 15px;
-                                          }
-                                          .mar {
-                                              margin-bottom: 20px;
-                                          }
-                                          .mar1 {
-                                              margin-bottom: 10px;
-                                          }
-                                          .foot {
-                                              margin-top: 20px;
-                                              margin-bottom: 10px;
-                                          }
-                                          .foot1 {
-                                              margin-bottom: 50px;
-                                          }
-                                          .position {
-                                              display: flexbox;
-                                              flex-direction: row;
-                                              justify-content: left;
-                                              margin-top: 10px;
-                                          }
-                                          table {
-                                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                              font-size: 12px;
-                                          }
-                                          .demo-table {
-                                              border-collapse: collapse;
-                                              font-size: 13px;
-                                          }
-                                          .demo-table th, 
-                                          .demo-table td {
-                                              border-bottom: 1px solid #e1edff;
-                                              border-left: 1px solid #e1edff;
-                                              padding: 7px 17px;
-                                          }
-                                          .demo-table th, 
-                                          .demo-table td:last-child {
-                                              border-right: 1px solid #e1edff;
-                                          }
-                                          .demo-table td:first-child {
-                                              border-top: 1px solid #e1edff;
-                                          }
-                                          .demo-table td:last-child{
-                                              border-bottom: 0;
-                                          }
-                                          caption {
-                                              caption-side: top;
-                                              margin-bottom: 10px;
-                                          }
-                                          
-                                          /* Table Header */
-                                          .demo-table thead th {
-                                              background-color: #508abb;
-                                              color: #FFFFFF;
-                                              border-color: #6ea1cc !important;
-                                              text-transform: uppercase;
-                                          }
-                                          
-                                          /* Table Body */
-                                          .demo-table tbody td {
-                                              color: #353535;
-                                          }
-                                          
-                                          .demo-table tbody tr:nth-child(odd) td {
-                                              background-color: #f4fbff;
-                                          }
-                                          .demo-table tbody tr:hover th,
-                                          .demo-table tbody tr:hover td {
-                                              background-color: #ffffa2;
-                                              border-color: #ffff0f;
-                                              transition: all .2s;
-                                          }
-                                      </style>
-                                      </head>
-                                      <body>
-                                          <div class="tittle mar">
-                                              Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                          </div>
-                                          <div class="tittle mar1">
-                                              <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
-                                          </div>
-                                          <div class="position">
-                                              <table class="demo-table">
-                                                  <thead>
-                                                      <tr>
-                                                          <th>No</th>
-                                                          <th>No Pengadaan</th>
-                                                          <th>Description</th>
-                                                          <th>Price</th>
-                                                          <th>Qty</th>
-                                                          <th>Kode Plant</th>
-                                                          <th>Cost Ctr</th>
-                                                          <th>Cost Ctr Name</th>
-                                                      </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    ${tableTd}
-                                                  </tbody>
-                                              </table>
-                                          </div>
-                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                          <div class="tittle foot">
-                                              Terima kasih,
-                                          </div>
-                                          <div class="tittle foot1">
-                                              Regards,
-                                          </div>
-                                          <div class="tittle">
-                                              Team Asset
-                                          </div>
-                                      </body>
-                                      `
-                                    }
-                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                    if (sendEmail) {
-                                      return response(res, 'success approve pengajuan io', { result: sendEmail })
-                                    } else {
-                                      return response(res, 'success approve pengajuan io')
-                                    }
-                                  } else {
-                                    return response(res, 'success approve pengajuan io')
-                                  }
+                                  return response(res, 'success approve pengajuan io')
                                 } else {
                                   return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
                                 }
@@ -1506,156 +1540,7 @@ module.exports = {
                                   }
                                 })
                                 if (findUser) {
-                                  let tableTd = ''
-                                  for (let i = 0; i < findDoc.length; i++) {
-                                    if (findDoc[i].isAsset === 'true') {
-                                      const element = `
-                                      <tr>
-                                        <td>${findDoc.indexOf(findDoc[i]) + 1}</td>
-                                        <td>${findDoc[i].no_pengadaan}</td>
-                                        <td>${findDoc[i].nama}</td>
-                                        <td>${findDoc[i].price}</td>
-                                        <td>${findDoc[i].qty}</td>
-                                        <td>${findDoc[i].kode_plant}</td>
-                                        <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
-                                        <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
-                                      </tr>`
-                                      tableTd = tableTd + element
-                                    }
-                                  }
-                                  const mailOptions = {
-                                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    // to: `${findUser.email}`,
-                                    to: `${emailAss}, ${emailAss2}`,
-                                    subject: `Pengajuan Pengadaan Asset ${findDoc[0].no_pengadaan} `,
-                                    html: `
-                                      <head>
-                                        <style type="text/css">
-                                          body {
-                                              display: flexbox;
-                                              flex-direction: column;
-                                          }
-                                          .tittle {
-                                              font-size: 15px;
-                                          }
-                                          .mar {
-                                              margin-bottom: 20px;
-                                          }
-                                          .mar1 {
-                                              margin-bottom: 10px;
-                                          }
-                                          .foot {
-                                              margin-top: 20px;
-                                              margin-bottom: 10px;
-                                          }
-                                          .foot1 {
-                                              margin-bottom: 50px;
-                                          }
-                                          .position {
-                                              display: flexbox;
-                                              flex-direction: row;
-                                              justify-content: left;
-                                              margin-top: 10px;
-                                          }
-                                          table {
-                                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                              font-size: 12px;
-                                          }
-                                          .demo-table {
-                                              border-collapse: collapse;
-                                              font-size: 13px;
-                                          }
-                                          .demo-table th, 
-                                          .demo-table td {
-                                              border-bottom: 1px solid #e1edff;
-                                              border-left: 1px solid #e1edff;
-                                              padding: 7px 17px;
-                                          }
-                                          .demo-table th, 
-                                          .demo-table td:last-child {
-                                              border-right: 1px solid #e1edff;
-                                          }
-                                          .demo-table td:first-child {
-                                              border-top: 1px solid #e1edff;
-                                          }
-                                          .demo-table td:last-child{
-                                              border-bottom: 0;
-                                          }
-                                          caption {
-                                              caption-side: top;
-                                              margin-bottom: 10px;
-                                          }
-                                          
-                                          /* Table Header */
-                                          .demo-table thead th {
-                                              background-color: #508abb;
-                                              color: #FFFFFF;
-                                              border-color: #6ea1cc !important;
-                                              text-transform: uppercase;
-                                          }
-                                          
-                                          /* Table Body */
-                                          .demo-table tbody td {
-                                              color: #353535;
-                                          }
-                                          
-                                          .demo-table tbody tr:nth-child(odd) td {
-                                              background-color: #f4fbff;
-                                          }
-                                          .demo-table tbody tr:hover th,
-                                          .demo-table tbody tr:hover td {
-                                              background-color: #ffffa2;
-                                              border-color: #ffff0f;
-                                              transition: all .2s;
-                                          }
-                                      </style>
-                                      </head>
-                                      <body>
-                                          <div class="tittle mar">
-                                              Dear Bapak/Ibu Divisi Asset,
-                                          </div>
-                                          <div class="tittle mar1">
-                                              <div>Mohon untuk isi nomor io pengajuan asset berikut ini.</div>
-                                          </div>
-                                          <div class="position">
-                                              <table class="demo-table">
-                                                  <thead>
-                                                      <tr>
-                                                          <th>No</th>
-                                                          <th>No Pengadaan</th>
-                                                          <th>Description</th>
-                                                          <th>Price</th>
-                                                          <th>Qty</th>
-                                                          <th>Kode Plant</th>
-                                                          <th>Cost Ctr</th>
-                                                          <th>Cost Ctr Name</th>
-                                                      </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    ${tableTd}
-                                                  </tbody>
-                                              </table>
-                                          </div>
-                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                          <div class="tittle foot">
-                                              Terima kasih,
-                                          </div>
-                                          <div class="tittle foot1">
-                                              Regards,
-                                          </div>
-                                          <div class="tittle">
-                                              Team Asset
-                                          </div>
-                                      </body>
-                                      `
-                                  }
-                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                  if (sendEmail) {
-                                    return response(res, 'success approve pengajuan io', { result: sendEmail })
-                                  } else {
-                                    return response(res, 'success approve pengajuan io')
-                                  }
+                                  return response(res, 'success approve pengajuan io')
                                 } else {
                                   return response(res, 'success approve pengadaan')
                                 }
@@ -1690,156 +1575,7 @@ module.exports = {
                                     }
                                   })
                                   if (findUser) {
-                                    let tableTd = ''
-                                    for (let i = 0; i < findIo.length; i++) {
-                                      if (findIo[i].isAsset === 'true') {
-                                        const element = `
-                                        <tr>
-                                          <td>${findIo.indexOf(findIo[i]) + 1}</td>
-                                          <td>${findIo[i].no_pengadaan}</td>
-                                          <td>${findIo[i].nama}</td>
-                                          <td>${findIo[i].price}</td>
-                                          <td>${findIo[i].qty}</td>
-                                          <td>${findIo[i].kode_plant}</td>
-                                          <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
-                                          <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
-                                        </tr>`
-                                        tableTd = tableTd + element
-                                      }
-                                    }
-                                    const mailOptions = {
-                                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      // to: `${findUser.email}`,
-                                      to: `${emailAss}, ${emailAss2}`,
-                                      subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
-                                      html: `
-                                      <head>
-                                        <style type="text/css">
-                                          body {
-                                              display: flexbox;
-                                              flex-direction: column;
-                                          }
-                                          .tittle {
-                                              font-size: 15px;
-                                          }
-                                          .mar {
-                                              margin-bottom: 20px;
-                                          }
-                                          .mar1 {
-                                              margin-bottom: 10px;
-                                          }
-                                          .foot {
-                                              margin-top: 20px;
-                                              margin-bottom: 10px;
-                                          }
-                                          .foot1 {
-                                              margin-bottom: 50px;
-                                          }
-                                          .position {
-                                              display: flexbox;
-                                              flex-direction: row;
-                                              justify-content: left;
-                                              margin-top: 10px;
-                                          }
-                                          table {
-                                              font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                              font-size: 12px;
-                                          }
-                                          .demo-table {
-                                              border-collapse: collapse;
-                                              font-size: 13px;
-                                          }
-                                          .demo-table th, 
-                                          .demo-table td {
-                                              border-bottom: 1px solid #e1edff;
-                                              border-left: 1px solid #e1edff;
-                                              padding: 7px 17px;
-                                          }
-                                          .demo-table th, 
-                                          .demo-table td:last-child {
-                                              border-right: 1px solid #e1edff;
-                                          }
-                                          .demo-table td:first-child {
-                                              border-top: 1px solid #e1edff;
-                                          }
-                                          .demo-table td:last-child{
-                                              border-bottom: 0;
-                                          }
-                                          caption {
-                                              caption-side: top;
-                                              margin-bottom: 10px;
-                                          }
-                                          
-                                          /* Table Header */
-                                          .demo-table thead th {
-                                              background-color: #508abb;
-                                              color: #FFFFFF;
-                                              border-color: #6ea1cc !important;
-                                              text-transform: uppercase;
-                                          }
-                                          
-                                          /* Table Body */
-                                          .demo-table tbody td {
-                                              color: #353535;
-                                          }
-                                          
-                                          .demo-table tbody tr:nth-child(odd) td {
-                                              background-color: #f4fbff;
-                                          }
-                                          .demo-table tbody tr:hover th,
-                                          .demo-table tbody tr:hover td {
-                                              background-color: #ffffa2;
-                                              border-color: #ffff0f;
-                                              transition: all .2s;
-                                          }
-                                      </style>
-                                      </head>
-                                      <body>
-                                          <div class="tittle mar">
-                                              Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                          </div>
-                                          <div class="tittle mar1">
-                                              <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
-                                          </div>
-                                          <div class="position">
-                                              <table class="demo-table">
-                                                  <thead>
-                                                      <tr>
-                                                          <th>No</th>
-                                                          <th>No Pengadaan</th>
-                                                          <th>Description</th>
-                                                          <th>Price</th>
-                                                          <th>Qty</th>
-                                                          <th>Kode Plant</th>
-                                                          <th>Cost Ctr</th>
-                                                          <th>Cost Ctr Name</th>
-                                                      </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    ${tableTd}
-                                                  </tbody>
-                                              </table>
-                                          </div>
-                                          <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                          <div class="tittle foot">
-                                              Terima kasih,
-                                          </div>
-                                          <div class="tittle foot1">
-                                              Regards,
-                                          </div>
-                                          <div class="tittle">
-                                              Team Asset
-                                          </div>
-                                      </body>
-                                      `
-                                    }
-                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                    if (sendEmail) {
-                                      return response(res, 'success approve pengajuan io', { result: sendEmail })
-                                    } else {
-                                      return response(res, 'success approve pengajuan io')
-                                    }
+                                    return response(res, 'success approve pengajuan io')
                                   } else {
                                     return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
                                   }
@@ -2544,7 +2280,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      // const no = req.params.no
+      // const { no } = req.body
       const schema = joi.object({
         alasan: joi.string().required(),
         no: joi.string().required(),
@@ -2715,7 +2451,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
+      const { no } = req.body
       const schema = joi.object({
         alasan: joi.string().required(),
         status: joi.number().required()
@@ -3250,54 +2986,39 @@ module.exports = {
     }
   },
   getDetail: async (req, res) => {
-    try {
-      const no = req.params.no
-      const result = await pengadaan.findAll({
-        where: {
-          no_pengadaan: no
+    // try {
+    const { no } = req.body
+    const result = await pengadaan.findAll({
+      where: {
+        no_pengadaan: no
+      },
+      order: [
+        ['id', 'DESC'],
+        [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+      ],
+      include: [
+        {
+          model: depo,
+          as: 'depo'
         },
-        include: [
-          {
-            model: depo,
-            as: 'depo'
-          }
-        ]
-      })
-      if (result.length > 0) {
-        const data = []
-        for (let i = 0; i < result.length; i++) {
-          const temp = result[i]
-          const appForm = await ttd.findAll({
-            where: {
-              no_doc: result[i].no_pengadaan
-            },
-            order: [
-              ['id', 'DESC']
-            ]
-          })
-          if (appForm.length > 0) {
-            temp.dataValues.appForm = appForm
-            data.push(temp)
-          } else {
-            temp.dataValues.appForm = appForm
-            data.push(temp)
-          }
+        {
+          as: 'appForm',
+          model: ttd
         }
-        if (data.length > 0) {
-          return response(res, 'success get detail', { result: data })
-        } else {
-          return response(res, 'success get detail', { result: data })
-        }
-      } else {
-        return response(res, 'failed get detail', {}, 404, false)
-      }
-    } catch (error) {
-      return response(res, error.message, {}, 500, false)
+      ]
+    })
+    if (result.length > 0) {
+      return response(res, 'success get detail', { result })
+    } else {
+      return response(res, 'failed get detail', {}, 404, false)
     }
+    // } catch (error) {
+    //   return response(res, error.message, {}, 500, false)
+    // }
   },
   getTempAsset: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const findTemp = await assettemp.findAll({
         where: {
           no_pengadaan: no
@@ -3577,7 +3298,7 @@ module.exports = {
   },
   submitIsAsset: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3588,7 +3309,8 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
-            status_form: 2
+            status_form: 2,
+            status_reject: null
           }
           if (findData) {
             await findData.update(data)
@@ -3608,156 +3330,7 @@ module.exports = {
               }
             })
             if (findEmail) {
-              let tableTd = ''
-              for (let i = 0; i < findIo.length; i++) {
-                if (findIo[i].isAsset === 'true') {
-                  const element = `
-                    <tr>
-                      <td>${findIo.indexOf(findIo[i]) + 1}</td>
-                      <td>${findIo[i].no_pengadaan}</td>
-                      <td>${findIo[i].nama}</td>
-                      <td>${findIo[i].price}</td>
-                      <td>${findIo[i].qty}</td>
-                      <td>${findIo[i].kode_plant}</td>
-                      <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
-                      <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
-                    </tr>`
-                  tableTd = tableTd + element
-                }
-              }
-              const mailOptions = {
-                from: 'noreply_asset@pinusmerahabadi.co.id',
-                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                // to: `${findEmail.email_area_aos}`,
-                to: `${emailAss}, ${emailAss2}`,
-                subject: `Approve Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
-                html: `
-                <head>
-                  <style type="text/css">
-                    body {
-                        display: flexbox;
-                        flex-direction: column;
-                    }
-                    .tittle {
-                        font-size: 15px;
-                    }
-                    .mar {
-                        margin-bottom: 20px;
-                    }
-                    .mar1 {
-                        margin-bottom: 10px;
-                    }
-                    .foot {
-                        margin-top: 20px;
-                        margin-bottom: 10px;
-                    }
-                    .foot1 {
-                        margin-bottom: 50px;
-                    }
-                    .position {
-                        display: flexbox;
-                        flex-direction: row;
-                        justify-content: left;
-                        margin-top: 10px;
-                    }
-                    table {
-                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                        font-size: 12px;
-                    }
-                    .demo-table {
-                        border-collapse: collapse;
-                        font-size: 13px;
-                    }
-                    .demo-table th, 
-                    .demo-table td {
-                        border-bottom: 1px solid #e1edff;
-                        border-left: 1px solid #e1edff;
-                        padding: 7px 17px;
-                    }
-                    .demo-table th, 
-                    .demo-table td:last-child {
-                        border-right: 1px solid #e1edff;
-                    }
-                    .demo-table td:first-child {
-                        border-top: 1px solid #e1edff;
-                    }
-                    .demo-table td:last-child{
-                        border-bottom: 0;
-                    }
-                    caption {
-                        caption-side: top;
-                        margin-bottom: 10px;
-                    }
-                    
-                    /* Table Header */
-                    .demo-table thead th {
-                        background-color: #508abb;
-                        color: #FFFFFF;
-                        border-color: #6ea1cc !important;
-                        text-transform: uppercase;
-                    }
-                    
-                    /* Table Body */
-                    .demo-table tbody td {
-                        color: #353535;
-                    }
-                    
-                    .demo-table tbody tr:nth-child(odd) td {
-                        background-color: #f4fbff;
-                    }
-                    .demo-table tbody tr:hover th,
-                    .demo-table tbody tr:hover td {
-                        background-color: #ffffa2;
-                        border-color: #ffff0f;
-                        transition: all .2s;
-                    }
-                </style>
-                </head>
-                <body>
-                    <div class="tittle mar">
-                        Dear Bapak/Ibu Divisi Budget,
-                    </div>
-                    <div class="tittle mar1">
-                        <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
-                    </div>
-                    <div class="position">
-                        <table class="demo-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>No Pengadaan</th>
-                                    <th>Description</th>
-                                    <th>Price</th>
-                                    <th>Qty</th>
-                                    <th>Kode Plant</th>
-                                    <th>Cost Ctr</th>
-                                    <th>Cost Ctr Name</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                              ${tableTd}
-                            </tbody>
-                        </table>
-                    </div>
-                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                    <div class="tittle foot">
-                        Terima kasih,
-                    </div>
-                    <div class="tittle foot1">
-                        Regards,
-                    </div>
-                    <div class="tittle">
-                        Team Asset
-                    </div>
-                </body>
-                `
-              }
-              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-              if (sendEmail) {
-                return response(res, 'success submit pengajuan io', { result: sendEmail })
-              } else {
-                return response(res, 'success submit pengajuan io')
-              }
+              return response(res, 'success submit pengajuan io')
             } else {
               return response(res, 'success submit pengajuan io')
             }
@@ -3776,9 +3349,9 @@ module.exports = {
   },
   updateNoIo: async (req, res) => {
     try {
-      const no = req.params.no
       const schema = joi.object({
-        no_io: joi.string().required()
+        no_io: joi.string().required(),
+        no: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -3786,7 +3359,7 @@ module.exports = {
       } else {
         const findIo = await pengadaan.findAll({
           where: {
-            no_pengadaan: no
+            no_pengadaan: results.no
           }
         })
         if (findIo.length > 0) {
@@ -3794,7 +3367,10 @@ module.exports = {
           for (let i = 0; i < findIo.length; i++) {
             const findData = await pengadaan.findByPk(findIo[i].id)
             if (findData) {
-              await findData.update(results)
+              const data = {
+                no_io: results.no_io
+              }
+              await findData.update(data)
               cek.push(1)
             }
           }
@@ -3899,9 +3475,9 @@ module.exports = {
   },
   updateAlasan: async (req, res) => {
     try {
-      const no = req.params.no
       const schema = joi.object({
-        alasan: joi.string().required()
+        alasan: joi.string().required(),
+        no: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -3909,7 +3485,7 @@ module.exports = {
       } else {
         const findIo = await pengadaan.findAll({
           where: {
-            no_pengadaan: no
+            no_pengadaan: results.no
           }
         })
         if (findIo.length > 0) {
@@ -3917,7 +3493,10 @@ module.exports = {
           for (let i = 0; i < findIo.length; i++) {
             const findItem = await pengadaan.findByPk(findIo[i].id)
             if (findItem) {
-              const updateAsset = await findItem.update(results)
+              const data = {
+                alasan: results.alasan
+              }
+              const updateAsset = await findItem.update(data)
               if (updateAsset) {
                 cek.push(findItem)
               }
@@ -3938,7 +3517,7 @@ module.exports = {
   },
   submitBudget: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3969,156 +3548,7 @@ module.exports = {
               }
             })
             if (findEmail) {
-              let tableTd = ''
-              for (let i = 0; i < findIo.length; i++) {
-                if (findIo[i].isAsset === 'true') {
-                  const element = `
-                  <tr>
-                    <td>${findIo.indexOf(findIo[i]) + 1}</td>
-                    <td>${findIo[i].no_pengadaan}</td>
-                    <td>${findIo[i].nama}</td>
-                    <td>${findIo[i].price}</td>
-                    <td>${findIo[i].qty}</td>
-                    <td>${findIo[i].kode_plant}</td>
-                    <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
-                    <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
-                  </tr>`
-                  tableTd = tableTd + element
-                }
-              }
-              const mailOptions = {
-                from: 'noreply_asset@pinusmerahabadi.co.id',
-                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                // to: `${findEmail.email}`,
-                to: `${emailAss}, ${emailAss2}`,
-                subject: `Eksekusi Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} `,
-                html: `
-                <head>
-                  <style type="text/css">
-                    body {
-                        display: flexbox;
-                        flex-direction: column;
-                    }
-                    .tittle {
-                        font-size: 15px;
-                    }
-                    .mar {
-                        margin-bottom: 20px;
-                    }
-                    .mar1 {
-                        margin-bottom: 10px;
-                    }
-                    .foot {
-                        margin-top: 20px;
-                        margin-bottom: 10px;
-                    }
-                    .foot1 {
-                        margin-bottom: 50px;
-                    }
-                    .position {
-                        display: flexbox;
-                        flex-direction: row;
-                        justify-content: left;
-                        margin-top: 10px;
-                    }
-                    table {
-                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                        font-size: 12px;
-                    }
-                    .demo-table {
-                        border-collapse: collapse;
-                        font-size: 13px;
-                    }
-                    .demo-table th, 
-                    .demo-table td {
-                        border-bottom: 1px solid #e1edff;
-                        border-left: 1px solid #e1edff;
-                        padding: 7px 17px;
-                    }
-                    .demo-table th, 
-                    .demo-table td:last-child {
-                        border-right: 1px solid #e1edff;
-                    }
-                    .demo-table td:first-child {
-                        border-top: 1px solid #e1edff;
-                    }
-                    .demo-table td:last-child{
-                        border-bottom: 0;
-                    }
-                    caption {
-                        caption-side: top;
-                        margin-bottom: 10px;
-                    }
-                    
-                    /* Table Header */
-                    .demo-table thead th {
-                        background-color: #508abb;
-                        color: #FFFFFF;
-                        border-color: #6ea1cc !important;
-                        text-transform: uppercase;
-                    }
-                    
-                    /* Table Body */
-                    .demo-table tbody td {
-                        color: #353535;
-                    }
-                    
-                    .demo-table tbody tr:nth-child(odd) td {
-                        background-color: #f4fbff;
-                    }
-                    .demo-table tbody tr:hover th,
-                    .demo-table tbody tr:hover td {
-                        background-color: #ffffa2;
-                        border-color: #ffff0f;
-                        transition: all .2s;
-                    }
-                </style>
-                </head>
-                <body>
-                    <div class="tittle mar">
-                        Dear Bapak/Ibu AOS,
-                    </div>
-                    <div class="tittle mar1">
-                        <div>Mohon untuk isi nomor asset pengajuan asset berikut ini.</div>
-                    </div>
-                    <div class="position">
-                        <table class="demo-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>No Pengadaan</th>
-                                    <th>Description</th>
-                                    <th>Price</th>
-                                    <th>Qty</th>
-                                    <th>Kode Plant</th>
-                                    <th>Cost Ctr</th>
-                                    <th>Cost Ctr Name</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                              ${tableTd}
-                            </tbody>
-                        </table>
-                    </div>
-                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                    <div class="tittle foot">
-                        Terima kasih,
-                    </div>
-                    <div class="tittle foot1">
-                        Regards,
-                    </div>
-                    <div class="tittle">
-                        Team Asset
-                    </div>
-                </body>
-                `
-              }
-              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-              if (sendEmail) {
-                return response(res, 'success submit pengajuan io', { result: sendEmail })
-              } else {
-                return response(res, 'success submit pengajuan io')
-              }
+              return response(res, 'success submit pengajuan io')
             } else {
               return response(res, 'success submit pengajuan io')
             }
@@ -4137,7 +3567,7 @@ module.exports = {
   },
   submitEks: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -4416,7 +3846,7 @@ module.exports = {
   },
   deleteTransaksi: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -4518,7 +3948,7 @@ module.exports = {
   },
   submitNotAsset: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -4549,156 +3979,7 @@ module.exports = {
               }
             })
             if (findEmail) {
-              let tableTd = ''
-              for (let i = 0; i < findIo.length; i++) {
-                if (findIo[i].isAsset === 'true') {
-                  const element = `
-                    <tr>
-                      <td>${findIo.indexOf(findIo[i]) + 1}</td>
-                      <td>${findIo[i].no_pengadaan}</td>
-                      <td>${findIo[i].nama}</td>
-                      <td>${findIo[i].price}</td>
-                      <td>${findIo[i].qty}</td>
-                      <td>${findIo[i].kode_plant}</td>
-                      <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
-                      <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
-                    </tr>`
-                  tableTd = tableTd + element
-                }
-              }
-              const mailOptions = {
-                from: 'noreply_asset@pinusmerahabadi.co.id',
-                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                // to: `${findEmail.email_area_aos}`,
-                to: `${emailAss}, ${emailAss2}`,
-                subject: `Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} Telah dibatalkan karena item tidak termasuk kategori aset`,
-                html: `
-                <head>
-                  <style type="text/css">
-                    body {
-                        display: flexbox;
-                        flex-direction: column;
-                    }
-                    .tittle {
-                        font-size: 15px;
-                    }
-                    .mar {
-                        margin-bottom: 20px;
-                    }
-                    .mar1 {
-                        margin-bottom: 10px;
-                    }
-                    .foot {
-                        margin-top: 20px;
-                        margin-bottom: 10px;
-                    }
-                    .foot1 {
-                        margin-bottom: 50px;
-                    }
-                    .position {
-                        display: flexbox;
-                        flex-direction: row;
-                        justify-content: left;
-                        margin-top: 10px;
-                    }
-                    table {
-                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                        font-size: 12px;
-                    }
-                    .demo-table {
-                        border-collapse: collapse;
-                        font-size: 13px;
-                    }
-                    .demo-table th, 
-                    .demo-table td {
-                        border-bottom: 1px solid #e1edff;
-                        border-left: 1px solid #e1edff;
-                        padding: 7px 17px;
-                    }
-                    .demo-table th, 
-                    .demo-table td:last-child {
-                        border-right: 1px solid #e1edff;
-                    }
-                    .demo-table td:first-child {
-                        border-top: 1px solid #e1edff;
-                    }
-                    .demo-table td:last-child{
-                        border-bottom: 0;
-                    }
-                    caption {
-                        caption-side: top;
-                        margin-bottom: 10px;
-                    }
-                    
-                    /* Table Header */
-                    .demo-table thead th {
-                        background-color: #508abb;
-                        color: #FFFFFF;
-                        border-color: #6ea1cc !important;
-                        text-transform: uppercase;
-                    }
-                    
-                    /* Table Body */
-                    .demo-table tbody td {
-                        color: #353535;
-                    }
-                    
-                    .demo-table tbody tr:nth-child(odd) td {
-                        background-color: #f4fbff;
-                    }
-                    .demo-table tbody tr:hover th,
-                    .demo-table tbody tr:hover td {
-                        background-color: #ffffa2;
-                        border-color: #ffff0f;
-                        transition: all .2s;
-                    }
-                </style>
-                </head>
-                <body>
-                    <div class="tittle mar">
-                        Dear Bapak/Ibu AOS,
-                    </div>
-                    <div class="tittle mar1">
-                        <div>Mohon untuk approve form internal order pengajuan asset berikut ini.</div>
-                    </div>
-                    <div class="position">
-                        <table class="demo-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>No Pengadaan</th>
-                                    <th>Description</th>
-                                    <th>Price</th>
-                                    <th>Qty</th>
-                                    <th>Kode Plant</th>
-                                    <th>Cost Ctr</th>
-                                    <th>Cost Ctr Name</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                              ${tableTd}
-                            </tbody>
-                        </table>
-                    </div>
-                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                    <div class="tittle foot">
-                        Terima kasih,
-                    </div>
-                    <div class="tittle foot1">
-                        Regards,
-                    </div>
-                    <div class="tittle">
-                        Team Asset
-                    </div>
-                </body>
-                `
-              }
-              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-              if (sendEmail) {
-                return response(res, 'success submit pengajuan io', { result: sendEmail })
-              } else {
-                return response(res, 'success submit pengajuan io')
-              }
+              return response(res, 'success submit pengajuan io')
             } else {
               return response(res, 'success submit pengajuan io')
             }
@@ -4717,7 +3998,7 @@ module.exports = {
   },
   podsSend: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const result = await pengadaan.findAll({
         where: {
           no_pengadaan: no

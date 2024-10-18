@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
-  class role extends Model {
+  class reservoir extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,13 +13,16 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   };
-  role.init({
-    name: DataTypes.STRING,
-    nomor: DataTypes.STRING,
-    type: DataTypes.TEXT
+  reservoir.init({
+    no_transaksi: DataTypes.STRING,
+    kode_plant: DataTypes.STRING,
+    transaksi: DataTypes.STRING,
+    tipe: DataTypes.STRING,
+    status: DataTypes.STRING,
+    createdAt: DataTypes.DATE
   }, {
     sequelize,
-    modelName: 'role'
+    modelName: 'reservoir'
   })
-  return role
+  return reservoir
 }
