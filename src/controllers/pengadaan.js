@@ -870,7 +870,7 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const data = {
             status_form: 1,
-            history: `submit pengajuan klaim by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+            history: `submit pengajuan pengadaan aset by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
             tglIo: moment()
           }
           const findData = await pengadaan.findByPk(findIo[i].id)
@@ -1522,11 +1522,14 @@ module.exports = {
                               }
                             })
                             if (findDoc.length > 0) {
-                              const data = {
-                                status_form: 3
-                              }
                               const valid = []
                               for (let i = 0; i < findDoc.length; i++) {
+                                const data = {
+                                  status_form: 3,
+                                  status_reject: null,
+                                  isreject: null,
+                                  history: `${findDoc[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                                }
                                 const findAsset = await pengadaan.findByPk(findDoc[i].id)
                                 if (findAsset) {
                                   await findAsset.update(data)
@@ -1569,12 +1572,20 @@ module.exports = {
                                   }
                                 })
                                 if (findIo.length > 0) {
-                                  const findUser = await user.findOne({
-                                    where: {
-                                      user_level: findRole[0].nomor
+                                  const cek = []
+                                  for (let i = 0; i < findIo.length; i++) {
+                                    const upData = {
+                                      status_reject: null,
+                                      isreject: null,
+                                      history: `${findIo[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
                                     }
-                                  })
-                                  if (findUser) {
+                                    const findId = await pengadaan.findByPk(findIo[i].id)
+                                    if (findId) {
+                                      await findId.update(upData)
+                                      cek.push(findId)
+                                    }
+                                  }
+                                  if (cek.length > 0) {
                                     return response(res, 'success approve pengajuan io')
                                   } else {
                                     return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
