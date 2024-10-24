@@ -870,7 +870,7 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const data = {
             status_form: 1,
-            history: `submit pengajuan pengadaan aset by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+            history: `submit pengajuan by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
             tglIo: moment()
           }
           const findData = await pengadaan.findByPk(findIo[i].id)
@@ -1491,12 +1491,20 @@ module.exports = {
                                 }
                               })
                               if (findIo.length > 0) {
-                                const findUser = await user.findOne({
-                                  where: {
-                                    user_level: findRole[0].nomor
+                                const cek = []
+                                for (let i = 0; i < findIo.length; i++) {
+                                  const upData = {
+                                    status_reject: null,
+                                    isreject: null,
+                                    history: `${findIo[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
                                   }
-                                })
-                                if (findUser) {
+                                  const findId = await pengadaan.findByPk(findIo[i].id)
+                                  if (findId) {
+                                    await findId.update(upData)
+                                    cek.push(findId)
+                                  }
+                                }
+                                if (cek.length > 0) {
                                   return response(res, 'success approve pengajuan io')
                                 } else {
                                   return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
@@ -2611,17 +2619,68 @@ module.exports = {
             limit: 50
           })
           if (findNo) {
-            const cekNo = []
-            for (let i = 0; i < findNo.length; i++) {
-              const no = findNo[i].no_pengadaan.split('P')
-              cekNo.push(parseInt(no[1]))
-            }
-            const noIo = cekNo.length > 0 ? Math.max(...cekNo) + 1 : 1
             const findDepo = await depo.findOne({
               where: {
                 kode_sap_1: data.prinfo.salespoint_code
               }
             })
+            const timeV1 = moment().startOf('month')
+            const timeV2 = moment().endOf('month').add(1, 'd')
+            const kodeDepo = findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant
+
+            const findNo = await reservoir.findAll({
+              where: {
+                transaksi: 'pengadaan',
+                tipe: 'area',
+                createdAt: {
+                  [Op.gte]: timeV1,
+                  [Op.lt]: timeV2
+                }
+              },
+              order: [['id', 'DESC']],
+              limit: 50
+            })
+            const cekNo = []
+            if (findNo.length > 0) {
+              for (let i = 0; i < findNo.length; i++) {
+                const no = findNo[i].no_transaksi.split('/')
+                cekNo.push(parseInt(no[0]))
+              }
+            } else {
+              cekNo.push(0)
+            }
+            const noIo = Math.max(...cekNo) + 1
+            const change = noIo.toString().split('')
+            const notrans = change.length === 2 ? '00' + noIo : change.length === 1 ? '000' + noIo : change.length === 3 ? '0' + noIo : noIo
+            const month = parseInt(moment().format('MM'))
+            const year = moment().format('YYYY')
+            let rome = ''
+            if (month === 1) {
+              rome = 'I'
+            } else if (month === 2) {
+              rome = 'II'
+            } else if (month === 3) {
+              rome = 'III'
+            } else if (month === 4) {
+              rome = 'IV'
+            } else if (month === 5) {
+              rome = 'V'
+            } else if (month === 6) {
+              rome = 'VI'
+            } else if (month === 7) {
+              rome = 'VII'
+            } else if (month === 8) {
+              rome = 'VIII'
+            } else if (month === 9) {
+              rome = 'IX'
+            } else if (month === 10) {
+              rome = 'X'
+            } else if (month === 11) {
+              rome = 'XI'
+            } else if (month === 12) {
+              rome = 'XII'
+            }
+            const noTrans = `${notrans}/${kodeDepo}/${rome}/${year}-IO`
             const valid = []
             for (let i = 0; i < data.pr_items.length; i++) {
               const dataSend = {
@@ -2631,25 +2690,44 @@ module.exports = {
                 uom: data.pr_items[i].uom,
                 isAsset: data.pr_items[i].isAsset,
                 setup_date: data.pr_items[i].setup_date,
-                kode_plant: findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant,
+                kode_plant: kodeDepo,
                 isBudget: `${data.prinfo.isBudget}`,
                 ticket_code: data.ticket_code,
-                no_pengadaan: noIo === undefined ? 'P' + 1 : 'P' + noIo,
+                no_pengadaan: noTrans,
                 kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget',
                 asset_token: data.pr_items[i].asset_number_token,
                 bidding_harga: data.pr_items[i].notes_bidding_harga,
                 ket_barang: data.pr_items[i].notes_keterangan_barang,
                 status_form: 1,
+                history: `create ajuan from pods at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
                 tglIo: moment(),
                 area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
                 alasan: data.pr_items[i].notes
               }
-              const sent = await pengadaan.create(dataSend)
-              if (sent) {
-                valid.push(sent)
+              const cekData = await pengadaan.findOne({
+                where: {
+                  ticket_code: data.ticket_code
+                }
+              })
+              if (cekData) {
+                valid.push()
+              } else {
+                const sent = await pengadaan.create(dataSend)
+                if (sent) {
+                  valid.push(sent)
+                }
               }
             }
             if (valid.length > 0) {
+              const creDataReser = {
+                no_transaksi: noTrans,
+                kode_plant: kodeDepo,
+                transaksi: 'pengadaan',
+                tipe: 'area',
+                status: 'used',
+                createdAt: moment()
+              }
+              const createRes = await reservoir.create(creDataReser)
               const cek = []
               for (let i = 0; i < data.attachments.length; i++) {
                 const send = {
@@ -2666,7 +2744,7 @@ module.exports = {
                   cek.push(sent)
                 }
               }
-              if (cek.length > 0) {
+              if (cek.length > 0 && createRes) {
                 const getApp = await approve.findAll({
                   where: {
                     nama_approve: 'pengadaan io',
@@ -2829,7 +2907,7 @@ module.exports = {
                                     </tbody>
                                 </table>
                             </div>
-                            <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                            <a href="https://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
                             <div class="tittle foot">
                                 Terima kasih,
                             </div>
@@ -2940,7 +3018,7 @@ module.exports = {
                 return response(res, 'berhasil melakukan pengajuan io', { result: data })
               }
             } else {
-              return response(res, 'failed create data pengadaan')
+              return response(res, 'berhasil melakukan pengajuan io', { result: data })
             }
           } else {
             return response(res, 'failed create data pengadaan')
