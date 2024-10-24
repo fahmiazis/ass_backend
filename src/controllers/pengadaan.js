@@ -2704,18 +2704,9 @@ module.exports = {
                 area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
                 alasan: data.pr_items[i].notes
               }
-              const cekData = await pengadaan.findOne({
-                where: {
-                  ticket_code: data.ticket_code
-                }
-              })
-              if (cekData) {
-                valid.push()
-              } else {
-                const sent = await pengadaan.create(dataSend)
-                if (sent) {
-                  valid.push(sent)
-                }
+              const sent = await pengadaan.create(dataSend)
+              if (sent) {
+                valid.push(sent)
               }
             }
             if (valid.length > 0) {
