@@ -76,7 +76,7 @@ module.exports = {
             return response(res, 'success get', { result })
           }
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data', { result: [] })
         }
       } else if (level === 12 || level === 7 || level === 28) {
         const findDepo = await depo.findAll({
@@ -147,7 +147,7 @@ module.exports = {
             return response(res, 'success get', { result: hasil })
           }
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data', { result: [] })
         }
       } else {
         const result = await pengadaan.findAll({
@@ -196,7 +196,7 @@ module.exports = {
             return response(res, 'success get', { result: data })
           }
         } else {
-          return response(res, 'failed get data', {})
+          return response(res, 'failed get data', { result: [] })
         }
       }
     } catch (error) {
@@ -387,7 +387,10 @@ module.exports = {
           where: {
             kode_plant: kode,
             status_reject: 1,
-            menu_rev: 'Revisi Area'
+            menu_rev: 'Revisi Area',
+            [Op.not]: [
+              { status_form: '0' }
+            ]
           },
           include: [
             {
@@ -405,14 +408,17 @@ module.exports = {
         if (result.length > 0) {
           return response(res, 'success get', { result })
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data', { result: [] })
         }
       } else if (level === 9) {
         const result = await pengadaan.findAll({
           where: {
             kode_plant: name,
-            status_form: { [Op.like]: `%${status}%` },
-            status_app: { [Op.not]: null }
+            status_reject: 1,
+            menu_rev: 'Revisi Area',
+            [Op.not]: [
+              { status_form: '0' }
+            ]
           },
           include: [
             {
@@ -453,7 +459,7 @@ module.exports = {
             return response(res, 'success get', { result: data })
           }
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data', { result: [] })
         }
       } else if (level === 12 || level === 7 || level === 28) {
         const findDepo = await depo.findAll({
@@ -524,7 +530,7 @@ module.exports = {
             return response(res, 'success get', { result: hasil })
           }
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data', { result: [] })
         }
       } else {
         const result = await pengadaan.findAll({
@@ -571,7 +577,7 @@ module.exports = {
             return response(res, 'success get', { result: data })
           }
         } else {
-          return response(res, 'failed get data', {}, 404, false)
+          return response(res, 'failed get data', { result: [] })
         }
       }
     } catch (error) {
@@ -642,27 +648,59 @@ module.exports = {
   },
   updateCart: async (req, res) => {
     try {
+      const kode = req.user.kode
       const id = req.params.id
       const schema = joi.object({
-        nama: joi.string(),
-        qty: joi.string(),
-        price: joi.string(),
-        kategori: joi.string()
+        nama: joi.string().required(),
+        qty: joi.string().required(),
+        price: joi.string().required(),
+        kategori: joi.string().required(),
+        tipe: joi.string().required(),
+        akta: joi.string().allow(''),
+        start: joi.string().allow(''),
+        end: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 404, false)
       } else {
-        const findIo = await pengadaan.findByPk(id)
-        if (findIo.length > 0) {
-          const sent = await findIo.update(results)
-          if (sent) {
-            return response(res, 'success add cart', { result: sent })
-          } else {
-            return response(res, 'add cart failed2', {}, 404, false)
+        const findIo = await pengadaan.findAll({
+          where: {
+            [Op.and]: [
+              { kode_plant: kode },
+              { nama: results.nama }
+            ],
+            status_form: null,
+            [Op.not]: [
+              { id: id }
+            ]
           }
+        })
+        if (findIo.length > 0) {
+          return response(res, 'Item ini telah ditambahkan', {}, 404, false)
         } else {
-          return response(res, 'add cart failed2', {}, 404, false)
+          const data = {
+            nama: results.nama,
+            qty: results.qty,
+            price: results.price,
+            kategori: results.kategori,
+            kode_plant: kode,
+            tipe: results.tipe,
+            akta: results.akta === '' ? null : results.akta,
+            start: results.start === null || results.start === '' ? null : results.start,
+            end: results.end === null || results.end === '' ? null : results.end
+          }
+          const findId = await pengadaan.findByPk(id)
+          if (findId) {
+            const updateIo = await findId.update(data)
+            if (updateIo) {
+              return response(res, 'success update cart', { updateIo })
+            } else {
+              return response(res, 'update cart failed2', { updateIo }, 404, false)
+            }
+          } else {
+            return response(res, 'update cart failed3', { findId }, 404, false)
+          }
         }
       }
     } catch (error) {
@@ -2303,7 +2341,6 @@ module.exports = {
       const schema = joi.object({
         alasan: joi.string().required(),
         no: joi.string().required(),
-        status: joi.number().required(),
         menu: joi.string().required(),
         list: joi.array(),
         type: joi.string(),
@@ -2333,7 +2370,7 @@ module.exports = {
               const temp = []
               for (let i = 0; i < findDis.length; i++) {
                 const send = {
-                  status_form: results.typeReject === 'pembatalan' ? 0 : findDis[i].status_form,
+                  status_form: results.typeReject === 'pembatalan' ? '0' : findDis[i].status_form,
                   status_reject: 1,
                   isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                   reason: results.alasan,
@@ -2408,7 +2445,7 @@ module.exports = {
                                 for (let i = 0; i < findDis.length; i++) {
                                   const findIo = await pengadaan.findByPk(findDis[i].id)
                                   const data = {
-                                    status_form: results.typeReject === 'pembatalan' ? 0 : findDis[i].status_form,
+                                    status_form: results.typeReject === 'pembatalan' ? '0' : findDis[i].status_form,
                                     status_reject: 1,
                                     isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                                     reason: results.alasan,
@@ -3379,6 +3416,7 @@ module.exports = {
   submitIsAsset: async (req, res) => {
     try {
       const { no } = req.body
+      const name = req.user.name
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3390,7 +3428,9 @@ module.exports = {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
             status_form: 2,
-            status_reject: null
+            status_reject: null,
+            isreject: null,
+            history: `${findIo[i].history}, verifikasi aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
             await findData.update(data)
@@ -3598,6 +3638,7 @@ module.exports = {
   submitBudget: async (req, res) => {
     try {
       const { no } = req.body
+      const name = req.user.name
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3608,7 +3649,8 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
-            status_form: 9
+            status_form: 9,
+            history: `${findIo[i].history}, verifikasi budget by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
             await findData.update(data)
@@ -3648,6 +3690,7 @@ module.exports = {
   submitEks: async (req, res) => {
     try {
       const { no } = req.body
+      const name = req.user.name
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3658,7 +3701,10 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
-            status_form: 8
+            status_form: 8,
+            status_reject: null,
+            isreject: null,
+            history: `${findIo[i].history}, eksekusi pengadaan aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
             await findData.update(data)
@@ -3672,168 +3718,75 @@ module.exports = {
             }
           })
           if (findDepo) {
-            const findEmail = await email.findOne({
-              where: {
-                kode_plant: findIo[0].kode_plant
-              }
-            })
-            if (findEmail) {
-              let tableTd = ''
-              for (let i = 0; i < findIo.length; i++) {
-                if (findIo[i].isAsset === 'true') {
-                  const element = `
-                  <tr>
-                    <td>${findIo.indexOf(findIo[i]) + 1}</td>
-                    <td>${findIo[i].no_pengadaan}</td>
-                    <td>${findIo[i].nama}</td>
-                    <td>${findIo[i].price}</td>
-                    <td>${findIo[i].qty}</td>
-                    <td>${findIo[i].kode_plant}</td>
-                    <td>${findDepo === null || findDepo.cost_center === undefined || findDepo.cost_center === null ? '' : findDepo.cost_center}</td>
-                    <td>${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? '' : findDepo.nama_area}</td>
-                  </tr>`
-                  tableTd = tableTd + element
-                }
-              }
-              const mailOptions = {
-                from: 'noreply_asset@pinusmerahabadi.co.id',
-                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                // to: `${findEmail.email_area_aos}`,
-                to: `${emailAss}, ${emailAss2}`,
-                subject: `Proses Pengajuan Pengadaan Asset ${findIo[0].no_pengadaan} Telah Selesai`,
-                html: `
-                <head>
-                  <style type="text/css">
-                    body {
-                        display: flexbox;
-                        flex-direction: column;
-                    }
-                    .tittle {
-                        font-size: 15px;
-                    }
-                    .mar {
-                        margin-bottom: 20px;
-                    }
-                    .mar1 {
-                        margin-bottom: 10px;
-                    }
-                    .foot {
-                        margin-top: 20px;
-                        margin-bottom: 10px;
-                    }
-                    .foot1 {
-                        margin-bottom: 50px;
-                    }
-                    .position {
-                        display: flexbox;
-                        flex-direction: row;
-                        justify-content: left;
-                        margin-top: 10px;
-                    }
-                    table {
-                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                        font-size: 12px;
-                    }
-                    .demo-table {
-                        border-collapse: collapse;
-                        font-size: 13px;
-                    }
-                    .demo-table th, 
-                    .demo-table td {
-                        border-bottom: 1px solid #e1edff;
-                        border-left: 1px solid #e1edff;
-                        padding: 7px 17px;
-                    }
-                    .demo-table th, 
-                    .demo-table td:last-child {
-                        border-right: 1px solid #e1edff;
-                    }
-                    .demo-table td:first-child {
-                        border-top: 1px solid #e1edff;
-                    }
-                    .demo-table td:last-child{
-                        border-bottom: 0;
-                    }
-                    caption {
-                        caption-side: top;
-                        margin-bottom: 10px;
-                    }
-                    
-                    /* Table Header */
-                    .demo-table thead th {
-                        background-color: #508abb;
-                        color: #FFFFFF;
-                        border-color: #6ea1cc !important;
-                        text-transform: uppercase;
-                    }
-                    
-                    /* Table Body */
-                    .demo-table tbody td {
-                        color: #353535;
-                    }
-                    
-                    .demo-table tbody tr:nth-child(odd) td {
-                        background-color: #f4fbff;
-                    }
-                    .demo-table tbody tr:hover th,
-                    .demo-table tbody tr:hover td {
-                        background-color: #ffffa2;
-                        border-color: #ffff0f;
-                        transition: all .2s;
-                    }
-                </style>
-                </head>
-                <body>
-                    <div class="tittle mar">
-                        Dear Bapak/Ibu AOS,
-                    </div>
-                    <div class="tittle mar1">
-                        <div>Proses pengadaan asset berikut ini telah selesai.</div>
-                    </div>
-                    <div class="position">
-                        <table class="demo-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>No Pengadaan</th>
-                                    <th>Description</th>
-                                    <th>Price</th>
-                                    <th>Qty</th>
-                                    <th>Kode Plant</th>
-                                    <th>Cost Ctr</th>
-                                    <th>Cost Ctr Name</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                              ${tableTd}
-                            </tbody>
-                        </table>
-                    </div>
-                    <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                    <div class="tittle foot">
-                        Terima kasih,
-                    </div>
-                    <div class="tittle foot1">
-                        Regards,
-                    </div>
-                    <div class="tittle">
-                        Team Asset
-                    </div>
-                </body>
-                `
-              }
-              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-              if (sendEmail) {
-                return response(res, 'success submit pengajuan io', { result: sendEmail })
-              } else {
-                return response(res, 'success submit pengajuan io')
-              }
-            } else {
-              return response(res, 'success submit pengajuan io')
-            }
+            return response(res, 'success submit pengajuan io')
           } else {
             return response(res, 'success submit pengajuan io')
           }
+        } else {
+          return response(res, 'failed submit', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitRevisi: async (req, res) => {
+    try {
+      const { no } = req.body
+      const name = req.user.name
+      const findIo = await pengadaan.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findIo.length > 0) {
+        const cek = []
+        for (let i = 0; i < findIo.length; i++) {
+          const findData = await pengadaan.findByPk(findIo[i].id)
+          const data = {
+            status_reject: 0,
+            isreject: null,
+            history: `${findIo[i].history}, submit revisi by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+          }
+          if (findData) {
+            await findData.update(data)
+            cek.push(1)
+          }
+        }
+        if (cek.length > 0) {
+          const findDepo = await depo.findOne({
+            where: {
+              kode_plant: findIo[0].kode_plant
+            }
+          })
+          if (findDepo) {
+            return response(res, 'success submit pengajuan io')
+          } else {
+            return response(res, 'success submit pengajuan io')
+          }
+        } else {
+          return response(res, 'failed submit', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  appRevisi: async (req, res) => {
+    try {
+      const id = req.params.id
+      const findIo = await pengadaan.findByPk(id)
+      if (findIo) {
+        const data = {
+          isreject: 0
+        }
+        const updateIo = await findIo.update(data)
+        if (updateIo) {
+          return response(res, 'success submit pengajuan io')
         } else {
           return response(res, 'failed submit', {}, 404, false)
         }
@@ -4029,6 +3982,7 @@ module.exports = {
   submitNotAsset: async (req, res) => {
     try {
       const { no } = req.body
+      const name = req.user.name
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -4039,7 +3993,8 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
-            status_form: 0
+            status_form: '0',
+            history: `${findIo[i].history}, verifikasi aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
             await findData.update(data)

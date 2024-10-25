@@ -1578,7 +1578,7 @@ module.exports = {
     try {
       const name = req.user.name
       const level = req.user.level
-      const { no, kode, tipe, menu, jenis } = req.body
+      const { no, kode, tipe, menu, jenis, typeReject } = req.body
       const transaksi = jenis === 'pengadaan' ? pengadaan : jenis === 'disposal' ? disposal : jenis === 'mutasi' ? mutasi : stock
       const noTrans = jenis === 'pengadaan'
         ? { no_pengadaan: no } : jenis === 'disposal'   // eslint-disable-line
@@ -2022,6 +2022,277 @@ module.exports = {
           } else {
             return response(res, 'failed get email3', { findDraft }, 404, false)
           }
+        } else if (tipe === 'reject') {
+          const findDraft = await tempmail.findOne({
+            where: {
+              [Op.and]: [
+                { type: tipe },
+                { menu: menu }
+              ],
+              [Op.or]: [
+                { access: { [Op.like]: '%all' } },
+                { access: { [Op.like]: `%${kode}` } }
+              ]
+            }
+          })
+          if (findDraft) {
+            const temp = []
+            const arrCc = findDraft.cc.split(',')
+            for (let i = 0; i < arrCc.length; i++) {
+              const findLevel = await role.findOne({
+                where: {
+                  name: arrCc[i]
+                }
+              })
+              if (findLevel && findLevel.type === 'area') {
+                const findDraftUser = await user.findAll({
+                  where: {
+                    user_level: findLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findDraftUser) {
+                  for (let i = 0; i < findDraftUser.length; i++) {
+                    const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
+                    const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
+                    if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                      temp.push(findDraftUser[i])
+                    }
+                  }
+                }
+              } else if (findLevel && findLevel.type !== 'area') {
+                const findDraftUser = await user.findOne({
+                  where: {
+                    user_level: findLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findDraftUser) {
+                  temp.push(findDraftUser)
+                }
+              }
+            }
+            if (temp.length > 0) {
+              let noLevel = null
+              const tipeStat = 5
+              for (let i = 0; i < 1; i++) {
+                const findLevel = await role.findOne({
+                  where: {
+                    nomor: tipeStat
+                  }
+                })
+                if (findLevel) {
+                  noLevel = findLevel
+                }
+              }
+              if (noLevel.type === 'area') {
+                const findUser = await user.findAll({
+                  where: {
+                    user_level: noLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findUser.length > 0) {
+                  let toMail = null
+                  for (let i = 0; i < findUser.length; i++) {
+                    const findName = findUser[i].fullname === null ? '' : findUser[i].fullname
+                    const findEmail = findUser[i].email === null ? '' : findUser[i].email
+                    const findKode = findUser[i].kode_plant === null ? '' : findUser[i].kode_plant
+                    if (noLevel.nomor === 5) {
+                      if (findDepo.kode_plant === findKode && (findDepo.aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.aos.toString().toLowerCase() === findEmail.toLowerCase())) {
+                        toMail = findUser[i]
+                      }
+                    } else {
+                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                        toMail = findUser[i]
+                      }
+                    }
+                  }
+                  if (toMail !== null) {
+                    if (findDraft) {
+                      const dataRes = {
+                        ...findDraft.dataValues,
+                        message: 'Transaksi berikut telah dibatalkan'
+                      }
+                      return response(res, 'success get draft email', { from: name, to: toMail, cc: temp, result: typeReject === 'pembatalan' ? dataRes : findDraft })
+                    } else {
+                      return response(res, 'failed get email 2', { toMail }, 404, false)
+                    }
+                  } else {
+                    return response(res, 'failed get email 12 king', { toMail, findUser, listName }, 404, false)
+                  }
+                } else {
+                  return response(res, 'failed get email 0', { findUser }, 404, false)
+                }
+              } else {
+                const findUser = await user.findOne({
+                  where: {
+                    user_level: noLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findUser) {
+                  return response(res, 'success get draft email', { from: name, to: findUser, cc: temp, result: findDraft })
+                } else {
+                  return response(res, 'failed get email5', { findUser }, 404, false)
+                }
+              }
+            } else {
+              return response(res, 'failed get email4', { temp }, 404, false)
+            }
+          } else {
+            return response(res, 'failed get email3', { findDraft }, 404, false)
+          }
+        } else if (tipe === 'revisi') {
+          const findDraft = await tempmail.findOne({
+            where: {
+              [Op.and]: [
+                { type: 'submit' },
+                { menu: menu }
+              ],
+              [Op.or]: [
+                { access: { [Op.like]: '%all' } },
+                { access: { [Op.like]: `%${kode}` } }
+              ]
+            }
+          })
+          if (findDraft) {
+            const temp = []
+            const arrCc = findDraft.cc.split(',')
+            for (let i = 0; i < arrCc.length; i++) {
+              const findLevel = await role.findOne({
+                where: {
+                  name: arrCc[i]
+                }
+              })
+              if (findLevel && findLevel.type === 'area') {
+                const findDraftUser = await user.findAll({
+                  where: {
+                    user_level: findLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findDraftUser) {
+                  for (let i = 0; i < findDraftUser.length; i++) {
+                    const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
+                    const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
+                    if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                      temp.push(findDraftUser[i])
+                    }
+                  }
+                }
+              } else if (findLevel && findLevel.type !== 'area') {
+                const findDraftUser = await user.findOne({
+                  where: {
+                    user_level: findLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findDraftUser) {
+                  temp.push(findDraftUser)
+                }
+              }
+            }
+            if (temp.length > 0) {
+              let noLevel = null
+              const tipeStat = parseInt(findTrans.user_reject)
+              for (let i = 0; i < 1; i++) {
+                const findLevel = await role.findOne({
+                  where: {
+                    nomor: tipeStat
+                  }
+                })
+                if (findLevel) {
+                  noLevel = findLevel
+                }
+              }
+              if (noLevel.type === 'area') {
+                const findUser = await user.findAll({
+                  where: {
+                    user_level: noLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findUser.length > 0) {
+                  let toMail = null
+                  for (let i = 0; i < findUser.length; i++) {
+                    const findName = findUser[i].fullname === null ? '' : findUser[i].fullname
+                    const findEmail = findUser[i].email === null ? '' : findUser[i].email
+                    if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                      toMail = findUser[i]
+                    }
+                  }
+                  if (toMail !== null) {
+                    if (findDraft) {
+                      return response(res, 'success get draft email', { from: name, to: toMail, cc: temp, result: findDraft })
+                    } else {
+                      return response(res, 'failed get email 2', { toMail }, 404, false)
+                    }
+                  } else {
+                    return response(res, 'failed get email 13 king', { toMail, findUser, listName }, 404, false)
+                  }
+                } else {
+                  return response(res, 'failed get email 0', { findUser }, 404, false)
+                }
+              } else {
+                const findUser = await user.findOne({
+                  where: {
+                    user_level: noLevel.nomor
+                  },
+                  include: [
+                    {
+                      model: role,
+                      as: 'role'
+                    }
+                  ]
+                })
+                if (findUser) {
+                  return response(res, 'success get draft email', { from: name, to: findUser, cc: temp, result: findDraft })
+                } else {
+                  return response(res, 'failed get email5', { findUser }, 404, false)
+                }
+              }
+            } else {
+              return response(res, 'failed get email4', { temp }, 404, false)
+            }
+          } else {
+            return response(res, 'failed get email3', { findDraft }, 404, false)
+          }
         }
       } else {
         return response(res, 'failed get email 1', { findRole, findDepo, findTrans }, 404, false)
@@ -2178,12 +2449,14 @@ module.exports = {
                   <th>TANGGAL AJUAN</th>
               </tr>`
             const mailOptions = {
-              from: 'noreply_ofr@pinusmerahabadi.co.id',
-              replyTo: 'noreply_ofr@pinusmerahabadi.co.id',
+              from: 'noreply_aset@pinusmerahabadi.co.id',
+              replyTo: 'noreply_aset@pinusmerahabadi.co.id',
               // to: `${to}`,
               // cc: cc.split(','),
               to: 'neng_rina@pinusmerahabadi.co.id',
               cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              // to: 'noreplyofr@gmail.com',
+              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>
