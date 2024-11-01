@@ -2384,35 +2384,36 @@ module.exports = {
             for (let i = 0; i < findData.length; i++) {
               const data = findData[i]
               const dateData = tipe === 'pengadaan' ? data.tglIo : tipe === 'disposal' ? data.tanggalDis : tipe === 'mutasi' ? data.tanggalMut : data.tanggalStock
-              if (tipe !== 'vendor' && proses === 'reject perbaikan' && listData !== undefined && listData.length > 0) {
-                if (listData.find((item) => parseInt(item) === parseInt(data.id)) !== undefined) {
-                  const element = `
-                  <tr>
-                    <th>${findData[i].no_transaksi}</th>
-                    <th>${findData[i].cost_center}</th>
-                    <th>${findData[i].area}</th>
-                    <th>${findData[i].no_coa}</th>
-                    <th>${findData[i].sub_coa}</th>
-                    <th>${findData[i].keterangan || findData[i].uraian}</th>
-                    <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
-                  </tr>`
-                  tableTd = tableTd + element
-                  cekList.push(listData.find((item) => parseInt(item) === parseInt(data.id)))
-                }
-              } else {
-                const element = tipe === 'pengadaan'
-                  ? `
+              // if (tipe !== 'vendor' && proses === 'reject perbaikan' && listData !== undefined && listData.length > 0) {
+              //   if (listData.find((item) => parseInt(item) === parseInt(data.id)) !== undefined) {
+              //     const element = `
+              //     <tr>
+              //       <th>${findData[i].no_transaksi}</th>
+              //       <th>${findData[i].cost_center}</th>
+              //       <th>${findData[i].area}</th>
+              //       <th>${findData[i].no_coa}</th>
+              //       <th>${findData[i].sub_coa}</th>
+              //       <th>${findData[i].keterangan || findData[i].uraian}</th>
+              //       <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
+              //     </tr>`
+              //     tableTd = tableTd + element
+              //     cekList.push(listData.find((item) => parseInt(item) === parseInt(data.id)))
+              //   }
+              // } else {
+              const element = tipe === 'pengadaan'
+                ? `
                     <tr>
-                      <th>${i + 1}</th>
-                      <th>${findData[i].no_pengadaan}</th>
-                      <th>${findData[i].nama}</th>
-                      <th>${findData[i].kategori}</th>
-                      <th>${findData[i].tipe === 'gudang' ? 'Sewa Gudang' : 'Barang'}</th>
-                      <th>${findData[i].price}</th>
-                      <th>${findData[i].qty}</th>
-                      <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
+                      <td>${i + 1}</td>
+                      <td>${findData[i].no_pengadaan}</td>
+                      <td>${findData[i].nama}</td>
+                      <td>${findData[i].kategori}</td>
+                      <td>${findData[i].tipe === 'gudang' ? 'Sewa Gudang' : 'Barang'}</td>
+                      <td>${findData[i].price}</td>
+                      <td>${findData[i].qty}</td>
+                      <td>${findData[i].isAsset === 'false' ? 'Non Aset' : findData[i].isAsset === 'true' ? 'Aset' : 'Belum Teridentifikasi'}</td>
+                      <td>${moment(dateData || moment()).format('DD MMMM YYYY')}</td>
                     </tr>`
-                  : `
+                : `
                     <tr>
                       <th>${findData[i].no_transaksi}</th>
                       <th>${findData[i].cost_center}</th>
@@ -2422,9 +2423,9 @@ module.exports = {
                       <th>${findData[i].keterangan || findData[i].uraian}</th>
                       <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
                     </tr>`
-                tableTd = tableTd + element
-                cekNon.push(data)
-              }
+              tableTd = tableTd + element
+              cekNon.push(data)
+              // }
             }
             const tabletr = tipe === 'pengadaan'
               ? `
@@ -2436,6 +2437,7 @@ module.exports = {
                   <th>TIPE</th>
                   <th>PRICE</th>
                   <th>KUANTITAS</th>
+                  <th>STATUS ASET</th>
                   <th>TANGGAL AJUAN</th>
               </tr>`
               : `

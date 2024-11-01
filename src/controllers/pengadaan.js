@@ -25,9 +25,95 @@ module.exports = {
       const { status } = req.query
       const statTrans = status === 'undefined' || status === null ? 'all' : status
       if (level === 5 || level === 9) {
-        const result = await pengadaan.findAll({
+        const result = await pengadaan.findAndCountAll({
           where: {
             kode_plant: level === 5 ? kode : name,
+            [Op.and]: [
+              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
+            ],
+            [Op.not]: { no_pengadaan: null }
+          },
+          order: [
+            ['tglIo', 'ASC'],
+            [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+          ],
+          include: [
+            {
+              model: depo,
+              as: 'depo'
+            },
+            {
+              model: ttd,
+              as: 'appForm'
+            }
+          ],
+          limit: 100,
+          offset: 0,
+          group: ['pengadaan.no_pengadaan'],
+          distinct: true
+        })
+        if (result.rows.length > 0) {
+          return response(res, 'success get', { result: result.rows })
+        } else {
+          return response(res, 'success get', { result: [] })
+        }
+      } else if (level === 12 || level === 7 || level === 28) {
+        const findDepo = await depo.findAll({
+          where: {
+            [Op.or]: [
+              { nama_bm: level === 12 ? fullname : 'undefined' },
+              { nama_om: level === 7 ? fullname : 'undefined' },
+              { nama_nom: level === 28 ? fullname : 'undefined' }
+            ]
+          }
+        })
+        if (findDepo.length > 0) {
+          const hasil = []
+          for (let i = 0; i < findDepo.length; i++) {
+            const result = await pengadaan.findAndCountAll({
+              where: {
+                kode_plant: findDepo[i].kode_plant,
+                [Op.and]: [
+                  statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
+                ],
+                [Op.not]: { no_pengadaan: null }
+              },
+              order: [
+                ['tglIo', 'ASC'],
+                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              ],
+              include: [
+                {
+                  model: depo,
+                  as: 'depo'
+                },
+                {
+                  model: ttd,
+                  as: 'appForm'
+                }
+              ],
+              limit: 100,
+              offset: 0,
+              group: ['pengadaan.no_pengadaan'],
+              distinct: true
+            })
+            if (result) {
+              for (let j = 0; j < result.rows.length; j++) {
+                hasil.push(result.rows[j])
+              }
+            }
+          }
+          if (hasil.length > 0) {
+            return response(res, 'success get', { result: hasil, findDepo })
+          } else {
+            return response(res, 'success get', { result: hasil })
+          }
+        } else {
+          return response(res, 'failed get data', { result: [] })
+        }
+      } else {
+        const result = await pengadaan.findAndCountAll({
+          where: {
             [Op.and]: [
               statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
             ],
@@ -47,154 +133,13 @@ module.exports = {
             ['id', 'ASC'],
             [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
           ],
+          limit: 100,
+          offset: 0,
           group: ['pengadaan.no_pengadaan'],
           distinct: true
         })
-        if (result.length > 0) {
-          // const data = []
-          // for (let i = 0; i < result.length; i++) {
-          //   const temp = result[i]
-          //   const appForm = await ttd.findAll({
-          //     where: {
-          //       no_doc: result[i].no_pengadaan
-          //     },
-          //     order: [
-          //       ['id', 'DESC']
-          //     ]
-          //   })
-          //   if (appForm.length > 0) {
-          //     temp.dataValues.appForm = appForm
-          //     data.push(temp)
-          //   } else {
-          //     temp.dataValues.appForm = appForm
-          //     data.push(temp)
-          //   }
-          // }
-          if (result.length > 0) {
-            return response(res, 'success get', { result })
-          } else {
-            return response(res, 'success get', { result })
-          }
-        } else {
-          return response(res, 'failed get data', { result: [] })
-        }
-      } else if (level === 12 || level === 7 || level === 28) {
-        const findDepo = await depo.findAll({
-          where: {
-            [Op.or]: [
-              { nama_bm: level === 12 ? fullname : 'undefined' },
-              { nama_om: level === 7 ? fullname : 'undefined' },
-              { nama_nom: level === 28 ? fullname : 'undefined' }
-            ]
-          }
-        })
-        if (findDepo.length > 0) {
-          const hasil = []
-          for (let i = 0; i < findDepo.length; i++) {
-            const result = await pengadaan.findAll({
-              where: {
-                kode_plant: findDepo[i].kode_plant,
-                [Op.and]: [
-                  statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
-                ],
-                [Op.not]: { no_pengadaan: null }
-              },
-              include: [
-                {
-                  model: depo,
-                  as: 'depo'
-                }
-              ],
-              order: [
-                ['id', 'ASC']
-              ],
-              group: [
-                ['no_pengadaan']
-              ]
-            })
-            if (result) {
-              for (let j = 0; j < result.length; j++) {
-                hasil.push(result[j])
-              }
-            }
-          }
-          if (hasil.length > 0) {
-            const data = []
-            for (let i = 0; i < hasil.length; i++) {
-              const temp = hasil[i]
-              const appForm = await ttd.findAll({
-                where: {
-                  no_doc: hasil[i].no_pengadaan
-                },
-                order: [
-                  ['id', 'DESC']
-                ]
-              })
-              if (appForm.length > 0) {
-                temp.dataValues.appForm = appForm
-                data.push(temp)
-              } else {
-                temp.dataValues.appForm = appForm
-                data.push(temp)
-              }
-            }
-            if (data.length > 0) {
-              return response(res, 'success get', { result: data, findDepo })
-            } else {
-              return response(res, 'success get', { result: data, findDepo })
-            }
-          } else {
-            return response(res, 'success get', { result: hasil })
-          }
-        } else {
-          return response(res, 'failed get data', { result: [] })
-        }
-      } else {
-        const result = await pengadaan.findAll({
-          where: {
-            [Op.and]: [
-              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
-            ],
-            [Op.not]: { no_pengadaan: null }
-          },
-          include: [
-            {
-              model: depo,
-              as: 'depo'
-            }
-          ],
-          order: [
-            ['id', 'ASC']
-          ],
-          group: [
-            ['no_pengadaan']
-          ]
-        })
         if (result) {
-          const data = []
-          for (let i = 0; i < result.length; i++) {
-            const temp = result[i]
-            const appForm = await ttd.findAll({
-              where: {
-                no_doc: result[i].no_pengadaan
-              },
-              order: [
-                ['id', 'DESC']
-              ]
-            })
-            if (appForm.length > 0) {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            } else {
-              temp.dataValues.appForm = appForm
-              data.push(temp)
-            }
-          }
-          if (data.length > 0) {
-            return response(res, 'success get', { result: data })
-          } else {
-            return response(res, 'success get', { result: data })
-          }
+          return response(res, 'success get', { result: result.rows })
         } else {
           return response(res, 'failed get data', { result: [] })
         }
@@ -2352,8 +2297,8 @@ module.exports = {
       } else {
         const no = results.no
         const listId = results.list
-        const histRev = `reject perbaikan by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}; reason: ${results.alasan}`
-        const histBatal = `reject pembatalan by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}; reason: ${results.alasan}`
+        const histRev = `reject perbaikan by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}; reason: ${results.alasan.replace(/\,/g, ' ')}` //eslint-disable-line
+        const histBatal = `reject pembatalan by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}; reason: ${results.alasan.replace(/\,/g, ' ')}` //eslint-disable-line
         const result = await role.findAll({
           where: {
             nomor: level
@@ -2370,13 +2315,13 @@ module.exports = {
               const temp = []
               for (let i = 0; i < findDis.length; i++) {
                 const send = {
-                  status_form: results.typeReject === 'pembatalan' ? '0' : findDis[i].status_form,
+                  status_form: results.type_reject === 'pembatalan' ? '0' : findDis[i].status_form,
                   status_reject: 1,
                   isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                   reason: results.alasan,
-                  menu_rev: results.menu,
+                  menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
                   user_reject: level,
-                  history: `${findDis[i].history}, ${results.typeReject === 'pembatalan' ? histBatal : histRev}`
+                  history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
                 }
                 const findData = await pengadaan.findByPk(findDis[i].id)
                 if (findData) {
@@ -2385,9 +2330,9 @@ module.exports = {
                 }
               }
               if (temp.length) {
-                return response(res, 'success reject ops', {})
+                return response(res, 'success reject io', { results })
               } else {
-                return response(res, 'success reject ops', {})
+                return response(res, 'success reject io', { results })
               }
             } else {
               const find = await ttd.findAll({
@@ -2445,13 +2390,13 @@ module.exports = {
                                 for (let i = 0; i < findDis.length; i++) {
                                   const findIo = await pengadaan.findByPk(findDis[i].id)
                                   const data = {
-                                    status_form: results.typeReject === 'pembatalan' ? '0' : findDis[i].status_form,
+                                    status_form: results.type_reject === 'pembatalan' ? '0' : findDis[i].status_form,
                                     status_reject: 1,
                                     isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                                     reason: results.alasan,
-                                    menu_rev: results.menu,
+                                    menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
                                     user_reject: level,
-                                    history: `${findDis[i].history}, ${results.typeReject === 'pembatalan' ? histBatal : histRev}`
+                                    history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
                                   }
                                   if (findIo) {
                                     const updateIo = await findIo.update(data)
@@ -2461,18 +2406,9 @@ module.exports = {
                                   }
                                 }
                                 if (cek.length > 0) {
-                                  const findUser = await user.findOne({
-                                    where: {
-                                      user_level: findRole[0].nomor
-                                    }
-                                  })
-                                  if (findUser) {
-                                    return response(res, 'success reject pengadaan')
-                                  } else {
-                                    return response(res, 'berhasil reject, tidak berhasil kirim notif email 2')
-                                  }
+                                  return response(res, 'success reject pengadaan', { results })
                                 } else {
-                                  return response(res, 'success reject pengadaan')
+                                  return response(res, 'success reject pengadaan', { results })
                                 }
                               }
                             }
@@ -3433,8 +3369,13 @@ module.exports = {
             history: `${findIo[i].history}, verifikasi aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
-            await findData.update(data)
-            cek.push(1)
+            if (findData.isAsset === 'false') {
+              await findData.destroy()
+              cek.push(1)
+            } else {
+              await findData.update(data)
+              cek.push(1)
+            }
           }
         }
         if (cek.length > 0) {
@@ -3742,32 +3683,91 @@ module.exports = {
         }
       })
       if (findIo.length > 0) {
-        const cek = []
-        for (let i = 0; i < findIo.length; i++) {
-          const findData = await pengadaan.findByPk(findIo[i].id)
-          const data = {
-            status_reject: 0,
-            isreject: null,
-            history: `${findIo[i].history}, submit revisi by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
-          }
-          if (findData) {
-            await findData.update(data)
-            cek.push(1)
-          }
-        }
-        if (cek.length > 0) {
-          const findDepo = await depo.findOne({
+        if (findIo[0].status_form === '2') {
+          const findSign = await ttd.findAll({
             where: {
-              kode_plant: findIo[0].kode_plant
+              no_doc: no
             }
           })
-          if (findDepo) {
-            return response(res, 'success submit pengajuan io')
+          if (findSign.length > 0) {
+            const cekSign = []
+            for (let i = 0; i < findSign.length; i++) {
+              if (findSign[i].jabatan === 'area' || findSign[i].jabatan === 'aos') {
+                cekSign.push(findSign[i])
+              } else {
+                const data = {
+                  status: null,
+                  nama: null
+                }
+                const findId = await ttd.findByPk(findSign[i].id)
+                if (findId) {
+                  await findId.update(data)
+                  cekSign.push(findId)
+                }
+              }
+            }
+            if (cekSign.length > 0) {
+              const cek = []
+              for (let i = 0; i < findIo.length; i++) {
+                const findData = await pengadaan.findByPk(findIo[i].id)
+                const data = {
+                  status_reject: 0,
+                  isreject: null,
+                  history: `${findIo[i].history}, submit revisi by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                }
+                if (findData) {
+                  await findData.update(data)
+                  cek.push(1)
+                }
+              }
+              if (cek.length > 0) {
+                const findDepo = await depo.findOne({
+                  where: {
+                    kode_plant: findIo[0].kode_plant
+                  }
+                })
+                if (findDepo) {
+                  return response(res, 'success submit pengajuan io')
+                } else {
+                  return response(res, 'success submit pengajuan io')
+                }
+              } else {
+                return response(res, 'failed submit', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed submit', {}, 404, false)
+            }
           } else {
-            return response(res, 'success submit pengajuan io')
+            return response(res, 'failed submit', {}, 404, false)
           }
         } else {
-          return response(res, 'failed submit', {}, 404, false)
+          const cek = []
+          for (let i = 0; i < findIo.length; i++) {
+            const findData = await pengadaan.findByPk(findIo[i].id)
+            const data = {
+              status_reject: 0,
+              isreject: null,
+              history: `${findIo[i].history}, submit revisi by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+            }
+            if (findData) {
+              await findData.update(data)
+              cek.push(1)
+            }
+          }
+          if (cek.length > 0) {
+            const findDepo = await depo.findOne({
+              where: {
+                kode_plant: findIo[0].kode_plant
+              }
+            })
+            if (findDepo) {
+              return response(res, 'success submit pengajuan io')
+            } else {
+              return response(res, 'success submit pengajuan io')
+            }
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
         }
       } else {
         return response(res, 'failed submit', {}, 404, false)

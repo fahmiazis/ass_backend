@@ -25,6 +25,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'appForm',
         sourceKey: 'no_pengadaan'
       })
+      pengadaan.hasMany(models.assettemp, {
+        foreignKey: 'idIo',
+        as: 'temp',
+        sourceKey: 'id'
+      })
       // define association here
     }
   };
