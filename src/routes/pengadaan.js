@@ -45,4 +45,7 @@ route.get('/rev', pengadaan.getRevisi)
 route.get('/tpods', pengadaan.tesApiPods)
 route.patch('/subnot', pengadaan.submitNotAsset)
 
+// remove sparator all ajuan asset
+route.patch('/remspar', pengadaan.removeSpar)
+
 module.exports = route

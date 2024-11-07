@@ -662,7 +662,7 @@ module.exports = {
             const data = {
               nama: results.nama,
               qty: results.qty,
-              price: results.price,
+              price: results.price.replace(/[^a-z0-9-]/g, ''),
               kategori: results.kategori,
               kode_plant: kode,
               area: `${findDepo.nama_area} ${findDepo.channel}`,
@@ -722,7 +722,7 @@ module.exports = {
           const data = {
             nama: results.nama,
             qty: results.qty,
-            price: results.price,
+            price: results.price.replace(/[^a-z0-9-]/g, ''),
             kategori: results.kategori,
             kode_plant: kode,
             tipe: results.tipe,
@@ -2755,7 +2755,7 @@ module.exports = {
               const dataSend = {
                 nama: data.pr_items[i].name,
                 qty: data.pr_items[i].qty,
-                price: data.pr_items[i].price,
+                price: data.pr_items[i].price.replace(/[^a-z0-9-]/g, ''),
                 uom: data.pr_items[i].uom,
                 isAsset: data.pr_items[i].isAsset,
                 setup_date: data.pr_items[i].setup_date,
@@ -3193,7 +3193,7 @@ module.exports = {
                   kode_plant: result[i].kode_plant,
                   no_pengadaan: result[i].no_pengadaan,
                   nama: result[i].nama,
-                  price: result[i].price,
+                  price: result[i].price.replace(/[^a-z0-9-]/g, ''),
                   idIo: result[i].id
                 }
                 const send = await assettemp.create(data)
@@ -4145,7 +4145,7 @@ module.exports = {
           const temp = {
             name: result[i].nama,
             qty: result[i].qty,
-            price: result[i].price,
+            price: result[i].price.replace(/[^a-z0-9-]/g, ''),
             isAsset: result[i].isAsset === 'true' ? 1 : 0,
             ticket_code: result[i].ticket_code,
             asset_number_token: result[i].asset_token,
@@ -4219,6 +4219,33 @@ module.exports = {
         return response(res, 'Success connect to pods', { result: send.data })
       } else {
         return response(res, 'Failed connect to pods', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  removeSpar: async (req, res) => {
+    try {
+      const findAll = await pengadaan.findAll()
+      if (findAll.length) {
+        const cek = []
+        for (let i = 0; i < findAll.length; i++) {
+          const data = {
+            price: findAll[i].price.replace(/[^a-z0-9-]/g, '')
+          }
+          const findId = await pengadaan.findByPk(findAll[i].id)
+          if (findId) {
+            await findId.update(data)
+            cek.push(findId)
+          }
+        }
+        if (cek.length > 0) {
+          return response(res, 'succes remove sparator', {})
+        } else {
+          return response(res, 'Failed remove sparator', {}, 400, false)
+        }
+      } else {
+        return response(res, 'Failed get pengadaan', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
