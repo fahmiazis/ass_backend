@@ -2549,6 +2549,8 @@ module.exports = {
                       <div class="tittle mar1">
                           <div>${message}</div>
                       </div>
+                      <br />
+                      <br />
                       <div class="position">
                           <table class="demo-table">
                               <thead>
@@ -2560,12 +2562,16 @@ module.exports = {
                           </table>
                       </div>
                       <a href="https://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                      <br />
+                      <br />
                       <div class="tittle foot">
                           Terima kasih,
                       </div>
                       <div class="tittle foot1">
                           Regards,
                       </div>
+                      <br />
+                      <br />
                       <div class="tittle">
                           ${fullname}
                       </div>

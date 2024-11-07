@@ -68,7 +68,11 @@ module.exports = (sequelize, DataTypes) => {
     isreject: DataTypes.INTEGER,
     menu_rev: DataTypes.STRING,
     user_reject: DataTypes.INTEGER,
-    history: DataTypes.TEXT
+    history: DataTypes.TEXT,
+    date_ident_asset: DataTypes.DATE,
+    date_fullapp: DataTypes.DATE,
+    date_budget: DataTypes.DATE,
+    date_eksekusi: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'pengadaan'

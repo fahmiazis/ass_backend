@@ -22,14 +22,54 @@ module.exports = {
       const kode = req.user.kode
       const name = req.user.name
       const fullname = req.user.fullname
-      const { status } = req.query
+      const { status, time1, time2, search } = req.query
+      let { limit, page } = req.query
+      const searchValue = search || ''
       const statTrans = status === 'undefined' || status === null ? 'all' : status
+      const timeVal1 = time1 === 'undefined' ? 'all' : time1
+      const timeVal2 = time2 === 'undefined' ? 'all' : time2
+      const timeV1 = moment(timeVal1)
+      const timeV2 = timeVal1 !== 'all' && timeVal1 === timeVal2 ? moment(timeVal2).add(1, 'd') : moment(timeVal2).add(1, 'd')
+      const listDepo = 'all'
+
+      if (!limit || limit === undefined || limit === 'undefined' || limit === null) {
+        limit = 100
+      } else if (limit === 'all') {
+        limit = 'all'
+      } else {
+        limit = parseInt(limit)
+      }
+
+      if (!page || page === undefined || page === null) {
+        page = 1
+      } else {
+        page = parseInt(page)
+      }
+
       if (level === 5 || level === 9) {
         const result = await pengadaan.findAndCountAll({
           where: {
             kode_plant: level === 5 ? kode : name,
             [Op.and]: [
-              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
+              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` },
+              timeVal1 === 'all'
+                ? { [Op.not]: { id: null } }
+                : {
+                    tglIo: {
+                      [Op.gte]: timeV1,
+                      [Op.lt]: timeV2
+                    }
+                  }
+            ],
+            [Op.or]: [
+            // { area: { [Op.like]: `%${searchValue}%` } },
+            // { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { no_pengadaan: { [Op.like]: `%${searchValue}%` } },
+              { nama: { [Op.like]: `%${searchValue}%` } },
+              { tipe: { [Op.like]: `%${searchValue}%` } },
+              { kategori: { [Op.like]: `%${searchValue}%` } },
+              { no_io: { [Op.like]: `%${searchValue}%` } },
+              { no_asset: { [Op.like]: `%${searchValue}%` } }
             ],
             [Op.not]: { no_pengadaan: null }
           },
@@ -47,8 +87,8 @@ module.exports = {
               as: 'appForm'
             }
           ],
-          limit: 100,
-          offset: 0,
+          limit: limit,
+          offset: (page - 1) * limit,
           group: ['pengadaan.no_pengadaan'],
           distinct: true
         })
@@ -57,10 +97,11 @@ module.exports = {
         } else {
           return response(res, 'success get', { result: [] })
         }
-      } else if (level === 12 || level === 7 || level === 28) {
+      } else if (level === 12 || level === 7 || level === 28 || level === 2) {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
+              { nama_pic_1: level === 2 ? fullname : 'undefined' },
               { nama_bm: level === 12 ? fullname : 'undefined' },
               { nama_om: level === 7 ? fullname : 'undefined' },
               { nama_nom: level === 28 ? fullname : 'undefined' }
@@ -68,45 +109,79 @@ module.exports = {
           }
         })
         if (findDepo.length > 0) {
-          const hasil = []
+          const dataDepo = []
           for (let i = 0; i < findDepo.length; i++) {
-            const result = await pengadaan.findAndCountAll({
-              where: {
-                kode_plant: findDepo[i].kode_plant,
-                [Op.and]: [
-                  statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
-                ],
-                [Op.not]: { no_pengadaan: null }
-              },
-              order: [
-                ['tglIo', 'ASC'],
-                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-              ],
-              include: [
-                {
-                  model: depo,
-                  as: 'depo'
-                },
-                {
-                  model: ttd,
-                  as: 'appForm'
-                }
-              ],
-              limit: 100,
-              offset: 0,
-              group: ['pengadaan.no_pengadaan'],
-              distinct: true
-            })
-            if (result) {
-              for (let j = 0; j < result.rows.length; j++) {
-                hasil.push(result.rows[j])
+            if (listDepo !== 'all') {
+              const depoArr = listDepo.split(',')
+              if (depoArr.find(item => item === findDepo[i].kode_plant) !== undefined) {
+                const data = { kode_plant: findDepo[i].kode_plant }
+                dataDepo.push(data)
               }
+            } else {
+              const data = { kode_plant: findDepo[i].kode_plant }
+              dataDepo.push(data)
             }
           }
-          if (hasil.length > 0) {
-            return response(res, 'success get', { result: hasil, findDepo })
+          // const hasil = []
+          // for (let i = 0; i < findDepo.length; i++) {
+          const result = await pengadaan.findAndCountAll({
+            where: {
+            // kode_plant: findDepo[i].kode_plant,
+              [Op.and]: [
+                {
+                  [Op.or]: dataDepo
+                },
+                statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` },
+                timeVal1 === 'all'
+                  ? { [Op.not]: { id: null } }
+                  : {
+                      tglIo: {
+                        [Op.gte]: timeV1,
+                        [Op.lt]: timeV2
+                      }
+                    }
+              ],
+              [Op.or]: [
+                { area: { [Op.like]: `%${searchValue}%` } },
+                { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                { no_pengadaan: { [Op.like]: `%${searchValue}%` } },
+                { nama: { [Op.like]: `%${searchValue}%` } },
+                { tipe: { [Op.like]: `%${searchValue}%` } },
+                { kategori: { [Op.like]: `%${searchValue}%` } },
+                { no_io: { [Op.like]: `%${searchValue}%` } },
+                { no_asset: { [Op.like]: `%${searchValue}%` } }
+              ],
+              [Op.not]: { no_pengadaan: null }
+            },
+            order: [
+              ['tglIo', 'ASC'],
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+            ],
+            include: [
+              {
+                model: depo,
+                as: 'depo'
+              },
+              {
+                model: ttd,
+                as: 'appForm'
+              }
+            ],
+            limit: limit,
+            offset: (page - 1) * limit,
+            group: ['pengadaan.no_pengadaan'],
+            distinct: true
+          })
+          // if (result) {
+          //   for (let j = 0; j < result.rows.length; j++) {
+          //     hasil.push(result.rows[j])
+          //   }
+          // }
+          // }
+          if (result.rows.length > 0) {
+            return response(res, 'success get', { result: result.rows, findDepo })
           } else {
-            return response(res, 'success get', { result: hasil })
+            return response(res, 'success get', { result: result.rows })
           }
         } else {
           return response(res, 'failed get data', { result: [] })
@@ -115,7 +190,25 @@ module.exports = {
         const result = await pengadaan.findAndCountAll({
           where: {
             [Op.and]: [
-              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` }
+              statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` },
+              timeVal1 === 'all'
+                ? { [Op.not]: { id: null } }
+                : {
+                    tglIo: {
+                      [Op.gte]: timeV1,
+                      [Op.lt]: timeV2
+                    }
+                  }
+            ],
+            [Op.or]: [
+              { area: { [Op.like]: `%${searchValue}%` } },
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { no_pengadaan: { [Op.like]: `%${searchValue}%` } },
+              { nama: { [Op.like]: `%${searchValue}%` } },
+              { tipe: { [Op.like]: `%${searchValue}%` } },
+              { kategori: { [Op.like]: `%${searchValue}%` } },
+              { no_io: { [Op.like]: `%${searchValue}%` } },
+              { no_asset: { [Op.like]: `%${searchValue}%` } }
             ],
             [Op.not]: { no_pengadaan: null }
           },
@@ -133,8 +226,8 @@ module.exports = {
             ['id', 'ASC'],
             [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
           ],
-          limit: 100,
-          offset: 0,
+          limit: limit,
+          offset: (page - 1) * limit,
           group: ['pengadaan.no_pengadaan'],
           distinct: true
         })
@@ -324,9 +417,9 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      const name = req.user.name
+      // const name = req.user.name
       const fullname = req.user.fullname
-      const { status } = req.query
+      // const { status } = req.query
       if (level === 5) {
         const result = await pengadaan.findAll({
           where: {
@@ -358,7 +451,7 @@ module.exports = {
       } else if (level === 9) {
         const result = await pengadaan.findAll({
           where: {
-            kode_plant: name,
+            kode_plant: kode,
             status_reject: 1,
             menu_rev: 'Revisi Area',
             [Op.not]: [
@@ -406,13 +499,11 @@ module.exports = {
         } else {
           return response(res, 'failed get data', { result: [] })
         }
-      } else if (level === 12 || level === 7 || level === 28) {
+      } else if (level === 2) {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 12 ? fullname : 'undefined' },
-              { nama_om: level === 7 ? fullname : 'undefined' },
-              { nama_nom: level === 28 ? fullname : 'undefined' }
+              { nama_pic_1: fullname }
             ]
           }
         })
@@ -421,10 +512,11 @@ module.exports = {
           for (let i = 0; i < findDepo.length; i++) {
             const result = await pengadaan.findAll({
               where: {
-                status_form: { [Op.like]: `%${status}%` },
                 kode_plant: findDepo[i].kode_plant,
+                status_reject: 1,
+                menu_rev: 'Revisi Aset',
                 [Op.not]: [
-                  { status_app: null }
+                  { status_form: '0' }
                 ]
               },
               include: [
@@ -480,8 +572,11 @@ module.exports = {
       } else {
         const result = await pengadaan.findAll({
           where: {
-            status_form: { [Op.like]: `%${status}%` },
-            status_app: { [Op.not]: null }
+            status_reject: 1,
+            menu_rev: 'Revisi Budget',
+            [Op.not]: [
+              { status_form: '0' }
+            ]
           },
           include: [
             {
@@ -570,7 +665,7 @@ module.exports = {
               price: results.price,
               kategori: results.kategori,
               kode_plant: kode,
-              area: findDepo.nama_area,
+              area: `${findDepo.nama_area} ${findDepo.channel}`,
               tipe: results.tipe,
               akta: results.akta === '' ? null : results.akta,
               start: results.start === null || results.start === '' ? null : results.start,
@@ -765,7 +860,7 @@ module.exports = {
         }
         const tempData = findIo.find(({no_pengadaan}) => no_pengadaan !== null) // eslint-disable-line
         const cekData = tempData === undefined ? 'ya' : 'no'
-        const noTrans = `${notrans}/${kode}/${rome}/${year}-IO`
+        const noTrans = `${notrans}/${kode}/${findIo[0].area}/${rome}/${year}-IO`
         const data = {
           no_pengadaan: noTrans
         }
@@ -1517,6 +1612,7 @@ module.exports = {
                               for (let i = 0; i < findDoc.length; i++) {
                                 const data = {
                                   status_form: 3,
+                                  date_fullapp: moment(),
                                   status_reject: null,
                                   isreject: null,
                                   history: `${findDoc[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
@@ -2653,7 +2749,7 @@ module.exports = {
             } else if (month === 12) {
               rome = 'XII'
             }
-            const noTrans = `${notrans}/${kodeDepo}/${rome}/${year}-IO`
+            const noTrans = `${notrans}/${kodeDepo}/${findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : `${findDepo.nama_area} ${findDepo.channel}`}/${rome}/${year}-IO`
             const valid = []
             for (let i = 0; i < data.pr_items.length; i++) {
               const dataSend = {
@@ -2674,7 +2770,7 @@ module.exports = {
                 status_form: 1,
                 history: `create ajuan from pods at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
                 tglIo: moment(),
-                area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : findDepo.nama_area,
+                area: findDepo === null || findDepo.nama_area === undefined || findDepo.nama_area === null ? data.prinfo.salespoint_code : `${findDepo.nama_area} ${findDepo.channel}`,
                 alasan: data.pr_items[i].notes
               }
               const sent = await pengadaan.create(dataSend)
@@ -3366,6 +3462,7 @@ module.exports = {
             status_form: 2,
             status_reject: null,
             isreject: null,
+            date_ident_asset: moment(),
             history: `${findIo[i].history}, verifikasi aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
@@ -3591,6 +3688,7 @@ module.exports = {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
             status_form: 9,
+            date_budget: moment(),
             history: `${findIo[i].history}, verifikasi budget by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
@@ -3644,6 +3742,7 @@ module.exports = {
           const data = {
             status_form: 8,
             status_reject: null,
+            date_eksekusi: moment(),
             isreject: null,
             history: `${findIo[i].history}, eksekusi pengadaan aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
@@ -3994,6 +4093,7 @@ module.exports = {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
             status_form: '0',
+            date_ident_asset: moment(),
             history: `${findIo[i].history}, verifikasi aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
