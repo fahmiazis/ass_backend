@@ -27,7 +27,7 @@ route.post('/master', pengadaan.uploadMasterTemp)
 route.patch('/del', pengadaan.deleteTransaksi)
 route.get('/cart', pengadaan.getDataCart)
 
-route.patch('/subcart', pengadaan.submitCart)
+// route.patch('/subcart', pengadaan.submitCart)
 route.patch('/submit', pengadaan.submitIo)
 route.patch('/subfinio', pengadaan.submitIoFinal)
 
