@@ -2408,7 +2408,7 @@ module.exports = {
                       <td>${findData[i].nama}</td>
                       <td>${findData[i].kategori}</td>
                       <td>${findData[i].tipe === 'gudang' ? 'Sewa Gudang' : 'Barang'}</td>
-                      <td>${findData[i].price}</td>
+                      <td>${findData[i].price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</td>
                       <td>${findData[i].qty}</td>
                       <td>${findData[i].isAsset === 'false' ? 'Non Aset' : findData[i].isAsset === 'true' ? 'Aset' : 'Belum Teridentifikasi'}</td>
                       <td>${moment(dateData || moment()).format('DD MMMM YYYY')}</td>

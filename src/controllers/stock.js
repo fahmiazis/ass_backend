@@ -1355,6 +1355,8 @@ module.exports = {
   getStockAll: async (req, res) => {
     try {
       let { limit, page, search, sort, group } = req.query
+      const kode = req.user.kode
+      const cost = req.user.name
       const fullname = req.user.fullname
       let searchValue = ''
       let sortValue = ''
@@ -1400,7 +1402,61 @@ module.exports = {
           start = `${time[2]}-${time[0]}-${findClose[0].start}`
           end = `${next[2]}-${next[0]}-${findClose[0].end}`
         }
-        if (level === 12 || level === 7 || level === 26 || level === 27 || level === 13 || level === 16) {
+        if (level === 5 || level === 9) {
+          const result = await stock.findAndCountAll({
+            where: {
+              kode_plant: level === 5 ? kode : cost,
+              // [Op.and]: [
+              //   {
+              //     tanggalStock: {
+              //       [Op.lte]: end,
+              //       [Op.gte]: start
+              //     }
+              //   }
+              // ],
+              [Op.or]: [
+                { no_asset: { [Op.like]: `%${searchValue}%` } },
+                { deskripsi: { [Op.like]: `%${searchValue}%` } },
+                { keterangan: { [Op.like]: `%${searchValue}%` } },
+                { merk: { [Op.like]: `%${searchValue}%` } },
+                { satuan: { [Op.like]: `%${searchValue}%` } },
+                { unit: { [Op.like]: `%${searchValue}%` } },
+                { kondisi: { [Op.like]: `%${searchValue}%` } },
+                { lokasi: { [Op.like]: `%${searchValue}%` } },
+                { grouping: { [Op.like]: `%${searchValue}%` } }
+              ],
+              [Op.not]: { no_stock: null }
+            },
+            include: [
+              {
+                model: path,
+                as: 'pict'
+              },
+              {
+                model: ttd,
+                as: 'appForm'
+              },
+              {
+                model: depo,
+                as: 'depo'
+              }
+            ],
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+            ],
+            limit: limit,
+            offset: (page - 1) * limit,
+            group: ['stock.no_stock'],
+            distinct: true
+          })
+          const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
+          if (result) {
+            return response(res, 'list asset', { result, pageInfo })
+          } else {
+            return response(res, 'failed to get stock', {}, 404, false)
+          }
+        } else if (level === 12 || level === 7 || level === 26 || level === 27 || level === 13 || level === 16) {
           const findDepo = await depo.findAll({
             where: {
               [Op.or]: [
@@ -1416,13 +1472,13 @@ module.exports = {
               const result = await stock.findAll({
                 where: {
                   [Op.and]: [
-                    { kode_plant: findDepo[i].kode_plant },
-                    {
-                      tanggalStock: {
-                        [Op.lte]: end,
-                        [Op.gte]: start
-                      }
-                    }
+                    { kode_plant: findDepo[i].kode_plant }
+                    // {
+                    //   tanggalStock: {
+                    //     [Op.lte]: end,
+                    //     [Op.gte]: start
+                    //   }
+                    // }
                   ],
                   [Op.or]: [
                     { no_asset: { [Op.like]: `%${searchValue}%` } },
@@ -1436,6 +1492,10 @@ module.exports = {
                   {
                     model: ttd,
                     as: 'appForm'
+                  },
+                  {
+                    model: depo,
+                    as: 'depo'
                   }
                 ],
                 order: [
@@ -1444,7 +1504,8 @@ module.exports = {
                 ],
                 limit: limit,
                 offset: (page - 1) * limit,
-                group: ['no_stock']
+                group: ['stock.no_stock'],
+                distinct: true
               })
               if (result.length > 0) {
                 for (let j = 0; j < result.length; j++) {
@@ -1473,13 +1534,13 @@ module.exports = {
                     { status_form: level === 2 ? 9 : 1 },
                     { status_form: level === 2 ? 8 : 1 }
                   ]
-                },
-                {
-                  tanggalStock: {
-                    [Op.lte]: end,
-                    [Op.gte]: start
-                  }
                 }
+                // {
+                //   tanggalStock: {
+                //     [Op.lte]: end,
+                //     [Op.gte]: start
+                //   }
+                // }
               ],
               [Op.or]: [
                 { no_asset: { [Op.like]: `%${searchValue}%` } },
@@ -1493,6 +1554,10 @@ module.exports = {
               {
                 model: ttd,
                 as: 'appForm'
+              },
+              {
+                model: depo,
+                as: 'depo'
               }
             ],
             order: [
@@ -1501,7 +1566,8 @@ module.exports = {
             ],
             limit: limit,
             offset: (page - 1) * limit,
-            group: ['no_stock']
+            group: ['stock.no_stock'],
+            distinct: true
           })
           const pageInfo = pagination('/stock/get', req.query, page, limit, result.count.length)
           if (result) {

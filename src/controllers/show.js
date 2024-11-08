@@ -76,48 +76,40 @@ module.exports = {
                 res.send(data)
               })
             } else {
-              const url = result.path
-              fs.readFile(url, function (err, data) {
-                if (err) {
-                  console.log(err)
-                }
-                res.contentType('application/pdf')
-                res.send(data)
+              const ext = result.path.split('.')[result.path.split('.').length - 1]
+              const name = new Date().getTime().toString().concat('.').concat(cekPr !== -1 ? 'pdf' : ext)
+              const newurl = `assets/documents/${name}`
+              const file = fs.createWriteStream(`${newurl}`)
+              const down = https.get(result.path, response => {
+                response.pipe(file)
               })
-              // const ext = result.path.split('.')[result.path.split('.').length - 1]
-              // const name = new Date().getTime().toString().concat('.').concat(cekPr !== -1 ? 'pdf' : ext)
-              // const newurl = `assets/documents/${name}`
-              // const file = fs.createWriteStream(`${newurl}`)
-              // const down = https.get(result.path, response => {
-              //   response.pipe(file)
-              // })
-              // if (down) {
-              //   const data = {
-              //     path: newurl
-              //   }
-              //   const upRes = await result.update(data)
-              //   console.log('update')
-              //   if (upRes) {
-              //     const find = await docUser.findByPk(id)
-              //     console.log('get')
-              //     if (find) {
-              //       console.log('send')
-              //       fs.readFile(find.path, function (err, data) {
-              //         if (err) {
-              //           console.log(err)
-              //         }
-              //         res.contentType('application/pdf')
-              //         res.send(data)
-              //       })
-              //     } else {
-              //       res.send()
-              //     }
-              //   } else {
-              //     res.send()
-              //   }
-              // } else {
-              //   res.send()
-              // }
+              if (down) {
+                const data = {
+                  path: newurl
+                }
+                const upRes = await result.update(data)
+                console.log('update')
+                if (upRes) {
+                  const find = await docUser.findByPk(id)
+                  console.log('get')
+                  if (find) {
+                    console.log('send')
+                    fs.readFile(find.path, function (err, data) {
+                      if (err) {
+                        console.log(err)
+                      }
+                      res.contentType('application/pdf')
+                      res.send(data)
+                    })
+                  } else {
+                    res.send()
+                  }
+                } else {
+                  res.send()
+                }
+              } else {
+                res.send()
+              }
             }
           } else {
             const url = result.path
