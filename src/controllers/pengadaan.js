@@ -2516,7 +2516,7 @@ module.exports = {
                   if (result[0].name === find[i].jabatan) {
                     hasil = find[i].id
                     arr = i
-                    // position = find[i].jabatan
+                  // position = find[i].jabatan
                   }
                 }
                 if (hasil !== 0) {
@@ -2548,36 +2548,29 @@ module.exports = {
                               }
                             })
                             if (findDoc) {
-                              const findRole = await role.findAll({
-                                where: {
-                                  name: find[arr + 1].jabatan
+                              const cek = []
+                              for (let i = 0; i < findDis.length; i++) {
+                                const findIo = await pengadaan.findByPk(findDis[i].id)
+                                const data = {
+                                  status_form: results.type_reject === 'pembatalan' ? '0' : findDis[i].status_form,
+                                  status_reject: 1,
+                                  isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
+                                  reason: results.alasan,
+                                  menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
+                                  user_reject: level,
+                                  history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
                                 }
-                              })
-                              if (findRole.length > 0) {
-                                const cek = []
-                                for (let i = 0; i < findDis.length; i++) {
-                                  const findIo = await pengadaan.findByPk(findDis[i].id)
-                                  const data = {
-                                    status_form: results.type_reject === 'pembatalan' ? '0' : findDis[i].status_form,
-                                    status_reject: 1,
-                                    isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
-                                    reason: results.alasan,
-                                    menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
-                                    user_reject: level,
-                                    history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
-                                  }
-                                  if (findIo) {
-                                    const updateIo = await findIo.update(data)
-                                    if (updateIo) {
-                                      cek.push(1)
-                                    }
+                                if (findIo) {
+                                  const updateIo = await findIo.update(data)
+                                  if (updateIo) {
+                                    cek.push(1)
                                   }
                                 }
-                                if (cek.length > 0) {
-                                  return response(res, 'success reject pengadaan', { results })
-                                } else {
-                                  return response(res, 'success reject pengadaan', { results })
-                                }
+                              }
+                              if (cek.length > 0) {
+                                return response(res, 'success reject pengadaan', { results })
+                              } else {
+                                return response(res, 'success reject pengadaan', { results })
                               }
                             }
                           }
