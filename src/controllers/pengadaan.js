@@ -633,6 +633,7 @@ module.exports = {
         price: joi.string().required(),
         kategori: joi.string().required(),
         tipe: joi.string().required(),
+        jenis: joi.string().required(),
         akta: joi.string().allow(''),
         start: joi.string().allow(''),
         end: joi.string().allow('')
@@ -667,6 +668,7 @@ module.exports = {
               kode_plant: kode,
               area: `${findDepo.nama_area} ${findDepo.channel}`,
               tipe: results.tipe,
+              jenis: results.jenis,
               akta: results.akta === '' ? null : results.akta,
               start: results.start === null || results.start === '' ? null : results.start,
               end: results.end === null || results.end === '' ? null : results.end
@@ -696,6 +698,7 @@ module.exports = {
         price: joi.string().required(),
         kategori: joi.string().required(),
         tipe: joi.string().required(),
+        jenis: joi.string().required(),
         akta: joi.string().allow(''),
         start: joi.string().allow(''),
         end: joi.string().allow('')
@@ -726,6 +729,7 @@ module.exports = {
             kategori: results.kategori,
             kode_plant: kode,
             tipe: results.tipe,
+            jenis: results.jenis,
             akta: results.akta === '' ? null : results.akta,
             start: results.start === null || results.start === '' ? null : results.start,
             end: results.end === null || results.end === '' ? null : results.end
@@ -939,7 +943,6 @@ module.exports = {
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no,
-          kode_plant: kode,
           status_form: null
         }
       })
@@ -1357,7 +1360,72 @@ module.exports = {
         }
       })
       if (result.length > 0) {
-        return response(res, 'success get document', { result })
+        const cekIo = await pengadaan.findByPk(id)
+        if (cekIo.status_form === null) {
+          const getDoc = await document.findAll({
+            where: {
+              tipe_dokumen: 'pengadaan',
+              [Op.or]: [
+                { jenis_dokumen: cekIo.jenis === 'it' ? 'it' : 'all' },
+                { jenis_dokumen: 'all' }
+              ],
+              [Op.or]: [
+                { tipe: cekIo.tipe === 'gudang' ? 'gudang' : 'pengajuan' },
+                { tipe: cekIo.akta === 'ada' ? 'akta' : null }
+              ]
+            }
+          })
+          if (getDoc.length > 0) {
+            const cekDoc = []
+            for (let i = 0; i < getDoc.length; i++) {
+              const send = {
+                nama_dokumen: getDoc[i].nama_dokumen,
+                jenis_dokumen: getDoc[i].jenis_dokumen,
+                divisi: getDoc[i].divisi,
+                no_pengadaan: id,
+                jenis_form: 'pengadaan'
+              }
+              const validDoc = result.find(item => item.nama_dokumen === getDoc[i].nama_dokumen)
+              if (validDoc !== undefined) {
+                if (send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && cekIo.jenis === 'non-it') {
+                  const findId = await docUser.findByPk(validDoc.id)
+                  await findId.destroy()
+                  cekDoc.push(findId)
+                } else {
+                  cekDoc.push(send)
+                }
+              } else {
+                if (send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && cekIo.jenis === 'non-it') {
+                  cekDoc.push(send)
+                } else {
+                  const make = await docUser.create(send)
+                  if (make) {
+                    cekDoc.push(make)
+                  }
+                }
+              }
+            }
+            if (cekDoc.length > 0) {
+              const findDoc = await docUser.findAll({
+                where: {
+                  [Op.and]: [
+                    { no_pengadaan: id },
+                    { jenis_form: 'pengadaan' }
+                  ]
+                }
+              })
+              if (findDoc.length > 0) {
+                return response(res, 'success get document 4', { result: findDoc })
+              } else {
+                return response(res, 'success get document 3', { result })
+              }
+            } else {
+              return response(res, 'success get document 2', { result })
+            }
+          }
+        } else {
+          return response(res, 'success get document 1', { result })
+        }
       } else {
         const result = await pengadaan.findByPk(id)
         if (result) {
@@ -1365,7 +1433,7 @@ module.exports = {
             where: {
               tipe_dokumen: 'pengadaan',
               [Op.or]: [
-                { jenis_dokumen: result.jenis },
+                { jenis_dokumen: result.jenis === 'it' ? 'it' : 'all' },
                 { jenis_dokumen: 'all' }
               ],
               [Op.or]: [
@@ -1384,9 +1452,13 @@ module.exports = {
                 no_pengadaan: id,
                 jenis_form: 'pengadaan'
               }
-              const make = await docUser.create(send)
-              if (make) {
-                hasil.push(make)
+              if (send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && result.jenis === 'non-it') {
+                hasil.push(send)
+              } else {
+                const make = await docUser.create(send)
+                if (make) {
+                  hasil.push(make)
+                }
               }
             }
             if (hasil.length === getDoc.length) {

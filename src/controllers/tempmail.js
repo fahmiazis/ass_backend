@@ -2381,7 +2381,7 @@ module.exports = {
             const cekNon = [proses, tipe, listData]
             let tableTd = ''
             const dataTo = nameTo === undefined ? '' : nameTo
-            for (let i = 0; i < findData.length; i++) {
+            for (let i = 0; i < (tipe === 'stock' ? 1 : findData.length); i++) {
               const data = findData[i]
               const dateData = tipe === 'pengadaan' ? data.tglIo : tipe === 'disposal' ? data.tanggalDis : tipe === 'mutasi' ? data.tanggalMut : data.tanggalStock
               // if (tipe !== 'vendor' && proses === 'reject perbaikan' && listData !== undefined && listData.length > 0) {
@@ -2413,7 +2413,16 @@ module.exports = {
                       <td>${findData[i].isAsset === 'false' ? 'Non Aset' : findData[i].isAsset === 'true' ? 'Aset' : 'Belum Teridentifikasi'}</td>
                       <td>${moment(dateData || moment()).format('DD MMMM YYYY')}</td>
                     </tr>`
-                : `
+                : tipe === 'stock'
+                  ? `
+                  <tr>
+                    <td>1</td>
+                    <td>${findData[0].no_stock}</td>
+                    <td>${findData[0].kode_plant}</td>
+                    <td>${findData[0].area}</td>
+                    <td>${moment(findData[0].tanggalStock).format('DD MMMM YYYY')}</td>
+                  </tr>`
+                  : `
                     <tr>
                       <th>${findData[i].no_transaksi}</th>
                       <th>${findData[i].cost_center}</th>
@@ -2440,7 +2449,16 @@ module.exports = {
                   <th>STATUS ASET</th>
                   <th>TANGGAL AJUAN</th>
               </tr>`
-              : `
+              : tipe === 'stock'
+                ? `
+                <tr>
+                  <th>No</th>
+                  <th>No Stock Opname</th>
+                  <th>Kode Area</th>
+                  <th>Area</th>
+                  <th>Tanggal Stock Opname</th>
+                </tr>`
+                : `
                 <tr>
                   <th>NO.AJUAN</th>
                   <th>COST CENTRE</th>

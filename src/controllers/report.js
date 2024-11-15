@@ -334,9 +334,29 @@ module.exports = {
           // group: ['pengadaan.no_pengadaan'],
           // distinct: true
         })
-        if (result) {
+        if (result.rows.length > 0) {
+          const data = result.rows
+          const finData = []
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].temp.length > 0) {
+              const dataTemp = data[i].temp
+              for (let j = 0; j < dataTemp.length; j++) {
+                const dataSend = {
+                  ...data[i].dataValues,
+                  no_asset_temp: dataTemp[j].no_asset
+                }
+                finData.push(dataSend)
+              }
+            } else {
+              const dataSend = {
+                ...data[i].dataValues,
+                no_asset_temp: ''
+              }
+              finData.push(dataSend)
+            }
+          }
           const pageInfo = pagination('/report/io', req.query, page, limit, result.count)
-          return response(res, 'success get', { result: result.rows, pageInfo })
+          return response(res, 'success get', { result: finData, pageInfo })
         } else {
           const pageInfo = pagination('/report/io', req.query, page, limit, result.count)
           return response(res, 'failed get data', { result: [], pageInfo })

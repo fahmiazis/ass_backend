@@ -1,4 +1,4 @@
-const { stock, asset, clossing, ttd, approve, role, user, path, depo, status_stock, docUser, document, notif, email } = require('../models')
+const { stock, asset, clossing, ttd, approve, role, user, path, depo, status_stock, docUser, document, notif, email, reservoir } = require('../models')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const moment = require('moment')
@@ -13,8 +13,10 @@ const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
 module.exports = {
-  submit: async (req, res) => {
+  submitStock: async (req, res) => {
     try {
+      const timeV1 = moment().startOf('month')
+      const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
       const cost = req.user.name
       const level = req.user.level
@@ -50,6 +52,7 @@ module.exports = {
             where: {
               [Op.and]: [
                 { kode_plant: level === 5 ? kode : cost },
+                { status_form: null },
                 {
                   tanggalStock: {
                     [Op.lte]: akhir,
@@ -59,528 +62,8 @@ module.exports = {
               ]
             }
           })
-          if (findStock) {
-            if (findStock.no_stock !== null) {
-              return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
-            } else {
-              const result = await asset.findAll({
-                where: {
-                  cost_center: level === 5 ? findArea.cost_center : cost,
-                  [Op.and]: [
-                    { [Op.not]: { satuan: null } },
-                    { [Op.not]: { unit: null } },
-                    { [Op.not]: { lokasi: null } },
-                    { [Op.not]: { grouping: null } },
-                    { [Op.not]: { kondisi: null } },
-                    { [Op.not]: { status_fisik: null } }
-                  ]
-                }
-              })
-              if (result.length > 0) {
-                const findAsset = await asset.findAll({
-                  where: {
-                    cost_center: level === 5 ? findArea.cost_center : cost,
-                    [Op.or]: [
-                      { status: '1' },
-                      { status: '11' },
-                      { status: null }
-                    ]
-                  }
-                })
-                if (result.length === findAsset.length) {
-                  const findPict = await asset.findAll({
-                    where: {
-                      cost_center: level === 5 ? findArea.cost_center : cost
-                    },
-                    include: [
-                      {
-                        model: path,
-                        as: 'pict'
-                      }
-                    ]
-                  })
-                  if (findPict.length > 0) {
-                    const cekImage = []
-                    for (let i = 0; i < findPict.length; i++) {
-                      const image = findPict[i].pict
-                      if (image.length > 0) {
-                        const timeIm = moment(image[image.length - 1].createdAt).format('L').split('/')
-                        if (parseInt(timeIm[1]) > end && parseInt(timeIm[1]) < start) {
-                          console.log(parseInt(timeIm[1]))
-                        } else {
-                          cekImage.push(1)
-                        }
-                      }
-                    }
-                    if (cekImage.length === findPict.length) {
-                      const findNo = await stock.findAll({
-                        where: {
-                          [Op.not]: { no_stock: null }
-                        },
-                        group: ['no_stock']
-                      })
-                      if (findNo.length > 0) {
-                        const cekNo = []
-                        for (let i = 0; i < findNo.length; i++) {
-                          const no = findNo[i].no_stock.split('O')
-                          cekNo.push(parseInt(no[1]))
-                        }
-                        const noDis = Math.max(...cekNo) + 1
-                        const hasil = []
-                        for (let i = 0; i < result.length; i++) {
-                          const data = {
-                            kode_plant: level === 5 ? kode : cost,
-                            area: findArea.nama_area,
-                            deskripsi: result[i].nama_asset,
-                            no_asset: result[i].no_asset,
-                            merk: result[i].merk,
-                            satuan: result[i].satuan,
-                            unit: result[i].unit,
-                            kondisi: result[i].kondisi,
-                            lokasi: result[i].lokasi,
-                            grouping: result[i].grouping,
-                            keterangan: result[i].keterangan,
-                            status_fisik: result[i].status_fisik,
-                            tanggalStock: moment().format('L'),
-                            status_form: 1
-                          }
-                          const send = await stock.create(data)
-                          if (send) {
-                            hasil.push('1')
-                          }
-                        }
-                        if (hasil.length === result.length) {
-                          const findNo = await stock.findAll({
-                            where: {
-                              [Op.and]: [
-                                { kode_plant: level === 5 ? kode : cost },
-                                {
-                                  tanggalStock: {
-                                    [Op.lte]: akhir,
-                                    [Op.gte]: awal
-                                  }
-                                }
-                              ]
-                            }
-                          })
-                          if (findNo) {
-                            const cek = []
-                            for (let i = 0; i < findNo.length; i++) {
-                              const data = {
-                                no_stock: 'O' + noDis,
-                                status_form: 1
-                              }
-                              const result = await stock.findByPk(findNo[i].id)
-                              if (result) {
-                                await result.update(data)
-                                cek.push('1')
-                              }
-                            }
-                            if (cek.length > 0) {
-                              for (let i = 0; i < findAsset.length; i++) {
-                                const data = {
-                                  status_fisik: null,
-                                  keterangan: null,
-                                  kondisi: null,
-                                  grouping: null
-                                }
-                                const result = await asset.findByPk(findAsset[i].id)
-                                if (result) {
-                                  await result.update(data)
-                                }
-                              }
-                              const findDepo = await depo.findOne({
-                                where: {
-                                  kode_plant: level === 5 ? kode : cost
-                                }
-                              })
-                              if (findDepo) {
-                                const findRom = await user.findOne({
-                                  where: {
-                                    fullname: findDepo.nama_om
-                                  }
-                                })
-                                if (findRom) {
-                                  const data = {
-                                    kode_plant: level === 5 ? kode : cost,
-                                    jenis: 'stock opname',
-                                    no_proses: `O${noDis}`,
-                                    list_appr: findRom.username,
-                                    keterangan: 'pengajuan',
-                                    response: 'request'
-                                  }
-                                  const createNotif = await notif.create(data)
-                                  if (createNotif) {
-                                    const mailOptions = {
-                                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      // to: `${findRom.email}`,
-                                      to: `${emailAss}, ${emailAss2}`,
-                                      subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
-                                      html: `
-                                    <head>
-                                      <style type="text/css">
-                                      body {
-                                          display: flexbox;
-                                          flex-direction: column;
-                                      }
-                                      .tittle {
-                                          font-size: 15px;
-                                      }
-                                      .mar {
-                                          margin-bottom: 20px;
-                                      }
-                                      .mar1 {
-                                          margin-bottom: 10px;
-                                      }
-                                      .foot {
-                                          margin-top: 20px;
-                                          margin-bottom: 10px;
-                                      }
-                                      .foot1 {
-                                          margin-bottom: 50px;
-                                      }
-                                      .position {
-                                          display: flexbox;
-                                          flex-direction: row;
-                                          justify-content: left;
-                                          margin-top: 10px;
-                                      }
-                                      table {
-                                          font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                          font-size: 12px;
-                                      }
-                                      .demo-table {
-                                          border-collapse: collapse;
-                                          font-size: 13px;
-                                      }
-                                      .demo-table th, 
-                                      .demo-table td {
-                                          border-bottom: 1px solid #e1edff;
-                                          border-left: 1px solid #e1edff;
-                                          padding: 7px 17px;
-                                      }
-                                      .demo-table th, 
-                                      .demo-table td:last-child {
-                                          border-right: 1px solid #e1edff;
-                                      }
-                                      .demo-table td:first-child {
-                                          border-top: 1px solid #e1edff;
-                                      }
-                                      .demo-table td:last-child{
-                                          border-bottom: 0;
-                                      }
-                                      caption {
-                                          caption-side: top;
-                                          margin-bottom: 10px;
-                                      }
-                                      
-                                      /* Table Header */
-                                      .demo-table thead th {
-                                          background-color: #508abb;
-                                          color: #FFFFFF;
-                                          border-color: #6ea1cc !important;
-                                          text-transform: uppercase;
-                                      }
-                                      
-                                      /* Table Body */
-                                      .demo-table tbody td {
-                                          color: #353535;
-                                      }
-                                      
-                                      .demo-table tbody tr:nth-child(odd) td {
-                                          background-color: #f4fbff;
-                                      }
-                                      .demo-table tbody tr:hover th,
-                                      .demo-table tbody tr:hover td {
-                                          background-color: #ffffa2;
-                                          border-color: #ffff0f;
-                                          transition: all .2s;
-                                      }
-                                  </style>
-                                    </head>
-                                    <body>
-                                        <div class="tittle mar">
-                                            Dear Bapak/Ibu ROM,
-                                        </div>
-                                        <div class="tittle mar1">
-                                            <div>Mohon untuk approve pengajuan stock opname area ${findDepo.nama_area} dengan nomor opname O${noDis}.</div>
-                                        </div>
-                                        <div class="position">
-                                        </div>
-                                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                        <div class="tittle foot">
-                                            Terima kasih,
-                                        </div>
-                                        <div class="tittle foot1">
-                                            Regards,
-                                        </div>
-                                        <div class="tittle">
-                                            Team Asset
-                                        </div>
-                                    </body>
-                                    `
-                                    }
-                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                    if (sendEmail) {
-                                      return response(res, 'success submit stock opname')
-                                    } else {
-                                      return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                    }
-                                  } else {
-                                    return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                  }
-                                } else {
-                                  return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                }
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'failed submit stock opname', {}, 400, false)
-                            }
-                          } else {
-                            return response(res, 'failed submit stock opname', {}, 400, false)
-                          }
-                        } else {
-                          return response(res, 'failed submit stock opname', {}, 400, false)
-                        }
-                      } else {
-                        const cekNo = [0]
-                        const noDis = Math.max(...cekNo) + 1
-                        const hasil = []
-                        for (let i = 0; i < result.length; i++) {
-                          const data = {
-                            kode_plant: level === 5 ? kode : cost,
-                            area: findArea.nama_area,
-                            deskripsi: result[i].nama_asset,
-                            no_asset: result[i].no_asset,
-                            merk: result[i].merk,
-                            satuan: result[i].satuan,
-                            unit: result[i].unit,
-                            kondisi: result[i].kondisi,
-                            lokasi: result[i].lokasi,
-                            grouping: result[i].grouping,
-                            keterangan: result[i].keterangan,
-                            status_fisik: result[i].status_fisik,
-                            tanggalStock: moment().format('L'),
-                            status_form: 1
-                          }
-                          const send = await stock.create(data)
-                          if (send) {
-                            hasil.push('1')
-                          }
-                        }
-                        if (hasil.length === result.length) {
-                          const findNo = await stock.findAll({
-                            where: {
-                              [Op.and]: [
-                                { kode_plant: level === 5 ? kode : cost },
-                                {
-                                  tanggalStock: {
-                                    [Op.lte]: akhir,
-                                    [Op.gte]: awal
-                                  }
-                                }
-                              ]
-                            }
-                          })
-                          if (findNo) {
-                            const cek = []
-                            for (let i = 0; i < findNo.length; i++) {
-                              const data = {
-                                no_stock: 'O' + noDis,
-                                status_form: 1
-                              }
-                              const result = await stock.findByPk(findNo[i].id)
-                              if (result) {
-                                await result.update(data)
-                                cek.push('1')
-                              }
-                            }
-                            if (cek.length > 0) {
-                              for (let i = 0; i < findAsset.length; i++) {
-                                const data = {
-                                  status_fisik: null,
-                                  keterangan: null,
-                                  kondisi: null,
-                                  grouping: null
-                                }
-                                const result = await asset.findByPk(findAsset[i].id)
-                                if (result) {
-                                  await result.update(data)
-                                }
-                              }
-                              const findDepo = await depo.findOne({
-                                where: {
-                                  kode_plant: level === 5 ? kode : cost
-                                }
-                              })
-                              if (findDepo) {
-                                const findRom = await user.findOne({
-                                  where: {
-                                    fullname: findDepo.nama_om
-                                  }
-                                })
-                                if (findRom) {
-                                  const data = {
-                                    kode_plant: level === 5 ? kode : cost,
-                                    jenis: 'stock opname',
-                                    no_proses: `O${noDis}`,
-                                    list_appr: findRom.username,
-                                    keterangan: 'pengajuan',
-                                    response: 'request'
-                                  }
-                                  const createNotif = await notif.create(data)
-                                  if (createNotif) {
-                                    const mailOptions = {
-                                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                      // to: `${findRom.email}`,
-                                      to: `${emailAss}, ${emailAss2}`,
-                                      subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
-                                      html: `
-                                    <head>
-                                      <style type="text/css">
-                                      body {
-                                          display: flexbox;
-                                          flex-direction: column;
-                                      }
-                                      .tittle {
-                                          font-size: 15px;
-                                      }
-                                      .mar {
-                                          margin-bottom: 20px;
-                                      }
-                                      .mar1 {
-                                          margin-bottom: 10px;
-                                      }
-                                      .foot {
-                                          margin-top: 20px;
-                                          margin-bottom: 10px;
-                                      }
-                                      .foot1 {
-                                          margin-bottom: 50px;
-                                      }
-                                      .position {
-                                          display: flexbox;
-                                          flex-direction: row;
-                                          justify-content: left;
-                                          margin-top: 10px;
-                                      }
-                                      table {
-                                          font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                          font-size: 12px;
-                                      }
-                                      .demo-table {
-                                          border-collapse: collapse;
-                                          font-size: 13px;
-                                      }
-                                      .demo-table th, 
-                                      .demo-table td {
-                                          border-bottom: 1px solid #e1edff;
-                                          border-left: 1px solid #e1edff;
-                                          padding: 7px 17px;
-                                      }
-                                      .demo-table th, 
-                                      .demo-table td:last-child {
-                                          border-right: 1px solid #e1edff;
-                                      }
-                                      .demo-table td:first-child {
-                                          border-top: 1px solid #e1edff;
-                                      }
-                                      .demo-table td:last-child{
-                                          border-bottom: 0;
-                                      }
-                                      caption {
-                                          caption-side: top;
-                                          margin-bottom: 10px;
-                                      }
-                                      
-                                      /* Table Header */
-                                      .demo-table thead th {
-                                          background-color: #508abb;
-                                          color: #FFFFFF;
-                                          border-color: #6ea1cc !important;
-                                          text-transform: uppercase;
-                                      }
-                                      
-                                      /* Table Body */
-                                      .demo-table tbody td {
-                                          color: #353535;
-                                      }
-                                      
-                                      .demo-table tbody tr:nth-child(odd) td {
-                                          background-color: #f4fbff;
-                                      }
-                                      .demo-table tbody tr:hover th,
-                                      .demo-table tbody tr:hover td {
-                                          background-color: #ffffa2;
-                                          border-color: #ffff0f;
-                                          transition: all .2s;
-                                      }
-                                  </style>
-                                    </head>
-                                    <body>
-                                        <div class="tittle mar">
-                                            Dear Bapak/Ibu ROM,
-                                        </div>
-                                        <div class="tittle mar1">
-                                            <div>Mohon untuk approve pengajuan stock opname area ${findDepo.nama_area} dengan nomor opname O${noDis}.</div>
-                                        </div>
-                                        <div class="position">
-                                        </div>
-                                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                        <div class="tittle foot">
-                                            Terima kasih,
-                                        </div>
-                                        <div class="tittle foot1">
-                                            Regards,
-                                        </div>
-                                        <div class="tittle">
-                                            Team Asset
-                                        </div>
-                                    </body>
-                                    `
-                                    }
-                                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                    if (sendEmail) {
-                                      return response(res, 'success submit stock opname')
-                                    } else {
-                                      return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                    }
-                                  } else {
-                                    return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                  }
-                                } else {
-                                  return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                }
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'failed submit stock opname', {}, 400, false)
-                            }
-                          } else {
-                            return response(res, 'failed submit stock opname', {}, 400, false)
-                          }
-                        } else {
-                          return response(res, 'failed submit stock opname', {}, 400, false)
-                        }
-                      }
-                    } else {
-                      return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length }, 400, false)
-                    }
-                  } else {
-                    return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
-                  }
-                } else {
-                  return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length, findaset: findAsset.length }, 400, false)
-                }
-              } else {
-                return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length }, 400, false)
-              }
-            }
+          if (findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock.status_form === 1) {
+            return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
           } else {
             const result = await asset.findAll({
               where: {
@@ -632,230 +115,171 @@ module.exports = {
                     }
                   }
                   if (cekImage.length === findPict.length) {
-                    const findNo = await stock.findAll({
+                    const findNo = await reservoir.findAll({
                       where: {
-                        [Op.not]: { no_stock: null }
-                      },
-                      group: ['no_stock']
-                    })
-                    if (findNo.length > 0) {
-                      const cekNo = []
-                      for (let i = 0; i < findNo.length; i++) {
-                        const no = findNo[i].no_stock.split('O')
-                        cekNo.push(parseInt(no[1]))
-                      }
-                      const noDis = Math.max(...cekNo) + 1
-                      const hasil = []
-                      for (let i = 0; i < result.length; i++) {
-                        const data = {
-                          kode_plant: level === 5 ? kode : cost,
-                          area: findArea.nama_area,
-                          deskripsi: result[i].nama_asset,
-                          no_asset: result[i].no_asset,
-                          merk: result[i].merk,
-                          satuan: result[i].satuan,
-                          unit: result[i].unit,
-                          kondisi: result[i].kondisi,
-                          lokasi: result[i].lokasi,
-                          grouping: result[i].grouping,
-                          keterangan: result[i].keterangan,
-                          status_fisik: result[i].status_fisik,
-                          tanggalStock: moment().format('L'),
-                          status_form: 1
+                        transaksi: 'stock opname',
+                        tipe: 'area',
+                        createdAt: {
+                          [Op.gte]: timeV1,
+                          [Op.lt]: timeV2
                         }
+                      },
+                      order: [['id', 'DESC']],
+                      limit: 50
+                    })
+                    const cekNo = []
+                    if (findNo.length > 0) {
+                      for (let i = 0; i < findNo.length; i++) {
+                        const no = findNo[i].no_transaksi.split('/')
+                        cekNo.push(parseInt(no[0]))
+                      }
+                    } else {
+                      cekNo.push(0)
+                    }
+                    const noStock = Math.max(...cekNo) + 1
+                    const change = noStock.toString().split('')
+                    const notrans = change.length === 2 ? '00' + noStock : change.length === 1 ? '000' + noStock : change.length === 3 ? '0' + noStock : noStock
+                    const month = parseInt(moment().format('MM'))
+                    const year = moment().format('YYYY')
+                    let rome = ''
+                    if (month === 1) {
+                      rome = 'I'
+                    } else if (month === 2) {
+                      rome = 'II'
+                    } else if (month === 3) {
+                      rome = 'III'
+                    } else if (month === 4) {
+                      rome = 'IV'
+                    } else if (month === 5) {
+                      rome = 'V'
+                    } else if (month === 6) {
+                      rome = 'VI'
+                    } else if (month === 7) {
+                      rome = 'VII'
+                    } else if (month === 8) {
+                      rome = 'VIII'
+                    } else if (month === 9) {
+                      rome = 'IX'
+                    } else if (month === 10) {
+                      rome = 'X'
+                    } else if (month === 11) {
+                      rome = 'XI'
+                    } else if (month === 12) {
+                      rome = 'XII'
+                    }
+                  const tempData = findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock // eslint-disable-line
+                    const cekData = tempData ? 'ya' : 'no'
+                    const noTrans = `${notrans}/${level === 5 ? kode : cost}/${findArea.nama_area}/${rome}/${year}-OPNM`
+                    const hasil = []
+                    for (let i = 0; i < result.length; i++) {
+                      const data = {
+                        kode_plant: level === 5 ? kode : cost,
+                        area: `${findArea.nama_area}`,
+                        deskripsi: result[i].nama_asset,
+                        no_asset: result[i].no_asset,
+                        merk: result[i].merk,
+                        satuan: result[i].satuan,
+                        unit: result[i].unit,
+                        kondisi: result[i].kondisi,
+                        lokasi: result[i].lokasi,
+                        grouping: result[i].grouping,
+                        keterangan: result[i].keterangan,
+                        status_fisik: result[i].status_fisik,
+                        tanggalStock: moment().format('L')
+                      }
+                      if (findStock && findStock.no_stock !== undefined && findStock.no_stock !== null) {
+                        hasil.push('1')
+                      } else {
                         const send = await stock.create(data)
                         if (send) {
                           hasil.push('1')
                         }
                       }
-                      if (hasil.length === result.length) {
-                        const findNo = await stock.findAll({
-                          where: {
-                            [Op.and]: [
-                              { kode_plant: level === 5 ? kode : cost },
-                              {
-                                tanggalStock: {
-                                  [Op.lte]: akhir,
-                                  [Op.gte]: awal
-                                }
+                    }
+                    if (hasil.length === result.length) {
+                      const findAllStock = await stock.findAll({
+                        where: {
+                          [Op.and]: [
+                            { kode_plant: level === 5 ? kode : cost },
+                            {
+                              tanggalStock: {
+                                [Op.lte]: akhir,
+                                [Op.gte]: awal
                               }
-                            ]
+                            }
+                          ]
+                        }
+                      })
+                      if (findAllStock) {
+                        const cek = []
+                        for (let i = 0; i < findAllStock.length; i++) {
+                          const data = {
+                            no_stock: noTrans
                           }
-                        })
-                        if (findNo) {
-                          const cek = []
-                          for (let i = 0; i < findNo.length; i++) {
-                            const data = {
-                              no_stock: 'O' + noDis
-                            }
-                            const result = await stock.findByPk(findNo[i].id)
-                            if (result) {
-                              await result.update(data)
-                              cek.push('1')
-                            }
+                          const result = await stock.findByPk(findAllStock[i].id)
+                          if (result) {
+                            await result.update(data)
+                            cek.push('1')
                           }
-                          if (cek.length > 0) {
-                            for (let i = 0; i < findAsset.length; i++) {
-                              const data = {
-                                status_fisik: null,
-                                keterangan: null,
-                                kondisi: null,
-                                grouping: null
-                              }
-                              const result = await asset.findByPk(findAsset[i].id)
-                              if (result) {
-                                await result.update(data)
-                              }
+                        }
+                        if (cek.length > 0) {
+                          const findDepo = await depo.findOne({
+                            where: {
+                              kode_plant: level === 5 ? kode : cost
                             }
-                            const findDepo = await depo.findOne({
-                              where: {
-                                kode_plant: level === 5 ? kode : cost
-                              }
-                            })
-                            if (findDepo) {
-                              const findRom = await user.findOne({
+                          })
+                          if (findDepo) {
+                            console.log(cekData)
+                            if (cekData === 'ya') {
+                              const findReser = await reservoir.findOne({
                                 where: {
-                                  fullname: findDepo.nama_om
+                                  no_transaksi: tempData.no_stock
                                 }
                               })
-                              if (findRom) {
-                                const data = {
-                                  kode_plant: level === 5 ? kode : cost,
-                                  jenis: 'stock opname',
-                                  no_proses: `O${noDis}`,
-                                  list_appr: findRom.username,
-                                  keterangan: 'pengajuan',
-                                  response: 'request'
+                              const findNewReser = await reservoir.findOne({
+                                where: {
+                                  no_transaksi: noTrans
                                 }
-                                const createNotif = await notif.create(data)
-                                if (createNotif) {
-                                  const mailOptions = {
-                                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    // to: `${findRom.email}`,
-                                    to: `${emailAss}, ${emailAss2}`,
-                                    subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
-                                    html: `
-                                  <head>
-                                    <style type="text/css">
-                                    body {
-                                        display: flexbox;
-                                        flex-direction: column;
-                                    }
-                                    .tittle {
-                                        font-size: 15px;
-                                    }
-                                    .mar {
-                                        margin-bottom: 20px;
-                                    }
-                                    .mar1 {
-                                        margin-bottom: 10px;
-                                    }
-                                    .foot {
-                                        margin-top: 20px;
-                                        margin-bottom: 10px;
-                                    }
-                                    .foot1 {
-                                        margin-bottom: 50px;
-                                    }
-                                    .position {
-                                        display: flexbox;
-                                        flex-direction: row;
-                                        justify-content: left;
-                                        margin-top: 10px;
-                                    }
-                                    table {
-                                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                        font-size: 12px;
-                                    }
-                                    .demo-table {
-                                        border-collapse: collapse;
-                                        font-size: 13px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td {
-                                        border-bottom: 1px solid #e1edff;
-                                        border-left: 1px solid #e1edff;
-                                        padding: 7px 17px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td:last-child {
-                                        border-right: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:first-child {
-                                        border-top: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:last-child{
-                                        border-bottom: 0;
-                                    }
-                                    caption {
-                                        caption-side: top;
-                                        margin-bottom: 10px;
-                                    }
-                                    
-                                    /* Table Header */
-                                    .demo-table thead th {
-                                        background-color: #508abb;
-                                        color: #FFFFFF;
-                                        border-color: #6ea1cc !important;
-                                        text-transform: uppercase;
-                                    }
-                                    
-                                    /* Table Body */
-                                    .demo-table tbody td {
-                                        color: #353535;
-                                    }
-                                    
-                                    .demo-table tbody tr:nth-child(odd) td {
-                                        background-color: #f4fbff;
-                                    }
-                                    .demo-table tbody tr:hover th,
-                                    .demo-table tbody tr:hover td {
-                                        background-color: #ffffa2;
-                                        border-color: #ffff0f;
-                                        transition: all .2s;
-                                    }
-                                </style>
-                                  </head>
-                                  <body>
-                                      <div class="tittle mar">
-                                          Dear Bapak/Ibu ROM,
-                                      </div>
-                                      <div class="tittle mar1">
-                                          <div>Mohon untuk approve pengajuan stock opname area ${findDepo.nama_area} dengan nomor opname O${noDis}.</div>
-                                      </div>
-                                      <div class="position">
-                                      </div>
-                                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                      <div class="tittle foot">
-                                          Terima kasih,
-                                      </div>
-                                      <div class="tittle foot1">
-                                          Regards,
-                                      </div>
-                                      <div class="tittle">
-                                          Team Asset
-                                      </div>
-                                  </body>
-                                  `
-                                  }
-                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                  if (sendEmail) {
-                                    return response(res, 'success submit stock opname')
-                                  } else {
-                                    return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                  }
-                                } else {
-                                  return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                }
+                              })
+                              const upDataReser = {
+                                status: 'expired'
+                              }
+                              const creDataReser = {
+                                no_transaksi: noTrans,
+                                kode_plant: kode,
+                                transaksi: 'stock opname',
+                                tipe: 'area',
+                                status: 'delayed'
+                              }
+                              if (findReser && !findNewReser) {
+                                await findReser.update(upDataReser)
+                                await reservoir.create(creDataReser)
+                                return response(res, 'success submit cart', { noStock: noTrans })
                               } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                                return response(res, 'success submit cart', { noStock: noTrans })
                               }
                             } else {
-                              return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
+                              const findNewReser = await reservoir.findOne({
+                                where: {
+                                  no_transaksi: noTrans
+                                }
+                              })
+                              if (findNewReser) {
+                                return response(res, 'success submit cart', { noStock: noTrans })
+                              } else {
+                                const creDataReser = {
+                                  no_transaksi: noTrans,
+                                  kode_plant: kode,
+                                  transaksi: 'stock opname',
+                                  tipe: 'area',
+                                  status: 'delayed'
+                                }
+                                await reservoir.create(creDataReser)
+                                return response(res, 'success submit cart', { noStock: noTrans })
+                              }
                             }
                           } else {
-                            return response(res, 'failed submit stock opname', {}, 400, false)
+                            return response(res, 'success submit stock opname')
                           }
                         } else {
                           return response(res, 'failed submit stock opname', {}, 400, false)
@@ -864,226 +288,7 @@ module.exports = {
                         return response(res, 'failed submit stock opname', {}, 400, false)
                       }
                     } else {
-                      const cekNo = [0]
-                      const noDis = Math.max(...cekNo) + 1
-                      const hasil = []
-                      for (let i = 0; i < result.length; i++) {
-                        const data = {
-                          kode_plant: level === 5 ? kode : cost,
-                          area: findArea.nama_area,
-                          deskripsi: result[i].nama_asset,
-                          no_asset: result[i].no_asset,
-                          merk: result[i].merk,
-                          satuan: result[i].satuan,
-                          unit: result[i].unit,
-                          kondisi: result[i].kondisi,
-                          lokasi: result[i].lokasi,
-                          grouping: result[i].grouping,
-                          keterangan: result[i].keterangan,
-                          status_fisik: result[i].status_fisik,
-                          tanggalStock: moment().format('L'),
-                          status_form: 1
-                        }
-                        const send = await stock.create(data)
-                        if (send) {
-                          hasil.push('1')
-                        }
-                      }
-                      if (hasil.length === result.length) {
-                        const findNo = await stock.findAll({
-                          where: {
-                            [Op.and]: [
-                              { kode_plant: level === 5 ? kode : cost },
-                              {
-                                tanggalStock: {
-                                  [Op.lte]: akhir,
-                                  [Op.gte]: awal
-                                }
-                              }
-                            ]
-                          }
-                        })
-                        if (findNo) {
-                          const cek = []
-                          for (let i = 0; i < findNo.length; i++) {
-                            const data = {
-                              no_stock: 'O' + noDis
-                            }
-                            const result = await stock.findByPk(findNo[i].id)
-                            if (result) {
-                              await result.update(data)
-                              cek.push('1')
-                            }
-                          }
-                          if (cek.length > 0) {
-                            for (let i = 0; i < findAsset.length; i++) {
-                              const data = {
-                                status_fisik: null,
-                                keterangan: null,
-                                kondisi: null,
-                                grouping: null
-                              }
-                              const result = await asset.findByPk(findAsset[i].id)
-                              if (result) {
-                                await result.update(data)
-                              }
-                            }
-                            const findDepo = await depo.findOne({
-                              where: {
-                                kode_plant: level === 5 ? kode : cost
-                              }
-                            })
-                            if (findDepo) {
-                              const findRom = await user.findOne({
-                                where: {
-                                  fullname: findDepo.nama_om
-                                }
-                              })
-                              if (findRom) {
-                                const data = {
-                                  kode_plant: level === 5 ? kode : cost,
-                                  jenis: 'stock opname',
-                                  no_proses: `O${noDis}`,
-                                  list_appr: findRom.username,
-                                  keterangan: 'pengajuan',
-                                  response: 'request'
-                                }
-                                const createNotif = await notif.create(data)
-                                if (createNotif) {
-                                  const mailOptions = {
-                                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    // to: `${findRom.email}`,
-                                    to: `${emailAss}, ${emailAss2}`,
-                                    subject: `Approve Pengajuan Stock Opname O${noDis} (TESTING)`,
-                                    html: `
-                                  <head>
-                                    <style type="text/css">
-                                    body {
-                                        display: flexbox;
-                                        flex-direction: column;
-                                    }
-                                    .tittle {
-                                        font-size: 15px;
-                                    }
-                                    .mar {
-                                        margin-bottom: 20px;
-                                    }
-                                    .mar1 {
-                                        margin-bottom: 10px;
-                                    }
-                                    .foot {
-                                        margin-top: 20px;
-                                        margin-bottom: 10px;
-                                    }
-                                    .foot1 {
-                                        margin-bottom: 50px;
-                                    }
-                                    .position {
-                                        display: flexbox;
-                                        flex-direction: row;
-                                        justify-content: left;
-                                        margin-top: 10px;
-                                    }
-                                    table {
-                                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                        font-size: 12px;
-                                    }
-                                    .demo-table {
-                                        border-collapse: collapse;
-                                        font-size: 13px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td {
-                                        border-bottom: 1px solid #e1edff;
-                                        border-left: 1px solid #e1edff;
-                                        padding: 7px 17px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td:last-child {
-                                        border-right: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:first-child {
-                                        border-top: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:last-child{
-                                        border-bottom: 0;
-                                    }
-                                    caption {
-                                        caption-side: top;
-                                        margin-bottom: 10px;
-                                    }
-                                    
-                                    /* Table Header */
-                                    .demo-table thead th {
-                                        background-color: #508abb;
-                                        color: #FFFFFF;
-                                        border-color: #6ea1cc !important;
-                                        text-transform: uppercase;
-                                    }
-                                    
-                                    /* Table Body */
-                                    .demo-table tbody td {
-                                        color: #353535;
-                                    }
-                                    
-                                    .demo-table tbody tr:nth-child(odd) td {
-                                        background-color: #f4fbff;
-                                    }
-                                    .demo-table tbody tr:hover th,
-                                    .demo-table tbody tr:hover td {
-                                        background-color: #ffffa2;
-                                        border-color: #ffff0f;
-                                        transition: all .2s;
-                                    }
-                                </style>
-                                  </head>
-                                  <body>
-                                      <div class="tittle mar">
-                                          Dear Bapak/Ibu ROM,
-                                      </div>
-                                      <div class="tittle mar1">
-                                          <div>Mohon untuk approve pengajuan stock opname area ${findDepo.nama_area} dengan nomor opname O${noDis}.</div>
-                                      </div>
-                                      <div class="position">
-                                      </div>
-                                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                      <div class="tittle foot">
-                                          Terima kasih,
-                                      </div>
-                                      <div class="tittle foot1">
-                                          Regards,
-                                      </div>
-                                      <div class="tittle">
-                                          Team Asset
-                                      </div>
-                                  </body>
-                                  `
-                                  }
-                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                  if (sendEmail) {
-                                    return response(res, 'success submit stock opname')
-                                  } else {
-                                    return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                  }
-                                } else {
-                                  return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                }
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                            }
-                          } else {
-                            return response(res, 'failed submit stock opname', {}, 400, false)
-                          }
-                        } else {
-                          return response(res, 'failed submit stock opname', {}, 400, false)
-                        }
-                      } else {
-                        return response(res, 'failed submit stock opname', {}, 400, false)
-                      }
+                      return response(res, 'failed submit stock opname', {}, 400, false)
                     }
                   } else {
                     return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length }, 400, false)
@@ -1101,6 +306,91 @@ module.exports = {
         }
       } else {
         return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitStockFinal: async (req, res) => {
+    try {
+      const { no } = req.body
+      const kode = req.user.kode
+      const cost = req.user.name
+      const level = req.user.level
+      const findArea = await depo.findOne({
+        where: {
+          kode_plant: level === 5 ? kode : cost
+        }
+      })
+      if (findArea) {
+        const findStock = await stock.findAll({
+          where: {
+            no_stock: no,
+            status_form: null
+          }
+        })
+        const findAsset = await asset.findAll({
+          where: {
+            cost_center: level === 5 ? findArea.cost_center : cost,
+            [Op.or]: [
+              { status: '1' },
+              { status: '11' },
+              { status: null }
+            ]
+          }
+        })
+        if (findStock && findAsset) {
+          const temp = []
+          for (let i = 0; i < findStock.length; i++) {
+            const data = {
+              status_form: 1,
+              history: `submit pengajuan by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+              tglIo: moment()
+            }
+            const findData = await stock.findByPk(findStock[i].id)
+            if (findData) {
+              await findData.update(data)
+              temp.push(findData)
+            }
+          }
+          if (temp.length > 0) {
+            const updateAsset = []
+            for (let i = 0; i < findAsset.length; i++) {
+              const data = {
+                status_fisik: null,
+                keterangan: null,
+                kondisi: null,
+                grouping: null
+              }
+              const result = await asset.findByPk(findAsset[i].id)
+              if (result) {
+                await result.update(data)
+                updateAsset.push(result)
+              }
+            }
+            const findNewReser = await reservoir.findOne({
+              where: {
+                no_transaksi: no
+              }
+            })
+            if (findNewReser) {
+              const upDataReser = {
+                status: 'used',
+                createdAt: moment()
+              }
+              await findNewReser.update(upDataReser)
+              return response(res, 'success submit stock opname', { updateAsset, findNewReser })
+            } else {
+              return response(res, 'success submit stock opname')
+            }
+          } else {
+            return response(res, 'failed submit stock opname', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed submit stock opname', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit stock opname', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -1490,6 +780,10 @@ module.exports = {
                 },
                 include: [
                   {
+                    model: path,
+                    as: 'pict'
+                  },
+                  {
                     model: ttd,
                     as: 'appForm'
                   },
@@ -1552,6 +846,10 @@ module.exports = {
             },
             include: [
               {
+                model: path,
+                as: 'pict'
+              },
+              {
                 model: ttd,
                 as: 'appForm'
               },
@@ -1585,8 +883,12 @@ module.exports = {
   },
   getDetailStock: async (req, res) => {
     try {
-      const id = req.params.id
-      const findId = await stock.findByPk(id)
+      const { no } = req.body
+      const findId = await stock.findOne({
+        where: {
+          no_stock: no
+        }
+      })
       if (findId) {
         const result = await stock.findAll({
           where: {
@@ -1603,6 +905,10 @@ module.exports = {
             {
               model: ttd,
               as: 'appForm'
+            },
+            {
+              model: depo,
+              as: 'depo'
             }
           ]
         })
@@ -1703,13 +1009,14 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  getApproveStock: async (req, res) => {
+  getApproval: async (req, res) => {
     try {
-      const no = req.params.no
-      const nama = req.params.nama
+      const id = req.params.id
+      const findId = await stock.findByPk(id)
+      const nama = findId.kode_plant.split('').length === 4 ? 'stock opname' : 'stock opname HO'
       const result = await ttd.findAll({
         where: {
-          no_doc: no
+          no_doc: findId.no_stock
         }
       })
       if (result.length > 0) {
@@ -1729,7 +1036,7 @@ module.exports = {
       } else {
         const result = await stock.findAll({
           where: {
-            no_stock: no
+            no_stock: findId.no_stock
           }
         })
         if (result) {
@@ -1751,7 +1058,7 @@ module.exports = {
                 jenis: getApp[i].jenis === '' || getApp[i].jenis === null ? null : getApp[i].jenis,
                 sebagai: getApp[i].sebagai === '' || getApp[i].sebagai === null ? null : getApp[i].sebagai,
                 kategori: null,
-                no_doc: no
+                no_doc: findId.no_stock
               }
               if (getDepo.kode_plant.split('').length > 4 && getDepo.nama_asman === null && getApp[i].jabatan === 'Asisten Manager') {
                 hasil.push(1)
@@ -1765,7 +1072,7 @@ module.exports = {
             if (hasil.length === getApp.length) {
               const result = await ttd.findAll({
                 where: {
-                  no_doc: no
+                  no_doc: findId.no_stock
                 }
               })
               if (result.length > 0) {
@@ -1779,7 +1086,7 @@ module.exports = {
                   if (updateArea) {
                     const findRes = await ttd.findAll({
                       where: {
-                        no_doc: no
+                        no_doc: findId.no_stock
                       }
                     })
                     if (findRes.length > 0) {
