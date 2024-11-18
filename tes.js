@@ -1,4 +1,4 @@
-const cekNo = 'https://devpods.pinusmerahabadi.co.id/printPR//attachments/ticketing/barangjasa/P01-RAP1-3105220031/item67/files/Printer_Penawaran_resmi_dari_2_vendor_(dilengkapi_KTP_dan_NPWP)_Area_RANTAU_PRAPAT.pdf'
+const cekNo = 'https://pods.pinusmerahabadi.co.id/storage/attachments/ticketing/barangjasa/P01-LPG1-2609240303/item9011/files/Armada_Aset_Penawaran_resmi_dari_2_vendor_(dilengkapi_KTP_dan_NPWP)_Area_LAMPUNG.pdf'
 const tes = 'assets/documents/1656572534470.pdf'
 
 const url = cekNo.split('localhost:8000')

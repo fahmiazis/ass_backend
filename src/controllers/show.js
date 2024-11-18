@@ -141,5 +141,20 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  tesDok: async (req, res) => {
+    const id = req.params.id
+    // const fileUrl = 'https://pods.pinusmerahabadi.co.id/storage/attachments/ticketing/barangjasa/P01-LPG1-2609240303/item9011/files/Armada_Aset_Penawaran_resmi_dari_2_vendor_(dilengkapi_KTP_dan_NPWP)_Area_LAMPUNG.pdf' // URL eksternal file PDF
+    try {
+      const result = await docUser.findByPk(id)
+      const fileUrl = result.path
+      const response = await axios.get(fileUrl, { responseType: 'arraybuffer' })
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', 'inline; filename="sample.pdf"')
+      res.send(response.data)
+    } catch (error) {
+      console.error(error)
+      res.status(500).send('Failed to fetch the file')
+    }
   }
 }

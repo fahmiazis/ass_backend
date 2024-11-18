@@ -1,8 +1,8 @@
 const joi = require('joi')
-const { depo, sequelize } = require('../models')
+const { depo } = require('../models')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
-const { Op, QueryTypes } = require('sequelize')
+const { Op } = require('sequelize')
 const readXlsxFile = require('read-excel-file/node')
 const multer = require('multer')
 const uploadMaster = require('../helpers/uploadMaster')
@@ -10,6 +10,12 @@ const fs = require('fs')
 const excel = require('exceljs')
 const vs = require('fs-extra')
 const { APP_URL } = process.env
+const borderStyles = {
+  top: { style: 'thin' },
+  left: { style: 'thin' },
+  bottom: { style: 'thin' },
+  right: { style: 'thin' }
+}
 
 module.exports = {
   createDepo: async (req, res) => {
@@ -189,6 +195,8 @@ module.exports = {
       }
       if (!limit) {
         limit = 10
+      } else if (limit === 'all') {
+        limit = 'all'
       } else {
         limit = parseInt(limit)
       }
@@ -302,7 +310,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Plant', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
+          const cek = ['Kode Area', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             console.log(valid[i] === cek[i])
@@ -383,56 +391,51 @@ module.exports = {
             } else {
               const arr = []
               for (let i = 0; i < rows.length - 1; i++) {
-                const select = await sequelize.query(`SELECT kode_plant, nama_area from depos WHERE kode_plant='${kode[i]}'`, {
-                  type: QueryTypes.SELECT
+                const dataDepo = rows[i]
+                const data = {
+                  kode_plant: dataDepo[0],
+                  nama_area: dataDepo[1],
+                  channel: dataDepo[2],
+                  distribution: dataDepo[3],
+                  status_area: dataDepo[4],
+                  profit_center: dataDepo[5],
+                  cost_center: dataDepo[6],
+                  kode_sap_1: dataDepo[7],
+                  kode_sap_2: dataDepo[8],
+                  nama_nom: dataDepo[9],
+                  nama_om: dataDepo[10],
+                  nama_bm: dataDepo[11],
+                  nama_aos: dataDepo[12],
+                  nama_pic_1: dataDepo[13],
+                  nama_pic_2: dataDepo[14],
+                  nama_pic_3: dataDepo[15],
+                  nama_pic_4: dataDepo[16],
+                  nama_asman: dataDepo[17]
+                }
+                const select = await depo.findOne({
+                  where: {
+                    kode_plant: kode[i]
+                  }
                 })
-                await sequelize.query(`DELETE from depos WHERE kode_plant='${kode[i]}'`, {
-                  type: QueryTypes.DELETE
-                })
-                if (select.length > 0) {
-                  arr.push(select[0])
+                if (select) {
+                  await select.update(data)
+                  arr.push(select)
+                } else {
+                  await depo.create(data)
+                  arr.push(data)
                 }
               }
               if (arr.length > 0) {
-                rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4, nama_asman) VALUES ${rows.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: rows,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'successfully upload file master')
-                } else {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'failed to upload file', {}, 404, false)
-                }
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'successfully upload file master')
               } else {
-                rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4, nama_asman) VALUES ${rows.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: rows,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
                   return response(res, 'successfully upload file master')
-                } else {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'failed to upload file', {}, 404, false)
-                }
+                })
               }
             }
           } else {
@@ -457,25 +460,56 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Plant', 'Nama Area', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Channel', 'Distribution', 'Status Area', 'Nama GROM', 'Nama ROM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
-        const key = ['kode_plant', 'nama_area', 'profit_center', 'distribution', 'status_area', 'profit_center', 'kode_sap_1', 'kode_sap_2', 'nama_nom', 'nama_om', 'nama_aos', 'nama_pic_1', 'nama_pic_2', 'nama_pic_3', 'nama_pic_4']
+        const header = ['Kode Area', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
+        const key = [
+          'kode_plant',
+          'nama_area',
+          'channel',
+          'distribution',
+          'status_area',
+          'profit_center',
+          'cost_center',
+          'kode_sap_1',
+          'kode_sap_2',
+          'nama_nom',
+          'nama_om',
+          'nama_bm',
+          'nama_aos',
+          'nama_pic_1',
+          'nama_pic_2',
+          'nama_pic_3',
+          'nama_pic_4',
+          'nama_asman'
+        ]
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
           arr.push(temp)
           temp = {}
         }
         worksheet.columns = arr
-        const cek = worksheet.addRows(result)
+        worksheet.addRows(result)
+        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+          row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+            cell.border = borderStyles
+          })
+        })
+
+        worksheet.columns.forEach(column => {
+          const lengths = column.values.map(v => v.toString().length)
+          const maxLength = Math.max(...lengths.filter(v => typeof v === 'number'))
+          column.width = maxLength + 5
+        })
+        const cek = [1]
         if (cek) {
           const name = new Date().getTime().toString().concat('-depo').concat('.xlsx')
           await workbook.xlsx.writeFile(name)
           vs.move(name, `assets/exports/${name}`, function (err) {
             if (err) {
               throw err
+            } else {
+              return response(res, 'success', { link: `${APP_URL}/download/${name}` })
             }
-            console.log('success')
           })
-          return response(res, 'success', { link: `${APP_URL}/download/${name}` })
         } else {
           return response(res, 'failed create file', {}, 404, false)
         }

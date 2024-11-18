@@ -2295,7 +2295,7 @@ module.exports = {
           }
         }
       } else {
-        return response(res, 'failed get email 1', { findRole, findDepo, findTrans }, 404, false)
+        return response(res, 'failed get email 1', { findRole, findDepo, findTrans, noTrans }, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -2473,10 +2473,10 @@ module.exports = {
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
               // to: `${to}`,
               // cc: cc.split(','),
-              to: 'neng_rina@pinusmerahabadi.co.id',
-              cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
-              // to: 'noreplyofr@gmail.com',
-              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              // to: 'neng_rina@pinusmerahabadi.co.id',
+              // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              to: 'noreplyofr@gmail.com',
+              cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>

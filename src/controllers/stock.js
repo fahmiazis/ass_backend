@@ -1161,7 +1161,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
+      const { no } = req.body
       const findDiv = await role.findAll()
       const result = await role.findAll({
         where: {
@@ -1225,131 +1225,7 @@ module.exports = {
                           }
                         }
                         if (valid.length === findDoc.length) {
-                          const findUser = await email.findOne({
-                            where: {
-                              kode_plant: findDoc[0].kode_plant
-                            }
-                          })
-                          if (findUser) {
-                            const mailOptions = {
-                              from: 'noreply_asset@pinusmerahabadi.co.id',
-                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              // to: `${findUser.email_staff_asset1}, ${findUser.email_staff_asset2}`,
-                              to: `${emailAss}, ${emailAss2}`,
-                              subject: `Full Approve Pengajuan Stock Opname ${no} (TESTING)`,
-                              html: `
-                            <head>
-                              <style type="text/css">
-                              body {
-                                  display: flexbox;
-                                  flex-direction: column;
-                              }
-                              .tittle {
-                                  font-size: 15px;
-                              }
-                              .mar {
-                                  margin-bottom: 20px;
-                              }
-                              .mar1 {
-                                  margin-bottom: 10px;
-                              }
-                              .foot {
-                                  margin-top: 20px;
-                                  margin-bottom: 10px;
-                              }
-                              .foot1 {
-                                  margin-bottom: 50px;
-                              }
-                              .position {
-                                  display: flexbox;
-                                  flex-direction: row;
-                                  justify-content: left;
-                                  margin-top: 10px;
-                              }
-                              table {
-                                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                  font-size: 12px;
-                              }
-                              .demo-table {
-                                  border-collapse: collapse;
-                                  font-size: 13px;
-                              }
-                              .demo-table th, 
-                              .demo-table td {
-                                  border-bottom: 1px solid #e1edff;
-                                  border-left: 1px solid #e1edff;
-                                  padding: 7px 17px;
-                              }
-                              .demo-table th, 
-                              .demo-table td:last-child {
-                                  border-right: 1px solid #e1edff;
-                              }
-                              .demo-table td:first-child {
-                                  border-top: 1px solid #e1edff;
-                              }
-                              .demo-table td:last-child{
-                                  border-bottom: 0;
-                              }
-                              caption {
-                                  caption-side: top;
-                                  margin-bottom: 10px;
-                              }
-                              
-                              /* Table Header */
-                              .demo-table thead th {
-                                  background-color: #508abb;
-                                  color: #FFFFFF;
-                                  border-color: #6ea1cc !important;
-                                  text-transform: uppercase;
-                              }
-                              
-                              /* Table Body */
-                              .demo-table tbody td {
-                                  color: #353535;
-                              }
-                              
-                              .demo-table tbody tr:nth-child(odd) td {
-                                  background-color: #f4fbff;
-                              }
-                              .demo-table tbody tr:hover th,
-                              .demo-table tbody tr:hover td {
-                                  background-color: #ffffa2;
-                                  border-color: #ffff0f;
-                                  transition: all .2s;
-                              }
-                          </style>
-                            </head>
-                            <body>
-                                <div class="tittle mar">
-                                    Dear Bapak/Ibu Asset,
-                                </div>
-                                <div class="tittle mar1">
-                                    <div>Mohon lanjutkan proses pengajuan stock opname area ${findDoc[0].area} dengan nomor opname ${no}.</div>
-                                </div>
-                                <div class="position">
-                                </div>
-                                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                <div class="tittle foot">
-                                    Terima kasih,
-                                </div>
-                                <div class="tittle foot1">
-                                    Regards,
-                                </div>
-                                <div class="tittle">
-                                    Team Asset
-                                </div>
-                            </body>
-                            `
-                            }
-                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                            if (sendEmail) {
-                              return response(res, 'success approve stock opname')
-                            } else {
-                              return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                            }
-                          } else {
-                            return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                          }
+                          return response(res, 'success approve opname')
                         }
                       }
                     } else {
@@ -1359,173 +1235,9 @@ module.exports = {
                         }
                       })
                       if (findDoc) {
-                        const findRole = await role.findAll({
-                          where: {
-                            name: find[arr + 1].jabatan
-                          }
-                        })
-                        if (findRole.length > 0) {
-                          const findUser = await user.findOne({
-                            where: {
-                              user_level: findRole[0].nomor
-                            }
-                          })
-                          if (findUser) {
-                            const findDepo = await depo.findOne({
-                              where: {
-                                kode_plant: findDoc.kode_plant
-                              }
-                            })
-                            if (findDepo) {
-                              const findRom = await user.findOne({
-                                where: {
-                                  fullname: find[arr + 1].jabatan === 'BM' ? findDepo.nama_bm : find[arr + 1].jabatan === 'ROM' ? findDepo.nama_om : findDepo.nama_bm
-                                }
-                              })
-                              if (findRom) {
-                                const data = {
-                                  kode_plant: findDoc.kode_plant,
-                                  jenis: 'stock opname',
-                                  no_proses: no,
-                                  list_appr: findRom.username,
-                                  keterangan: 'pengajuan',
-                                  response: 'request'
-                                }
-                                const createNotif = await notif.create(data)
-                                if (createNotif) {
-                                  const mailOptions = {
-                                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                                    // to: `${find[arr + 1].jabatan === 'BM' || find[arr + 1].jabatan === 'ROM' ? findRom.email : findUser.email}`,
-                                    to: `${emailAss}, ${emailAss2}`,
-                                    subject: `Approve Pengajuan Stock Opname ${no} (TESTING)`,
-                                    html: `
-                                  <head>
-                                    <style type="text/css">
-                                    body {
-                                        display: flexbox;
-                                        flex-direction: column;
-                                    }
-                                    .tittle {
-                                        font-size: 15px;
-                                    }
-                                    .mar {
-                                        margin-bottom: 20px;
-                                    }
-                                    .mar1 {
-                                        margin-bottom: 10px;
-                                    }
-                                    .foot {
-                                        margin-top: 20px;
-                                        margin-bottom: 10px;
-                                    }
-                                    .foot1 {
-                                        margin-bottom: 50px;
-                                    }
-                                    .position {
-                                        display: flexbox;
-                                        flex-direction: row;
-                                        justify-content: left;
-                                        margin-top: 10px;
-                                    }
-                                    table {
-                                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                        font-size: 12px;
-                                    }
-                                    .demo-table {
-                                        border-collapse: collapse;
-                                        font-size: 13px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td {
-                                        border-bottom: 1px solid #e1edff;
-                                        border-left: 1px solid #e1edff;
-                                        padding: 7px 17px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td:last-child {
-                                        border-right: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:first-child {
-                                        border-top: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:last-child{
-                                        border-bottom: 0;
-                                    }
-                                    caption {
-                                        caption-side: top;
-                                        margin-bottom: 10px;
-                                    }
-                                    
-                                    /* Table Header */
-                                    .demo-table thead th {
-                                        background-color: #508abb;
-                                        color: #FFFFFF;
-                                        border-color: #6ea1cc !important;
-                                        text-transform: uppercase;
-                                    }
-                                    
-                                    /* Table Body */
-                                    .demo-table tbody td {
-                                        color: #353535;
-                                    }
-                                    
-                                    .demo-table tbody tr:nth-child(odd) td {
-                                        background-color: #f4fbff;
-                                    }
-                                    .demo-table tbody tr:hover th,
-                                    .demo-table tbody tr:hover td {
-                                        background-color: #ffffa2;
-                                        border-color: #ffff0f;
-                                        transition: all .2s;
-                                    }
-                                </style>
-                                  </head>
-                                  <body>
-                                      <div class="tittle mar">
-                                          Dear Bapak/Ibu ${find[arr + 1].jabatan},
-                                      </div>
-                                      <div class="tittle mar1">
-                                          <div>Mohon untuk approve pengajuan stock opname area ${findDepo.nama_area} dengan nomor opname ${no}.</div>
-                                      </div>
-                                      <div class="position">
-                                      </div>
-                                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                      <div class="tittle foot">
-                                          Terima kasih,
-                                      </div>
-                                      <div class="tittle foot1">
-                                          Regards,
-                                      </div>
-                                      <div class="tittle">
-                                          Team Asset
-                                      </div>
-                                  </body>
-                                  `
-                                  }
-                                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                                  if (sendEmail) {
-                                    return response(res, 'success submit stock opname')
-                                  } else {
-                                    return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                  }
-                                } else {
-                                  return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                                }
-                              } else {
-                                return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                              }
-                            } else {
-                              return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                            }
-                          } else {
-                            return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
-                          }
-                        } else {
-                          return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
-                        }
+                        return response(res, 'success approve opname')
                       } else {
-                        return response(res, 'berhasil approve dokumen, tidak berhasil kirim notif email 2')
+                        return response(res, 'success approve opname')
                       }
                     }
                   } else {
@@ -1555,9 +1267,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
-      const list = Object.values(req.body)
-      const alasan = list[0]
+      const { no, alasan, listData } = req.body
       const result = await role.findAll({
         where: {
           nomor: level
@@ -1590,207 +1300,36 @@ module.exports = {
                 }
                 const findTtd = await ttd.findByPk(hasil)
                 if (findTtd) {
-                  let tableTd = ''
+                  await findTtd.update(data)
                   const cek = []
-                  for (let i = 1; i < list.length; i++) {
+                  const findAllData = await stock.findAll({
+                    where: {
+                      no_stock: no
+                    }
+                  })
+                  for (let i = 0; i < findAllData.length; i++) {
                     const send = {
-                      status_app: 0
+                      status_reject: 1,
+                      isreject: listData.find(item => item === findAllData[i].no_asset) !== undefined ? 1 : null,
+                      menu_rev: 'revisi area',
+                      user_reject: name,
+                      reason: alasan
                     }
                     const findStock = await stock.findOne({
                       where: {
                         [Op.and]: [
-                          { no_asset: list[i] },
+                          { no_asset: findAllData[i].no_asset },
                           { no_stock: no }
                         ]
                       }
                     })
                     if (findStock) {
-                      const element = `
-                        <tr>
-                          <td>${i}</td>
-                          <td>${findStock.no_stock}</td>
-                          <td>${findStock.no_asset}</td>
-                          <td>${findStock.nama_asset}</td>
-                          <td>${findStock.cost_center}</td>
-                          <td>${findStock.area}</td>
-                        </tr>`
-                      tableTd = tableTd + element
                       await findStock.update(send)
                       cek.push(1)
                     }
                   }
-                  if (cek.length === (list.length - 1)) {
-                    const findStock = await stock.findOne({
-                      where: {
-                        no_stock: no
-                      }
-                    })
-                    let draftEmail = ''
-                    const draf = []
-                    for (let i = 0; i < find.length; i++) {
-                      if (find[i].jabatan === 'area' && find[i].sebagai === 'pembuat') {
-                        const findEmail = await email.findOne({
-                          where: {
-                            kode_plant: findStock.kode_plant
-                          }
-                        })
-                        if (findEmail) {
-                          draf.push(findEmail)
-                          draftEmail += findEmail.email_area_aos + ', '
-                        }
-                      } else {
-                        const result = await user.findOne({
-                          where: {
-                            username: find[i].nama
-                          }
-                        })
-                        if (result) {
-                          draf.push(result)
-                          draftEmail += result.email + ', '
-                        }
-                      }
-                    }
-                    if (draf.length > 0) {
-                      const sent = await findTtd.update(data)
-                      if (sent) {
-                        const mailOptions = {
-                          from: 'noreply_asset@pinusmerahabadi.co.id',
-                          replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                          // to: `${draftEmail}`,
-                          to: `${emailAss}, ${emailAss2}`,
-                          subject: `Reject Stock Opname Asset ${no} (TESTING WEB ASET)`,
-                          html: `
-                          <head>
-                            <style type="text/css">
-                            body {
-                                display: flexbox;
-                                flex-direction: column;
-                            }
-                            .tittle {
-                                font-size: 15px;
-                            }
-                            .mar {
-                                margin-bottom: 20px;
-                            }
-                            .mar1 {
-                                margin-bottom: 10px;
-                            }
-                            .foot {
-                                margin-top: 20px;
-                                margin-bottom: 10px;
-                            }
-                            .foot1 {
-                                margin-bottom: 50px;
-                            }
-                            .position {
-                                display: flexbox;
-                                flex-direction: row;
-                                justify-content: left;
-                                margin-top: 10px;
-                            }
-                            table {
-                                font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                font-size: 12px;
-                            }
-                            .demo-table {
-                                border-collapse: collapse;
-                                font-size: 13px;
-                            }
-                            .demo-table th, 
-                            .demo-table td {
-                                border-bottom: 1px solid #e1edff;
-                                border-left: 1px solid #e1edff;
-                                padding: 7px 17px;
-                            }
-                            .demo-table th, 
-                            .demo-table td:last-child {
-                                border-right: 1px solid #e1edff;
-                            }
-                            .demo-table td:first-child {
-                                border-top: 1px solid #e1edff;
-                            }
-                            .demo-table td:last-child{
-                                border-bottom: 0;
-                            }
-                            caption {
-                                caption-side: top;
-                                margin-bottom: 10px;
-                            }
-                            
-                            /* Table Header */
-                            .demo-table thead th {
-                                background-color: #508abb;
-                                color: #FFFFFF;
-                                border-color: #6ea1cc !important;
-                                text-transform: uppercase;
-                            }
-                            
-                            /* Table Body */
-                            .demo-table tbody td {
-                                color: #353535;
-                            }
-                            
-                            .demo-table tbody tr:nth-child(odd) td {
-                                background-color: #f4fbff;
-                            }
-                            .demo-table tbody tr:hover th,
-                            .demo-table tbody tr:hover td {
-                                background-color: #ffffa2;
-                                border-color: #ffff0f;
-                                transition: all .2s;
-                            }
-                        </style>
-                          </head>
-                          <body>
-                              <div class="tittle mar">
-                                  Dear Bapak/Ibu,
-                              </div>
-                              <div class="tittle mar1">
-                                  <div>Pengajuan stock opname telah direject</div>
-                                  <div>Alasan Reject: ${alasan}</div>
-                                  <div>Direject oleh: ${name}</div>
-                              </div>
-                              <div class="position">
-                                  <table class="demo-table">
-                                      <thead>
-                                          <tr>
-                                              <th>No</th>
-                                              <th>No Stock</th>
-                                              <th>Asset</th>
-                                              <th>Asset description</th>
-                                              <th>Cost Ctr</th>
-                                              <th>Depo / Cabang</th>
-                                          </tr>
-                                      </thead>
-                                      <tbody>
-                                        ${tableTd}
-                                      </tbody>
-                                  </table>
-                              </div>
-                              <div class="tittle foot">
-                                  Terima kasih,
-                              </div>
-                              <div class="tittle foot1">
-                                  Regards,
-                              </div>
-                              <div class="tittle">
-                                ${name}
-                              </div>
-                          </body>
-                          `
-                        }
-                        const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                        if (sendEmail) {
-                          return response(res, 'success reject stock opname', { sendEmail })
-                        } else {
-                          return response(res, 'berhasil reject stock opname, tidak berhasil kirim notif email 1')
-                        }
-                      } else {
-                        return response(res, 'failed reject stock opname', {}, 404, false)
-                      }
-                    } else {
-                      return response(res, 'success reject stock opname gagal kirim email')
-                    }
+                  if (cek.length === (listData.length - 1)) {
+                    return response(res, 'success reject stock opname', {})
                   } else {
                     return response(res, 'failed reject stock opname', {}, 404, false)
                   }
