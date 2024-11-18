@@ -2473,10 +2473,10 @@ module.exports = {
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
               // to: `${to}`,
               // cc: cc.split(','),
-              // to: 'neng_rina@pinusmerahabadi.co.id',
-              // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
-              to: 'noreplyofr@gmail.com',
-              cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              to: 'neng_rina@pinusmerahabadi.co.id',
+              cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              // to: 'noreplyofr@gmail.com',
+              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>
