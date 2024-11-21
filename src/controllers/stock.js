@@ -329,7 +329,8 @@ module.exports = {
         const findStock = await stock.findAll({
           where: {
             no_stock: no,
-            status_form: null
+            status_form: null,
+            status_app: 1
           }
         })
         const findAsset = await asset.findAll({
@@ -539,7 +540,7 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  getStock: async (req, res) => {
+  getStockArea: async (req, res) => {
     try {
       const kode = req.user.kode
       const cost = req.user.name
@@ -631,7 +632,7 @@ module.exports = {
           ],
           limit: limit,
           offset: (page - 1) * limit,
-          group: ['stock.no_stock'],
+          group: [status === 'revisi' ? 'stock.no_stock' : 'stock.id'],
           distinct: true
         })
         const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
@@ -1887,7 +1888,7 @@ module.exports = {
               }
             })
             const data = {
-              kode_plant: results.kode_plant,
+              kode_plant: kode,
               area: results.area,
               deskripsi: results.deskripsi,
               no_asset: results.no_asset,
@@ -1900,7 +1901,8 @@ module.exports = {
               keterangan: results.keterangan,
               status_fisik: results.status_fisik,
               tanggalStock: moment().format('L'),
-              status_doc: 1
+              status_doc: 1,
+              status_app: null
             }
             if (findStock) {
               // if (findStock.no_stock !== null) {
