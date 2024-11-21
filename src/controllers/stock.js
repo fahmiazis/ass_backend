@@ -278,13 +278,13 @@ module.exports = {
                             return response(res, 'success submit stock opname')
                           }
                         } else {
-                          return response(res, 'failed submit stock opname', {}, 400, false)
+                          return response(res, 'failed submit stock opname1', {}, 400, false)
                         }
                       } else {
-                        return response(res, 'failed submit stock opname', {}, 400, false)
+                        return response(res, 'failed submit stock opname2', {}, 400, false)
                       }
                     } else {
-                      return response(res, 'failed submit stock opname', {}, 400, false)
+                      return response(res, 'failed submit stock opname3', {}, 400, false)
                     }
                   } else {
                     return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length }, 400, false)
@@ -383,13 +383,13 @@ module.exports = {
               return response(res, 'success submit stock opname')
             }
           } else {
-            return response(res, 'failed submit stock opname', {}, 404, false)
+            return response(res, 'failed submit stock opname4', {}, 404, false)
           }
         } else {
-          return response(res, 'failed submit stock opname', {}, 404, false)
+          return response(res, 'failed submit stock opname5', {}, 404, false)
         }
       } else {
-        return response(res, 'failed submit stock opname', {}, 404, false)
+        return response(res, 'failed submit stock opname6', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -934,7 +934,7 @@ module.exports = {
         // area: joi.string(),
         // tanggal: joi.string(),
         // no_doc: joi.string(),
-        // no_asset: joi.string(),
+        no_asset: joi.string(),
         // nama_asset: joi.string(),
         // kode_plant: joi.string(),
         keterangan: joi.string().allow(''),

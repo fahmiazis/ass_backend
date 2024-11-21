@@ -346,7 +346,7 @@ module.exports = {
           const result = await asset.findByPk(id)
           if (result) {
             await result.update(results)
-            return response(res, 'successfully update asset', { result })
+            return response(res, 'successfully update asset1', { result })
           } else {
             return response(res, 'failed update asset', {}, 404, false)
           }
