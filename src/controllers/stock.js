@@ -52,13 +52,14 @@ module.exports = {
             where: {
               [Op.and]: [
                 { kode_plant: level === 5 ? kode : cost },
-                { status_form: null },
-                {
-                  tanggalStock: {
-                    [Op.lte]: akhir,
-                    [Op.gte]: awal
-                  }
-                }
+                { status_form: null }
+                // ,
+                // {
+                //   tanggalStock: {
+                //     [Op.lte]: akhir,
+                //     [Op.gte]: awal
+                //   }
+                // }
               ]
             }
           })
@@ -519,13 +520,7 @@ module.exports = {
           const result = await docUser.findAll({
             where: {
               [Op.and]: [
-                { no_stock: no },
-                {
-                  periode: {
-                    [Op.lte]: end,
-                    [Op.gte]: start
-                  }
-                }
+                { no_stock: no }
               ]
             }
           })
@@ -786,7 +781,8 @@ module.exports = {
                     { keterangan: { [Op.like]: `%${searchValue}%` } },
                     { kondisi: { [Op.like]: `%${searchValue}%` } },
                     { grouping: { [Op.like]: `%${searchValue}%` } }
-                  ]
+                  ],
+                  [Op.not]: { no_stock: null }
                 },
                 include: [
                   {
@@ -852,7 +848,8 @@ module.exports = {
                 { keterangan: { [Op.like]: `%${searchValue}%` } },
                 { kondisi: { [Op.like]: `%${searchValue}%` } },
                 { grouping: { [Op.like]: `%${searchValue}%` } }
-              ]
+              ],
+              [Op.not]: { no_stock: null }
             },
             include: [
               {
@@ -1299,22 +1296,15 @@ module.exports = {
             })
             for (let i = 0; i < findAllData.length; i++) {
               const send = {
-                status_form: results.type_reject === 'pembatalan' ? '0' : findAllData[i].status_form,
+                status_form: results.type_reject === 'pembatalan' ? 0 : findAllData[i].status_form,
                 status_reject: 1,
-                isreject: list.find(item => item === findAllData[i].no_asset) !== undefined ? 1 : null,
+                isreject: list.find(item => item === findAllData[i].id) !== undefined ? 1 : null,
                 reason: results.alasan,
                 menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
                 user_reject: level,
                 history: `${findAllData[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
               }
-              const findStock = await stock.findOne({
-                where: {
-                  [Op.and]: [
-                    { no_asset: findAllData[i].no_asset },
-                    { no_stock: no }
-                  ]
-                }
-              })
+              const findStock = await stock.findByPk(findAllData[i].id)
               if (findStock) {
                 await findStock.update(send)
                 cek.push(1)
@@ -1362,19 +1352,12 @@ module.exports = {
                       for (let i = 0; i < findAllData.length; i++) {
                         const send = {
                           status_reject: 1,
-                          isreject: list.find(item => item === findAllData[i].no_asset) !== undefined ? 1 : null,
+                          isreject: list.find(item => item === findAllData[i].id) !== undefined ? 1 : null,
                           menu_rev: results.menu,
                           user_reject: name,
                           reason: alasan
                         }
-                        const findStock = await stock.findOne({
-                          where: {
-                            [Op.and]: [
-                              { no_asset: findAllData[i].no_asset },
-                              { no_stock: no }
-                            ]
-                          }
-                        })
+                        const findStock = await stock.findByPk(findAllData[i].id)
                         if (findStock) {
                           await findStock.update(send)
                           cek.push(1)
@@ -1917,20 +1900,19 @@ module.exports = {
               keterangan: results.keterangan,
               status_fisik: results.status_fisik,
               tanggalStock: moment().format('L'),
-              status_form: 0,
               status_doc: 1
             }
             if (findStock) {
-              if (findStock.no_stock !== null) {
-                return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
+              // if (findStock.no_stock !== null) {
+              //   return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
+              // } else {
+              const send = await stock.create(data)
+              if (send) {
+                return response(res, 'success add stock opname', { result: send })
               } else {
-                const send = await stock.create(data)
-                if (send) {
-                  return response(res, 'success add stock opname', { result: send })
-                } else {
-                  return response(res, 'failed add stock opname', {}, 400, false)
-                }
+                return response(res, 'failed add stock opname', {}, 400, false)
               }
+              // }
             } else {
               const send = await stock.create(data)
               if (send) {
