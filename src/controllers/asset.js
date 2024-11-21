@@ -273,10 +273,10 @@ module.exports = {
   },
   getDetailAsset: async (req, res) => {
     try {
-      const no = req.params.no
+      const id = req.params.id
       const findAsset = await asset.findOne({
         where: {
-          no_asset: no
+          id: id
         },
         include: [
           {
