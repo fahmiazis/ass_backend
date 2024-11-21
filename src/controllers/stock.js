@@ -324,8 +324,7 @@ module.exports = {
         const findStock = await stock.findAll({
           where: {
             no_stock: no,
-            status_form: null,
-            status_app: 1
+            status_form: null
           }
         })
         const findAsset = await asset.findAll({
@@ -344,7 +343,8 @@ module.exports = {
             const data = {
               status_form: 1,
               history: `approved by ${role}(${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
-              tglIo: moment()
+              tglIo: moment(),
+              status_app: 1
             }
             const findData = await stock.findByPk(findStock[i].id)
             if (findData) {
