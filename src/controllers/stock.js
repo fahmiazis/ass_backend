@@ -202,12 +202,7 @@ module.exports = {
                         where: {
                           [Op.and]: [
                             { kode_plant: level === 5 ? kode : cost },
-                            {
-                              tanggalStock: {
-                                [Op.lte]: akhir,
-                                [Op.gte]: awal
-                              }
-                            }
+                            { status_form: null }
                           ]
                         }
                       })
