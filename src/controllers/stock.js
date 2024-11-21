@@ -342,7 +342,7 @@ module.exports = {
           for (let i = 0; i < findStock.length; i++) {
             const data = {
               status_form: 1,
-              history: `approved by ${role}(${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
+              history: `approved by ${role} (${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
               tglIo: moment(),
               status_app: 1
             }
