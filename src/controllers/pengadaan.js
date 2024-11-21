@@ -3886,16 +3886,7 @@ module.exports = {
                 }
               }
               if (cek.length > 0) {
-                const findDepo = await depo.findOne({
-                  where: {
-                    kode_plant: findIo[0].kode_plant
-                  }
-                })
-                if (findDepo) {
-                  return response(res, 'success submit pengajuan io')
-                } else {
-                  return response(res, 'success submit pengajuan io')
-                }
+                return response(res, 'success submit revisi')
               } else {
                 return response(res, 'failed submit', {}, 404, false)
               }
@@ -3920,16 +3911,7 @@ module.exports = {
             }
           }
           if (cek.length > 0) {
-            const findDepo = await depo.findOne({
-              where: {
-                kode_plant: findIo[0].kode_plant
-              }
-            })
-            if (findDepo) {
-              return response(res, 'success submit pengajuan io')
-            } else {
-              return response(res, 'success submit pengajuan io')
-            }
+            return response(res, 'success submit revisi')
           } else {
             return response(res, 'failed submit', {}, 404, false)
           }

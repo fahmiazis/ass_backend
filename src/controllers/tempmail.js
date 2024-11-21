@@ -1954,7 +1954,7 @@ module.exports = {
               // const cekData = findAllTrans.find(({stat_skb}) => stat_skb === 'ya') === undefined ? 'ya' : 'no' // eslint-disable-line
               // const tipeStat = tempStat === 2 ? 2 : 5
               // const tipeStat = cekData === 'ya' ? 2 : 4
-              const tipeStat = 8
+              const tipeStat = jenis === 'pengadaan' ? 8 : 2
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
                   where: {
@@ -2473,10 +2473,10 @@ module.exports = {
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
               // to: `${to}`,
               // cc: cc.split(','),
-              to: 'neng_rina@pinusmerahabadi.co.id',
-              cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
-              // to: 'noreplyofr@gmail.com',
-              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              // to: 'neng_rina@pinusmerahabadi.co.id',
+              // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              to: 'noreplyofr@gmail.com',
+              cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>

@@ -1,4 +1,4 @@
-const { stock, asset, clossing, ttd, approve, role, user, path, depo, status_stock, docUser, document, notif, email, reservoir } = require('../models')
+const { stock, asset, clossing, ttd, approve, role, user, path, depo, status_stock, docUser, document, reservoir } = require('../models')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const moment = require('moment')
@@ -6,11 +6,11 @@ const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
-const wrapMail = require('../helpers/wrapMail')
+// const wrapMail = require('../helpers/wrapMail')
 // const excel = require('exceljs')
 
-const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
-const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
+// const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
+// const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
 module.exports = {
   submitStock: async (req, res) => {
@@ -317,6 +317,8 @@ module.exports = {
       const kode = req.user.kode
       const cost = req.user.name
       const level = req.user.level
+      const name = req.user.fullname
+      const role = req.user.role
       const findArea = await depo.findOne({
         where: {
           kode_plant: level === 5 ? kode : cost
@@ -344,7 +346,7 @@ module.exports = {
           for (let i = 0; i < findStock.length; i++) {
             const data = {
               status_form: 1,
-              history: `submit pengajuan by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+              history: `approved by ${role}(${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
               tglIo: moment()
             }
             const findData = await stock.findByPk(findStock[i].id)
@@ -592,13 +594,15 @@ module.exports = {
           where: {
             kode_plant: level === 5 ? kode : cost,
             [Op.and]: [
-              { status_app: status === 'null' ? null : status },
-              {
-                tanggalStock: {
-                  [Op.lte]: end,
-                  [Op.gte]: start
-                }
-              }
+              status === 'revisi' ? { status_reject: 1 } : { status_app: status === 'null' ? null : status },
+              status === 'revisi' ? { status_reject: 1 } : { [Op.not]: { id: null } }
+              // ,
+              // {
+              //   tanggalStock: {
+              //     [Op.lte]: end,
+              //     [Op.gte]: start
+              //   }
+              // }
             ],
             [Op.or]: [
               { no_asset: { [Op.like]: `%${searchValue}%` } },
@@ -620,6 +624,10 @@ module.exports = {
             {
               model: ttd,
               as: 'appForm'
+            },
+            {
+              model: depo,
+              as: 'depo'
             }
           ],
           order: [
@@ -627,7 +635,9 @@ module.exports = {
             [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
           ],
           limit: limit,
-          offset: (page - 1) * limit
+          offset: (page - 1) * limit,
+          group: ['stock.no_stock'],
+          distinct: true
         })
         const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
         if (result) {
@@ -689,8 +699,8 @@ module.exports = {
           start = `${next[2]}-${next[0]}-${findClose[0].start}`
         } else {
           const next = moment().add(1, 'month').format('L').split('/')
-          start = `${time[2]}-${time[0]}-${findClose[0].start}`
-          end = `${next[2]}-${next[0]}-${findClose[0].end}`
+          start = `${time[2]}-${time[0]}-${findClose[0].start}` // eslint-disable-line
+          end = `${next[2]}-${next[0]}-${findClose[0].end}` // eslint-disable-line
         }
         if (level === 5 || level === 9) {
           const result = await stock.findAndCountAll({
@@ -1160,7 +1170,7 @@ module.exports = {
   approveStock: async (req, res) => {
     try {
       const level = req.user.level
-      const name = req.user.name
+      const name = req.user.fullname
       const { no } = req.body
       const findDiv = await role.findAll()
       const result = await role.findAll({
@@ -1206,37 +1216,27 @@ module.exports = {
                         ]
                       }
                     })
-                    if (results.length === find.length) {
-                      const findDoc = await stock.findAll({
-                        where: {
-                          no_stock: no
-                        }
-                      })
-                      if (findDoc) {
+                    const findDoc = await stock.findAll({
+                      where: {
+                        no_stock: no
+                      }
+                    })
+                    if (findDoc) {
+                      const valid = []
+                      for (let i = 0; i < findDoc.length; i++) {
                         const data = {
-                          status_form: 9
+                          status_form: results.length === find.length ? 9 : findDoc[i].status_form,
+                          status_reject: null,
+                          isreject: null,
+                          history: `${findDoc[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}`
                         }
-                        const valid = []
-                        for (let i = 0; i < findDoc.length; i++) {
-                          const findAsset = await stock.findByPk(findDoc[i].id)
-                          if (findAsset) {
-                            await findAsset.update(data)
-                            valid.push(1)
-                          }
-                        }
-                        if (valid.length === findDoc.length) {
-                          return response(res, 'success approve opname')
+                        const findAsset = await stock.findByPk(findDoc[i].id)
+                        if (findAsset) {
+                          await findAsset.update(data)
+                          valid.push(1)
                         }
                       }
-                    } else {
-                      const findDoc = await stock.findOne({
-                        where: {
-                          no_stock: no
-                        }
-                      })
-                      if (findDoc) {
-                        return response(res, 'success approve opname')
-                      } else {
+                      if (valid.length === findDoc.length) {
                         return response(res, 'success approve opname')
                       }
                     }
@@ -1266,88 +1266,142 @@ module.exports = {
   rejectStock: async (req, res) => {
     try {
       const level = req.user.level
-      const name = req.user.name
-      const { no, alasan, listData } = req.body
-      const result = await role.findAll({
-        where: {
-          nomor: level
-        }
+      const name = req.user.fullname
+      const schema = joi.object({
+        alasan: joi.string().required(),
+        no: joi.string().required(),
+        menu: joi.string().required(),
+        list: joi.array(),
+        type: joi.string(),
+        type_reject: joi.string()
       })
-      if (result.length > 0) {
-        const find = await ttd.findAll({
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 404, false)
+      } else {
+        const no = results.no
+        const list = results.list
+        const alasan = results.alasan
+        const histRev = `reject perbaikan by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}; reason: ${results.alasan.replace(/\,/g, ' ')}` //eslint-disable-line
+        const histBatal = `reject pembatalan by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}; reason: ${results.alasan.replace(/\,/g, ' ')}` //eslint-disable-line
+        const result = await role.findAll({
           where: {
-            no_doc: no
+            nomor: level
           }
         })
-        if (find.length > 0) {
-          let hasil = 0
-          let arr = null
-          for (let i = 0; i < find.length; i++) {
-            if (result[0].name === find[i].jabatan) {
-              hasil = find[i].id
-              arr = i
-            }
-          }
-          if (hasil !== 0) {
-            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
-              return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
-            } else {
-              if (arr === 0 || find[arr - 1].status === 1) {
-                const data = {
-                  nama: name,
-                  status: 0,
-                  path: alasan
+        if (result.length > 0) {
+          if (results.type === 'verif') {
+            const cek = []
+            const findAllData = await stock.findAll({
+              where: {
+                no_stock: no
+              }
+            })
+            for (let i = 0; i < findAllData.length; i++) {
+              const send = {
+                status_form: results.type_reject === 'pembatalan' ? '0' : findAllData[i].status_form,
+                status_reject: 1,
+                isreject: list.find(item => item === findAllData[i].no_asset) !== undefined ? 1 : null,
+                reason: results.alasan,
+                menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
+                user_reject: level,
+                history: `${findAllData[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
+              }
+              const findStock = await stock.findOne({
+                where: {
+                  [Op.and]: [
+                    { no_asset: findAllData[i].no_asset },
+                    { no_stock: no }
+                  ]
                 }
-                const findTtd = await ttd.findByPk(hasil)
-                if (findTtd) {
-                  await findTtd.update(data)
-                  const cek = []
-                  const findAllData = await stock.findAll({
-                    where: {
-                      no_stock: no
-                    }
-                  })
-                  for (let i = 0; i < findAllData.length; i++) {
-                    const send = {
-                      status_reject: 1,
-                      isreject: listData.find(item => item === findAllData[i].no_asset) !== undefined ? 1 : null,
-                      menu_rev: 'revisi area',
-                      user_reject: name,
-                      reason: alasan
-                    }
-                    const findStock = await stock.findOne({
-                      where: {
-                        [Op.and]: [
-                          { no_asset: findAllData[i].no_asset },
-                          { no_stock: no }
-                        ]
-                      }
-                    })
-                    if (findStock) {
-                      await findStock.update(send)
-                      cek.push(1)
-                    }
-                  }
-                  if (cek.length === (listData.length - 1)) {
-                    return response(res, 'success reject stock opname', {})
-                  } else {
-                    return response(res, 'failed reject stock opname', {}, 404, false)
-                  }
-                } else {
-                  return response(res, 'failed reject stock opname', {}, 404, false)
-                }
-              } else {
-                return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+              })
+              if (findStock) {
+                await findStock.update(send)
+                cek.push(1)
               }
             }
+            if (cek.length > 0) {
+              return response(res, 'success reject stock opname', {})
+            } else {
+              return response(res, 'failed reject stock opname1', {}, 404, false)
+            }
           } else {
-            return response(res, 'failed reject stock opname', {}, 404, false)
+            const find = await ttd.findAll({
+              where: {
+                no_doc: no
+              }
+            })
+            if (find.length > 0) {
+              let hasil = 0
+              let arr = null
+              for (let i = 0; i < find.length; i++) {
+                if (result[0].name === find[i].jabatan) {
+                  hasil = find[i].id
+                  arr = i
+                }
+              }
+              if (hasil !== 0) {
+                if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
+                  return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
+                } else {
+                  if (arr === 0 || find[arr - 1].status === 1) {
+                    const data = {
+                      nama: name,
+                      status: 0,
+                      path: alasan
+                    }
+                    const findTtd = await ttd.findByPk(hasil)
+                    if (findTtd) {
+                      await findTtd.update(data)
+                      const cek = []
+                      const findAllData = await stock.findAll({
+                        where: {
+                          no_stock: no
+                        }
+                      })
+                      for (let i = 0; i < findAllData.length; i++) {
+                        const send = {
+                          status_reject: 1,
+                          isreject: list.find(item => item === findAllData[i].no_asset) !== undefined ? 1 : null,
+                          menu_rev: results.menu,
+                          user_reject: name,
+                          reason: alasan
+                        }
+                        const findStock = await stock.findOne({
+                          where: {
+                            [Op.and]: [
+                              { no_asset: findAllData[i].no_asset },
+                              { no_stock: no }
+                            ]
+                          }
+                        })
+                        if (findStock) {
+                          await findStock.update(send)
+                          cek.push(1)
+                        }
+                      }
+                      if (cek.length > 0) {
+                        return response(res, 'success reject stock opname', {})
+                      } else {
+                        return response(res, 'failed reject stock opname2', {}, 404, false)
+                      }
+                    } else {
+                      return response(res, 'failed reject stock opname3', {}, 404, false)
+                    }
+                  } else {
+                    return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+                  }
+                }
+              } else {
+                return response(res, 'failed reject stock opname4', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed reject stock opname5', {}, 404, false)
+            }
           }
         } else {
-          return response(res, 'failed reject stock opname', {}, 404, false)
+          return response(res, 'failed reject stock opname6', {}, 404, false)
         }
-      } else {
-        return response(res, 'failed reject stock opname', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -1657,6 +1711,7 @@ module.exports = {
   submitAsset: async (req, res) => {
     try {
       const no = req.params.no
+      const name = req.user.fullname
       const findStock = await stock.findAll({
         where: {
           no_stock: no
@@ -1667,7 +1722,10 @@ module.exports = {
         for (let i = 0; i < findStock.length; i++) {
           const find = await stock.findByPk(findStock[i].id)
           const data = {
-            status_form: 8
+            status_form: 8,
+            status_reject: null,
+            isreject: null,
+            history: `${findStock[i].history}, submit aset by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}`
           }
           if (find) {
             await find.update(data)
@@ -1680,131 +1738,7 @@ module.exports = {
           // for (let i = 0; i < findStock.length; i++) {
           //   const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${findStock[i].no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
           // }
-          const findEmail = await email.findOne({
-            where: {
-              kode_plant: findStock[0].kode_plant
-            }
-          })
-          if (findEmail) {
-            const mailOptions = {
-              from: 'noreply_asset@pinusmerahabadi.co.id',
-              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-              // to: `${findEmail.email_area_aos}`,
-              to: `${emailAss}, ${emailAss2}`,
-              subject: `Proses Stock Opname ${no} Telah Selesai (TESTING)`,
-              html: `
-            <head>
-              <style type="text/css">
-              body {
-                  display: flexbox;
-                  flex-direction: column;
-              }
-              .tittle {
-                  font-size: 15px;
-              }
-              .mar {
-                  margin-bottom: 20px;
-              }
-              .mar1 {
-                  margin-bottom: 10px;
-              }
-              .foot {
-                  margin-top: 20px;
-                  margin-bottom: 10px;
-              }
-              .foot1 {
-                  margin-bottom: 50px;
-              }
-              .position {
-                  display: flexbox;
-                  flex-direction: row;
-                  justify-content: left;
-                  margin-top: 10px;
-              }
-              table {
-                  font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                  font-size: 12px;
-              }
-              .demo-table {
-                  border-collapse: collapse;
-                  font-size: 13px;
-              }
-              .demo-table th, 
-              .demo-table td {
-                  border-bottom: 1px solid #e1edff;
-                  border-left: 1px solid #e1edff;
-                  padding: 7px 17px;
-              }
-              .demo-table th, 
-              .demo-table td:last-child {
-                  border-right: 1px solid #e1edff;
-              }
-              .demo-table td:first-child {
-                  border-top: 1px solid #e1edff;
-              }
-              .demo-table td:last-child{
-                  border-bottom: 0;
-              }
-              caption {
-                  caption-side: top;
-                  margin-bottom: 10px;
-              }
-              
-              /* Table Header */
-              .demo-table thead th {
-                  background-color: #508abb;
-                  color: #FFFFFF;
-                  border-color: #6ea1cc !important;
-                  text-transform: uppercase;
-              }
-              
-              /* Table Body */
-              .demo-table tbody td {
-                  color: #353535;
-              }
-              
-              .demo-table tbody tr:nth-child(odd) td {
-                  background-color: #f4fbff;
-              }
-              .demo-table tbody tr:hover th,
-              .demo-table tbody tr:hover td {
-                  background-color: #ffffa2;
-                  border-color: #ffff0f;
-                  transition: all .2s;
-              }
-          </style>
-            </head>
-            <body>
-                <div class="tittle mar">
-                    Dear Bapak/Ibu AOS,
-                </div>
-                <div class="tittle mar1">
-                    <div>Pengajuan stock opname ${no} telah selesai diproses.</div>
-                </div>
-                <div class="position">
-                </div>
-                <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                <div class="tittle foot">
-                    Terima kasih,
-                </div>
-                <div class="tittle foot1">
-                    Regards,
-                </div>
-                <div class="tittle">
-                    Team Asset
-                </div>
-            </body>
-            `
-            }
-            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-            if (sendEmail) {
-              return response(res, 'success submit stock opname')
-            } else {
-              return response(res, 'berhasil submit mutasi, tidak berhasil kirim notif email 1')
-            }
-          } else {
-            return response(res, 'berhasil submit tidak berhasil kirim notif email')
-          }
+          return response(res, 'success submit stock opname')
         } else {
           return response(res, 'failed submit stock2', {}, 404, false)
         }
@@ -1818,178 +1752,93 @@ module.exports = {
   submitRevisi: async (req, res) => {
     try {
       const id = req.params.id
-      const data = {
-        status_app: 1
-      }
+      const name = req.user.fullname
       const findStock = await stock.findByPk(id)
-      if (findStock) {
-        const upStock = await findStock.update(data)
-        if (upStock) {
-          const find = await ttd.findOne({
-            where: {
-              [Op.and]: [
-                { no_doc: findStock.no_stock },
-                { status: 0 }
-              ]
+      if (findStock.status_form === '2') {
+        const findSign = await ttd.findAll({
+          where: {
+            no_doc: findStock.no_stock
+          }
+        })
+        if (findSign.length > 0) {
+          const cekSign = []
+          for (let i = 0; i < findSign.length; i++) {
+            if (findSign[i].jabatan === 'area' || findSign[i].jabatan === 'aos') {
+              cekSign.push(findSign[i])
+            } else {
+              const data = {
+                status: null,
+                nama: null
+              }
+              const findId = await ttd.findByPk(findSign[i].id)
+              if (findId) {
+                await findId.update(data)
+                cekSign.push(findId)
+              }
             }
-          })
-          if (find) {
-            const findUser = await user.findOne({
+          }
+          if (cekSign.length > 0) {
+            const findAllData = await stock.findAll({
               where: {
-                username: find.nama
+                no_stock: findStock.no_stock
               }
             })
-            if (findUser) {
-              const tableTd = `
-              <tr>
-                <td>1</td>
-                <td>${findStock.no_stock}</td>
-                <td>${findStock.no_asset}</td>
-                <td>${findStock.nama_asset}</td>
-                <td>${findStock.cost_center}</td>
-                <td>${findStock.area}</td>
-              </tr>`
-              const mailOptions = {
-                from: 'noreply_asset@pinusmerahabadi.co.id',
-                replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                // to: `${findUser.email}`,
-                to: `${emailAss}, ${emailAss2}`,
-                subject: `Revisi Stock Opname ${findStock.no_stock} (TESTING WEB ASET)`,
-                html: `
-                <head>
-                  <style type="text/css">
-                  body {
-                      display: flexbox;
-                      flex-direction: column;
-                  }
-                  .tittle {
-                      font-size: 15px;
-                  }
-                  .mar {
-                      margin-bottom: 20px;
-                  }
-                  .mar1 {
-                      margin-bottom: 10px;
-                  }
-                  .foot {
-                      margin-top: 20px;
-                      margin-bottom: 10px;
-                  }
-                  .foot1 {
-                      margin-bottom: 50px;
-                  }
-                  .position {
-                      display: flexbox;
-                      flex-direction: row;
-                      justify-content: left;
-                      margin-top: 10px;
-                  }
-                  table {
-                      font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                      font-size: 12px;
-                  }
-                  .demo-table {
-                      border-collapse: collapse;
-                      font-size: 13px;
-                  }
-                  .demo-table th, 
-                  .demo-table td {
-                      border-bottom: 1px solid #e1edff;
-                      border-left: 1px solid #e1edff;
-                      padding: 7px 17px;
-                  }
-                  .demo-table th, 
-                  .demo-table td:last-child {
-                      border-right: 1px solid #e1edff;
-                  }
-                  .demo-table td:first-child {
-                      border-top: 1px solid #e1edff;
-                  }
-                  .demo-table td:last-child{
-                      border-bottom: 0;
-                  }
-                  caption {
-                      caption-side: top;
-                      margin-bottom: 10px;
-                  }
-                  
-                  /* Table Header */
-                  .demo-table thead th {
-                      background-color: #508abb;
-                      color: #FFFFFF;
-                      border-color: #6ea1cc !important;
-                      text-transform: uppercase;
-                  }
-                  
-                  /* Table Body */
-                  .demo-table tbody td {
-                      color: #353535;
-                  }
-                  
-                  .demo-table tbody tr:nth-child(odd) td {
-                      background-color: #f4fbff;
-                  }
-                  .demo-table tbody tr:hover th,
-                  .demo-table tbody tr:hover td {
-                      background-color: #ffffa2;
-                      border-color: #ffff0f;
-                      transition: all .2s;
-                  }
-              </style>
-                </head>
-                <body>
-                    <div class="tittle mar">
-                        Dear Bapak/Ibu,
-                    </div>
-                    <div class="tittle mar1">
-                        <div>Pengajuan stock opname telah direvisi oleh area</div>
-                    </div>
-                    <div class="position">
-                        <table class="demo-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>No Stock</th>
-                                    <th>Asset</th>
-                                    <th>Asset description</th>
-                                    <th>Cost Ctr</th>
-                                    <th>Depo / Cabang</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                              ${tableTd}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="tittle foot">
-                        Terima kasih,
-                    </div>
-                    <div class="tittle foot1">
-                        Regards,
-                    </div>
-                    <div class="tittle">
-                      AOS ${findStock.area}
-                    </div>
-                </body>
-                `
+            if (findAllData.length > 0) {
+              const cek = []
+              for (let i = 0; i < findAllData.length; i++) {
+                const findData = await stock.findByPk(findAllData[i].id)
+                const data = {
+                  status_reject: 0,
+                  isreject: null,
+                  history: `${findAllData[i].history}, submit revisi by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}`
+                }
+                if (findData) {
+                  await findData.update(data)
+                  cek.push(1)
+                }
               }
-              const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-              if (sendEmail) {
-                return response(res, 'success submit stock')
+              if (cek.length > 0) {
+                return response(res, 'success submit revisi')
               } else {
-                return response(res, 'berhasil revisi stock gagal kirim notif email')
+                return response(res, 'failed submit', {}, 404, false)
               }
             } else {
-              return response(res, 'berhasil revisi stock gagal kirim notif email')
+              return response(res, 'failed submit revisi stock', {}, 404, false)
             }
           } else {
-            return response(res, 'berhasil revisi stock gagal kirim notif email')
+            return response(res, 'failed submit revisi stock', {}, 404, false)
           }
         } else {
           return response(res, 'failed submit revisi stock', {}, 404, false)
         }
       } else {
-        return response(res, 'failed submit revisi stock', {}, 404, false)
+        const findAllData = await stock.findAll({
+          where: {
+            no_stock: findStock.no_stock
+          }
+        })
+        if (findAllData.length > 0) {
+          const cek = []
+          for (let i = 0; i < findAllData.length; i++) {
+            const findData = await stock.findByPk(findAllData[i].id)
+            const data = {
+              status_reject: 0,
+              isreject: null,
+              history: `${findAllData[i].history}, submit revisi by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}`
+            }
+            if (findData) {
+              await findData.update(data)
+              cek.push(1)
+            }
+          }
+          if (cek.length > 0) {
+            return response(res, 'success submit revisi')
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed submit revisi stock', {}, 404, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -2104,7 +1953,7 @@ module.exports = {
       const no = req.params.no
       const level = req.user.level
       const fullname = req.user.fullname
-      const { date } = req.query
+      // const { date } = req.query
       if (no === 'all') {
         const findClose = await clossing.findAll({
           where: {
