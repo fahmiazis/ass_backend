@@ -663,9 +663,9 @@ module.exports = {
         sortValue = sort || 'id'
       }
       if (!limit) {
-        limit = 12
+        limit = 1000
       } else {
-        limit = parseInt(limit)
+        limit = 1000
       }
       if (!page) {
         page = 1
