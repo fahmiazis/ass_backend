@@ -21,8 +21,9 @@ route.get('/cekdoc/:no', stock.cekDokumen)
 route.get('/area', stock.getStockArea)
 route.patch('/update/:id', stock.updateStock)
 route.patch('/subrev/:id', stock.submitRevisi)
+route.patch('/apprev/:id', stock.appRevisi)
 route.post('/add', stock.addStock)
-route.patch('/subaset/:no', stock.submitAsset)
+route.patch('/subaset', stock.submitAsset)
 route.get('/export/:no', stock.exportStock)
 
 module.exports = route

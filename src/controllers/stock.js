@@ -645,7 +645,7 @@ module.exports = {
   },
   getStockAll: async (req, res) => {
     try {
-      let { limit, page, search, sort, group } = req.query
+      let { limit, page, search, sort, group, status } = req.query
       const kode = req.user.kode
       const cost = req.user.name
       const fullname = req.user.fullname
@@ -763,7 +763,8 @@ module.exports = {
               const result = await stock.findAll({
                 where: {
                   [Op.and]: [
-                    { kode_plant: findDepo[i].kode_plant }
+                    { kode_plant: findDepo[i].kode_plant },
+                    status === 'available' ? { status_form: 2 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
                     // {
                     //   tanggalStock: {
                     //     [Op.lte]: end,
@@ -825,12 +826,7 @@ module.exports = {
           const result = await stock.findAndCountAll({
             where: {
               [Op.and]: [
-                {
-                  [Op.or]: [
-                    { status_form: level === 2 ? 9 : 1 },
-                    { status_form: level === 2 ? 8 : 1 }
-                  ]
-                }
+                status === 'available' ? { status_form: 9 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
                 // {
                 //   tanggalStock: {
                 //     [Op.lte]: end,
@@ -1347,11 +1343,13 @@ module.exports = {
                       })
                       for (let i = 0; i < findAllData.length; i++) {
                         const send = {
+                          status_form: results.type_reject === 'pembatalan' ? 0 : findAllData[i].status_form,
                           status_reject: 1,
                           isreject: list.find(item => item === findAllData[i].id) !== undefined ? 1 : null,
-                          menu_rev: results.menu,
-                          user_reject: name,
-                          reason: alasan
+                          reason: results.alasan,
+                          menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
+                          user_reject: level,
+                          history: `${findAllData[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
                         }
                         const findStock = await stock.findByPk(findAllData[i].id)
                         if (findStock) {
@@ -1583,7 +1581,7 @@ module.exports = {
   },
   getReportAll: async (req, res) => {
     // try {
-    let { limit, page, search, sort, group, fisik, sap, kondisi, plant } = req.query
+    let { limit, page, search, sort, group, fisik, sap, kondisi, plant, time1, time2 } = req.query
     let searchValue = ''
     let sortValue = ''
     if (typeof search === 'object') {
@@ -1628,18 +1626,10 @@ module.exports = {
       }
     })
     if (findClose.length > 0) {
-      const time = moment().format('L').split('/')
-      let start = ''
-      let end = ''
-      if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-        const next = moment().subtract(1, 'month').format('L').split('/')
-        end = `${time[2]}-${time[0]}-${findClose[0].end}`
-        start = `${next[2]}-${next[0]}-${findClose[0].start}`
-      } else {
-        const next = moment().add(1, 'month').format('L').split('/')
-        start = `${time[2]}-${time[0]}-${findClose[0].start}`
-        end = `${next[2]}-${next[0]}-${findClose[0].end}`
-      }
+      const timeVal1 = time1 === 'undefined' ? 'all' : time1
+      const timeVal2 = time2 === 'undefined' ? 'all' : time2
+      const timeV1 = moment(timeVal1)
+      const timeV2 = timeVal1 !== 'all' && timeVal1 === timeVal2 ? moment(timeVal2).add(1, 'd') : moment(timeVal2).add(1, 'd')
       const result = await stock.findAll({
         where: {
           grouping: group === 'all' ? { [Op.not]: null } : { [Op.like]: `%${group}%` },
@@ -1648,12 +1638,14 @@ module.exports = {
           kondisi: kondisi === 'all' ? { [Op.not]: 'king' } : { [Op.like]: `%${kondisi}%` },
           [Op.and]: [
             { status_form: 8 },
-            {
-              tanggalStock: {
-                [Op.lte]: end,
-                [Op.gte]: start
-              }
-            }
+            timeVal1 === 'all'
+              ? { [Op.not]: { no_stock: null } }
+              : {
+                  tanggalStock: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
+                  }
+                }
           ],
           [Op.or]: [
             { no_asset: sap === 'null' ? null : { [Op.not]: null } },
@@ -1689,7 +1681,7 @@ module.exports = {
   },
   submitAsset: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const name = req.user.fullname
       const findStock = await stock.findAll({
         where: {
@@ -1728,12 +1720,33 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  appRevisi: async (req, res) => {
+    try {
+      const id = req.params.id
+      const findIo = await stock.findByPk(id)
+      if (findIo) {
+        const data = {
+          isreject: 0
+        }
+        const updateIo = await findIo.update(data)
+        if (updateIo) {
+          return response(res, 'success update revisi')
+        } else {
+          return response(res, 'failed update revisi', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed update revisi', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   submitRevisi: async (req, res) => {
     try {
       const id = req.params.id
       const name = req.user.fullname
       const findStock = await stock.findByPk(id)
-      if (findStock.status_form === '2') {
+      if (findStock.status_form === 2) {
         const findSign = await ttd.findAll({
           where: {
             no_doc: findStock.no_stock
@@ -1777,7 +1790,7 @@ module.exports = {
                 }
               }
               if (cek.length > 0) {
-                return response(res, 'success submit revisi')
+                return response(res, 'success submit revisi (reset approval)')
               } else {
                 return response(res, 'failed submit', {}, 404, false)
               }
@@ -1811,7 +1824,7 @@ module.exports = {
             }
           }
           if (cek.length > 0) {
-            return response(res, 'success submit revisi')
+            return response(res, 'success submit revisi (no reset approval)')
           } else {
             return response(res, 'failed submit', {}, 404, false)
           }
