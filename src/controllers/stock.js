@@ -764,7 +764,7 @@ module.exports = {
                 where: {
                   [Op.and]: [
                     { kode_plant: findDepo[i].kode_plant },
-                    status === 'available' ? { status_form: 2 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
+                    // status === 'available' ? { status_form: 2 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
                     // {
                     //   tanggalStock: {
                     //     [Op.lte]: end,
