@@ -196,7 +196,8 @@ module.exports = {
       if (!limit) {
         limit = 10
       } else if (limit === 'all') {
-        limit = 'all'
+        const findLimit = await depo.findAll()
+        limit = findLimit.length
       } else {
         limit = parseInt(limit)
       }
@@ -389,8 +390,9 @@ module.exports = {
             if (result.length > 0) {
               return response(res, 'there is duplication in your file master', { result }, 404, false)
             } else {
+              rows.shift()
               const arr = []
-              for (let i = 0; i < rows.length - 1; i++) {
+              for (let i = 0; i < rows.length; i++) {
                 const dataDepo = rows[i]
                 const data = {
                   kode_plant: dataDepo[0],

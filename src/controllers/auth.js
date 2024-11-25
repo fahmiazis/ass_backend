@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const response = require('../helpers/response')
 const { user, role } = require('../models')
+const { Op } = require('sequelize')
 
 const { APP_KEY } = process.env
 
@@ -19,7 +20,17 @@ module.exports = {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
         if (results.username === 'p000' || results.username === 'P000') {
-          const result = await user.findOne({ where: { username: results.username }, include: [{ model: role, as: 'role' }] })
+          const result = await user.findOne({
+            where: {
+              [Op.or]: [
+                { username: results.username },
+                { email: results.username }
+              ]
+            },
+            include: [
+              { model: role, as: 'role' }
+            ]
+          })
           if (result) {
             const { id, kode_plant, user_level, username, fullname, email, role } = result
             bcrypt.compare(results.password, result.password, function (_err, result) {
@@ -35,7 +46,17 @@ module.exports = {
             return response(res, 'username is not registered', {}, 400, false)
           }
         } else {
-          const result = await user.findOne({ where: { username: results.username }, include: [{ model: role, as: 'role' }] })
+          const result = await user.findOne({
+            where: {
+              [Op.or]: [
+                { username: results.username },
+                { email: results.username }
+              ]
+            },
+            include: [
+              { model: role, as: 'role' }
+            ]
+          })
           if (result) {
             const { id, kode_plant, user_level, username, fullname, email, role } = result
             bcrypt.compare(results.password, result.password, function (_err, result) {

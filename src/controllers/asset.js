@@ -1,8 +1,8 @@
-const { asset, sequelize, path, depo } = require('../models')
+const { asset, path, depo } = require('../models')
 const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
-const { Op, QueryTypes } = require('sequelize')
+const { Op } = require('sequelize')
 const readXlsxFile = require('read-excel-file/node')
 const multer = require('multer')
 const uploadMaster = require('../helpers/uploadMaster')
@@ -68,13 +68,16 @@ module.exports = {
       if (typeof sort === 'object') {
         sortValue = Object.values(sort)[0]
       } else {
-        sortValue = sort || 'id'
+        sortValue = sort || 'tanggal'
       }
       if (!tipe) {
         tipe = 'all'
       }
       if (!limit) {
         limit = 12
+      } else if (limit === 'all') {
+        const findLimit = await asset.findAll()
+        limit = findLimit.length
       } else {
         limit = parseInt(limit)
       }
@@ -93,12 +96,31 @@ module.exports = {
           const result = await asset.findAndCountAll({
             where: {
               [Op.and]: [
-                { cost_center: findDep.cost_center },
-                { status: null }
-              ],
-              [Op.or]: [
-                { no_asset: { [Op.like]: `%${searchValue}%` } },
-                { nama_asset: { [Op.like]: `%${searchValue}%` } }
+                {
+                  [Op.and]: [
+                    { cost_center: findDep.cost_center },
+                    { status: null }
+                  ]
+                },
+                {
+                  [Op.or]: [
+                    { no_asset: { [Op.like]: `%${searchValue}%` } },
+                    { no_doc: { [Op.like]: `%${searchValue}%` } },
+                    { tanggal: { [Op.like]: `%${searchValue}%` } },
+                    { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                    { nilai_acquis: { [Op.like]: `%${searchValue}%` } },
+                    { accum_dep: { [Op.like]: `%${searchValue}%` } },
+                    { nilai_buku: { [Op.like]: `%${searchValue}%` } },
+                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                    { cost_center: { [Op.like]: `%${searchValue}%` } },
+                    { area: { [Op.like]: `%${searchValue}%` } },
+                    { merk: { [Op.like]: `%${searchValue}%` } },
+                    { satuan: { [Op.like]: `%${searchValue}%` } },
+                    { unit: { [Op.like]: `%${searchValue}%` } },
+                    { lokasi: { [Op.like]: `%${searchValue}%` } },
+                    { kategori: { [Op.like]: `%${searchValue}%` } }
+                  ]
+                }
               ]
             },
             include: [
@@ -108,7 +130,7 @@ module.exports = {
               }
             ],
             order: [
-              [sortValue, 'ASC'],
+              [sortValue, 'DESC'],
               [{ model: path, as: 'pict' }, 'id', 'ASC']
             ],
             limit: limit,
@@ -127,13 +149,36 @@ module.exports = {
         const result = await asset.findAndCountAll({
           where: {
             [Op.and]: [
-              { cost_center: cost },
-              { status: null }
-            ],
-            [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}%` } },
-              { nama_asset: { [Op.like]: `%${searchValue}%` } }
+              {
+                [Op.and]: [
+                  { cost_center: cost },
+                  { status: null }
+                ]
+              },
+              {
+                [Op.or]: [
+                  { no_asset: { [Op.like]: `%${searchValue}%` } },
+                  { no_doc: { [Op.like]: `%${searchValue}%` } },
+                  { tanggal: { [Op.like]: `%${searchValue}%` } },
+                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                  { nilai_acquis: { [Op.like]: `%${searchValue}%` } },
+                  { accum_dep: { [Op.like]: `%${searchValue}%` } },
+                  { nilai_buku: { [Op.like]: `%${searchValue}%` } },
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { cost_center: { [Op.like]: `%${searchValue}%` } },
+                  { area: { [Op.like]: `%${searchValue}%` } },
+                  { merk: { [Op.like]: `%${searchValue}%` } },
+                  { satuan: { [Op.like]: `%${searchValue}%` } },
+                  { unit: { [Op.like]: `%${searchValue}%` } },
+                  { lokasi: { [Op.like]: `%${searchValue}%` } },
+                  { kategori: { [Op.like]: `%${searchValue}%` } }
+                ]
+              }
             ]
+            // [Op.or]: [
+            //   { no_asset: { [Op.like]: `%${searchValue}%` } },
+            //   { nama_asset: { [Op.like]: `%${searchValue}%` } }
+            // ]
           },
           include: [
             {
@@ -142,7 +187,7 @@ module.exports = {
             }
           ],
           order: [
-            [sortValue, 'ASC'],
+            [sortValue, 'DESC'],
             [{ model: path, as: 'pict' }, 'id', 'ASC']
           ],
           limit: limit,
@@ -157,16 +202,39 @@ module.exports = {
       } else {
         const result = await asset.findAndCountAll({
           where: {
-            [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}` } },
-              { area: { [Op.like]: `%${searchValue}` } },
-              { kode_plant: { [Op.like]: `%${searchValue}` } },
-              { nama_asset: { [Op.like]: `%${searchValue}` } }
-            ],
-            [Op.or]: [
-              { status: '1' },
-              { status: '11' },
-              { status: null }
+            // [Op.or]: [
+            //   { no_asset: { [Op.like]: `%${searchValue}` } },
+            //   { area: { [Op.like]: `%${searchValue}` } },
+            //   { kode_plant: { [Op.like]: `%${searchValue}` } },
+            //   { nama_asset: { [Op.like]: `%${searchValue}` } }
+            // ],
+            [Op.and]: [
+              {
+                [Op.or]: [
+                  { no_asset: { [Op.like]: `%${searchValue}%` } },
+                  { no_doc: { [Op.like]: `%${searchValue}%` } },
+                  { tanggal: { [Op.like]: `%${searchValue}%` } },
+                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                  { nilai_acquis: { [Op.like]: `%${searchValue}%` } },
+                  { accum_dep: { [Op.like]: `%${searchValue}%` } },
+                  { nilai_buku: { [Op.like]: `%${searchValue}%` } },
+                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                  { cost_center: { [Op.like]: `%${searchValue}%` } },
+                  { area: { [Op.like]: `%${searchValue}%` } },
+                  { merk: { [Op.like]: `%${searchValue}%` } },
+                  { satuan: { [Op.like]: `%${searchValue}%` } },
+                  { unit: { [Op.like]: `%${searchValue}%` } },
+                  { lokasi: { [Op.like]: `%${searchValue}%` } },
+                  { kategori: { [Op.like]: `%${searchValue}%` } }
+                ]
+              },
+              {
+                [Op.or]: [
+                  { status: '1' },
+                  { status: '11' },
+                  { status: null }
+                ]
+              }
             ]
           },
           include: [
@@ -175,13 +243,13 @@ module.exports = {
               as: 'pict'
             }
           ],
-          order: [[sortValue, 'ASC']],
+          order: [[sortValue, 'DESC']],
           limit: limit,
           offset: (page - 1) * limit
         })
         const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
         if (result) {
-          return response(res, 'list asset', { result, pageInfo })
+          return response(res, 'list asset admin', { result, pageInfo, searchValue })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
@@ -429,42 +497,41 @@ module.exports = {
             const arr = []
             rows.shift()
             for (let i = 0; i < rows.length; i++) {
-              const select = await sequelize.query(`SELECT no_asset from assets WHERE no_asset='${rows[i][0]}'`, {
-                type: QueryTypes.SELECT
-              })
+              // const select = await sequelize.query(`SELECT no_asset from assets WHERE no_asset='${rows[i][0]}'`, {
+              //   type: QueryTypes.SELECT
+              // })
+              const dataAsset = rows[i]
               const send = {
-                no_doc: rows[i][1],
-                tanggal: rows[i][2],
-                no_asset: rows[i][0],
-                nama_asset: rows[i][3],
-                area: rows[i][9],
-                kode_plant: rows[i][7],
-                nilai_buku: rows[i][6],
-                nilai_acquis: rows[i][4],
-                accum_dep: rows[i][5],
-                merk: rows[i][10],
-                satuan: rows[i][11],
-                unit: rows[i][12],
-                lokasi: rows[i][13],
-                kategori: rows[i][14],
-                cost_center: rows[i][8]
+                no_asset: dataAsset[0],
+                no_doc: dataAsset[1],
+                tanggal: dataAsset[2],
+                nama_asset: dataAsset[3],
+                nilai_acquis: dataAsset[4],
+                accum_dep: dataAsset[5],
+                nilai_buku: dataAsset[6],
+                kode_plant: dataAsset[7],
+                cost_center: dataAsset[8],
+                area: dataAsset[9],
+                merk: dataAsset[10],
+                satuan: dataAsset[11],
+                unit: dataAsset[12],
+                lokasi: dataAsset[13],
+                kategori: dataAsset[14]
               }
-              if (select.length > 0) {
-                const updateAsset = await asset.update(send, {
-                  where: {
-                    no_asset: rows[i][0]
-                  }
-                })
-                // const updateAsset = await sequelize.query(`UPDATE assets SET no_doc='${rows[i][1]}', tanggal='${rows[i][2]}', no_asset='${rows[i][0]}', nama_asset='${rows[i][3]}', area='${rows[i][9]}', kode_plant='${rows[i][7]}', nilai_buku='${rows[i][6]}', nilai_acquis='${rows[i][4]}', accum_dep='${rows[i][5]}', merk='${rows[i][10]}', satuan='${rows[i][11]}', unit='${rows[i][12]}', lokasi='${rows[i][13]}', kategori='${rows[i][14]}' WHERE no_asset='${rows[i][0]}'`, {
-                //   type: QueryTypes.UPDATE
-                // })
+              const cekAsset = await asset.findOne({
+                where: {
+                  no_asset: send.no_asset
+                }
+              })
+              if (cekAsset) {
+                const updateAsset = await cekAsset.update(send)
                 if (updateAsset) {
-                  arr.push(select[0])
+                  arr.push(updateAsset)
                 }
               } else {
                 const createAsset = await asset.create(send)
                 if (createAsset) {
-                  arr.push(select[0])
+                  arr.push(createAsset)
                 }
               }
             }

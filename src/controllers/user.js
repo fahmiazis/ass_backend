@@ -1,8 +1,8 @@
 const joi = require('joi')
 const response = require('../helpers/response')
-const { user, sequelize, role, depo } = require('../models')
+const { user, role, depo } = require('../models')
 const bcrypt = require('bcryptjs')
-const { Op, QueryTypes } = require('sequelize')
+const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const readXlsxFile = require('read-excel-file/node')
 const multer = require('multer')
@@ -327,6 +327,9 @@ module.exports = {
       }
       if (!limit) {
         limit = 10
+      } else if (limit === 'all') {
+        const findLimit = await user.findAll()
+        limit = findLimit.length
       } else {
         limit = parseInt(limit)
       }
@@ -347,6 +350,12 @@ module.exports = {
             ],
             [Op.not]: { user_level: 1 }
           },
+          include: [
+            {
+              model: role,
+              as: 'role'
+            }
+          ],
           order: [[sortValue, 'ASC']],
           limit: limit,
           offset: (page - 1) * limit
@@ -420,7 +429,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['User Name', 'Full Name', 'Password', 'Kode Depo', 'User Level', 'Email']
+          const cek = ['User Name', 'Full Name', 'Kode Area', 'Email', 'User Level']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             if (valid[i] === cek[i]) {
@@ -429,21 +438,21 @@ module.exports = {
           }
           if (count.length === cek.length) {
             const plant = []
-            const user = []
+            const userData = []
             const cek = []
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
-              if (a[4] === '5' || a[4] === 5) {
+              if (a[4].split('-')[0] === '5' || a[4].split('-')[0] === 5) {
                 plant.push(`Kode depo ${a[3]} dan  User level ${a[4]}`)
               }
-              user.push(`User Name ${a[0]}`)
+              userData.push(`User Name ${a[0]}`)
               cek.push(`${a[0]}`)
             }
             const object = {}
             const result = []
             const obj = {}
 
-            user.forEach(item => {
+            userData.forEach(item => {
               if (!obj[item]) { obj[item] = 0 }
               obj[item] += 1
             })
@@ -467,96 +476,111 @@ module.exports = {
             if (result.length > 0) {
               return response(res, 'there is duplication in your file master', { result }, 404, false)
             } else {
-              const arr = []
-              for (let i = 0; i < rows.length - 1; i++) {
-                const select = await sequelize.query(`SELECT username from users WHERE username='${cek[i]}'`, {
-                  type: QueryTypes.SELECT
-                })
-                await sequelize.query(`DELETE from users WHERE username='${cek[i]}'`, {
-                  type: QueryTypes.DELETE
-                })
-                if (select.length > 0) {
-                  arr.push(select[0])
+              rows.shift()
+              const create = []
+              for (let i = 0; i < rows.length; i++) {
+                const noun = []
+                const process = rows[i]
+                for (let j = 0; j < (process.length + 1); j++) {
+                  if (j === process.length) {
+                    let str = 'pma12345'
+                    str = await bcrypt.hash(str, await bcrypt.genSalt())
+                    noun.push(str)
+                  } else {
+                    noun.push(process[j])
+                  }
                 }
+                create.push(noun)
               }
-              if (arr.length > 0) {
-                rows.shift()
-                const create = []
-                for (let i = 0; i < rows.length; i++) {
-                  const noun = []
-                  const process = rows[i]
-                  for (let j = 0; j < process.length; j++) {
-                    if (j === 2) {
-                      let str = process[j]
-                      str = await bcrypt.hash(str, await bcrypt.genSalt())
-                      noun.push(str)
+              if (create.length > 0) {
+                const arr = []
+                for (let i = 0; i < create.length; i++) {
+                  const dataUser = create[i]
+                  const dataCreate = {
+                    username: dataUser[0],
+                    fullname: dataUser[1],
+                    kode_plant: dataUser[2],
+                    email: dataUser[3],
+                    user_level: dataUser[4].split('-')[0],
+                    password: dataUser[5]
+                  }
+                  const dataUpdate = {
+                    username: dataUser[0],
+                    fullname: dataUser[1],
+                    kode_plant: dataUser[2],
+                    email: dataUser[3],
+                    user_level: dataUser[4].split('-')[0],
+                    password: dataUser[5]
+                  }
+                  if (parseInt(dataUser[4].split('-')[0]) === 5) {
+                    const findUser = await user.findOne({
+                      where: {
+                        kode_plant: dataUser[2]
+                      }
+                    })
+                    if (findUser) {
+                      const upUser = await findUser.update(dataUpdate)
+                      if (upUser) {
+                        arr.push(upUser)
+                      }
                     } else {
-                      noun.push(process[j])
+                      const createUser = await user.create(dataCreate)
+                      if (createUser) {
+                        arr.push(createUser)
+                      }
+                    }
+                  } else {
+                    const findUser = await user.findOne({
+                      where: {
+                        username: dataUser[0]
+                      }
+                    })
+                    if (findUser) {
+                      const upUser = await findUser.update(dataUpdate)
+                      if (upUser) {
+                        arr.push(upUser)
+                      }
+                    } else {
+                      const createUser = await user.create(dataCreate)
+                      if (createUser) {
+                        arr.push(createUser)
+                      }
                     }
                   }
-                  create.push(noun)
                 }
-                const result = await sequelize.query(`INSERT INTO users (username, fullname, password, kode_plant, user_level, email) VALUES ${create.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: create,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
+                if (arr.length) {
                   fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
+                    if (err) {
+                      return response(res, 'successfully upload file master')
+                    } else {
+                      return response(res, 'successfully upload file master')
+                    }
                   })
-                  return response(res, 'successfully upload file master')
                 } else {
                   fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
+                    if (err) {
+                      return response(res, 'failed to upload file', {}, 404, false)
+                    } else {
+                      return response(res, 'failed to upload file', {}, 404, false)
+                    }
                   })
-                  return response(res, 'failed to upload file', {}, 404, false)
                 }
               } else {
-                rows.shift()
-                const create = []
-                for (let i = 0; i < rows.length; i++) {
-                  const noun = []
-                  const process = rows[i]
-                  for (let j = 0; j < process.length; j++) {
-                    if (j === 2) {
-                      let str = process[j]
-                      str = await bcrypt.hash(str, await bcrypt.genSalt())
-                      noun.push(str)
-                    } else {
-                      noun.push(process[j])
-                    }
-                  }
-                  create.push(noun)
-                }
-                const result = await sequelize.query(`INSERT INTO users (username, fullname, password, kode_plant, user_level, email) VALUES ${create.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: create,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'successfully upload file master')
-                } else {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'failed to upload file', {}, 404, false)
-                }
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'failed to upload file', {}, 404, false)
               }
             }
           } else {
             fs.unlink(dokumen, function (err) {
-              if (err) throw err
-              console.log('success')
+              if (err) {
+                return response(res, 'Failed to upload master file, please use the template provided', {}, 400, false)
+              } else {
+                return response(res, 'Failed to upload master file, please use the template provided', {}, 400, false)
+              }
             })
-            return response(res, 'Failed to upload master file, please use the template provided', {}, 400, false)
           }
         } catch (error) {
           return response(res, error.message, {}, 500, false)
@@ -573,7 +597,7 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['User Name', 'Password', 'Kode Depo', 'User Level', 'Email']
+        const header = ['User Name', 'Full Name', 'Kode Depo', 'User Level', 'Email']
         const key = ['username', 'password', 'kode_plant', 'user_level', 'email']
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
