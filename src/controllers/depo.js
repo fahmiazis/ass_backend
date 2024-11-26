@@ -416,7 +416,7 @@ module.exports = {
                 }
                 const select = await depo.findOne({
                   where: {
-                    kode_plant: kode[i]
+                    kode_plant: data.kode_plant
                   }
                 })
                 if (select) {

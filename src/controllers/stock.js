@@ -586,7 +586,8 @@ module.exports = {
             kode_plant: level === 5 ? kode : cost,
             [Op.and]: [
               status === 'revisi' ? { status_reject: 1 } : { status_app: status === 'null' ? null : status },
-              status === 'revisi' ? { status_reject: 1 } : { [Op.not]: { id: null } }
+              status === 'revisi' ? { status_reject: 1 } : { [Op.not]: { id: null } },
+              status === 'revisi' ? { [Op.not]: { status_form: 0 } } : { [Op.not]: { id: null } }
               // ,
               // {
               //   tanggalStock: {
@@ -1942,7 +1943,7 @@ module.exports = {
   },
   exportStock: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const level = req.user.level
       const fullname = req.user.fullname
       // const { date } = req.query
