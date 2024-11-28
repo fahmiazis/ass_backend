@@ -1,6 +1,6 @@
 const joi = require('joi')
 const response = require('../helpers/response')
-const { user, role, depo } = require('../models')
+const { user, role, depo, approve, ttd } = require('../models')
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
@@ -82,7 +82,9 @@ module.exports = {
       const level = req.user.level
       const schema = joi.object({
         name: joi.string().required(),
-        nomor: joi.string().required()
+        fullname: joi.string().required(),
+        nomor: joi.string().required(),
+        type: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -98,7 +100,7 @@ module.exports = {
             }
           })
           if (result.length > 0) {
-            return response(res, 'role or nomor already exist', {}, 404, false)
+            return response(res, 'role or level already exist', {}, 404, false)
           } else {
             const result = await role.create(results)
             if (result) {
@@ -110,22 +112,6 @@ module.exports = {
         } else {
           return response(res, "You're not super administrator", {}, 404, false)
         }
-      }
-    } catch (error) {
-      return response(res, error.message, {}, 500, false)
-    }
-  },
-  getRole: async (req, res) => {
-    try {
-      const result = await role.findAll({
-        where: {
-          [Op.not]: { name: 'admin' }
-        }
-      })
-      if (result) {
-        return response(res, 'succes get role', { result })
-      } else {
-        return response(res, 'failed get role', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -760,63 +746,191 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  //   createUserpv: async (req, res) => {
+  //     try {
+  //       const level = req.user.level
+  //       if (level === 1) {
+  //         const result = await pic.findAll()
+  //         const user = await user.findAll()
+  //         if (result) {
+  //           const data = []
+  //           const dataUser = []
+  //           result.map(x => {
+  //             return (
+  //               data.push(x.spv)
+  //             )
+  //           })
+  //           user.map(x => {
+  //             return (
+  //               dataUser.push(x.username)
+  //             )
+  //           })
+  //           const set = new Set(data)
+  //           const newData = [...set]
+  //           const filter = []
+  //           for (let i = 0; i < newData.length; i++) {
+  //             const pos = dataUser.indexOf(newData[i])
+  //             if (pos === -1) {
+  //               filter.push(newData[i])
+  //             }
+  //           }
+  //           console.log(filter)
+  //           if (filter.length !== 0) {
+  //             const send = []
+  //             for (let i = 0; i < filter.length; i++) {
+  //               const create = [filter[i], await bcrypt.hash(filter[i], await bcrypt.genSalt()), 2]
+  //               send.push(create)
+  //             }
+  //             const results = await sequelize.query(`INSERT INTO user (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
+  //               {
+  //                 replacements: send,
+  //                 type: QueryTypes.INSERT
+  //               })
+  //             if (results) {
+  //               return response(res, 'success create user pic', { send })
+  //             } else {
+  //               return response(res, 'failed create user pic', {}, 404, false)
+  //             }
+  //           } else {
+  //             return response(res, 'All SPV has user account')
+  //           }
+  //         } else {
+  //           return response(res, 'failed get pic', {}, 404, false)
+  //         }
+  //       } else {
+  //         return response(res, "You're not super administrator", {}, 404, false)
+  //       }
+  //     } catch (error) {
+  //       return response(res, error.message, {}, 500, false)
+  //     }
+  //   }
+  getRole: async (req, res) => {
+    try {
+      const { search } = req.query
+      let searchValue = ''
+      if (typeof search === 'object') {
+        searchValue = Object.values(search)[0]
+      } else {
+        searchValue = search || ''
+      }
+      const result = await role.findAll({
+        where: {
+          [Op.not]: { name: 'admin' },
+          [Op.or]: [
+            { name: { [Op.like]: `%${searchValue}%` } },
+            { fullname: { [Op.like]: `%${searchValue}%` } }
+          ]
+        }
+      })
+      if (result) {
+        return response(res, 'succes get role', { result })
+      } else {
+        return response(res, 'failed get role', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDetailRole: async (req, res) => {
+    try {
+      const id = req.params.id
+      const result = await role.findByPk(id)
+      if (result) {
+        return response(res, `Profile of role with id ${id}`, { result })
+      } else {
+        return response(res, 'fail to get role', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateRole: async (req, res) => {
+    try {
+      const level = req.user.level
+      const id = req.params.id
+      const schema = joi.object({
+        name: joi.string().required(),
+        fullname: joi.string().required(),
+        type: joi.string().required(),
+        nomor: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        if (level === 1) {
+          const result = await role.findAll({
+            where: {
+              name: results.name,
+              [Op.not]: { id: id }
+            }
+          })
+          if (result.length > 0) {
+            return response(res, 'role or level already exist', {}, 404, false)
+          } else {
+            const findRole = await role.findByPk(id)
+            const findRoleUp = await role.findByPk(id)
+            if (findRole) {
+              const result = await findRoleUp.update(results)
+              if (result) {
+                const findTtd = await ttd.findAll({
+                  where: {
+                    [Op.and]: [
+                      { jabatan: findRole.name },
+                      { nama: null }
+                    ]
+                  }
+                })
+                const findApp = await approve.findAll({
+                  where: {
+                    jabatan: findRole.name
+                  }
+                })
+                if (findTtd.length > 0 || findApp.length > 0) {
+                  const temp = []
+                  const hasil = []
+                  for (let i = 0; i < findTtd.length; i++) {
+                    const findData = await ttd.findByPk(findTtd[i].id)
+                    const upData = {
+                      jabatan: results.name
+                    }
+                    if (findData.jabatan === results.name) {
+                      await findData.update(upData)
+                      temp.push(1)
+                    }
+                  }
+                  for (let i = 0; i < findApp.length; i++) {
+                    const findData = await approve.findByPk(findApp[i].id)
+                    const upData = {
+                      jabatan: results.name
+                    }
+                    if (findData) {
+                      await findData.update(upData)
+                      hasil.push(1)
+                    }
+                  }
+                  if (temp.length || hasil.length) {
+                    return response(res, 'update Role succesfully good', { result, findTtd, findApp, findRole })
+                  } else {
+                    return response(res, 'update Role succesfully wut', { result, findTtd, findApp, findRole })
+                  }
+                } else {
+                  return response(res, 'update Role succesfully bad', { result, findTtd, findApp, findRole })
+                }
+              } else {
+                return response(res, 'Fail to create role', {}, 400, false)
+              }
+            } else {
+              return response(res, 'Fail to create role', {}, 400, false)
+            }
+          }
+        } else {
+          return response(res, "You're not super administrator", {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
-//   createUserpv: async (req, res) => {
-//     try {
-//       const level = req.user.level
-//       if (level === 1) {
-//         const result = await pic.findAll()
-//         const user = await user.findAll()
-//         if (result) {
-//           const data = []
-//           const dataUser = []
-//           result.map(x => {
-//             return (
-//               data.push(x.spv)
-//             )
-//           })
-//           user.map(x => {
-//             return (
-//               dataUser.push(x.username)
-//             )
-//           })
-//           const set = new Set(data)
-//           const newData = [...set]
-//           const filter = []
-//           for (let i = 0; i < newData.length; i++) {
-//             const pos = dataUser.indexOf(newData[i])
-//             if (pos === -1) {
-//               filter.push(newData[i])
-//             }
-//           }
-//           console.log(filter)
-//           if (filter.length !== 0) {
-//             const send = []
-//             for (let i = 0; i < filter.length; i++) {
-//               const create = [filter[i], await bcrypt.hash(filter[i], await bcrypt.genSalt()), 2]
-//               send.push(create)
-//             }
-//             const results = await sequelize.query(`INSERT INTO user (username, password, user_level) VALUES ${send.map(a => '(?)').join(',')}`,
-//               {
-//                 replacements: send,
-//                 type: QueryTypes.INSERT
-//               })
-//             if (results) {
-//               return response(res, 'success create user pic', { send })
-//             } else {
-//               return response(res, 'failed create user pic', {}, 404, false)
-//             }
-//           } else {
-//             return response(res, 'All SPV has user account')
-//           }
-//         } else {
-//           return response(res, 'failed get pic', {}, 404, false)
-//         }
-//       } else {
-//         return response(res, "You're not super administrator", {}, 404, false)
-//       }
-//     } catch (error) {
-//       return response(res, error.message, {}, 500, false)
-//     }
-//   }
 }

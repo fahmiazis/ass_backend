@@ -324,7 +324,8 @@ module.exports = {
             [{ model: path, as: 'pict' }, 'id', 'ASC']
           ],
           limit: limit,
-          offset: (page - 1) * limit
+          offset: (page - 1) * limit,
+          distinct: true
         })
         const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
         if (result) {

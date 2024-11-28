@@ -6,6 +6,8 @@ const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
+// const fs = require('fs')
+// const { exiftool } = require('exiftool-vendored')
 // const wrapMail = require('../helpers/wrapMail')
 // const excel = require('exceljs')
 
@@ -646,7 +648,7 @@ module.exports = {
   },
   getStockAll: async (req, res) => {
     try {
-      let { limit, page, search, sort, group, status } = req.query
+      let { limit, page, search, sort, group, status, time1, time2 } = req.query
       const kode = req.user.kode
       const cost = req.user.name
       const fullname = req.user.fullname
@@ -676,6 +678,10 @@ module.exports = {
       if (!group) {
         group = ''
       }
+      const timeVal1 = time1 === 'undefined' ? 'all' : time1
+      const timeVal2 = time2 === 'undefined' ? 'all' : time2
+      const timeV1 = moment(timeVal1)
+      const timeV2 = timeVal1 !== 'all' && timeVal1 === timeVal2 ? moment(timeVal2).add(1, 'd') : moment(timeVal2).add(1, 'd')
       const findClose = await clossing.findAll({
         where: {
           jenis: 'stock'
@@ -697,15 +703,17 @@ module.exports = {
         if (level === 5 || level === 9) {
           const result = await stock.findAndCountAll({
             where: {
-              kode_plant: level === 5 ? kode : cost,
-              // [Op.and]: [
-              //   {
-              //     tanggalStock: {
-              //       [Op.lte]: end,
-              //       [Op.gte]: start
-              //     }
-              //   }
-              // ],
+              [Op.and]: [
+                { kode_plant: level === 5 ? kode : cost },
+                timeVal1 === 'all'
+                  ? { [Op.not]: { no_stock: null } }
+                  : {
+                      tanggalStock: {
+                        [Op.gte]: timeV1,
+                        [Op.lt]: timeV2
+                      }
+                    }
+              ],
               [Op.or]: [
                 { no_asset: { [Op.like]: `%${searchValue}%` } },
                 { deskripsi: { [Op.like]: `%${searchValue}%` } },
@@ -764,7 +772,15 @@ module.exports = {
               const result = await stock.findAll({
                 where: {
                   [Op.and]: [
-                    { kode_plant: findDepo[i].kode_plant }
+                    { kode_plant: findDepo[i].kode_plant },
+                    timeVal1 === 'all'
+                      ? { [Op.not]: { no_stock: null } }
+                      : {
+                          tanggalStock: {
+                            [Op.gte]: timeV1,
+                            [Op.lt]: timeV2
+                          }
+                        }
                     // status === 'available' ? { status_form: 2 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
                     // {
                     //   tanggalStock: {
@@ -827,7 +843,15 @@ module.exports = {
           const result = await stock.findAndCountAll({
             where: {
               [Op.and]: [
-                status === 'available' ? { status_form: 9 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
+                status === 'available' ? { status_form: 9 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } },
+                timeVal1 === 'all'
+                  ? { [Op.not]: { no_stock: null } }
+                  : {
+                      tanggalStock: {
+                        [Op.gte]: timeV1,
+                        [Op.lt]: timeV2
+                      }
+                    }
                 // {
                 //   tanggalStock: {
                 //     [Op.lte]: end,
@@ -1399,6 +1423,10 @@ module.exports = {
           return response(res, err.message, {}, 401, false)
         }
         const dokumen = `uploads/${req.file.filename}`
+        // const filePath = `assets/documents/${req.file.filename}`
+        // const photo = fs.readFileSync(filePath)
+        // const stat = await exiftool.readMetaData(filePath)
+        // const stat = await exiftool.read(filePath)
         const findAsset = await asset.findOne({
           where: {
             no_asset: no
@@ -1412,7 +1440,7 @@ module.exports = {
           }
           const result = await path.create(send)
           if (result) {
-            return response(res, 'successfully upload', { send })
+            return response(res, 'successfully upload', { send, infoFile: req.file })
           } else {
             return response(res, 'failed upload', {}, 404, false)
           }
