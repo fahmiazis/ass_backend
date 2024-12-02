@@ -752,17 +752,19 @@ module.exports = {
           })
           const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
           if (result) {
-            return response(res, 'list asset', { result, pageInfo })
+            return response(res, 'list asset', { result, pageInfo, dataDepo: [] })
           } else {
             return response(res, 'failed to get stock', {}, 404, false)
           }
-        } else if (level === 12 || level === 7 || level === 26 || level === 27 || level === 13 || level === 16) {
+        } else if (level === 12 || level === 7 || level === 26 || level === 27 || level === 13 || level === 16 || level === 28 || level === 2) {
           const findDepo = await depo.findAll({
             where: {
               [Op.or]: [
                 { nama_bm: level === 12 || level === 27 || level === 13 || level === 16 ? fullname : 'undefined' },
                 { nama_om: level === 7 ? fullname : 'undefined' },
-                { nama_asman: level === 26 ? fullname : 'undefined' }
+                { nama_asman: level === 26 ? fullname : 'undefined' },
+                { nama_pic_1: level === 2 ? fullname : 'undefined' },
+                { nama_nom: level === 28 ? fullname : 'undefined' }
               ]
             }
           })
@@ -830,11 +832,11 @@ module.exports = {
             if (hasil.length > 0) {
               const result = { rows: hasil, count: hasil.length }
               const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
-              return response(res, 'list stock', { result, pageInfo })
+              return response(res, 'list stock', { result, pageInfo, dataDepo: findDepo })
             } else {
               const result = { rows: hasil, count: 0 }
               const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
-              return response(res, 'list stock', { result, pageInfo })
+              return response(res, 'list stock', { result, pageInfo, dataDepo: findDepo })
             }
           } else {
             return response(res, 'failed get data stock', {}, 404, false)
@@ -893,7 +895,7 @@ module.exports = {
           })
           const pageInfo = pagination('/stock/get', req.query, page, limit, result.count.length)
           if (result) {
-            return response(res, 'list stock', { result, pageInfo })
+            return response(res, 'list stock', { result, pageInfo, dataDepo: [] })
           } else {
             return response(res, 'failed get data stock', {}, 404, false)
           }
