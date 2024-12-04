@@ -634,6 +634,7 @@ module.exports = {
         kategori: joi.string().required(),
         tipe: joi.string().required(),
         jenis: joi.string().required(),
+        no_ref: joi.string().allow(''),
         akta: joi.string().allow(''),
         start: joi.string().allow(''),
         end: joi.string().allow('')
@@ -668,6 +669,7 @@ module.exports = {
               kode_plant: kode,
               area: `${findDepo.nama_area} ${findDepo.channel}`,
               tipe: results.tipe,
+              no_ref: results.no_ref,
               jenis: results.jenis,
               akta: results.akta === '' ? null : results.akta,
               start: results.start === null || results.start === '' ? null : results.start,
@@ -675,7 +677,7 @@ module.exports = {
             }
             const sent = await pengadaan.create(data)
             if (sent) {
-              return response(res, 'success add cart', { result: sent })
+              return response(res, 'success add cart king', { result: sent, results })
             } else {
               return response(res, 'add cart failed2', {}, 404, false)
             }
@@ -699,6 +701,7 @@ module.exports = {
         kategori: joi.string().required(),
         tipe: joi.string().required(),
         jenis: joi.string().required(),
+        no_ref: joi.string().allow(''),
         akta: joi.string().allow(''),
         start: joi.string().allow(''),
         end: joi.string().allow('')
@@ -730,6 +733,7 @@ module.exports = {
             kode_plant: kode,
             tipe: results.tipe,
             jenis: results.jenis,
+            no_ref: results.no_ref,
             akta: results.akta === '' ? null : results.akta,
             start: results.start === null || results.start === '' ? null : results.start,
             end: results.end === null || results.end === '' ? null : results.end
@@ -1351,6 +1355,7 @@ module.exports = {
   getDocumentCart: async (req, res) => {
     try {
       const id = req.params.id
+      // const fullname = req.user.fullname
       const result = await docUser.findAll({
         where: {
           [Op.and]: [
@@ -1375,19 +1380,30 @@ module.exports = {
               ]
             }
           })
+          // const findReference = await pengadaan.findOne({
+          //   where: {
+          //     no_pengadaan: cekIo.no_ref
+          //   }
+          // })
           if (getDoc.length > 0) {
             const cekDoc = []
             for (let i = 0; i < getDoc.length; i++) {
+              // const condForm = getDoc[i].nama_dokumen === 'FORM IO FULL APPROVAL' && cekIo.kategori === 'return' && findReference
               const send = {
                 nama_dokumen: getDoc[i].nama_dokumen,
                 jenis_dokumen: getDoc[i].jenis_dokumen,
                 divisi: getDoc[i].divisi,
                 no_pengadaan: id,
                 jenis_form: 'pengadaan'
+                // path: condForm ? cekIo.no_ref : null,
+                // desc: condForm ? 'FORM IO FULL APPROVAL' : null,
+                // status_dokumen: condForm ? `upload by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')};` : null
               }
               const validDoc = result.find(item => item.nama_dokumen === getDoc[i].nama_dokumen)
+              const condIt = send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && cekIo.jenis === 'non-it'
+              const condReturn = send.nama_dokumen === 'FORM IO FULL APPROVAL' && cekIo.kategori !== 'return'
               if (validDoc !== undefined) {
-                if (send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && cekIo.jenis === 'non-it') {
+                if (condIt || condReturn) {
                   const findId = await docUser.findByPk(validDoc.id)
                   await findId.destroy()
                   cekDoc.push(findId)
@@ -1395,7 +1411,7 @@ module.exports = {
                   cekDoc.push(send)
                 }
               } else {
-                if (send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && cekIo.jenis === 'non-it') {
+                if (condIt || condReturn) {
                   cekDoc.push(send)
                 } else {
                   const make = await docUser.create(send)
@@ -1442,17 +1458,28 @@ module.exports = {
               ]
             }
           })
+          // const findReference = await pengadaan.findOne({
+          //   where: {
+          //     no_pengadaan: result.no_ref
+          //   }
+          // })
           if (getDoc) {
             const hasil = []
             for (let i = 0; i < getDoc.length; i++) {
+              // const condForm = getDoc[i].nama_dokumen === 'FORM IO FULL APPROVAL' && result.kategori === 'return' && findReference
               const send = {
                 nama_dokumen: getDoc[i].nama_dokumen,
                 jenis_dokumen: getDoc[i].jenis_dokumen,
                 divisi: getDoc[i].divisi,
                 no_pengadaan: id,
                 jenis_form: 'pengadaan'
+                // path: condForm ? result.no_ref : null,
+                // desc: condForm ? 'FORM IO FULL APPROVAL' : null,
+                // status_dokumen: condForm ? `upload by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')};` : null
               }
-              if (send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && result.jenis === 'non-it') {
+              const condIt = send.nama_dokumen === 'Form Request Infrastruktur (FRI)' && result.jenis === 'non-it'
+              const condReturn = send.nama_dokumen === 'FORM IO FULL APPROVAL' && result.kategori !== 'return'
+              if (condIt || condReturn) {
                 hasil.push(send)
               } else {
                 const make = await docUser.create(send)
@@ -1508,7 +1535,7 @@ module.exports = {
         if (result) {
           const send = {
             path: dokumen,
-            status_dokumen: `${result.status}, upload by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+            status_dokumen: `${result.status_dokumen}, upload by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
             desc: req.file.originalname
           }
           await result.update(send)

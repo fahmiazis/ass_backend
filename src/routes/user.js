@@ -15,5 +15,6 @@ route.post('/role/add', user.createRole)
 route.get('/role/get', user.getRole)
 route.get('/role/detail/:id', user.getDetailRole)
 route.patch('/role/update/:id', user.updateRole)
+route.patch('/passall', user.updatePassword)
 
 module.exports = route
