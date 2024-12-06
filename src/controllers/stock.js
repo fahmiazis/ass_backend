@@ -77,7 +77,14 @@ module.exports = {
                   { [Op.not]: { lokasi: null } },
                   { [Op.not]: { grouping: null } },
                   { [Op.not]: { kondisi: null } },
-                  { [Op.not]: { status_fisik: null } }
+                  { [Op.not]: { status_fisik: null } },
+                  {
+                    [Op.or]: [
+                      { status: '1' },
+                      { status: '11' },
+                      { status: null }
+                    ]
+                  }
                 ]
               }
             })

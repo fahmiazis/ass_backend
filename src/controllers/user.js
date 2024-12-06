@@ -895,7 +895,7 @@ module.exports = {
                     const upData = {
                       jabatan: results.name
                     }
-                    if (findData.jabatan === results.name) {
+                    if (findData) {
                       await findData.update(upData)
                       temp.push(1)
                     }
@@ -911,7 +911,7 @@ module.exports = {
                     }
                   }
                   if (temp.length || hasil.length) {
-                    return response(res, 'update Role succesfully good', { result, findTtd, findApp, findRole })
+                    return response(res, 'update Role succesfully good', { result, findTtd, findApp, findRole, temp, hasil })
                   } else {
                     return response(res, 'update Role succesfully wut', { result, findTtd, findApp, findRole })
                   }
