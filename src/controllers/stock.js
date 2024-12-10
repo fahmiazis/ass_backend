@@ -113,12 +113,13 @@ module.exports = {
                 })
                 if (findPict.length > 0) {
                   const cekImage = []
+                  const failImage = []
                   for (let i = 0; i < findPict.length; i++) {
                     const image = findPict[i].pict
                     if (image.length > 0) {
                       const timeIm = moment(image[image.length - 1].createdAt).format('L').split('/')
                       if (parseInt(timeIm[1]) > end && parseInt(timeIm[1]) < start) {
-                        console.log(parseInt(timeIm[1]))
+                        failImage.push(findPict[i])
                       } else {
                         cekImage.push(1)
                       }
@@ -177,7 +178,7 @@ module.exports = {
                     } else if (month === 12) {
                       rome = 'XII'
                     }
-                  const tempData = findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock // eslint-disable-line
+                    const tempData = findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock // eslint-disable-line
                     const cekData = tempData ? 'ya' : 'no'
                     const noTrans = `${notrans}/${level === 5 ? kode : cost}/${findArea.nama_area}/${rome}/${year}-OPNM`
                     const hasil = []
@@ -296,7 +297,7 @@ module.exports = {
                       return response(res, 'failed submit stock opname3', {}, 400, false)
                     }
                   } else {
-                    return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length }, 400, false)
+                    return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length, dataPict: findPict, failPict: failImage }, 400, false)
                   }
                 } else {
                   return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)

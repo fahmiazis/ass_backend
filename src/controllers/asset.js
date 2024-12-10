@@ -281,6 +281,8 @@ module.exports = {
       }
       if (!limit) {
         limit = 10
+      } else if (limit === 'all') {
+        limit = 100
       } else {
         limit = parseInt(limit)
       }
@@ -295,6 +297,14 @@ module.exports = {
         }
       })
       if (findDep) {
+        if (limit === 'all') {
+          const findLimit = await asset.findAll({
+            where: {
+              cost_center: findDep.cost_center
+            }
+          })
+          limit = findLimit.length
+        }
         const result = await asset.findAndCountAll({
           where: {
             [Op.and]: [
