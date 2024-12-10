@@ -102,7 +102,12 @@ module.exports = {
               if (result.length === findAsset.length) {
                 const findPict = await asset.findAll({
                   where: {
-                    cost_center: level === 5 ? findArea.cost_center : cost
+                    cost_center: level === 5 ? findArea.cost_center : cost,
+                    [Op.or]: [
+                      { status: '1' },
+                      { status: '11' },
+                      { status: null }
+                    ]
                   },
                   include: [
                     {
