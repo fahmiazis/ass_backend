@@ -604,7 +604,7 @@ module.exports = {
             [Op.and]: [
               status === 'revisi' ? { status_reject: 1 } : { status_app: status === 'null' ? null : status },
               status === 'revisi' ? { status_reject: 1 } : { [Op.not]: { id: null } },
-              status === 'revisi' ? { [Op.not]: { status_form: 0 } } : { [Op.not]: { id: null } }
+              status === 'revisi' ? { [Op.not]: { status_form: 0 } } : { [Op.not]: { status_form: null } }
               // ,
               // {
               //   tanggalStock: {
@@ -727,7 +727,9 @@ module.exports = {
                         [Op.gte]: timeV1,
                         [Op.lt]: timeV2
                       }
-                    }
+                    },
+                { [Op.not]: { no_stock: null } },
+                { [Op.not]: { status_form: null } }
               ],
               [Op.or]: [
                 { no_asset: { [Op.like]: `%${searchValue}%` } },
@@ -739,8 +741,7 @@ module.exports = {
                 { kondisi: { [Op.like]: `%${searchValue}%` } },
                 { lokasi: { [Op.like]: `%${searchValue}%` } },
                 { grouping: { [Op.like]: `%${searchValue}%` } }
-              ],
-              [Op.not]: { no_stock: null }
+              ]
             },
             include: [
               {
