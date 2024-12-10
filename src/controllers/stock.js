@@ -128,6 +128,8 @@ module.exports = {
                       } else {
                         cekImage.push(1)
                       }
+                    } else {
+                      failImage.push(findPict[i])
                     }
                   }
                   if (cekImage.length === findPict.length) {
