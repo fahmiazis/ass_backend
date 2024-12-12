@@ -600,11 +600,11 @@ module.exports = {
         }
         const result = await stock.findAndCountAll({
           where: {
-            kode_plant: level === 5 ? kode : cost,
             [Op.and]: [
-              status === 'revisi' ? { status_reject: 1 } : { status_app: status === 'null' ? null : status },
+              { kode_plant: level === 5 ? kode : cost },
+              status === 'revisi' ? { status_reject: 1 } : { status_app: (status === 'null' || status === 'draft' ? null : status) },
               status === 'revisi' ? { status_reject: 1 } : { [Op.not]: { id: null } },
-              status === 'revisi' ? { [Op.not]: { status_form: 0 } } : { [Op.not]: { status_form: null } }
+              status === 'revisi' ? { [Op.not]: { status_form: 0 } } : status === 'draft' ? { status_form: null } : { [Op.not]: { status_form: null } }
               // ,
               // {
               //   tanggalStock: {
@@ -648,7 +648,7 @@ module.exports = {
           group: [status === 'revisi' ? 'stock.no_stock' : 'stock.id'],
           distinct: true
         })
-        const pageInfo = pagination('/stock/get', req.query, page, limit, result.count)
+        const pageInfo = pagination('/stock/area', req.query, page, limit, result.count)
         if (result) {
           return response(res, 'list asset', { result, pageInfo })
         } else {
@@ -798,7 +798,8 @@ module.exports = {
                             [Op.gte]: timeV1,
                             [Op.lt]: timeV2
                           }
-                        }
+                        },
+                    { [Op.not]: { status_form: null } }
                     // status === 'available' ? { status_form: 2 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
                     // {
                     //   tanggalStock: {
@@ -869,7 +870,8 @@ module.exports = {
                         [Op.gte]: timeV1,
                         [Op.lt]: timeV2
                       }
-                    }
+                    },
+                { [Op.not]: { status_form: null } }
                 // {
                 //   tanggalStock: {
                 //     [Op.lte]: end,
