@@ -4215,58 +4215,62 @@ module.exports = {
         }
       })
       if (result.length > 0) {
-        const data = []
-        for (let i = 0; i < result.length; i++) {
-          const temp = {
-            name: result[i].nama,
-            qty: result[i].qty,
-            price: result[i].price.replace(/[^a-z0-9-]/g, ''),
-            isAsset: result[i].isAsset === 'true' ? 1 : 0,
-            ticket_code: result[i].ticket_code,
-            asset_number_token: result[i].asset_token,
-            no_io: result[i].no_io,
-            no_asset: result[i].no_asset,
-            area: result[i].area,
-            kode_plant: result[i].kode_plant
+        if (result[0].asset_token === null) {
+          return response(res, 'bukan ajuan pods', { result })
+        } else {
+          const data = []
+          for (let i = 0; i < result.length; i++) {
+            const temp = {
+              name: result[i].nama,
+              qty: result[i].qty,
+              price: result[i].price.replace(/[^a-z0-9-]/g, ''),
+              isAsset: result[i].isAsset === 'true' ? 1 : 0,
+              ticket_code: result[i].ticket_code,
+              asset_number_token: result[i].asset_token,
+              no_io: result[i].no_io,
+              no_asset: result[i].no_asset,
+              area: result[i].area,
+              kode_plant: result[i].kode_plant
+            }
+            data.push(temp)
           }
-          data.push(temp)
-        }
-        if (data.length > 0) {
-          const findTtd = await ttd.findAll({
-            where: {
-              [Op.or]: [
-                { no_doc: no },
-                { no_pengadaan: no }
-              ]
-            }
-          })
-          if (findTtd.length > 0) {
-            const authors = []
-            for (let i = 0; i < findTtd.length; i++) {
-              const temp = {
-                name: findTtd[i].nama,
-                as: findTtd[i].sebagai === 'pembuat' ? 'Dibuat Oleh' : findTtd[i].sebagai === 'pemeriksa' ? 'Diperiksa Oleh' : findTtd[i].sebagai === 'penyetuju' && 'Disetujui Oleh',
-                position: findTtd[i].jabatan,
-                approval_datetime: findTtd[i].updatedAt
+          if (data.length > 0) {
+            const findTtd = await ttd.findAll({
+              where: {
+                [Op.or]: [
+                  { no_doc: no },
+                  { no_pengadaan: no }
+                ]
               }
-              authors.push(temp)
-            }
-            const send = await axios({
-              method: 'post',
-              url: 'https://devpods.pinusmerahabadi.co.id/api/updateassetnumber',
-              data: { data, authors },
-              headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.c_G5Y7CbEKR4UncCqxLmGHtkcZDtibjh2XP_M7fTbAE' }
-            }).then(response => { console.log(response); return (response) }).catch(err => { console.log(err); return (err) })
-            if (send.status === 200) {
-              return response(res, send.message, { result: send.data })
+            })
+            if (findTtd.length > 0) {
+              const authors = []
+              for (let i = 0; i < findTtd.length; i++) {
+                const temp = {
+                  name: findTtd[i].nama,
+                  as: findTtd[i].sebagai === 'pembuat' ? 'Dibuat Oleh' : findTtd[i].sebagai === 'pemeriksa' ? 'Diperiksa Oleh' : findTtd[i].sebagai === 'penyetuju' && 'Disetujui Oleh',
+                  position: findTtd[i].jabatan,
+                  approval_datetime: findTtd[i].updatedAt
+                }
+                authors.push(temp)
+              }
+              const send = await axios({
+                method: 'post',
+                url: 'https://devpods.pinusmerahabadi.co.id/api/updateassetnumber',
+                data: { data, authors },
+                headers: { Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.c_G5Y7CbEKR4UncCqxLmGHtkcZDtibjh2XP_M7fTbAE' }
+              }).then(response => { console.log(response); return (response) }).catch(err => { console.log(err); return (err) })
+              if (send.status === 200) {
+                return response(res, send.message, { result: send.data })
+              } else {
+                return response(res, 'gagal kirim ke pods', { send }, 400, false)
+              }
             } else {
-              return response(res, 'gagal kirim ke pods', { send }, 400, false)
+              return response(res, 'failed send api', {}, 400, false)
             }
           } else {
             return response(res, 'failed send api', {}, 400, false)
           }
-        } else {
-          return response(res, 'failed send api', {}, 400, false)
         }
       } else {
         return response(res, 'failed send api', {}, 400, false)
