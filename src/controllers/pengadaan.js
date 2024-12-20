@@ -954,7 +954,8 @@ module.exports = {
         const temp = []
         for (let i = 0; i < findIo.length; i++) {
           const data = {
-            status_form: 1,
+            status_form: findIo[i].kategori === 'return' ? 2 : 1,
+            isAsset: findIo[i].kategori === 'return' ? 'true' : null,
             history: `submit pengajuan by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
             tglIo: moment()
           }
@@ -1212,6 +1213,7 @@ module.exports = {
   getApproveIo: async (req, res) => {
     try {
       const { no } = req.body
+      const level = req.user.level
       const result = await ttd.findAll({
         where: {
           [Op.or]: [
@@ -1261,6 +1263,11 @@ module.exports = {
             }
           })
           if (getApp) {
+            const getArea = await user.findOne({
+              where: {
+                kode_plant: result[0].kode_plant
+              }
+            })
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
@@ -1268,7 +1275,9 @@ module.exports = {
                 jenis: getApp[i].jenis,
                 sebagai: getApp[i].sebagai,
                 kategori: getApp[i].kategori,
-                no_doc: no
+                no_doc: no,
+                nama: i === 0 && result[0].kategori === 'return' && (level === 5 || level === 9) ? getArea.fullname : null,
+                status: i === 0 && result[0].kategori === 'return' && (level === 5 || level === 9) ? 1 : null
               }
               const make = await ttd.create(send)
               if (make) {

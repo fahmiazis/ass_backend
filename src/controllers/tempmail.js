@@ -1597,7 +1597,7 @@ module.exports = {
       })
       const findTrans = await transaksi.findOne({
         where: {
-          // noTrans,
+        // noTrans,
           [Op.and]: [
             noTrans,
             tipe === 'revisi' ? { [Op.not]: { user_reject: null } } : { [Op.not]: { id: null } }
@@ -1813,9 +1813,11 @@ module.exports = {
               if (temp.length > 0) {
                 let noLevel = null
                 let arr = null
+                console.log(findApp)
                 for (let i = 0; i < findApp.length; i++) {
                   if (findRole.name === findApp[i].jabatan) {
                     arr = i + 1
+                    console.log(arr)
                     const findLevel = await role.findOne({
                       where: {
                         name: findApp[arr].jabatan
@@ -1824,6 +1826,7 @@ module.exports = {
                     if (findLevel) {
                       noLevel = findLevel
                     }
+                    break
                   }
                 }
                 if (noLevel.type === 'area') {
@@ -2580,16 +2583,28 @@ module.exports = {
                     <td>${listData[i].grouping}</td>
                     <td>${listData[i].keterangan}</td>
                   </tr>`
-                    : `
-                    <tr>
-                      <th>${findData[i].no_transaksi}</th>
-                      <th>${findData[i].cost_center}</th>
-                      <th>${findData[i].area}</th>
-                      <th>${findData[i].no_coa}</th>
-                      <th>${findData[i].sub_coa}</th>
-                      <th>${findData[i].keterangan || findData[i].uraian}</th>
-                      <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
-                    </tr>`
+                    : tipe === 'mutasi'
+                      ? `
+                      <tr>
+                        <td>${findData[i].no_mutasi}</td>
+                        <td>${findData[i].no_asset}</td>
+                        <td>${findData[i].nama_asset}</td>
+                        <td>${findData[i].area}</td>
+                        <td>${findData[i].cost_center}</td>
+                        <td>${findData[i].area_rec}</td>
+                        <td>${findData[i].cost_center_rec}</td>
+                        <td>${moment(findData[i].tanggalMut).format('DD MMMM YYYY')}</td>
+                      </tr>`
+                      : `
+                      <tr>
+                        <th>${findData[i].no_transaksi}</th>
+                        <th>${findData[i].cost_center}</th>
+                        <th>${findData[i].area}</th>
+                        <th>${findData[i].no_coa}</th>
+                        <th>${findData[i].sub_coa}</th>
+                        <th>${findData[i].keterangan || findData[i].uraian}</th>
+                        <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
+                      </tr>`
               tableTd = tableTd + element
               cekNon.push(data)
               // }
@@ -2630,25 +2645,37 @@ module.exports = {
                   <th>STATUS ASET</th>
                   <th>KETERANGAN</th>
                 </tr>`
-                  : `
-                <tr>
-                  <th>NO.AJUAN</th>
-                  <th>COST CENTRE</th>
-                  <th>AREA</th>
-                  <th>NO.COA</th>
-                  <th>JENIS TRANSAKSI</th>
-                  <th>KETERANGAN TAMBAHAN</th>
-                  <th>TANGGAL AJUAN</th>
-              </tr>`
+                  : tipe === 'mutasi'
+                    ? `
+                  <tr>
+                    <th>No Mutasi</th>
+                    <th>No Asset</th>
+                    <th>Asset description</th>
+                    <th>Cabang / Depo</th>
+                    <th>Cost Ctr</th>
+                    <th>Cabang / Depo Penerima</th>
+                    <th>Cost Ctr Penerima</th>
+                    <th>TANGGAL AJUAN</th>
+                  </tr>`
+                    : `
+                    <tr>
+                      <th>NO.AJUAN</th>
+                      <th>COST CENTRE</th>
+                      <th>AREA</th>
+                      <th>NO.COA</th>
+                      <th>JENIS TRANSAKSI</th>
+                      <th>KETERANGAN TAMBAHAN</th>
+                      <th>TANGGAL AJUAN</th>
+                  </tr>`
             const mailOptions = {
               from: 'noreply_aset@pinusmerahabadi.co.id',
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
-              to: `${to}`,
-              cc: `${cc.split(',')}, neng_rina@pinusmerahabadi.co.id, pmaho_asset1@pinusmerahabadi.co.id, noreplyofr@gmail.com`,
+              // to: `${to}`,
+              // cc: `${cc.split(',')}, neng_rina@pinusmerahabadi.co.id, pmaho_asset1@pinusmerahabadi.co.id, noreplyofr@gmail.com`,
               // to: 'neng_rina@pinusmerahabadi.co.id',
               // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
-              // to: 'noreplyofr@gmail.com',
-              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              to: 'noreplyofr@gmail.com',
+              cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>

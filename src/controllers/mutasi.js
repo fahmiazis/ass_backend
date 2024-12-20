@@ -1,5 +1,5 @@
 const response = require('../helpers/response')
-const { mutasi, asset, depo, notif, ttd, approve, role, user, docUser, document, path, email } = require('../models')
+const { mutasi, asset, depo, notif, ttd, approve, role, user, docUser, document, path, email, reservoir } = require('../models')
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const joi = require('joi')
@@ -91,19 +91,19 @@ module.exports = {
                     if (update) {
                       return response(res, 'success add mutasi', { result: make })
                     } else {
-                      return response(res, 'failed add mutasi', {}, 400, false)
+                      return response(res, 'failed add mutasi1', {}, 400, false)
                     }
                   } else {
-                    return response(res, 'failed add mutasi', {}, 400, false)
+                    return response(res, 'failed add mutasi2', {}, 400, false)
                   }
                 } else {
-                  return response(res, 'failed add mutasi', {}, 400, false)
+                  return response(res, 'failed add mutasi3', {}, 400, false)
                 }
               } else {
-                return response(res, 'failed add mutasi', {}, 400, false)
+                return response(res, 'failed add mutasi4', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add mutasi', {}, 400, false)
+              return response(res, 'failed add mutasi5', {}, 400, false)
             }
           } else {
             return response(res, 'Hanya bisa menambahkan item dengan area tujuan yang sama. Kosongkan atau submit cart terlebih dahulu !', {}, 400, false)
@@ -174,6 +174,38 @@ module.exports = {
         }
       } else {
         return response(res, 'failed add mutasi', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateMutasi: async (req, res) => {
+    try {
+      const { kodeRec, id } = req.body
+      const findRec = await depo.findOne({
+        where: {
+          kode_plant: kodeRec
+        }
+      })
+      if (findRec) {
+        const findData = await mutasi.findByPk(id)
+        if (findData) {
+          const data = {
+            kode_plant_rec: findRec.kode_plant,
+            cost_center_rec: findRec.cost_center,
+            area_rec: findRec.nama_area
+          }
+          const updateData = await findData.update(data)
+          if (updateData) {
+            return response(res, 'success update mutasi', { updateData })
+          } else {
+            return response(res, 'failed update mutasi1', {}, 400, false)
+          }
+        } else {
+          return response(res, 'failed update mutasi2', {}, 400, false)
+        }
+      } else {
+        return response(res, 'failed update mutasi3', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -974,8 +1006,8 @@ module.exports = {
   },
   deleteItem: async (req, res) => {
     try {
-      const no = req.params.no
-      const result = await mutasi.findByPk(no)
+      const id = req.params.id
+      const result = await mutasi.findByPk(id)
       if (result) {
         await result.destroy()
         const findAsset = await asset.findOne({
@@ -1002,6 +1034,8 @@ module.exports = {
   },
   submitMutasi: async (req, res) => {
     try {
+      const timeV1 = moment().startOf('month')
+      const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
       const cost = req.user.name
       const level = req.user.level
@@ -1012,7 +1046,29 @@ module.exports = {
       if (error) {
         return response(res, 'Error', { error: error.message }, 404, false)
       } else {
-        const result = await mutasi.findAll({
+        const findNo = await reservoir.findAll({
+          where: {
+            transaksi: 'mutasi',
+            tipe: 'area',
+            createdAt: {
+              [Op.gte]: timeV1,
+              [Op.lt]: timeV2
+            }
+          },
+          order: [['id', 'DESC']],
+          limit: 50
+        })
+        const cekNo = []
+        if (findNo.length > 0) {
+          for (let i = 0; i < findNo.length; i++) {
+            const no = findNo[i].no_transaksi.split('/')
+            cekNo.push(parseInt(no[0]))
+          }
+        } else {
+          cekNo.push(0)
+        }
+        const noMut = Math.max(...cekNo) + 1
+        const findMut = await mutasi.findAll({
           where: {
             [Op.and]: [
               { kode_plant: level === '5' ? kode : cost },
@@ -1020,410 +1076,103 @@ module.exports = {
             ]
           }
         })
-        if (result.length > 0) {
-          const findNo = await mutasi.findAll({
-            where: {
-              [Op.not]: { no_mutasi: null }
-            },
-            order: [['id', 'DESC']],
-            limit: 50
-          })
-          if (findNo.length > 0) {
-            const cekNo = []
-            for (let i = 0; i < findNo.length; i++) {
-              const no = findNo[i].no_mutasi.split('M')
-              cekNo.push(parseInt(no[1]))
+        if (findMut.length > 0) {
+          const temp = []
+          const change = noMut.toString().split('')
+          const notrans = change.length === 2 ? '00' + noMut : change.length === 1 ? '000' + noMut : change.length === 3 ? '0' + noMut : noMut
+          const month = parseInt(moment().format('MM'))
+          const year = moment().format('YYYY')
+          let rome = ''
+          if (month === 1) {
+            rome = 'I'
+          } else if (month === 2) {
+            rome = 'II'
+          } else if (month === 3) {
+            rome = 'III'
+          } else if (month === 4) {
+            rome = 'IV'
+          } else if (month === 5) {
+            rome = 'V'
+          } else if (month === 6) {
+            rome = 'VI'
+          } else if (month === 7) {
+            rome = 'VII'
+          } else if (month === 8) {
+            rome = 'VIII'
+          } else if (month === 9) {
+            rome = 'IX'
+          } else if (month === 10) {
+            rome = 'X'
+          } else if (month === 11) {
+            rome = 'XI'
+          } else if (month === 12) {
+            rome = 'XII'
+          }
+          const tempData = findMut.find(({no_mutasi}) => no_mutasi !== null) // eslint-disable-line
+          const cekData = tempData === undefined ? 'ya' : 'no'
+          const noTrans = `${notrans}/${kode}/${findMut[0].area}/${rome}/${year}-MTI`
+          const data = {
+            no_mutasi: noTrans,
+            alasan: results.alasan
+          }
+          for (let i = 0; i < findMut.length; i++) {
+            const find = await mutasi.findByPk(findMut[i].id)
+            if (find) {
+              await find.update(data)
+              temp.push(1)
             }
-            const noMut = Math.max(...cekNo) + 1
-            const temp = []
-            for (let i = 0; i < result.length; i++) {
-              const find = await mutasi.findByPk(result[i].id)
-              if (find) {
-                const send = {
-                  status_form: 2,
-                  no_mutasi: noMut === undefined ? 'M' + 1 : 'M' + noMut,
-                  alasan: results.alasan,
-                  tanggalMut: moment()
-                }
-                await find.update(send)
-                temp.push(1)
-              }
-            }
-            if (temp.length === result.length) {
-              const findDepo = await depo.findOne({
+          }
+          if (temp.length === findMut.length) {
+            if (cekData === 'no') {
+              const findReser = await reservoir.findOne({
                 where: {
-                  kode_plant: level === '5' ? kode : cost
+                  no_transaksi: tempData.no_mutasi
                 }
               })
-              if (findDepo) {
-                const findEmail = await user.findOne({
-                  where: {
-                    [Op.or]: [
-                      { username: findDepo.nama_bm }
-                    ]
-                  }
-                })
-                if (findEmail) {
-                  const data = {
-                    kode_plant: level === '5' ? kode : cost,
-                    jenis: 'mutasi',
-                    no_proses: `M${noMut === undefined ? 1 : noMut}`,
-                    list_appr: findEmail.username,
-                    keterangan: 'pengajuan',
-                    response: 'request'
-                  }
-                  const createNotif = await notif.create(data)
-                  if (createNotif) {
-                    let tableTd = ''
-                    for (let i = 0; i < result.length; i++) {
-                      const element = `
-                    <tr>
-                      <td>${result.indexOf(result[i]) + 1}</td>
-                      <td>M${noMut === undefined ? 1 : noMut}</td>
-                      <td>${result[i].no_asset}</td>
-                      <td>${result[i].nama_asset}</td>
-                      <td>${result[i].area}</td>
-                      <td>${result[i].cost_center}</td>
-                      <td>${result[i].area_rec}</td>
-                      <td>${result[i].cost_center_rec}</td>
-                    </tr>`
-                      tableTd = tableTd + element
-                    }
-                    const mailOptions = {
-                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      // to: `${findEmail.email}`,
-                      to: `${emailAss}, ${emailAss2}`,
-                      subject: `Approve Pengajuan Mutasi M${noMut === undefined ? 1 : noMut} (TESTING)`,
-                      html: `
-                    <head>
-                      <style type="text/css">
-                      body {
-                          display: flexbox;
-                          flex-direction: column;
-                      }
-                      .tittle {
-                          font-size: 15px;
-                      }
-                      .mar {
-                          margin-bottom: 20px;
-                      }
-                      .mar1 {
-                          margin-bottom: 10px;
-                      }
-                      .foot {
-                          margin-top: 20px;
-                          margin-bottom: 10px;
-                      }
-                      .foot1 {
-                          margin-bottom: 50px;
-                      }
-                      .position {
-                          display: flexbox;
-                          flex-direction: row;
-                          justify-content: left;
-                          margin-top: 10px;
-                      }
-                      table {
-                          font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                          font-size: 12px;
-                      }
-                      .demo-table {
-                          border-collapse: collapse;
-                          font-size: 13px;
-                      }
-                      .demo-table th, 
-                      .demo-table td {
-                          border-bottom: 1px solid #e1edff;
-                          border-left: 1px solid #e1edff;
-                          padding: 7px 17px;
-                      }
-                      .demo-table th, 
-                      .demo-table td:last-child {
-                          border-right: 1px solid #e1edff;
-                      }
-                      .demo-table td:first-child {
-                          border-top: 1px solid #e1edff;
-                      }
-                      .demo-table td:last-child{
-                          border-bottom: 0;
-                      }
-                      caption {
-                          caption-side: top;
-                          margin-bottom: 10px;
-                      }
-                      
-                      /* Table Header */
-                      .demo-table thead th {
-                          background-color: #508abb;
-                          color: #FFFFFF;
-                          border-color: #6ea1cc !important;
-                          text-transform: uppercase;
-                      }
-                      
-                      /* Table Body */
-                      .demo-table tbody td {
-                          color: #353535;
-                      }
-                      
-                      .demo-table tbody tr:nth-child(odd) td {
-                          background-color: #f4fbff;
-                      }
-                      .demo-table tbody tr:hover th,
-                      .demo-table tbody tr:hover td {
-                          background-color: #ffffa2;
-                          border-color: #ffff0f;
-                          transition: all .2s;
-                      }
-                  </style>
-                    </head>
-                    <body>
-                        <div class="tittle mar">
-                            Dear Bapak/Ibu,
-                        </div>
-                        <div class="tittle mar1">
-                            <div>Mohon untuk approve pengajuan mutasi asset area.</div>
-                        </div>
-                        <div class="position">
-                            <table class="demo-table">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>No Mutasi</th>
-                                        <th>Asset</th>
-                                        <th>Asset description</th>
-                                        <th>Cabang / Depo</th>
-                                        <th>Cost Ctr</th>
-                                        <th>Cabang / Depo Penerima</th>
-                                        <th>Cost Ctr Penerima</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                  ${tableTd}
-                                </tbody>
-                            </table>
-                        </div>
-                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                        <div class="tittle foot">
-                            Terima kasih,
-                        </div>
-                        <div class="tittle foot1">
-                            Regards,
-                        </div>
-                        <div class="tittle">
-                            Team Asset
-                        </div>
-                    </body>
-                    `
-                    }
-                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                    if (sendEmail) {
-                      return response(res, 'success approve mutasi', { sendEmail })
-                    } else {
-                      return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                    }
-                  }
+              const findNewReser = await reservoir.findOne({
+                where: {
+                  no_transaksi: noTrans
                 }
+              })
+              const upDataReser = {
+                status: 'expired'
+              }
+              const creDataReser = {
+                no_transaksi: noTrans,
+                kode_plant: kode,
+                transaksi: 'mutasi',
+                tipe: 'area',
+                status: 'delayed'
+              }
+              if (findReser && !findNewReser) {
+                await findReser.update(upDataReser)
+                await reservoir.create(creDataReser)
+                return response(res, 'success submit cart', { no_mutasi: noTrans })
+              } else {
+                return response(res, 'success submit cart', { no_mutasi: noTrans })
               }
             } else {
-              return response(res, 'failed submit', {}, 404, false)
+              const findNewReser = await reservoir.findOne({
+                where: {
+                  no_transaksi: noTrans
+                }
+              })
+              if (findNewReser) {
+                return response(res, 'success submit cart', { no_mutasi: noTrans })
+              } else {
+                const creDataReser = {
+                  no_transaksi: noTrans,
+                  kode_plant: kode,
+                  transaksi: 'mutasi',
+                  tipe: 'area',
+                  status: 'delayed'
+                }
+                await reservoir.create(creDataReser)
+                return response(res, 'success submit cart', { no_mutasi: noTrans })
+              }
             }
           } else {
-            const cekNo = [0]
-            const noMut = Math.max(...cekNo) + 1
-            const temp = []
-            for (let i = 0; i < result.length; i++) {
-              const find = await mutasi.findByPk(result[i].id)
-              if (find) {
-                const send = {
-                  status_form: 2,
-                  no_mutasi: noMut === undefined ? 'M1' : 'M' + noMut,
-                  alasan: results.alasan,
-                  tanggalMut: moment()
-                }
-                await find.update(send)
-                temp.push(1)
-              }
-            }
-            if (temp.length === result.length) {
-              const findDepo = await depo.findOne({
-                where: {
-                  kode_plant: level === '5' ? kode : cost
-                }
-              })
-              if (findDepo) {
-                const findEmail = await user.findOne({
-                  where: {
-                    [Op.or]: [
-                      { username: findDepo.nama_bm }
-                    ]
-                  }
-                })
-                if (findEmail) {
-                  const data = {
-                    kode_plant: level === '5' ? kode : cost,
-                    jenis: 'mutasi',
-                    no_proses: `M${noMut === undefined ? 1 : noMut}`,
-                    list_appr: findEmail.username,
-                    keterangan: 'pengajuan',
-                    response: 'request'
-                  }
-                  const createNotif = await notif.create(data)
-                  if (createNotif) {
-                    let tableTd = ''
-                    for (let i = 0; i < result.length; i++) {
-                      const element = `
-                    <tr>
-                      <td>${result.indexOf(result[i]) + 1}</td>
-                      <td>M${noMut === undefined ? 1 : noMut}</td>
-                      <td>${result[i].no_asset}</td>
-                      <td>${result[i].nama_asset}</td>
-                      <td>${result[i].area}</td>
-                      <td>${result[i].cost_center}</td>
-                      <td>${result[i].area_rec}</td>
-                      <td>${result[i].cost_center_rec}</td>
-                    </tr>`
-                      tableTd = tableTd + element
-                    }
-                    const mailOptions = {
-                      from: 'noreply_asset@pinusmerahabadi.co.id',
-                      replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                      // to: `${findEmail.email}`,
-                      to: `${emailAss}, ${emailAss2}`,
-                      subject: `Approve Pengajuan Mutasi M${noMut === undefined ? 1 : noMut} (TESTING)`,
-                      html: `
-                    <head>
-                      <style type="text/css">
-                      body {
-                          display: flexbox;
-                          flex-direction: column;
-                      }
-                      .tittle {
-                          font-size: 15px;
-                      }
-                      .mar {
-                          margin-bottom: 20px;
-                      }
-                      .mar1 {
-                          margin-bottom: 10px;
-                      }
-                      .foot {
-                          margin-top: 20px;
-                          margin-bottom: 10px;
-                      }
-                      .foot1 {
-                          margin-bottom: 50px;
-                      }
-                      .position {
-                          display: flexbox;
-                          flex-direction: row;
-                          justify-content: left;
-                          margin-top: 10px;
-                      }
-                      table {
-                          font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                          font-size: 12px;
-                      }
-                      .demo-table {
-                          border-collapse: collapse;
-                          font-size: 13px;
-                      }
-                      .demo-table th, 
-                      .demo-table td {
-                          border-bottom: 1px solid #e1edff;
-                          border-left: 1px solid #e1edff;
-                          padding: 7px 17px;
-                      }
-                      .demo-table th, 
-                      .demo-table td:last-child {
-                          border-right: 1px solid #e1edff;
-                      }
-                      .demo-table td:first-child {
-                          border-top: 1px solid #e1edff;
-                      }
-                      .demo-table td:last-child{
-                          border-bottom: 0;
-                      }
-                      caption {
-                          caption-side: top;
-                          margin-bottom: 10px;
-                      }
-                      
-                      /* Table Header */
-                      .demo-table thead th {
-                          background-color: #508abb;
-                          color: #FFFFFF;
-                          border-color: #6ea1cc !important;
-                          text-transform: uppercase;
-                      }
-                      
-                      /* Table Body */
-                      .demo-table tbody td {
-                          color: #353535;
-                      }
-                      
-                      .demo-table tbody tr:nth-child(odd) td {
-                          background-color: #f4fbff;
-                      }
-                      .demo-table tbody tr:hover th,
-                      .demo-table tbody tr:hover td {
-                          background-color: #ffffa2;
-                          border-color: #ffff0f;
-                          transition: all .2s;
-                      }
-                  </style>
-                    </head>
-                    <body>
-                        <div class="tittle mar">
-                            Dear Bapak/Ibu,
-                        </div>
-                        <div class="tittle mar1">
-                            <div>Mohon untuk approve pengajuan mutasi asset area.</div>
-                        </div>
-                        <div class="position">
-                            <table class="demo-table">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>No Mutasi</th>
-                                        <th>Asset</th>
-                                        <th>Asset description</th>
-                                        <th>Cabang / Depo</th>
-                                        <th>Cost Ctr</th>
-                                        <th>Cabang / Depo Penerima</th>
-                                        <th>Cost Ctr Penerima</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                  ${tableTd}
-                                </tbody>
-                            </table>
-                        </div>
-                        <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                        <div class="tittle foot">
-                            Terima kasih,
-                        </div>
-                        <div class="tittle foot1">
-                            Regards,
-                        </div>
-                        <div class="tittle">
-                            Team Asset
-                        </div>
-                    </body>
-                    `
-                    }
-                    const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                    if (sendEmail) {
-                      return response(res, 'success approve mutasi', { sendEmail })
-                    } else {
-                      return response(res, 'berhasil approve mutasi, tidak berhasil kirim notif email 1')
-                    }
-                  }
-                }
-              }
-            } else {
-              return response(res, 'failed submit', {}, 404, false)
-            }
+            return response(res, 'failed submit', {}, 404, false)
           }
         } else {
           return response(res, 'data mutasi is empty', {}, 404, false)
@@ -1433,9 +1182,62 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  submitMutasiFinal: async (req, res) => {
+    try {
+      const { no } = req.body
+      const kode = req.user.kode
+      const name = req.user.name
+      const findMut = await mutasi.findAll({
+        where: {
+          [Op.and]: [
+            { kode_plant: kode },
+            { status_form: 1 }
+          ]
+        }
+      })
+      if (findMut) {
+        const temp = []
+        for (let i = 0; i < findMut.length; i++) {
+          const data = {
+            status_form: 2,
+            history: `submit pengajuan by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+            tanggalMut: moment()
+          }
+          const findData = await mutasi.findByPk(findMut[i].id)
+          if (findData) {
+            await findData.update(data)
+            temp.push(findData)
+          }
+        }
+        if (temp.length > 0) {
+          const findNewReser = await reservoir.findOne({
+            where: {
+              no_transaksi: no
+            }
+          })
+          if (findNewReser) {
+            const upDataReser = {
+              status: 'used',
+              createdAt: moment()
+            }
+            await findNewReser.update(upDataReser)
+            return response(res, 'success submit cart')
+          } else {
+            return response(res, 'success submit cart')
+          }
+        } else {
+          return response(res, 'failed submit cart', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed submit cart', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   getDetailMutasi: async (req, res) => {
     try {
-      const no = req.params.no
+      const no = req.body.no
       const tipe = req.params.tipe
       const level = req.user.level
       if (tipe === 'budget') {
@@ -1633,8 +1435,8 @@ module.exports = {
   },
   getApproveMut: async (req, res) => {
     try {
-      const no = req.params.no
-      const nama = req.params.nama
+      const no = req.body.no
+      const nama = req.body.nama
       const result = await ttd.findAll({
         where: {
           no_doc: no
@@ -1767,7 +1569,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
+      const no = req.body.no
       const findMut = await mutasi.findOne({
         where: {
           no_mutasi: no
@@ -2752,7 +2554,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
+      const no = req.body.no
       const list = Object.values(req.body)
       const alasan = list[0]
       const findMut = await mutasi.findAll({
@@ -3189,7 +2991,7 @@ module.exports = {
   },
   getDocumentMut: async (req, res) => {
     try {
-      const no = req.params.no
+      const no = req.body.no
       const nomut = req.params.nomut
       const results = await mutasi.findOne({
         where: {
@@ -3258,7 +3060,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
-      const no = req.params.no
+      const no = req.body.no
       const list = Object.values(req.body)
       const alasan = list[0]
       const findMut = await mutasi.findAll({
@@ -3743,7 +3545,7 @@ module.exports = {
   },
   submitEks: async (req, res) => {
     try {
-      const no = req.params.no
+      const no = req.body.no
       const findBud = await mutasi.findAll({
         where: {
           [Op.and]: [
@@ -4286,7 +4088,7 @@ module.exports = {
   submitBudget: async (req, res) => {
     try {
       const level = req.user.level
-      const no = req.params.no
+      const no = req.body.no
       const findBud = await mutasi.findAll({
         where: {
           no_mutasi: no,
@@ -4676,7 +4478,7 @@ module.exports = {
   },
   updateDate: async (req, res) => {
     try {
-      const no = req.params.no
+      const no = req.body.no
       const schema = joi.object({
         tgl_mutasifisik: joi.date().required()
       })
@@ -4713,7 +4515,7 @@ module.exports = {
   },
   submitEditMutasi: async (req, res) => {
     try {
-      const no = req.params.no
+      const no = req.body.no
       const findDoc = await docUser.findAll({
         where: {
           no_pengadaan: no
@@ -4911,7 +4713,7 @@ module.exports = {
   },
   deleteApprove: async (req, res) => {
     try {
-      const no = req.params.no
+      const no = req.body.no
       const findTtd = await ttd.findAll({
         where: {
           no_doc: no
