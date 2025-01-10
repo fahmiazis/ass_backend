@@ -1270,14 +1270,15 @@ module.exports = {
             })
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
+              const cekApp = getApp[i].jabatan.toLowerCase() === 'aos' && result[0].kategori === 'return' && (level === 5 || level === 9)
               const send = {
                 jabatan: getApp[i].jabatan,
                 jenis: getApp[i].jenis,
                 sebagai: getApp[i].sebagai,
                 kategori: getApp[i].kategori,
                 no_doc: no,
-                nama: i === 0 && result[0].kategori === 'return' && (level === 5 || level === 9) ? getArea.fullname : null,
-                status: i === 0 && result[0].kategori === 'return' && (level === 5 || level === 9) ? 1 : null
+                nama: cekApp ? getArea.fullname : null,
+                status: cekApp ? 1 : null
               }
               const make = await ttd.create(send)
               if (make) {
@@ -1527,7 +1528,7 @@ module.exports = {
   },
   uploadDocument: async (req, res) => {
     const id = req.params.id
-    const name = req.user.name
+    const fullname = req.user.fullname
     uploadHelper(req, res, async function (err) {
       try {
         if (err instanceof multer.MulterError) {
@@ -1544,7 +1545,7 @@ module.exports = {
         if (result) {
           const send = {
             path: dokumen,
-            status_dokumen: `${result.status_dokumen}, upload by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+            status_dokumen: `${result.status_dokumen}, upload by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
             desc: req.file.originalname
           }
           await result.update(send)
@@ -1609,6 +1610,7 @@ module.exports = {
     try {
       const level = req.user.level
       const name = req.user.name
+      const fullname = req.user.fullname
       const { no } = req.body
       const result = await role.findAll({
         where: {
@@ -1682,7 +1684,7 @@ module.exports = {
                                   const upData = {
                                     status_reject: null,
                                     isreject: null,
-                                    history: `${findIo[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                                    history: `${findIo[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
                                   }
                                   const findId = await pengadaan.findByPk(findIo[i].id)
                                   if (findId) {
@@ -1723,7 +1725,7 @@ module.exports = {
                                   date_fullapp: moment(),
                                   status_reject: null,
                                   isreject: null,
-                                  history: `${findDoc[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                                  history: `${findDoc[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
                                 }
                                 const findAsset = await pengadaan.findByPk(findDoc[i].id)
                                 if (findAsset) {
@@ -1772,7 +1774,7 @@ module.exports = {
                                     const upData = {
                                       status_reject: null,
                                       isreject: null,
-                                      history: `${findIo[i].history}, approved by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                                      history: `${findIo[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
                                     }
                                     const findId = await pengadaan.findByPk(findIo[i].id)
                                     if (findId) {
@@ -3561,7 +3563,7 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
-            status_form: 2,
+            status_form: findData.kategori === 'return' ? 4 : 2,
             status_reject: null,
             isreject: null,
             date_ident_asset: moment(),
@@ -3733,7 +3735,7 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  updateAlasan: async (req, res) => {
+  updateReason: async (req, res) => {
     try {
       const schema = joi.object({
         alasan: joi.string().required(),

@@ -15,7 +15,7 @@ module.exports = {
       }
       const result = await docUser.findByPk(id)
       if (result) {
-        if (no === null) {
+        if (no === null || no === 'undefined' || no === undefined) {
           const url = result.path
           fs.readFile(url, function (err, data) {
             if (err) {

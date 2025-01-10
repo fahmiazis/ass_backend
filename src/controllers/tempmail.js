@@ -153,7 +153,7 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  //   draftEmail: async (req, res) => {
+  //   draftEmail1: async (req, res) => {
   //     try {
   //       const name = req.user.name
   //       const level = req.user.level
@@ -1675,7 +1675,7 @@ module.exports = {
             }
             if (temp.length > 0) {
               let noLevel = null
-              const tipeStat = parseInt(findTrans.status_form) === 1 || parseInt(findTrans.status_form) === 9 ? 5 : 2
+              const tipeStat = (parseInt(findTrans.status_form) === 1 || parseInt(findTrans.status_form) === 9 || (parseInt(findTrans.status_form) === 4 && jenis === 'mutasi')) ? 5 : 2
               // const tipeStat = 5
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
@@ -1843,23 +1843,50 @@ module.exports = {
                   })
                   const cekName = []
                   if (findUser.length > 0) {
-                    let toMail = null
-                    for (let i = 0; i < findUser.length; i++) {
-                      const findName = findUser[i].fullname === null ? '' : findUser[i].fullname
-                      const findEmail = findUser[i].email === null ? '' : findUser[i].email
-                      cekName.push(findName)
-                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                        toMail = findUser[i]
+                    if (jenis === 'mutasi' && (parseInt(noLevel.nomor) === 5 || parseInt(noLevel.nomor) === 9)) {
+                      const findArea = await depo.findOne({
+                        where: {
+                          kode_plant: findTrans.kode_plant_rec
+                        }
+                      })
+                      const listUser = Object.values(findArea.dataValues)
+                      let toMail = null
+                      for (let i = 0; i < findUser.length; i++) {
+                        const findName = findUser[i].fullname === null ? '' : findUser[i].fullname
+                        const findEmail = findUser[i].email === null ? '' : findUser[i].email
+                        cekName.push(findName)
+                        if (listUser.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                          toMail = findUser[i]
+                        }
                       }
-                    }
-                    if (toMail !== null) {
-                      if (findDraft) {
-                        return response(res, 'success get draft email area', { from: name, to: toMail, cc: temp, result: findDraft, findDepo })
+                      if (toMail !== null) {
+                        if (findDraft) {
+                          return response(res, 'success get draft email area', { from: name, to: toMail, cc: temp, result: findDraft, findDepo })
+                        } else {
+                          return response(res, 'failed get emai7l', { toMail, findUser, listUser, cekName }, 404, false)
+                        }
                       } else {
-                        return response(res, 'failed get emai7l', { toMail, findUser, listName, cekName }, 404, false)
+                        return response(res, 'failed get emai6llll', { toMail, findUser, listUser, cekName }, 404, false)
                       }
                     } else {
-                      return response(res, 'failed get emai6llll', { toMail, findUser, listName, cekName }, 404, false)
+                      let toMail = null
+                      for (let i = 0; i < findUser.length; i++) {
+                        const findName = findUser[i].fullname === null ? '' : findUser[i].fullname
+                        const findEmail = findUser[i].email === null ? '' : findUser[i].email
+                        cekName.push(findName)
+                        if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                          toMail = findUser[i]
+                        }
+                      }
+                      if (toMail !== null) {
+                        if (findDraft) {
+                          return response(res, 'success get draft email area', { from: name, to: toMail, cc: temp, result: findDraft, findDepo })
+                        } else {
+                          return response(res, 'failed get emai7l', { toMail, findUser, listName, cekName }, 404, false)
+                        }
+                      } else {
+                        return response(res, 'failed get emai6llll', { toMail, findUser, listName, cekName }, 404, false)
+                      }
                     }
                   } else {
                     return response(res, 'failed get emai5l', { findUser }, 404, false)
@@ -1883,7 +1910,7 @@ module.exports = {
                   }
                 }
               } else {
-                return response(res, 'failed get emai1l', { temp }, 404, false)
+                return response(res, 'failed get emai1l', { temp, listName, findDepo }, 404, false)
               }
             } else {
               return response(res, 'failed get emai2l', { findDraft }, 404, false)
@@ -1957,7 +1984,7 @@ module.exports = {
               // const cekData = findAllTrans.find(({stat_skb}) => stat_skb === 'ya') === undefined ? 'ya' : 'no' // eslint-disable-line
               // const tipeStat = tempStat === 2 ? 2 : 5
               // const tipeStat = cekData === 'ya' ? 2 : 4
-              const tipeStat = jenis === 'pengadaan' ? 8 : 2
+              const tipeStat = jenis === 'pengadaan' && findTrans.kategori === 'return' ? 2 : jenis === 'pengadaan' ? 8 : jenis === 'mutasi' && findTrans.isbudget === 'ya' ? 8 : 2
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
                   where: {
