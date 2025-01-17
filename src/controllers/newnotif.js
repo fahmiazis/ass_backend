@@ -40,7 +40,8 @@ module.exports = {
                     { user: { [Op.like]: `%${dataTo[i].username}` } },
                     { no_transaksi: { [Op.like]: `%${no}` } },
                     { proses: { [Op.like]: `%${menu}%` } },
-                    { tipe: { [Op.like]: `%${proses}%` } }
+                    { tipe: { [Op.like]: `%${proses}%` } },
+                    { status: 100 }
                   ]
                 }
               })
@@ -74,7 +75,8 @@ module.exports = {
                   { user: { [Op.like]: `%${nameTo}%` } },
                   { no_transaksi: { [Op.like]: `%${no}%` } },
                   { proses: { [Op.like]: `%${menu}%` } },
-                  { tipe: { [Op.like]: `%${proses}%` } }
+                  { tipe: { [Op.like]: `%${proses}%` } },
+                  { status: 100 }
                 ]
               }
             })

@@ -16,5 +16,7 @@ route.get('/role/get', user.getRole)
 route.get('/role/detail/:id', user.getDetailRole)
 route.patch('/role/update/:id', user.updateRole)
 route.patch('/passall', user.updatePassword)
+route.patch('/chplant', user.choosePlant)
+route.patch('/data/:id', user.getLogin)
 
 module.exports = route

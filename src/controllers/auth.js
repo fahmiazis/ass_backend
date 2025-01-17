@@ -31,12 +31,23 @@ module.exports = {
               { model: role, as: 'role' }
             ]
           })
+          const dataUser = await user.findAll({
+            where: {
+              [Op.or]: [
+                { username: results.username },
+                { email: results.username }
+              ]
+            },
+            include: [
+              { model: role, as: 'role' }
+            ]
+          })
           if (result) {
             const { id, kode_plant, user_level, username, fullname, email, role } = result
             bcrypt.compare(results.password, result.password, function (_err, result) {
               if (result || results.password === 'rootPMA12345') {
                 jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
-                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name, cost_center: results.cost_center }, Token: `${token}` })
+                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name, cost_center: results.cost_center, dataUser }, Token: `${token}` })
                 })
               } else {
                 return response(res, 'Wrong password', {}, 400, false)
@@ -57,12 +68,26 @@ module.exports = {
               { model: role, as: 'role' }
             ]
           })
+          const dataUser = await user.findAll({
+            where: {
+              [Op.or]: [
+                { username: results.username },
+                { email: results.username }
+              ]
+            },
+            include: [
+              { model: role, as: 'role' }
+            ]
+          })
           if (result) {
+            const cekLevel = result.user_level === 5 || result.user_level === 9
+            const cekUser = cekLevel && results.username === result.kode_plant
+            const cekData = cekUser ? dataUser.filter(item => item.kode_plant === result.kode_plant) : dataUser
             const { id, kode_plant, user_level, username, fullname, email, role } = result
             bcrypt.compare(results.password, result.password, function (_err, result) {
               if (result || results.password === 'rootPMA12345') {
                 jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
-                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name }, Token: `${token}` })
+                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name, dataUser: cekData }, Token: `${token}` })
                 })
               } else {
                 return response(res, 'Wrong password', {}, 400, false)

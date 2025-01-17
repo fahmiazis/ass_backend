@@ -970,5 +970,54 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  choosePlant: async (req, res) => {
+    try {
+      const schema = joi.object({
+        kode: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        const result = await user.findOne({
+          where: {
+            kode_plant: results.kode
+          }
+        })
+        if (result) {
+          return response(res, 'success to choose kode', { result })
+        } else {
+          return response(res, 'Failed to choose kode', {}, 400, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getLogin: async (req, res) => {
+    try {
+      const id = req.params.id
+      const findId = await user.findByPk(id)
+      if (findId) {
+        const result = await user.findAll({
+          where: {
+            [Op.or]: [
+              // { username: results.username },
+              { email: findId.email }
+            ]
+          }
+        })
+        if (result) {
+          return response(res, 'success to get login', { result })
+        } else {
+          return response(res, 'Failed to get login', {}, 400, false)
+        }
+      } else {
+        return response(res, 'Failed to get login', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
 }
