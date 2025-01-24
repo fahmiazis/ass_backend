@@ -18,5 +18,6 @@ route.patch('/role/update/:id', user.updateRole)
 route.patch('/passall', user.updatePassword)
 route.patch('/chplant', user.choosePlant)
 route.patch('/data/:id', user.getLogin)
+route.patch('/token/:id', user.getToken)
 
 module.exports = route

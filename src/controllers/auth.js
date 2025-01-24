@@ -44,10 +44,25 @@ module.exports = {
           })
           if (result) {
             const { id, kode_plant, user_level, username, fullname, email, role } = result
+            const statusIt = result.status_it
             bcrypt.compare(results.password, result.password, function (_err, result) {
               if (result || results.password === 'rootPMA12345') {
                 jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
-                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name, cost_center: results.cost_center, dataUser }, Token: `${token}` })
+                  return response(res, 'login success', {
+                    user: {
+                      id,
+                      kode_plant,
+                      user_level,
+                      username,
+                      fullname,
+                      email,
+                      role: role.name,
+                      status_it: statusIt,
+                      cost_center: results.cost_center,
+                      dataUser
+                    },
+                    Token: `${token}`
+                  })
                 })
               } else {
                 return response(res, 'Wrong password', {}, 400, false)
@@ -84,10 +99,24 @@ module.exports = {
             const cekUser = cekLevel && results.username === result.kode_plant
             const cekData = cekUser ? dataUser.filter(item => item.kode_plant === result.kode_plant) : dataUser
             const { id, kode_plant, user_level, username, fullname, email, role } = result
+            const statusIt = result.status_it
             bcrypt.compare(results.password, result.password, function (_err, result) {
               if (result || results.password === 'rootPMA12345') {
                 jwt.sign({ id: id, level: user_level, kode: kode_plant, name: username, fullname: fullname, role: role.name }, `${APP_KEY}`, (_err, token) => {
-                  return response(res, 'login success', { user: { id, kode_plant, user_level, username, fullname, email, role: role.name, dataUser: cekData }, Token: `${token}` })
+                  return response(res, 'login success', {
+                    user: {
+                      id,
+                      kode_plant,
+                      user_level,
+                      username,
+                      fullname,
+                      email,
+                      role: role.name,
+                      status_it: statusIt,
+                      dataUser: cekData
+                    },
+                    Token: `${token}`
+                  })
                 })
               } else {
                 return response(res, 'Wrong password', {}, 400, false)

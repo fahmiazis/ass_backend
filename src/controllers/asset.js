@@ -1,4 +1,4 @@
-const { asset, path, depo } = require('../models')
+const { asset, path, depo, user } = require('../models')
 const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
@@ -263,7 +263,8 @@ module.exports = {
       const kode = req.user.kode
       const cost = req.user.name
       const level = req.user.level
-      let { limit, page, search, sort, tipe } = req.query
+      const id = req.user.id
+      let { limit, page, search, sort, tipe, area } = req.query
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -296,52 +297,133 @@ module.exports = {
           kode_plant: level === 5 ? kode : cost
         }
       })
+      const detailUser = await user.findOne({
+        where: {
+          id: id
+        }
+      })
       if (findDep) {
+        const listCenter = []
         if (limit === 'all') {
-          const findLimit = await asset.findAll({
+          if (level === 9) {
+            const findUser = await user.findAll({
+              where: {
+                user_level: 9
+              }
+            })
+            for (let i = 0; i < findUser.length; i++) {
+              const data = { cost_center: findUser[i].username }
+              listCenter.push(data)
+            }
+            if (listCenter) {
+              const findLimit = await asset.findAll({
+                where: {
+                  [Op.and]: [
+                    area === 'all' ? { [Op.or]: listCenter } : { cost_center: area },
+                    detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }
+                  ]
+                }
+              })
+              limit = findLimit.length
+            }
+          } else {
+            const findLimit = await asset.findAll({
+              where: {
+                cost_center: findDep.cost_center
+              }
+            })
+            limit = findLimit.length
+          }
+        }
+        if (level === 9) {
+          const findUser = await user.findAll({
             where: {
-              cost_center: findDep.cost_center
+              user_level: 9
             }
           })
-          limit = findLimit.length
-        }
-        const result = await asset.findAndCountAll({
-          where: {
-            [Op.and]: [
-              { cost_center: findDep.cost_center },
+          const listData = []
+          for (let i = 0; i < findUser.length; i++) {
+            const data = { cost_center: findUser[i].username }
+            listData.push(data)
+          }
+          const result = await asset.findAndCountAll({
+            where: {
+              [Op.and]: [
+                area === 'all' ? { [Op.or]: listData } : { cost_center: area },
+                detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' },
+                {
+                  [Op.or]: [
+                    { status: '1' },
+                    { status: '11' },
+                    { status: null }
+                  ]
+                }
+              ],
+              [Op.or]: [
+                { no_asset: { [Op.like]: `%${searchValue}` } },
+                { nama_asset: { [Op.like]: `%${searchValue}` } }
+              ]
+              // [Op.not]: { status: '0' }
+            },
+            include: [
               {
-                [Op.or]: [
-                  { status: '1' },
-                  { status: '11' },
-                  { status: null }
-                ]
+                model: path,
+                as: 'pict'
               }
             ],
-            [Op.or]: [
-              { no_asset: { [Op.like]: `%${searchValue}` } },
-              { nama_asset: { [Op.like]: `%${searchValue}` } }
-            ]
-            // [Op.not]: { status: '0' }
-          },
-          include: [
-            {
-              model: path,
-              as: 'pict'
-            }
-          ],
-          order: [
-            [sortValue, 'ASC'],
-            [{ model: path, as: 'pict' }, 'id', 'ASC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit,
-          distinct: true
-        })
-        const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
-        if (result) {
-          return response(res, 'list asset', { result, pageInfo })
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: path, as: 'pict' }, 'id', 'ASC']
+            ],
+            limit: limit,
+            offset: (page - 1) * limit,
+            distinct: true
+          })
+          const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
+          if (result) {
+            return response(res, 'list asset', { result, pageInfo, level: level === 9, listData, area })
+          } else {
+            return response(res, 'failed to get asset', {}, 404, false)
+          }
         } else {
-          return response(res, 'failed to get asset', {}, 404, false)
+          const result = await asset.findAndCountAll({
+            where: {
+              [Op.and]: [
+                { cost_center: findDep.cost_center },
+                {
+                  [Op.or]: [
+                    { status: '1' },
+                    { status: '11' },
+                    { status: null }
+                  ]
+                }
+              ],
+              [Op.or]: [
+                { no_asset: { [Op.like]: `%${searchValue}` } },
+                { nama_asset: { [Op.like]: `%${searchValue}` } }
+              ]
+              // [Op.not]: { status: '0' }
+            },
+            include: [
+              {
+                model: path,
+                as: 'pict'
+              }
+            ],
+            order: [
+              [sortValue, 'ASC'],
+              [{ model: path, as: 'pict' }, 'id', 'ASC']
+            ],
+            limit: limit,
+            offset: (page - 1) * limit,
+            distinct: true
+          })
+          const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
+          if (result) {
+            return response(res, 'list asset', { result, pageInfo })
+          } else {
+            return response(res, 'failed to get asset', {}, 404, false)
+          }
         }
       } else {
         return response(res, 'failed to get asset', {}, 404, false)

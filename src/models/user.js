@@ -25,7 +25,8 @@ module.exports = (sequelize, DataTypes) => {
     password: DataTypes.STRING,
     kode_plant: DataTypes.STRING,
     user_level: DataTypes.INTEGER,
-    status: DataTypes.ENUM('active', 'inactive')
+    status: DataTypes.ENUM('active', 'inactive'),
+    status_it: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'user'
