@@ -1,4 +1,4 @@
-const { stock, asset, clossing, ttd, approve, role, user, path, depo, status_stock, docUser, document, reservoir } = require('../models')
+const { stock, asset, clossing, ttd, approve, role, user, path, depo, status_stock, docUser, document, reservoir } = require('../models') // eslint-disable-line
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const moment = require('moment')
@@ -39,17 +39,17 @@ module.exports = {
         if (parseInt(time[1]) > end && parseInt(time[1]) < start) {
           return response(res, 'Belum saatnya atau waktu telah terlewat untuk stock opname', {}, 404, false)
         } else {
-          let awal = ''
-          let akhir = ''
-          if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-            const next = moment().subtract(1, 'month').format('L').split('/')
-            akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
-            awal = `${next[2]}-${next[0]}-${findClose[0].start}`
-          } else {
-            const next = moment().add(1, 'month').format('L').split('/')
-            awal = `${time[2]}-${time[0]}-${findClose[0].start}`
-            akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
-          }
+          // let awal = ''
+          // let akhir = ''
+          // if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+          //   const next = moment().subtract(1, 'month').format('L').split('/')
+          //   akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
+          //   awal = `${next[2]}-${next[0]}-${findClose[0].start}`
+          // } else {
+          //   const next = moment().add(1, 'month').format('L').split('/')
+          //   awal = `${time[2]}-${time[0]}-${findClose[0].start}`
+          //   akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
+          // }
           const findStock = await stock.findOne({
             where: {
               [Op.and]: [
@@ -342,7 +342,17 @@ module.exports = {
           where: {
             no_stock: no,
             status_form: null
-          }
+          },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            },
+            {
+              model: path,
+              as: 'img'
+            }
+          ]
         })
         const findAsset = await asset.findAll({
           where: {
@@ -355,18 +365,60 @@ module.exports = {
           }
         })
         if (findStock && findAsset) {
+          const cekDoc = []
           const temp = []
           for (let i = 0; i < findStock.length; i++) {
-            const data = {
-              status_form: 1,
-              history: `approved by ${role} (${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
-              tglIo: moment(),
-              status_app: 1
-            }
-            const findData = await stock.findByPk(findStock[i].id)
-            if (findData) {
-              await findData.update(data)
-              temp.push(findData)
+            const item = findStock[i]
+            const cekPict = item.pict !== undefined && item.pict.length !== 0
+            const cekImg = item.img !== undefined && item.img.length !== 0
+            const pict = item.pict.length !== 0 && item.pict[item.pict.length - 1].path
+            const img = item.img.length !== 0 && item.img[item.img.length - 1].path
+            const findDoc = await docUser.findAll({
+              where: {
+                [Op.and]: [
+                  { no_stock: item.no_asset }
+                ]
+              },
+              include: [
+                {
+                  model: stock,
+                  as: 'stock'
+                }
+              ]
+            })
+            if (findDoc.length > 0 && findDoc.find(item => item.stock === null) !== undefined) {
+              const validDoc = findDoc.filter(item => item.stock === null)
+              for (let j = 0; j < validDoc.length; j++) {
+                const data = {
+                  status_form: 1,
+                  history: `approved by ${role} (${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
+                  tglIo: moment(),
+                  status_app: 1,
+                  image: cekPict ? pict : cekImg ? img : null,
+                  date_img: moment(),
+                  id_doc: validDoc[j].id
+                }
+                const findData = await stock.findByPk(findStock[i].id)
+                if (findData) {
+                  await findData.update(data)
+                  temp.push(findData)
+                  cekDoc.push(validDoc[j])
+                }
+              }
+            } else {
+              const data = {
+                status_form: 1,
+                history: `approved by ${role} (${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
+                tglIo: moment(),
+                status_app: 1,
+                image: cekPict ? pict : cekImg ? img : null,
+                date_img: moment()
+              }
+              const findData = await stock.findByPk(findStock[i].id)
+              if (findData) {
+                await findData.update(data)
+                temp.push(findData)
+              }
             }
           }
           if (temp.length > 0) {
@@ -395,9 +447,9 @@ module.exports = {
                 createdAt: moment()
               }
               await findNewReser.update(upDataReser)
-              return response(res, 'success submit stock opname', { updateAsset, findNewReser })
+              return response(res, 'success submit stock opname', { updateAsset, findNewReser, cekDoc })
             } else {
-              return response(res, 'success submit stock opname')
+              return response(res, 'success submit stock opname', { cekDoc })
             }
           } else {
             return response(res, 'failed submit stock opname4', {}, 404, false)
@@ -415,89 +467,191 @@ module.exports = {
   getDocument: async (req, res) => {
     try {
       const no = req.params.no
+      const id = req.params.id
       const results = await asset.findOne({
         where: {
           no_asset: no
         }
       })
-      if (results) {
-        const findClose = await clossing.findAll({
-          where: {
-            jenis: 'stock'
-          }
-        })
-        if (findClose.length > 0) {
-          const time = moment().format('L').split('/')
-          let start = ''
-          let end = ''
-          if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-            const next = moment().subtract(1, 'month').format('L').split('/')
-            end = `${time[2]}-${time[0]}-${findClose[0].end}`
-            start = `${next[2]}-${next[0]}-${findClose[0].start}`
-          } else {
-            const next = moment().add(1, 'month').format('L').split('/')
-            start = `${time[2]}-${time[0]}-${findClose[0].start}`
-            end = `${next[2]}-${next[0]}-${findClose[0].end}`
-          }
-          const result = await docUser.findAll({
+      const cekId = id === undefined || id === '' || id === 'undefined' || id === null
+      if (cekId) {
+        if (results) {
+          const findClose = await clossing.findAll({
             where: {
-              [Op.and]: [
-                { no_stock: no },
-                {
-                  periode: {
-                    [Op.lte]: end,
-                    [Op.gte]: start
-                  }
-                }
-              ]
+              jenis: 'stock'
             }
           })
-          if (result.length > 0) {
-            return response(res, 'success get document', { result })
-          } else {
-            const getDoc = await document.findAll({
+          if (findClose.length > 0) {
+            // const time = moment().format('L').split('/')
+            // let start = ''
+            // let end = ''
+            // if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+            //   const next = moment().subtract(1, 'month').format('L').split('/')
+            //   end = `${time[2]}-${time[0]}-${findClose[0].end}`
+            //   start = `${next[2]}-${next[0]}-${findClose[0].start}`
+            // } else {
+            //   const next = moment().add(1, 'month').format('L').split('/')
+            //   start = `${time[2]}-${time[0]}-${findClose[0].start}`
+            //   end = `${next[2]}-${next[0]}-${findClose[0].end}`
+            // }
+            const result = await docUser.findAll({
               where: {
                 [Op.and]: [
-                  { tipe_dokumen: 'stock' },
-                  {
-                    [Op.or]: [
-                      { tipe: 'pengajuan' }
-                    ]
-                  }
+                  { no_stock: no }
+                  // {
+                  //   periode: {
+                  //     [Op.lte]: end,
+                  //     [Op.gte]: start
+                  //   }
+                  // }
                 ]
-              }
+              },
+              include: [
+                {
+                  model: stock,
+                  as: 'stock'
+                }
+              ]
             })
-            if (getDoc) {
-              const hasil = []
-              for (let i = 0; i < getDoc.length; i++) {
-                const send = {
-                  nama_dokumen: getDoc[i].nama_dokumen,
-                  jenis_dokumen: getDoc[i].jenis_dokumen,
-                  divisi: getDoc[i].divisi,
-                  no_stock: no,
-                  tipe: 'pengajuan',
-                  path: null,
-                  periode: start
+            if (result.length > 0 && result.find(item => item.stock === null) !== undefined) {
+              const data = result.filter(item => item.stock === null)
+              return response(res, 'success get document1', { result: data })
+            } else {
+              const getDoc = await document.findAll({
+                where: {
+                  [Op.and]: [
+                    { tipe_dokumen: 'stock' },
+                    {
+                      [Op.or]: [
+                        { tipe: 'pengajuan' }
+                      ]
+                    }
+                  ]
                 }
-                const make = await docUser.create(send)
-                if (make) {
-                  hasil.push(make)
+              })
+              if (getDoc) {
+                const hasil = []
+                for (let i = 0; i < getDoc.length; i++) {
+                  const send = {
+                    nama_dokumen: getDoc[i].nama_dokumen,
+                    jenis_dokumen: getDoc[i].jenis_dokumen,
+                    divisi: getDoc[i].divisi,
+                    no_stock: no,
+                    tipe: 'pengajuan',
+                    path: null
+                    // periode: start
+                  }
+                  const make = await docUser.create(send)
+                  if (make) {
+                    hasil.push(make)
+                  }
                 }
-              }
-              if (hasil.length === getDoc.length) {
-                return response(res, 'success get document', { result: hasil })
+                if (hasil.length === getDoc.length) {
+                  return response(res, 'success get document2', { result: hasil, cekRes: result })
+                } else {
+                  return response(res, 'failed get data', {}, 404, false)
+                }
               } else {
                 return response(res, 'failed get data', {}, 404, false)
               }
-            } else {
-              return response(res, 'failed get data', {}, 404, false)
             }
+          } else {
+            return response(res, 'Failed get document 2', {}, 400, false)
           }
         } else {
-          return response(res, 'Failed get document 2', {}, 400, false)
+          return response(res, 'Failed get document 1', {}, 400, false)
         }
       } else {
-        return response(res, 'Failed get document 1', {}, 400, false)
+        if (results) {
+          const findClose = await clossing.findAll({
+            where: {
+              jenis: 'stock'
+            }
+          })
+          if (findClose.length > 0) {
+            // const time = moment().format('L').split('/')
+            // let start = ''
+            // let end = ''
+            // if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+            //   const next = moment().subtract(1, 'month').format('L').split('/')
+            //   end = `${time[2]}-${time[0]}-${findClose[0].end}`
+            //   start = `${next[2]}-${next[0]}-${findClose[0].start}`
+            // } else {
+            //   const next = moment().add(1, 'month').format('L').split('/')
+            //   start = `${time[2]}-${time[0]}-${findClose[0].start}`
+            //   end = `${next[2]}-${next[0]}-${findClose[0].end}`
+            // }
+            const findStock = await stock.findByPk(id)
+            if (findStock) {
+              const result = await docUser.findAll({
+                where: {
+                  [Op.and]: [
+                    { no_stock: no },
+                    { id: findStock.id_doc }
+                    // {
+                    //   periode: {
+                    //     [Op.lte]: end,
+                    //     [Op.gte]: start
+                    //   }
+                    // }
+                  ]
+                }
+              })
+              if (result.length > 0) {
+                return response(res, 'success get document3', { result })
+              } else {
+                const getDoc = await document.findAll({
+                  where: {
+                    [Op.and]: [
+                      { tipe_dokumen: 'stock' },
+                      {
+                        [Op.or]: [
+                          { tipe: 'pengajuan' }
+                        ]
+                      }
+                    ]
+                  }
+                })
+                if (getDoc) {
+                  const hasil = []
+                  for (let i = 0; i < getDoc.length; i++) {
+                    const send = {
+                      nama_dokumen: getDoc[i].nama_dokumen,
+                      jenis_dokumen: getDoc[i].jenis_dokumen,
+                      divisi: getDoc[i].divisi,
+                      no_stock: no,
+                      tipe: 'pengajuan',
+                      path: null
+                      // periode: start
+                    }
+
+                    const addData = await docUser.create(send)
+                    if (addData) {
+                      const data = {
+                        id_doc: addData.id
+                      }
+                      await findStock.update(data)
+                      hasil.push(addData)
+                    }
+                  }
+                  if (hasil.length === getDoc.length) {
+                    return response(res, 'success get document4', { result: hasil })
+                  } else {
+                    return response(res, 'failed get data', {}, 404, false)
+                  }
+                } else {
+                  return response(res, 'failed get data', {}, 404, false)
+                }
+              }
+            } else {
+              return response(res, 'Failed get document 3', {}, 400, false)
+            }
+          } else {
+            return response(res, 'Failed get document 2', {}, 400, false)
+          }
+        } else {
+          return response(res, 'Failed get document 1', {}, 400, false)
+        }
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -586,18 +740,18 @@ module.exports = {
         }
       })
       if (findClose.length > 0) {
-        const time = moment().format('L').split('/')
-        let start = ''
-        let end = ''
-        if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-          const next = moment().subtract(1, 'month').format('L').split('/')
-          end = `${time[2]}-${time[0]}-${findClose[0].end}`
-          start = `${next[2]}-${next[0]}-${findClose[0].start}`
-        } else {
-          const next = moment().add(1, 'month').format('L').split('/')
-          start = `${time[2]}-${time[0]}-${findClose[0].start}`
-          end = `${next[2]}-${next[0]}-${findClose[0].end}`
-        }
+        // const time = moment().format('L').split('/')
+        // let start = ''
+        // let end = ''
+        // if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+        //   const next = moment().subtract(1, 'month').format('L').split('/')
+        //   end = `${time[2]}-${time[0]}-${findClose[0].end}`
+        //   start = `${next[2]}-${next[0]}-${findClose[0].start}`
+        // } else {
+        //   const next = moment().add(1, 'month').format('L').split('/')
+        //   start = `${time[2]}-${time[0]}-${findClose[0].start}`
+        //   end = `${next[2]}-${next[0]}-${findClose[0].end}`
+        // }
         const result = await stock.findAndCountAll({
           where: {
             [Op.and]: [
@@ -1486,21 +1640,77 @@ module.exports = {
           return response(res, err.message, {}, 401, false)
         }
         const dokumen = `uploads/${req.file.filename}`
-        const findAsset = await stock.findByPk(no)
-        if (findAsset) {
-          const send = {
-            path: dokumen,
-            no_asset: no,
-            no_doc: 'opname'
-          }
-          const result = await path.create(send)
-          if (result) {
-            return response(res, 'successfully upload', { send })
+        const findStock = await stock.findByPk(no)
+        if (findStock) {
+          if (findStock.no_asset !== undefined && findStock.no_asset !== null && findStock.no_asset !== '') {
+            const send = {
+              path: dokumen,
+              no_asset: findStock.no_asset,
+              no_doc: 'opname'
+            }
+            const data = {
+              image: dokumen,
+              date_img: moment()
+            }
+            const result = await path.create(send)
+            const updateStock = await findStock.update(data)
+            if (result && updateStock) {
+              return response(res, 'successfully upload', { send })
+            } else {
+              return response(res, 'failed upload', {}, 404, false)
+            }
           } else {
-            return response(res, 'failed upload', {}, 404, false)
+            const send = {
+              path: dokumen,
+              no_asset: no,
+              no_doc: 'opname'
+            }
+            const data = {
+              image: dokumen,
+              date_img: moment()
+            }
+            const result = await path.create(send)
+            const updateStock = await findStock.update(data)
+            if (result && updateStock) {
+              return response(res, 'successfully upload', { send })
+            } else {
+              return response(res, 'failed upload', {}, 404, false)
+            }
           }
         } else {
           return response(res, 'failed upload', {}, 404, false)
+        }
+      } catch (error) {
+        return response(res, error.message, {}, 500, false)
+      }
+    })
+  },
+  uploadDocument: async (req, res) => {
+    const id = req.params.id
+    const fullname = req.user.fullname
+    uploadHelper(req, res, async function (err) {
+      try {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            return response(res, 'fieldname doesnt match', {}, 500, false)
+          }
+          return response(res, err.message, {}, 500, false)
+        } else if (err) {
+          return response(res, err.message, {}, 401, false)
+        }
+        const dokumen = `assets/documents/${req.file.filename}`
+        const result = await docUser.findByPk(id)
+        if (result) {
+          const send = {
+            path: dokumen,
+            status_dokumen: `${result.status_dokumen}, upload by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')};`,
+            desc: req.file.originalname
+          }
+          await result.update(send)
+          return response(res, 'successfully upload dokumen', { send })
+        } else {
+          return response(res, 'failed upload dokumen', {}, 404, false)
         }
       } catch (error) {
         return response(res, error.message, {}, 500, false)
@@ -2133,6 +2343,66 @@ module.exports = {
         } else {
           return response(res, 'failed export stock', {}, 404, false)
         }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateImageStock: async (req, res) => {
+    try {
+      const { no } = req.body
+      const kode = req.user.kode
+      const cost = req.user.name
+      const level = req.user.level
+      const findArea = await depo.findOne({
+        where: {
+          kode_plant: level === 5 ? kode : cost
+        }
+      })
+      if (findArea) {
+        const findStock = await stock.findAll({
+          where: {
+            no_stock: no,
+            status_form: null
+          },
+          include: [
+            {
+              model: path,
+              as: 'pict'
+            },
+            {
+              model: path,
+              as: 'img'
+            }
+          ]
+        })
+        if (findStock) {
+          const temp = []
+          for (let i = 0; i < findStock.length; i++) {
+            const item = findStock[i]
+            const cekPict = item.pict !== undefined && item.pict.length !== 0
+            const cekImg = item.img !== undefined && item.img.length !== 0
+            const pict = item.pict.length !== 0 && item.pict[item.pict.length - 1].path
+            const img = item.img.length !== 0 && item.img[item.img.length - 1].path
+            const data = {
+              image: cekPict ? pict : cekImg ? img : null
+            }
+            const findData = await stock.findByPk(findStock[i].id)
+            if (findData) {
+              await findData.update(data)
+              temp.push(findData)
+            }
+          }
+          if (temp.length > 0) {
+            return response(res, 'success update image stock opname')
+          } else {
+            return response(res, 'failed update image stock opname4', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed update image stock opname5', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed update image stock opname6', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

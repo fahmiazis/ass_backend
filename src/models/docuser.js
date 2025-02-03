@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_pengadaan',
         as: 'disposal'
       })
+      docUser.hasOne(models.stock, {
+        foreignKey: 'id_doc',
+        sourceKey: 'id',
+        as: 'stock'
+      })
     }
   };
   docUser.init({

@@ -36,6 +36,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'kode_plant',
         as: 'depo'
       })
+      stock.hasOne(models.docUser, {
+        foreignKey: 'id',
+        as: 'doc',
+        sourceKey: 'id_doc'
+      })
     }
   };
   stock.init({
@@ -61,7 +66,10 @@ module.exports = (sequelize, DataTypes) => {
     isreject: DataTypes.INTEGER,
     menu_rev: DataTypes.STRING,
     user_reject: DataTypes.INTEGER,
-    history: DataTypes.TEXT
+    history: DataTypes.TEXT,
+    image: DataTypes.STRING,
+    date_img: DataTypes.DATE,
+    id_doc: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'stock'
