@@ -1,8 +1,10 @@
-const cekNo = 'https://pods.pinusmerahabadi.co.id/storage/attachments/ticketing/barangjasa/P01-LPG1-2609240303/item9011/files/Armada_Aset_Penawaran_resmi_dari_2_vendor_(dilengkapi_KTP_dan_NPWP)_Area_LAMPUNG.pdf'
-const tes = 'assets/documents/1656572534470.pdf'
+const moment = require('moment')
 
-const url = cekNo.split('localhost:8000')
-const res = tes.split('/')
-const cek = cekNo.search('printPR')
+const item = {
+  tgl_faktur: '2023-03-30T17:00:00.000Z'
+}
+const king = moment().format('YYYY') - moment(item.tgl_faktur).format('YYYY') > 1
+const num = moment().format('YYYY') - moment(item.tgl_faktur).format('YYYY') === 1 && moment().format('M') <= 3 && Math.abs((parseInt(moment().format('M')) + 12) - moment(item.tgl_faktur).format('M'))
 
-console.log(url.length, res.length, cek)
+console.log(num)
+console.log(king)

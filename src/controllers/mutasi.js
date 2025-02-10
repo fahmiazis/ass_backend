@@ -292,7 +292,11 @@ module.exports = {
                   { kode_plant_rec: level === '5' ? kode : cost }
                 ]
               },
-              statTrans === 'all' ? { [Op.not]: { no_mutasi: null } } : { status_form: `${statTrans}` },
+              statTrans === 'all'
+                ? { [Op.not]: { no_mutasi: null } }
+                : statTrans === 'revisi'
+                  ? { status_reject: 1 }
+                  : { status_form: `${statTrans}` },
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
@@ -1609,9 +1613,12 @@ module.exports = {
         })
         if (findDis) {
           const cekIt = []
+          const cekNonIt = []
           for (let i = 0; i < findDis.length; i++) {
             if (findDis[i].kategori === 'IT') {
               cekIt.push(1)
+            } else if (findDis[i].kategori === 'NON IT') {
+              cekNonIt.push(1)
             }
           }
           const getDepo = await depo.findOne({
@@ -1623,7 +1630,7 @@ module.exports = {
             where: {
               nama_approve: nama,
               [Op.or]: [
-                { jenis: cekIt.length > 0 ? 'it' : 'all' },
+                { jenis: cekIt.length > 0 ? 'it' : cekNonIt.length > 0 ? 'non-it' : 'all' },
                 { jenis: 'all' }
               ]
             }
