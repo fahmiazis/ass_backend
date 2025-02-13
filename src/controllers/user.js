@@ -923,11 +923,11 @@ module.exports = {
             [Op.or]: [
               // { username: results.username },
               { email: findId.email }
-            ],
-            include: [
-              { model: role, as: 'role' }
             ]
-          }
+          },
+          include: [
+            { model: role, as: 'role' }
+          ]
         })
         if (result) {
           return response(res, 'success to get login', { result })
