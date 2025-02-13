@@ -135,6 +135,7 @@ module.exports = {
     try {
       const name = req.user.name
       const fullname = req.user.fullname
+      const kode = req.user.kode
       const level = req.user.level
       const timeV1 = moment().startOf('month')
       const timeV2 = moment().endOf('month').add(1, 'd')
@@ -145,7 +146,7 @@ module.exports = {
             {
               [Op.or]: [
                 { user: { [Op.like]: `%${name}%` } },
-                { user: { [Op.like]: `%${level === 5 || level === '5' ? name : fullname}%` } }
+                level === 5 || level === '5' ? { kode_plant: { [Op.like]: `%${kode}%` } } : { user: { [Op.like]: `%${fullname}%` } }
               ],
               createdAt: {
                 [Op.gte]: timeV1,
