@@ -923,6 +923,9 @@ module.exports = {
             [Op.or]: [
               // { username: results.username },
               { email: findId.email }
+            ],
+            include: [
+              { model: role, as: 'role' }
             ]
           }
         })
