@@ -135,6 +135,7 @@ module.exports = {
     try {
       const name = req.user.name
       const fullname = req.user.fullname
+      const level = req.user.level
       const timeV1 = moment().startOf('month')
       const timeV2 = moment().endOf('month').add(1, 'd')
       const { tipe } = req.query
@@ -144,7 +145,7 @@ module.exports = {
             {
               [Op.or]: [
                 { user: { [Op.like]: `%${name}%` } },
-                { user: { [Op.like]: `%${fullname}%` } }
+                { user: { [Op.like]: `%${level === 5 || level === '5' ? name : fullname}%` } }
               ],
               createdAt: {
                 [Op.gte]: timeV1,
