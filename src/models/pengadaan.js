@@ -73,7 +73,10 @@ module.exports = (sequelize, DataTypes) => {
     date_fullapp: DataTypes.DATE,
     date_budget: DataTypes.DATE,
     date_eksekusi: DataTypes.DATE,
-    no_ref: DataTypes.STRING
+    no_ref: DataTypes.STRING,
+    user_rev: DataTypes.STRING,
+    pic_aset: DataTypes.STRING,
+    pic_budget: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'pengadaan'

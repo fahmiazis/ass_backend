@@ -143,11 +143,30 @@ module.exports = {
       const findNotif = await newnotif.findAll({
         where: {
           [Op.and]: [
+            level === 5 || level === '5'
+              ? {
+                  [Op.and]: [
+                    {
+                      [Op.or]: [
+                        { user: { [Op.like]: `%${name}%` } },
+                        { user: { [Op.like]: `%${fullname}%` } }
+                      ]
+                    },
+                    {
+                      [Op.or]: [
+                        { kode_plant: { [Op.like]: `%${kode}%` } },
+                        { proses: { [Op.like]: '%mutasi asset%' } }
+                      ]
+                    }
+                  ]
+                }
+              : {
+                  [Op.or]: [
+                    { user: { [Op.like]: `%${name}%` } },
+                    { user: { [Op.like]: `%${fullname}%` } }
+                  ]
+                },
             {
-              [Op.or]: [
-                { user: { [Op.like]: `%${name}%` } },
-                level === 5 || level === '5' ? { kode_plant: { [Op.like]: `%${kode}%` } } : { user: { [Op.like]: `%${fullname}%` } }
-              ],
               createdAt: {
                 [Op.gte]: timeV1,
                 [Op.lt]: timeV2

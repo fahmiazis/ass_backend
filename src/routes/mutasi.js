@@ -25,5 +25,8 @@ route.patch('/upstat/:id', mutasi.updateEksekusi)
 route.patch('/changeDate', mutasi.updateDate)
 route.patch('/subedit', mutasi.submitEditMutasi)
 route.delete('/delapp', mutasi.deleteApprove)
+route.patch('/apprev/:id/:type', mutasi.appRevisi)
+route.patch('/subrev', mutasi.submitRevisi)
+route.patch('/upreason', mutasi.updateReason)
 
 module.exports = route

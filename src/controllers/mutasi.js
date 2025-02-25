@@ -305,6 +305,7 @@ module.exports = {
                       [Op.lt]: timeV2
                     }
                   },
+              statTrans === 'revisi' && { [Op.not]: { status_form: 0 } },
               { [Op.not]: { status_form: 1 } },
               { [Op.not]: { no_mutasi: null } }
             ],
@@ -1797,6 +1798,8 @@ module.exports = {
                       for (let i = 0; i < findTrans.length; i++) {
                         const data = {
                           status_form: findTrans[i].status_form,
+                          status_reject: null,
+                          isreject: null,
                           history: `${findTrans[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
                         }
                         const findAsset = await mutasi.findByPk(findTrans[i].id)
@@ -1852,6 +1855,8 @@ module.exports = {
                           for (let i = 0; i < findTrans.length; i++) {
                             const data = {
                               status_form: results.length === find.length && findTrans[i].isbudget === 'ya' ? 3 : results.length === find.length && findTrans[i].isbudget !== 'ya' ? 4 : findTrans[i].status_form,
+                              status_reject: null,
+                              isreject: null,
                               history: `${findTrans[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
                             }
                             const findData = await mutasi.findByPk(findTrans[i].id)
@@ -1907,7 +1912,8 @@ module.exports = {
         menu: joi.string().required(),
         list: joi.array(),
         type: joi.string(),
-        type_reject: joi.string()
+        type_reject: joi.string(),
+        user_rev: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -1929,17 +1935,19 @@ module.exports = {
             }
           })
           if (findDis.length > 0) {
+            const userRev = results.user_rev === '' || results.user_rev === null || results.user_rev === 'null' || results.user_rev === 'undefined' || results.user_rev === undefined ? findDis[0].kode_plant : results.user_rev
             if (results.type === 'verif') {
               const temp = []
               for (let i = 0; i < findDis.length; i++) {
                 const send = {
-                  status_form: results.type_reject === 'pembatalan' ? '0' : findDis[i].status_form,
+                  status_form: results.type_reject === 'pembatalan' ? 0 : findDis[i].status_form,
                   status_reject: 1,
                   isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                   reason: results.alasan,
                   menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
                   user_reject: level,
-                  history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
+                  history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`,
+                  user_rev: userRev
                 }
                 const findData = await mutasi.findByPk(findDis[i].id)
                 if (findData) {
@@ -2000,19 +2008,20 @@ module.exports = {
                             if (findDoc) {
                               const cek = []
                               for (let i = 0; i < findDis.length; i++) {
-                                const findIo = await mutasi.findByPk(findDis[i].id)
+                                const findMut = await mutasi.findByPk(findDis[i].id)
                                 const data = {
-                                  status_form: results.type_reject === 'pembatalan' ? '0' : findDis[i].status_form,
+                                  status_form: results.type_reject === 'pembatalan' ? 0 : findDis[i].status_form,
                                   status_reject: 1,
                                   isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                                   reason: results.alasan,
                                   menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
                                   user_reject: level,
-                                  history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
+                                  history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`,
+                                  user_rev: userRev
                                 }
-                                if (findIo) {
-                                  const updateIo = await findIo.update(data)
-                                  if (updateIo) {
+                                if (findMut) {
+                                  const updateMut = await findMut.update(data)
+                                  if (updateMut) {
                                     cek.push(1)
                                   }
                                 }
@@ -2977,6 +2986,7 @@ module.exports = {
   submitEks: async (req, res) => {
     try {
       const no = req.body.no
+      const fullname = req.user.fullname
       const findMut = await mutasi.findAll({
         where: {
           [Op.and]: [
@@ -2989,7 +2999,11 @@ module.exports = {
         for (let i = 0; i < findMut.length; i++) {
           const data = {
             status_form: 8,
-            tgl_mutasisap: moment()
+            status_reject: null,
+            isreject: null,
+            tgl_mutasisap: moment(),
+            pic_aset: fullname,
+            history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           const send = {
             kode_plant: findMut[i].kode_plant_rec,
@@ -3429,6 +3443,172 @@ module.exports = {
   //     return response(res, error.message, {}, 500, false)
   //   }
   // },
+  updateReason: async (req, res) => {
+    try {
+      const { alasan, no } = req.body
+      const findData = await mutasi.findAll({
+        where: {
+          no_mutasi: no
+        }
+      })
+      if (findData.length > 0) {
+        const data = {
+          alasan: alasan
+        }
+        const cekData = []
+        for (let i = 0; i < findData.length; i++) {
+          const findMut = await mutasi.findByPk(findData[i].id)
+          if (findMut) {
+            const updateData = await findMut.update(data)
+            if (updateData) {
+              cekData.push(updateData)
+            }
+          }
+        }
+        if (cekData.length > 0) {
+          return response(res, 'success update mutasi', { updateData: cekData })
+        } else {
+          return response(res, 'failed update mutasi1', {}, 400, false)
+        }
+      } else {
+        return response(res, 'failed update mutasi2', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  appRevisi: async (req, res) => {
+    try {
+      const id = req.params.id
+      const type = req.params.type
+      const findMut = await mutasi.findByPk(id)
+      if (findMut) {
+        const data = {
+          isreject: 0
+        }
+        if (type === 'reason') {
+          const findData = await mutasi.findAll({
+            where: {
+              no_mutasi: findMut.no_mutasi
+            }
+          })
+          if (findData.length > 0) {
+            const cekData = []
+            for (let i = 0; i < findData.length; i++) {
+              const findUpdate = await mutasi.findByPk(findData[i].id)
+              if (findUpdate) {
+                await findUpdate.update(data)
+                cekData.push(findUpdate)
+              }
+            }
+            if (cekData.length > 0) {
+              return response(res, 'success submit app revisi')
+            } else {
+              return response(res, 'failed submit', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
+        } else {
+          const updateMut = await findMut.update(data)
+          if (updateMut) {
+            return response(res, 'success submit app revisi')
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitRevisi: async (req, res) => {
+    try {
+      const { no } = req.body
+      const fullname = req.user.fullname
+      const findMut = await mutasi.findAll({
+        where: {
+          no_mutasi: no
+        }
+      })
+      if (findMut.length > 0) {
+        if (findMut[0].status_form === 2) {
+          const findSign = await ttd.findAll({
+            where: {
+              no_doc: no
+            }
+          })
+          if (findSign.length > 0) {
+            const cekSign = []
+            for (let i = 0; i < findSign.length; i++) {
+              if (findSign[i].sebagai === 'pembuat' || findSign[i].sebagai === 'penerima' || findSign[i].jabatan === 'area' || findSign[i].jabatan === 'aos') {
+                cekSign.push(findSign[i])
+              } else {
+                const data = {
+                  status: null,
+                  nama: null
+                }
+                const findId = await ttd.findByPk(findSign[i].id)
+                if (findId) {
+                  await findId.update(data)
+                  cekSign.push(findId)
+                }
+              }
+            }
+            if (cekSign.length > 0) {
+              const cek = []
+              for (let i = 0; i < findMut.length; i++) {
+                const findData = await mutasi.findByPk(findMut[i].id)
+                const data = {
+                  status_reject: 0,
+                  isreject: null,
+                  history: `${findMut[i].history}, submit revisi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                }
+                if (findData) {
+                  await findData.update(data)
+                  cek.push(1)
+                }
+              }
+              if (cek.length > 0) {
+                return response(res, 'success submit revisi')
+              } else {
+                return response(res, 'failed submit', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed submit', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
+        } else {
+          const cek = []
+          for (let i = 0; i < findMut.length; i++) {
+            const findData = await mutasi.findByPk(findMut[i].id)
+            const data = {
+              status_reject: 0,
+              isreject: null,
+              history: `${findMut[i].history}, submit revisi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+            }
+            if (findData) {
+              await findData.update(data)
+              cek.push(1)
+            }
+          }
+          if (cek.length > 0) {
+            return response(res, 'success submit revisi')
+          } else {
+            return response(res, 'failed submit', {}, 404, false)
+          }
+        }
+      } else {
+        return response(res, 'failed submit', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   submitBudget: async (req, res) => {
     try {
       // const level = req.user.level

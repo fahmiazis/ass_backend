@@ -1243,9 +1243,10 @@ module.exports = {
           }
         })
         if (result) {
+          const kodePlant = result[0].kode_plant
           const getApp = await approve.findAll({
             where: {
-              nama_approve: 'pengadaan io',
+              nama_approve: kodePlant.split('').length === 4 ? 'pengadaan io' : 'pengadaan io HO',
               [Op.and]: [
                 {
                   [Op.or]: [
@@ -2911,7 +2912,7 @@ module.exports = {
               if (cek.length > 0 && createRes) {
                 const getApp = await approve.findAll({
                   where: {
-                    nama_approve: 'pengadaan io',
+                    nama_approve: kodeDepo.split('').length === 4 ? 'pengadaan io' : 'pengadaan io HO',
                     jenis: 'all',
                     [Op.or]: [
                       { kategori: data.prinfo.isBudget === true ? 'budget' : 'non-budget' },
@@ -3895,7 +3896,7 @@ module.exports = {
           if (findSign.length > 0) {
             const cekSign = []
             for (let i = 0; i < findSign.length; i++) {
-              if (findSign[i].jabatan === 'area' || findSign[i].jabatan === 'aos') {
+              if (findSign[i].sebagai === 'pembuat' || findSign[i].jabatan === 'area' || findSign[i].jabatan === 'aos') {
                 cekSign.push(findSign[i])
               } else {
                 const data = {

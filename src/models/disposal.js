@@ -74,7 +74,10 @@ module.exports = (sequelize, DataTypes) => {
     reason: DataTypes.STRING,
     menu_rev: DataTypes.STRING,
     user_reject: DataTypes.INTEGER,
-    history: DataTypes.TEXT
+    history: DataTypes.TEXT,
+    user_rev: DataTypes.STRING,
+    pic_aset: DataTypes.STRING,
+    pic_budget: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'disposal'

@@ -2014,7 +2014,7 @@ module.exports = {
         if (findSign.length > 0) {
           const cekSign = []
           for (let i = 0; i < findSign.length; i++) {
-            if (findSign[i].jabatan === 'area' || findSign[i].jabatan === 'aos') {
+            if (findSign[i].sebagai === 'pembuat' || findSign[i].jabatan === 'area' || findSign[i].jabatan === 'aos') {
               cekSign.push(findSign[i])
             } else {
               const data = {
