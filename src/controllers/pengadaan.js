@@ -1,4 +1,4 @@
-const { email, approve, ttd, depo, pengadaan, document, docUser, role, user, assettemp, reservoir } = require('../models')
+const { email, approve, ttd, depo, pengadaan, document, docUser, role, user, assettemp, reservoir, asset } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -3854,19 +3854,23 @@ module.exports = {
           if (findData) {
             await findData.update(data)
             cek.push(1)
+            if (findData.kategori === 'return') {
+              const findAsset = await asset.findOne({
+                where: {
+                  no_asset: findData.no_ref
+                }
+              })
+              if (findAsset) {
+                const send = {
+                  status: '0'
+                }
+                await findAsset.update(send)
+              }
+            }
           }
         }
         if (cek.length > 0) {
-          const findDepo = await depo.findOne({
-            where: {
-              kode_plant: findIo[0].kode_plant
-            }
-          })
-          if (findDepo) {
-            return response(res, 'success submit pengajuan io')
-          } else {
-            return response(res, 'success submit pengajuan io')
-          }
+          return response(res, 'success submit pengajuan io')
         } else {
           return response(res, 'failed submit', {}, 404, false)
         }
