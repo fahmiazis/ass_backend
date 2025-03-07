@@ -1,6 +1,7 @@
 const { disposal, asset, depo, ttd, docUser, mutasi, pengadaan, assettemp } = require('../models')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
+const moment = require('moment')
 const { pagination } = require('../helpers/pagination')
 
 module.exports = {
@@ -86,6 +87,11 @@ module.exports = {
   getReportMutasi: async (req, res) => {
     try {
       let { limit, page, search, sort, status } = req.query
+      const { time1, time2 } = req.query
+      const timeVal1 = time1 === 'undefined' ? 'all' : time1
+      const timeVal2 = time2 === 'undefined' ? 'all' : time2
+      const timeV1 = moment(timeVal1)
+      const timeV2 = timeVal1 !== 'all' && timeVal1 === timeVal2 ? moment(timeVal2).add(1, 'd') : moment(timeVal2).add(1, 'd')
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -104,7 +110,7 @@ module.exports = {
         status = parseInt(status)
       }
       if (!limit) {
-        limit = 10
+        limit = 100
       } else if (limit === 'All') {
         limit = null
       } else {
@@ -115,11 +121,26 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const result = await mutasi.findAndCountAll({
+      const result = await mutasi.findAll({
         where: {
+          [Op.and]: [
+            timeVal1 === 'all'
+              ? { [Op.not]: { id: null } }
+              : {
+                  tanggalMut: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
+                  }
+                },
+            { [Op.not]: { status_form: 1 } },
+            { [Op.not]: { no_mutasi: null } }
+          ],
           [Op.or]: [
             { no_mutasi: { [Op.like]: `%${searchValue}%` } },
-            { no_asset: { [Op.like]: `%${searchValue}%` } }
+            { no_asset: { [Op.like]: `%${searchValue}%` } },
+            { area: { [Op.like]: `%${searchValue}%` } },
+            { no_asset: { [Op.like]: `%${searchValue}%` } },
+            { nama_asset: { [Op.like]: `%${searchValue}%` } }
           ]
         },
         order: [
@@ -147,9 +168,9 @@ module.exports = {
           }
         ]
       })
-      const pageInfo = pagination('/report/mutasi', req.query, page, limit, result.count)
+      const pageInfo = pagination('/report/mutasi', req.query, page, limit, result.length)
       if (result) {
-        return response(res, 'success get report', { result, pageInfo })
+        return response(res, 'success get report', { result: { rows: result, count: result.length }, pageInfo })
       } else {
         return response(res, 'failed get report', {}, 400, false)
       }
