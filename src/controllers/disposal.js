@@ -1623,7 +1623,7 @@ module.exports = {
   },
   getApproveDisposal: async (req, res) => {
     try {
-      const no = req.params.no
+      const { no } = req.body
       const { nama } = req.query
       const result = await ttd.findAll({
         where: {

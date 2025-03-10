@@ -3,7 +3,7 @@ const disposal = require('../controllers/disposal')
 
 route.get('/get', disposal.getDisposal)
 route.get('/cart', disposal.getCartDisposal)
-route.get('/approve/:no', disposal.getApproveDisposal)
+route.patch('/approve', disposal.getApproveDisposal)
 route.patch('/detail', disposal.getDetailDisposal)
 route.post('/add/:no', disposal.addDisposal)
 route.post('/sell/:no', disposal.addSell)
