@@ -1,4 +1,4 @@
-const { disposal, asset, depo, path, ttd, approve, role, document, docUser, email, user, notif } = require('../models')
+const { disposal, asset, depo, path, ttd, approve, role, document, docUser, email, user, notif, reservoir } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -180,9 +180,6 @@ module.exports = {
   deleteDisposal: async (req, res) => {
     try {
       const noAsset = req.params.asset
-      const kode = req.user.kode
-      const name = req.user.name
-      const level = req.user.level
       const result = await disposal.findOne({
         where: {
           [Op.and]: [
@@ -192,54 +189,50 @@ module.exports = {
         }
       })
       if (result) {
-        if ((level === 5 && result.kode_plant === kode) || (level === 9 && name === result.cost_center)) {
-          const findAsset = await asset.findOne({
-            where: {
-              no_asset: noAsset
-            }
-          })
-          if (findAsset) {
-            const data = {
-              status: null
-            }
-            const sent = await findAsset.update(data)
-            if (sent) {
-              const del = await result.destroy()
-              if (del) {
-                const findDoc = await docUser.findAll({
-                  where: {
-                    no_pengadaan: noAsset,
-                    [Op.and]: [
-                      { jenis_form: 'disposal' },
-                      {
-                        [Op.or]: [
-                          { tipe: 'pengajuan' },
-                          { tipe: 'jual' },
-                          { tipe: 'purch' }
-                        ]
-                      }
-                    ]
-                  }
-                })
-                if (findDoc.length > 0) {
-                  const cekdok = []
-                  for (let i = 0; i < findDoc.length; i++) {
-                    const findOne = await docUser.findByPk(findDoc[i].id)
-                    if (findOne) {
-                      await findOne.destroy()
-                      cekdok.push(1)
+        const findAsset = await asset.findOne({
+          where: {
+            no_asset: noAsset
+          }
+        })
+        if (findAsset) {
+          const data = {
+            status: null
+          }
+          const sent = await findAsset.update(data)
+          if (sent) {
+            const del = await result.destroy()
+            if (del) {
+              const findDoc = await docUser.findAll({
+                where: {
+                  no_pengadaan: noAsset,
+                  [Op.and]: [
+                    { jenis_form: 'disposal' },
+                    {
+                      [Op.or]: [
+                        { tipe: 'pengajuan' },
+                        { tipe: 'jual' },
+                        { tipe: 'purch' }
+                      ]
                     }
+                  ]
+                }
+              })
+              if (findDoc.length > 0) {
+                const cekdok = []
+                for (let i = 0; i < findDoc.length; i++) {
+                  const findOne = await docUser.findByPk(findDoc[i].id)
+                  if (findOne) {
+                    await findOne.destroy()
+                    cekdok.push(1)
                   }
-                  if (cekdok.length === findDoc.length) {
-                    return response(res, 'success delete disposal')
-                  } else {
-                    return response(res, 'failed delete disposal', {}, 400, false)
-                  }
-                } else {
+                }
+                if (cekdok.length === findDoc.length) {
                   return response(res, 'success delete disposal')
+                } else {
+                  return response(res, 'failed delete disposal', {}, 400, false)
                 }
               } else {
-                return response(res, 'failed delete disposal', {}, 400, false)
+                return response(res, 'success delete disposal')
               }
             } else {
               return response(res, 'failed delete disposal', {}, 400, false)
@@ -248,7 +241,7 @@ module.exports = {
             return response(res, 'failed delete disposal', {}, 400, false)
           }
         } else {
-          return response(res, "failed delete disposal, you havn't access", {}, 400, false)
+          return response(res, 'failed delete disposal', {}, 400, false)
         }
       } else {
         return response(res, 'failed delete disposal', {}, 400, false)
@@ -263,6 +256,11 @@ module.exports = {
     const kode = req.user.kode
     const fullname = req.user.name
     let { limit, page, search, sort, status, tipe, form } = req.query
+    const { time1, time2 } = req.query
+    const timeVal1 = time1 === 'undefined' ? 'all' : time1
+    const timeVal2 = time2 === 'undefined' ? 'all' : time2
+    const timeV1 = moment(timeVal1)
+    const timeV2 = timeVal1 !== 'all' && timeVal1 === timeVal2 ? moment(timeVal2).add(1, 'd') : moment(timeVal2).add(1, 'd')
     let searchValue = ''
     let sortValue = ''
     if (typeof search === 'object') {
@@ -293,12 +291,25 @@ module.exports = {
     if (level === 5 || level === 9) {
       const result = await disposal.findAll({
         where: {
-          kode_plant: level === 5 ? kode : fullname,
-          [Op.or]: [
-            { status_form: status },
-            { status_form: status === 2 ? 9 : status },
-            { status_form: status === 2 ? 26 : status },
-            { status_form: status === 2 ? 3 : status }
+          [Op.and]: [
+            { kode_plant: kode },
+            {
+              [Op.or]: [
+                { status_form: status },
+                { status_form: status === 2 ? 9 : status },
+                { status_form: status === 2 ? 26 : status },
+                { status_form: status === 2 ? 3 : status }
+              ]
+            },
+            timeVal1 === 'all'
+              ? { [Op.not]: { id: null } }
+              : {
+                  tanggalDis: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
+                  }
+                },
+            { [Op.not]: { status_form: 1 } }
           ]
         },
         order: [
@@ -326,94 +337,9 @@ module.exports = {
         ]
       })
       if (result) {
-        if (form === 'editdis' && result.length > 0) {
-          const result = await disposal.findAll({
-            where: {
-              kode_plant: level === 5 ? kode : fullname,
-              [Op.or]: [
-                { status_reject: level === 5 ? 1 : 2 },
-                { status_reject: 3 }
-              ],
-              [Op.not]: [
-                { isreject: 2 },
-                { isreject: null },
-                { isreject: 0 }
-              ]
-            },
-            order: [
-              [sortValue, 'DESC'],
-              [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
-              [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
-            ],
-            include: [
-              {
-                model: path,
-                as: 'pict'
-              },
-              {
-                model: ttd,
-                as: 'ttdSet'
-              },
-              {
-                model: ttd,
-                as: 'appForm'
-              },
-              {
-                model: docUser,
-                as: 'docAsset'
-              }
-            ]
-          })
-          if (result) {
-            return response(res, 'success', { result: { rows: result, count: result.length } })
-          } else {
-            return response(res, 'success', { result: { rows: result, count: result.length } })
-          }
-        } else if (form === 'editeks' && result.length > 0) {
-          const result = await disposal.findAll({
-            where: {
-              kode_plant: level === 5 ? kode : fullname,
-              status_reject: 5,
-              [Op.not]: [
-                { isreject: 2 },
-                { isreject: null },
-                { isreject: 0 }
-              ]
-            },
-            order: [
-              [sortValue, 'DESC'],
-              [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
-              [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
-            ],
-            include: [
-              {
-                model: path,
-                as: 'pict'
-              },
-              {
-                model: ttd,
-                as: 'ttdSet'
-              },
-              {
-                model: ttd,
-                as: 'appForm'
-              },
-              {
-                model: docUser,
-                as: 'docAsset'
-              }
-            ]
-          })
-          if (result) {
-            return response(res, 'success', { result: { rows: result, count: result.length } })
-          } else {
-            return response(res, 'success', { result: { rows: result, count: result.length } })
-          }
-        } else {
-          return response(res, 'success get disposal', { result: { rows: result, count: result.length }, form: form })
-        }
+        return response(res, 'success get disposal', { result: { rows: result, count: result.length }, form: form })
       } else {
-        return response(res, 'failed get disposal', {}, 400, false)
+        return response(res, 'success get disposal', { result: { rows: result, count: result.length }, form: form })
       }
     } else if (level === 12 || level === 7 || level === 26 || level === 27) {
       const findDepo = await depo.findAll({
@@ -430,17 +356,32 @@ module.exports = {
         for (let i = 0; i < findDepo.length; i++) {
           const result = await disposal.findAll({
             where: {
-              kode_plant: findDepo[i].kode_plant,
-              [Op.or]: [
-                { no_disposal: { [Op.like]: `%${searchValue}%` } },
-                { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                { kategori: { [Op.like]: `%${searchValue}%` } },
-                { keterangan: { [Op.like]: `%${searchValue}%` } }
-              ],
-              [Op.or]: [
-                { status_form: status },
-                { status_form: status === 2 ? 9 : status },
-                { status_form: status === 2 ? 26 : status }
+              [Op.and]: [
+                { kode_plant: findDepo[i].kode_plant },
+                {
+                  [Op.or]: [
+                    { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                    { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                    { kategori: { [Op.like]: `%${searchValue}%` } },
+                    { keterangan: { [Op.like]: `%${searchValue}%` } }
+                  ]
+                },
+                {
+                  [Op.or]: [
+                    { status_form: status },
+                    { status_form: status === 2 ? 9 : status },
+                    { status_form: status === 2 ? 26 : status }
+                  ]
+                },
+                timeVal1 === 'all'
+                  ? { [Op.not]: { id: null } }
+                  : {
+                      tanggalDis: {
+                        [Op.gte]: timeV1,
+                        [Op.lt]: timeV2
+                      }
+                    },
+                { [Op.not]: { status_form: 1 } }
               ]
             },
             order: [
@@ -508,17 +449,32 @@ module.exports = {
         for (let i = 0; i < findDepo.length; i++) {
           const result = await disposal.findAll({
             where: {
-              kode_plant: findDepo[i].kode_plant,
-              [Op.or]: [
-                { no_disposal: { [Op.like]: `%${searchValue}%` } },
-                { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                { kategori: { [Op.like]: `%${searchValue}%` } },
-                { keterangan: { [Op.like]: `%${searchValue}%` } }
-              ],
-              [Op.or]: [
-                { status_form: status },
-                { status_form: status === 2 ? 9 : status },
-                { status_form: status === 2 ? 26 : status }
+              [Op.and]: [
+                { kode_plant: findDepo[i].kode_plant },
+                {
+                  [Op.or]: [
+                    { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                    { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                    { kategori: { [Op.like]: `%${searchValue}%` } },
+                    { keterangan: { [Op.like]: `%${searchValue}%` } }
+                  ]
+                },
+                {
+                  [Op.or]: [
+                    { status_form: status },
+                    { status_form: status === 2 ? 9 : status },
+                    { status_form: status === 2 ? 26 : status }
+                  ]
+                },
+                timeVal1 === 'all'
+                  ? { [Op.not]: { id: null } }
+                  : {
+                      tanggalDis: {
+                        [Op.gte]: timeV1,
+                        [Op.lt]: timeV2
+                      }
+                    },
+                { [Op.not]: { status_form: 1 } }
               ]
             },
             order: [
@@ -558,19 +514,34 @@ module.exports = {
           if (level === 13) {
             const result = await disposal.findAndCountAll({
               where: {
-                kategori: 'IT',
-                [Op.or]: [
-                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                  { no_io: { [Op.like]: `%${searchValue}%` } },
-                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
-                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                  { kategori: { [Op.like]: `%${searchValue}%` } },
-                  { keterangan: { [Op.like]: `%${searchValue}%` } }
-                ],
-                [Op.or]: [
-                  { status_form: status },
-                  { status_form: status === 2 ? 9 : status },
-                  { status_form: status === 2 ? 26 : status }
+                [Op.and]: [
+                  { kategori: 'IT' },
+                  {
+                    [Op.or]: [
+                      { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                      { no_io: { [Op.like]: `%${searchValue}%` } },
+                      { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                      { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                      { kategori: { [Op.like]: `%${searchValue}%` } },
+                      { keterangan: { [Op.like]: `%${searchValue}%` } }
+                    ]
+                  },
+                  {
+                    [Op.or]: [
+                      { status_form: status },
+                      { status_form: status === 2 ? 9 : status },
+                      { status_form: status === 2 ? 26 : status }
+                    ]
+                  },
+                  timeVal1 === 'all'
+                    ? { [Op.not]: { id: null } }
+                    : {
+                        tanggalDis: {
+                          [Op.gte]: timeV1,
+                          [Op.lt]: timeV2
+                        }
+                      },
+                  { [Op.not]: { status_form: 1 } }
                 ]
               },
               order: [
@@ -643,18 +614,33 @@ module.exports = {
           } else {
             const result = await disposal.findAndCountAll({
               where: {
-                [Op.or]: [
-                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                  { no_io: { [Op.like]: `%${searchValue}%` } },
-                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
-                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                  { kategori: { [Op.like]: `%${searchValue}%` } },
-                  { keterangan: { [Op.like]: `%${searchValue}%` } }
-                ],
-                [Op.or]: [
-                  { status_form: status },
-                  { status_form: status === 2 ? 9 : status },
-                  { status_form: status === 2 ? 26 : status }
+                [Op.and]: [
+                  {
+                    [Op.or]: [
+                      { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                      { no_io: { [Op.like]: `%${searchValue}%` } },
+                      { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                      { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                      { kategori: { [Op.like]: `%${searchValue}%` } },
+                      { keterangan: { [Op.like]: `%${searchValue}%` } }
+                    ]
+                  },
+                  {
+                    [Op.or]: [
+                      { status_form: status },
+                      { status_form: status === 2 ? 9 : status },
+                      { status_form: status === 2 ? 26 : status }
+                    ]
+                  },
+                  timeVal1 === 'all'
+                    ? { [Op.not]: { id: null } }
+                    : {
+                        tanggalDis: {
+                          [Op.gte]: timeV1,
+                          [Op.lt]: timeV2
+                        }
+                      },
+                  { [Op.not]: { status_form: 1 } }
                 ]
               },
               order: [
@@ -731,19 +717,34 @@ module.exports = {
           if (level === 13) {
             const result = await disposal.findAndCountAll({
               where: {
-                kategori: 'IT',
-                [Op.or]: [
-                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                  { no_io: { [Op.like]: `%${searchValue}%` } },
-                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
-                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                  { kategori: { [Op.like]: `%${searchValue}%` } },
-                  { keterangan: { [Op.like]: `%${searchValue}%` } }
-                ],
-                [Op.or]: [
-                  { status_form: status },
-                  { status_form: status === 2 ? 9 : status },
-                  { status_form: status === 2 ? 26 : status }
+                [Op.and]: [
+                  { kategori: 'IT' },
+                  {
+                    [Op.or]: [
+                      { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                      { no_io: { [Op.like]: `%${searchValue}%` } },
+                      { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                      { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                      { kategori: { [Op.like]: `%${searchValue}%` } },
+                      { keterangan: { [Op.like]: `%${searchValue}%` } }
+                    ]
+                  },
+                  {
+                    [Op.or]: [
+                      { status_form: status },
+                      { status_form: status === 2 ? 9 : status },
+                      { status_form: status === 2 ? 26 : status }
+                    ]
+                  },
+                  timeVal1 === 'all'
+                    ? { [Op.not]: { id: null } }
+                    : {
+                        tanggalDis: {
+                          [Op.gte]: timeV1,
+                          [Op.lt]: timeV2
+                        }
+                      },
+                  { [Op.not]: { status_form: 1 } }
                 ]
               },
               order: [
@@ -816,18 +817,33 @@ module.exports = {
           } else {
             const result = await disposal.findAndCountAll({
               where: {
-                [Op.or]: [
-                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                  { no_io: { [Op.like]: `%${searchValue}%` } },
-                  { no_disposal: { [Op.like]: `%${searchValue}%` } },
-                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                  { kategori: { [Op.like]: `%${searchValue}%` } },
-                  { keterangan: { [Op.like]: `%${searchValue}%` } }
-                ],
-                [Op.or]: [
-                  { status_form: status },
-                  { status_form: status === 2 ? 9 : status },
-                  { status_form: status === 2 ? 26 : status }
+                [Op.and]: [
+                  {
+                    [Op.or]: [
+                      { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                      { no_io: { [Op.like]: `%${searchValue}%` } },
+                      { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                      { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                      { kategori: { [Op.like]: `%${searchValue}%` } },
+                      { keterangan: { [Op.like]: `%${searchValue}%` } }
+                    ]
+                  },
+                  {
+                    [Op.or]: [
+                      { status_form: status },
+                      { status_form: status === 2 ? 9 : status },
+                      { status_form: status === 2 ? 26 : status }
+                    ]
+                  },
+                  timeVal1 === 'all'
+                    ? { [Op.not]: { id: null } }
+                    : {
+                        tanggalDis: {
+                          [Op.gte]: timeV1,
+                          [Op.lt]: timeV2
+                        }
+                      },
+                  { [Op.not]: { status_form: 1 } }
                 ]
               },
               order: [
@@ -904,16 +920,31 @@ module.exports = {
     } else {
       const result = await disposal.findAll({
         where: {
-          [Op.or]: [
-            { kode_plant: { [Op.like]: `%${searchValue}%` } },
-            { no_disposal: { [Op.like]: `%${searchValue}%` } },
-            { nama_asset: { [Op.like]: `%${searchValue}%` } },
-            { no_asset: { [Op.like]: `%${searchValue}%` } }
-          ],
-          [Op.or]: [
-            { status_form: status },
-            { status_form: status === 2 ? 9 : status },
-            { status_form: status === 2 ? 26 : status }
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                { no_disposal: { [Op.like]: `%${searchValue}%` } },
+                { nama_asset: { [Op.like]: `%${searchValue}%` } },
+                { no_asset: { [Op.like]: `%${searchValue}%` } }
+              ]
+            },
+            {
+              [Op.or]: [
+                { status_form: status },
+                { status_form: status === 2 ? 9 : status },
+                { status_form: status === 2 ? 26 : status }
+              ]
+            },
+            timeVal1 === 'all'
+              ? { [Op.not]: { id: null } }
+              : {
+                  tanggalDis: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
+                  }
+                },
+            { [Op.not]: { status_form: 1 } }
           ]
         },
         order: [
@@ -1007,526 +1038,204 @@ module.exports = {
   },
   submitDisposal: async (req, res) => {
     try {
+      const timeV1 = moment().startOf('month')
+      const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
-      const cost = req.user.name
-      const level = req.user.level
+      const findNo = await reservoir.findAll({
+        where: {
+          transaksi: 'disposal',
+          tipe: 'area',
+          createdAt: {
+            [Op.gte]: timeV1,
+            [Op.lt]: timeV2
+          }
+        },
+        order: [['id', 'DESC']],
+        limit: 50
+      })
+      const cekNo = []
+      if (findNo.length > 0) {
+        for (let i = 0; i < findNo.length; i++) {
+          const no = findNo[i].no_transaksi.split('/')
+          cekNo.push(parseInt(no[0]))
+        }
+      } else {
+        cekNo.push(0)
+      }
+      const noMut = Math.max(...cekNo) + 1
+      const findMut = await disposal.findAll({
+        where: {
+          [Op.and]: [
+            { kode_plant: kode },
+            { status_form: 1 }
+          ]
+        }
+      })
+      if (findMut.length > 0) {
+        const temp = []
+        const change = noMut.toString().split('')
+        const notrans = change.length === 2 ? '00' + noMut : change.length === 1 ? '000' + noMut : change.length === 3 ? '0' + noMut : noMut
+        const month = parseInt(moment().format('MM'))
+        const year = moment().format('YYYY')
+        let rome = ''
+        if (month === 1) {
+          rome = 'I'
+        } else if (month === 2) {
+          rome = 'II'
+        } else if (month === 3) {
+          rome = 'III'
+        } else if (month === 4) {
+          rome = 'IV'
+        } else if (month === 5) {
+          rome = 'V'
+        } else if (month === 6) {
+          rome = 'VI'
+        } else if (month === 7) {
+          rome = 'VII'
+        } else if (month === 8) {
+          rome = 'VIII'
+        } else if (month === 9) {
+          rome = 'IX'
+        } else if (month === 10) {
+          rome = 'X'
+        } else if (month === 11) {
+          rome = 'XI'
+        } else if (month === 12) {
+          rome = 'XII'
+        }
+          const tempData = findMut.find(({no_disposal}) => no_disposal !== null) // eslint-disable-line
+        const cekData = tempData === undefined ? 'ya' : 'no'
+        const noTrans = `${notrans}/${kode}/${findMut[0].area}/${rome}/${year}-DPSL`
+        const data = {
+          no_disposal: noTrans
+        }
+        for (let i = 0; i < findMut.length; i++) {
+          const find = await disposal.findByPk(findMut[i].id)
+          if (find) {
+            await find.update(data)
+            temp.push(1)
+          }
+        }
+        if (temp.length === findMut.length) {
+          if (cekData === 'no') {
+            const findReser = await reservoir.findOne({
+              where: {
+                no_transaksi: tempData.no_disposal
+              }
+            })
+            const findNewReser = await reservoir.findOne({
+              where: {
+                no_transaksi: noTrans
+              }
+            })
+            const upDataReser = {
+              status: 'expired'
+            }
+            const creDataReser = {
+              no_transaksi: noTrans,
+              kode_plant: kode,
+              transaksi: 'disposal',
+              tipe: 'area',
+              status: 'delayed'
+            }
+            if (findReser && !findNewReser) {
+              await findReser.update(upDataReser)
+              await reservoir.create(creDataReser)
+              return response(res, 'success submit cart', { no_disposal: noTrans })
+            } else {
+              return response(res, 'success submit cart', { no_disposal: noTrans })
+            }
+          } else {
+            const findNewReser = await reservoir.findOne({
+              where: {
+                no_transaksi: noTrans
+              }
+            })
+            if (findNewReser) {
+              return response(res, 'success submit cart', { no_disposal: noTrans })
+            } else {
+              const creDataReser = {
+                no_transaksi: noTrans,
+                kode_plant: kode,
+                transaksi: 'disposal',
+                tipe: 'area',
+                status: 'delayed'
+              }
+              await reservoir.create(creDataReser)
+              return response(res, 'success submit cart', { no_disposal: noTrans })
+            }
+          }
+        } else {
+          return response(res, 'failed submit', {}, 404, false)
+        }
+      } else {
+        return response(res, 'data disposal is empty', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  submitDisposalFinal: async (req, res) => {
+    try {
+      const kode = req.user.kode
+      const { no } = req.body
       const result = await disposal.findAll({
         where: {
           [Op.and]: [
-            { kode_plant: level === 5 ? kode : level === 9 && cost },
+            { kode_plant: kode },
             { status_form: 1 }
           ]
         }
       })
       if (result.length > 0) {
-        const findNo = await disposal.findAll({
-          where: {
-            [Op.not]: { no_disposal: null }
-          },
-          order: [['id', 'DESC']],
-          limit: 50
-        })
-        if (findNo.length > 0) {
-          const cekNo = []
-          for (let i = 0; i < findNo.length; i++) {
-            cekNo.push(parseInt(findNo[i].no_disposal === null ? 0 : findNo[i].no_disposal))
-          }
-          const noDis = Math.max(...cekNo) + 1
+        const noTrans = no
 
-          const change = noDis.toString().split('')
-          const notrans = change.length === 2 ? '00' + noDis : change.length === 1 ? '000' + noDis : change.length === 3 ? '0' + noDis : noDis
-          const month = parseInt(moment().format('MM'))
-          const year = moment().format('YYYY')
-          let rome = ''
-          if (month === 1) {
-            rome = 'I'
-          } else if (month === 2) {
-            rome = 'II'
-          } else if (month === 3) {
-            rome = 'III'
-          } else if (month === 4) {
-            rome = 'IV'
-          } else if (month === 5) {
-            rome = 'V'
-          } else if (month === 6) {
-            rome = 'VI'
-          } else if (month === 7) {
-            rome = 'VII'
-          } else if (month === 8) {
-            rome = 'VIII'
-          } else if (month === 9) {
-            rome = 'IX'
-          } else if (month === 10) {
-            rome = 'X'
-          } else if (month === 11) {
-            rome = 'XI'
-          } else if (month === 12) {
-            rome = 'XII'
-          }
-
-          // const tempData = findKlaim.find(({no_transaksi}) => no_transaksi !== null) // eslint-disable-line
-          // const cekData = tempData === undefined ? 'ya' : 'no'
-          const noTrans = `${notrans}/${kode}/${rome}/${year}-DPS`
-
-          const temp = []
-          for (let i = 0; i < result.length; i++) {
-            const find = await disposal.findByPk(result[i].id)
-            if (find) {
-              const prev = moment().subtract(1, 'month').format('L').split('/')
-              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
-              if (findApi.status === 200) {
-                if (find.nilai_jual !== '0') {
-                  const send = {
-                    status_form: 26,
-                    no_disposal: noTrans === undefined ? 1 : noTrans,
-                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('jual')
-                } else {
-                  const send = {
-                    status_form: 2,
-                    no_disposal: noTrans === undefined ? 1 : noTrans,
-                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('musnah')
-                }
-              } else {
-                if (find.nilai_jual !== '0') {
-                  const send = {
-                    status_form: 26,
-                    no_disposal: noTrans === undefined ? 1 : noTrans,
-                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('jual')
-                } else {
-                  const send = {
-                    status_form: 2,
-                    no_disposal: noTrans === undefined ? 1 : noTrans,
-                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('musnah')
-                }
+        const temp = []
+        for (let i = 0; i < result.length; i++) {
+          const find = await disposal.findByPk(result[i].id)
+          if (find) {
+            const cekJual = find.nilai_jual !== '0' || find.nilai_jual !== 0
+            const prev = moment().subtract(1, 'month').format('L').split('/')
+            const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+            if (findApi.status === 200) {
+              const send = {
+                status_form: cekJual ? 26 : 2,
+                no_disposal: noTrans,
+                nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                tanggalDis: moment()
               }
+              await find.update(send)
+              temp.push(cekJual ? 'jual' : 'musnah')
+            } else {
+              const send = {
+                status_form: cekJual ? 26 : 2,
+                no_disposal: noTrans,
+                nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                tanggalDis: moment()
+              }
+              await find.update(send)
+              temp.push(cekJual ? 'jual' : 'musnah')
             }
           }
-          if (temp.length === result.length) {
-            const findDepo = await depo.findOne({
-              where: {
-                kode_plant: level === 5 ? kode : level === 9 && cost
-              }
-            })
-            if (findDepo) {
-              const findEmail = await user.findOne({
-                where: {
-                  [Op.or]: [
-                    { username: temp.find(element => element === 'jual') ? '' : findDepo.nama_bm },
-                    { user_level: temp.find(element => element === 'jual') ? 6 : '' }
-                  ]
-                }
-              })
-              if (findEmail) {
-                const data = {
-                  kode_plant: level === 5 ? kode : level === 9 && cost,
-                  jenis: 'disposal',
-                  no_proses: `D${noDis === undefined ? 1 : noDis}`,
-                  list_appr: findEmail.username,
-                  keterangan: 'pengajuan',
-                  response: 'request',
-                  route: temp.find(element => element === 'jual') ? 'purchdis' : 'disposal'
-                }
-                const createNotif = await notif.create(data)
-                if (createNotif) {
-                  let tableTd = ''
-                  for (let i = 0; i < result.length; i++) {
-                    const element = `
-                  <tr>
-                    <td>${result.indexOf(result[i]) + 1}</td>
-                    <td>D${noDis === undefined ? 1 : noDis}</td>
-                    <td>${result[i].no_asset}</td>
-                    <td>${result[i].nama_asset}</td>
-                    <td>${result[i].cost_center}</td>
-                    <td>${result[i].area}</td>
-                  </tr>`
-                    tableTd = tableTd + element
-                  }
-                  const mailOptions = {
-                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                    // to: `${findEmail.email}`,
-                    to: `${emailAss}, ${emailAss2}`,
-                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} `,
-                    html: `
-                  <head>
-                    <style type="text/css">
-                    body {
-                        display: flexbox;
-                        flex-direction: column;
-                    }
-                    .tittle {
-                        font-size: 15px;
-                    }
-                    .mar {
-                        margin-bottom: 20px;
-                    }
-                    .mar1 {
-                        margin-bottom: 10px;
-                    }
-                    .foot {
-                        margin-top: 20px;
-                        margin-bottom: 10px;
-                    }
-                    .foot1 {
-                        margin-bottom: 50px;
-                    }
-                    .position {
-                        display: flexbox;
-                        flex-direction: row;
-                        justify-content: left;
-                        margin-top: 10px;
-                    }
-                    table {
-                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                        font-size: 12px;
-                    }
-                    .demo-table {
-                        border-collapse: collapse;
-                        font-size: 13px;
-                    }
-                    .demo-table th, 
-                    .demo-table td {
-                        border-bottom: 1px solid #e1edff;
-                        border-left: 1px solid #e1edff;
-                        padding: 7px 17px;
-                    }
-                    .demo-table th, 
-                    .demo-table td:last-child {
-                        border-right: 1px solid #e1edff;
-                    }
-                    .demo-table td:first-child {
-                        border-top: 1px solid #e1edff;
-                    }
-                    .demo-table td:last-child{
-                        border-bottom: 0;
-                    }
-                    caption {
-                        caption-side: top;
-                        margin-bottom: 10px;
-                    }
-                    
-                    /* Table Header */
-                    .demo-table thead th {
-                        background-color: #508abb;
-                        color: #FFFFFF;
-                        border-color: #6ea1cc !important;
-                        text-transform: uppercase;
-                    }
-                    
-                    /* Table Body */
-                    .demo-table tbody td {
-                        color: #353535;
-                    }
-                    
-                    .demo-table tbody tr:nth-child(odd) td {
-                        background-color: #f4fbff;
-                    }
-                    .demo-table tbody tr:hover th,
-                    .demo-table tbody tr:hover td {
-                        background-color: #ffffa2;
-                        border-color: #ffff0f;
-                        transition: all .2s;
-                    }
-                </style>
-                  </head>
-                  <body>
-                      <div class="tittle mar">
-                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : level === 5 ? 'BM' : level === 9 && 'Manager'},
-                      </div>
-                      <div class="tittle mar1">
-                          <div>Mohon untuk approve pengajuan disposal asset area.</div>
-                      </div>
-                      <div class="position">
-                          <table class="demo-table">
-                              <thead>
-                                  <tr>
-                                      <th>No</th>
-                                      <th>No Disposal</th>
-                                      <th>Asset</th>
-                                      <th>Asset description</th>
-                                      <th>Cost Ctr</th>
-                                      <th>Cost Ctr Name</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                ${tableTd}
-                              </tbody>
-                          </table>
-                      </div>
-                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                      <div class="tittle foot">
-                          Terima kasih,
-                      </div>
-                      <div class="tittle foot1">
-                          Regards,
-                      </div>
-                      <div class="tittle">
-                          Team Asset
-                      </div>
-                  </body>
-                  `
-                  }
-                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                  if (sendEmail) {
-                    return response(res, 'success approve disposal', { sendEmail })
-                  } else {
-                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
-                  }
-                }
-              }
+        }
+        if (temp.length > 0) {
+          const findNewReser = await reservoir.findOne({
+            where: {
+              no_transaksi: no
             }
+          })
+          if (findNewReser) {
+            const upDataReser = {
+              status: 'used',
+              createdAt: moment()
+            }
+            await findNewReser.update(upDataReser)
+            return response(res, 'success submit cart')
           } else {
-            return response(res, 'failed submit 9', {}, 404, false)
+            return response(res, 'success submit cart')
           }
         } else {
-          const cekNo = [0]
-          const noDis = Math.max(...cekNo) + 1
-          const temp = []
-          for (let i = 0; i < result.length; i++) {
-            const find = await disposal.findOne({
-              where: {
-                no_asset: result[i].no_asset
-              }
-            })
-            if (find) {
-              const prev = moment().subtract(1, 'month').format('L').split('/')
-              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
-              if (findApi.status === 200) {
-                if (find.nilai_jual !== '0') {
-                  const send = {
-                    status_form: 26,
-                    no_disposal: noDis === undefined ? 1 : noDis,
-                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('jual')
-                } else {
-                  const send = {
-                    status_form: 2,
-                    no_disposal: noDis === undefined ? 1 : noDis,
-                    nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('musnah')
-                }
-              } else {
-                if (find.nilai_jual !== '0') {
-                  const send = {
-                    status_form: 26,
-                    no_disposal: noDis === undefined ? 1 : noDis,
-                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('jual')
-                } else {
-                  const send = {
-                    status_form: 2,
-                    no_disposal: noDis === undefined ? 1 : noDis,
-                    nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
-                    tanggalDis: moment()
-                  }
-                  await find.update(send)
-                  temp.push('musnah')
-                }
-              }
-            }
-          }
-          if (temp.length === result.length) {
-            const findDepo = await depo.findOne({
-              where: {
-                kode_plant: level === 5 ? kode : level === 9 && cost
-              }
-            })
-            if (findDepo) {
-              const findEmail = await user.findOne({
-                where: {
-                  [Op.or]: [
-                    { username: temp.find(element => element === 'jual') ? '' : findDepo.nama_bm },
-                    { user_level: temp.find(element => element === 'jual') ? 6 : '' }
-                  ]
-                }
-              })
-              if (findEmail) {
-                const data = {
-                  kode_plant: level === 5 ? kode : level === 9 && cost,
-                  jenis: 'disposal',
-                  no_proses: `D${noDis === undefined ? 1 : noDis}`,
-                  list_appr: findEmail.username,
-                  keterangan: 'pengajuan',
-                  response: 'request',
-                  route: temp.find(element => element === 'jual') ? 'purchdis' : 'disposal'
-                }
-                const createNotif = await notif.create(data)
-                if (createNotif) {
-                  let tableTd = ''
-                  for (let i = 0; i < result.length; i++) {
-                    const element = `
-                  <tr>
-                    <td>${result.indexOf(result[i]) + 1}</td>
-                    <td>D${noDis === undefined ? 1 : noDis}</td>
-                    <td>${result[i].no_asset}</td>
-                    <td>${result[i].nama_asset}</td>
-                    <td>${result[i].cost_center}</td>
-                    <td>${result[i].area}</td>
-                  </tr>`
-                    tableTd = tableTd + element
-                  }
-                  const mailOptions = {
-                    from: 'noreply_asset@pinusmerahabadi.co.id',
-                    replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                    // to: `${findEmail.email}`,
-                    to: `${emailAss}, ${emailAss2}`,
-                    subject: `Approve Pengajuan Disposal D${noDis === undefined ? 1 : noDis} `,
-                    html: `
-                  <head>
-                    <style type="text/css">
-                    body {
-                        display: flexbox;
-                        flex-direction: column;
-                    }
-                    .tittle {
-                        font-size: 15px;
-                    }
-                    .mar {
-                        margin-bottom: 20px;
-                    }
-                    .mar1 {
-                        margin-bottom: 10px;
-                    }
-                    .foot {
-                        margin-top: 20px;
-                        margin-bottom: 10px;
-                    }
-                    .foot1 {
-                        margin-bottom: 50px;
-                    }
-                    .position {
-                        display: flexbox;
-                        flex-direction: row;
-                        justify-content: left;
-                        margin-top: 10px;
-                    }
-                    table {
-                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                        font-size: 12px;
-                    }
-                    .demo-table {
-                        border-collapse: collapse;
-                        font-size: 13px;
-                    }
-                    .demo-table th, 
-                    .demo-table td {
-                        border-bottom: 1px solid #e1edff;
-                        border-left: 1px solid #e1edff;
-                        padding: 7px 17px;
-                    }
-                    .demo-table th, 
-                    .demo-table td:last-child {
-                        border-right: 1px solid #e1edff;
-                    }
-                    .demo-table td:first-child {
-                        border-top: 1px solid #e1edff;
-                    }
-                    .demo-table td:last-child{
-                        border-bottom: 0;
-                    }
-                    caption {
-                        caption-side: top;
-                        margin-bottom: 10px;
-                    }
-                    
-                    /* Table Header */
-                    .demo-table thead th {
-                        background-color: #508abb;
-                        color: #FFFFFF;
-                        border-color: #6ea1cc !important;
-                        text-transform: uppercase;
-                    }
-                    
-                    /* Table Body */
-                    .demo-table tbody td {
-                        color: #353535;
-                    }
-                    
-                    .demo-table tbody tr:nth-child(odd) td {
-                        background-color: #f4fbff;
-                    }
-                    .demo-table tbody tr:hover th,
-                    .demo-table tbody tr:hover td {
-                        background-color: #ffffa2;
-                        border-color: #ffff0f;
-                        transition: all .2s;
-                    }
-                </style>
-                  </head>
-                  <body>
-                      <div class="tittle mar">
-                          Dear Bapak/Ibu ${temp.find(element => element === 'jual') ? 'Team Purchasing' : level === 5 ? 'BM' : level === 9 && 'Manager'},
-                      </div>
-                      <div class="tittle mar1">
-                          <div>Mohon untuk approve pengajuan disposal asset area.</div>
-                      </div>
-                      <div class="position">
-                          <table class="demo-table">
-                              <thead>
-                                  <tr>
-                                      <th>No</th>
-                                      <th>No Disposal</th>
-                                      <th>Asset</th>
-                                      <th>Asset description</th>
-                                      <th>Cost Ctr</th>
-                                      <th>Cost Ctr Name</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                ${tableTd}
-                              </tbody>
-                          </table>
-                      </div>
-                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                      <div class="tittle foot">
-                          Terima kasih,
-                      </div>
-                      <div class="tittle foot1">
-                          Regards,
-                      </div>
-                      <div class="tittle">
-                          Team Asset
-                      </div>
-                  </body>
-                  `
-                  }
-                  const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                  if (sendEmail) {
-                    return response(res, 'success approve disposal', { sendEmail })
-                  } else {
-                    return response(res, 'berhasil approve disposal, tidak berhasil kirim notif email 1')
-                  }
-                }
-              }
-            }
-          } else {
-            return response(res, 'failed submit', {}, 404, false)
-          }
+          return response(res, 'failed submit 9', {}, 404, false)
         }
       } else {
         return response(res, 'failed submit', {}, 404, false)
@@ -1694,9 +1403,14 @@ module.exports = {
               })
               if (result.length > 0) {
                 const findArea = await ttd.findByPk(result[0].id)
-                if (findArea) {
+                const findUser = await user.findOne({
+                  where: {
+                    kode_plant: getDepo.kode_plant
+                  }
+                })
+                if (findArea && findUser) {
                   const data = {
-                    nama: getDepo.nama_aos,
+                    nama: findUser.fullname,
                     status: 1
                   }
                   const updateArea = await findArea.update(data)
@@ -3963,7 +3677,7 @@ module.exports = {
             return response(res, 'successfully upload dokumen', { send })
           } else {
             const send = {
-              status: tipe === 'mutasi' ? 4 : 1,
+              status: tipe === 'disposal' ? 4 : 1,
               path: dokumen,
               divisi: 'asset'
             }

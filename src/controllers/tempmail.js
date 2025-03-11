@@ -258,7 +258,7 @@ module.exports = {
             }
             if (temp.length > 0) {
               let noLevel = null
-              const tipeStat = (parseInt(findTrans.status_form) === 1 || parseInt(findTrans.status_form) === 9 || (parseInt(findTrans.status_form) === 4 && jenis === 'mutasi')) ? cekLevel : 2
+              const tipeStat = (parseInt(findTrans.status_form) === 1 && jenis === 'disposal') ? 6 : (parseInt(findTrans.status_form) === 1 || parseInt(findTrans.status_form) === 9 || (parseInt(findTrans.status_form) === 4 && jenis === 'mutasi')) ? cekLevel : 2
               // const tipeStat = 5
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
@@ -492,7 +492,7 @@ module.exports = {
                   if (findUser) {
                     return response(res, 'success get draft email nasional', { from: name, to: findUser, cc: temp, result: findDraft, findDepo })
                   } else {
-                    return response(res, 'failed get emai4l', { findUser }, 404, false)
+                    return response(res, 'failed get emai4l', { findUser, noLevel }, 404, false)
                   }
                 }
               } else {
@@ -1220,16 +1220,27 @@ module.exports = {
                         <td>${findData[i].cost_center_rec}</td>
                         <td>${moment(findData[i].tanggalMut).format('DD MMMM YYYY')}</td>
                       </tr>`
-                      : `
-                      <tr>
-                        <th>${findData[i].no_transaksi}</th>
-                        <th>${findData[i].cost_center}</th>
-                        <th>${findData[i].area}</th>
-                        <th>${findData[i].no_coa}</th>
-                        <th>${findData[i].sub_coa}</th>
-                        <th>${findData[i].keterangan || findData[i].uraian}</th>
-                        <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
-                      </tr>`
+                      : tipe === 'disposal'
+                        ? `
+                        <tr>
+                          <td>${findData[i].no_disposal}</td>
+                          <td>${findData[i].nilai_jual === 0 || findData[i].nilai_jual === '0' ? 'Pemusnahan' : 'Penjualan'}</td>
+                          <td>${findData[i].no_asset}</td>
+                          <td>${findData[i].nama_asset}</td>
+                          <td>${findData[i].cost_center}</td>
+                          <td>${findData[i].area}</td>
+                          <td>${moment(findData[i].tanggalDis).format('DD MMMM YYYY')}</td>
+                        </tr>`
+                        : `
+                        <tr>
+                          <th>${findData[i].no_transaksi}</th>
+                          <th>${findData[i].cost_center}</th>
+                          <th>${findData[i].area}</th>
+                          <th>${findData[i].no_coa}</th>
+                          <th>${findData[i].sub_coa}</th>
+                          <th>${findData[i].keterangan || findData[i].uraian}</th>
+                          <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
+                        </tr>`
               tableTd = tableTd + element
               cekNon.push(data)
               // }
@@ -1282,16 +1293,27 @@ module.exports = {
                     <th>Cost Ctr Penerima</th>
                     <th>TANGGAL AJUAN</th>
                   </tr>`
-                    : `
+                    : tipe === 'disposal'
+                      ? `
                     <tr>
-                      <th>NO.AJUAN</th>
-                      <th>COST CENTRE</th>
-                      <th>AREA</th>
-                      <th>NO.COA</th>
-                      <th>JENIS TRANSAKSI</th>
-                      <th>KETERANGAN TAMBAHAN</th>
-                      <th>TANGGAL AJUAN</th>
-                  </tr>`
+                      <th>No Disposal</th>
+                      <th>Tipe</th>
+                      <th>No Asset</th>
+                      <th>Asset description</th>
+                      <th>Cost Ctr</th>
+                      <th>Cabang / Depo</th>
+                      <th>Tgl Ajuan</th>
+                    </tr>`
+                      : `
+                      <tr>
+                        <th>NO.AJUAN</th>
+                        <th>COST CENTRE</th>
+                        <th>AREA</th>
+                        <th>NO.COA</th>
+                        <th>JENIS TRANSAKSI</th>
+                        <th>KETERANGAN TAMBAHAN</th>
+                        <th>TANGGAL AJUAN</th>
+                      </tr>`
             const mailOptions = {
               from: 'noreply_aset@pinusmerahabadi.co.id',
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',

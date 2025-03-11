@@ -20,16 +20,23 @@ module.exports = {
       const timeV1 = moment().startOf('month')
       const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
-      const cost = req.user.name
-      const level = req.user.level
+      const id = req.user.id
+      // const level = req.user.level
+      const { asetPart } = req.body
+      const partArea = asetPart === undefined || asetPart === 'undefined' || asetPart === null || asetPart === 'null' || asetPart === 'all' ? 'all' : asetPart
       const findArea = await depo.findOne({
         where: {
-          kode_plant: level === 5 ? kode : cost
+          kode_plant: kode
         }
       })
       const findClose = await clossing.findAll({
         where: {
           jenis: 'stock'
+        }
+      })
+      const detailUser = await user.findOne({
+        where: {
+          id: id
         }
       })
       if (findClose.length > 0 && findArea) {
@@ -53,7 +60,7 @@ module.exports = {
           const findStock = await stock.findOne({
             where: {
               [Op.and]: [
-                { kode_plant: level === 5 ? kode : cost },
+                { kode_plant: kode },
                 { status_form: null }
                 // ,
                 // {
@@ -70,8 +77,13 @@ module.exports = {
           } else {
             const result = await asset.findAll({
               where: {
-                cost_center: level === 5 ? findArea.cost_center : cost,
+                // [Op.and]: [
+                //   partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
+                //   detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }
+                // ],
                 [Op.and]: [
+                  partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
+                  detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' },
                   { [Op.not]: { satuan: null } },
                   { [Op.not]: { unit: null } },
                   { [Op.not]: { lokasi: null } },
@@ -91,7 +103,10 @@ module.exports = {
             if (result.length > 0) {
               const findAsset = await asset.findAll({
                 where: {
-                  cost_center: level === 5 ? findArea.cost_center : cost,
+                  [Op.and]: [
+                    partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
+                    detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }
+                  ],
                   [Op.or]: [
                     { status: '1' },
                     { status: '11' },
@@ -102,7 +117,10 @@ module.exports = {
               if (result.length === findAsset.length) {
                 const findPict = await asset.findAll({
                   where: {
-                    cost_center: level === 5 ? findArea.cost_center : cost,
+                    [Op.and]: [
+                      partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
+                      detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }
+                    ],
                     [Op.or]: [
                       { status: '1' },
                       { status: '11' },
@@ -187,11 +205,11 @@ module.exports = {
                     }
                     const tempData = findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock // eslint-disable-line
                     const cekData = tempData ? 'ya' : 'no'
-                    const noTrans = `${notrans}/${level === 5 ? kode : cost}/${findArea.nama_area}/${rome}/${year}-OPNM`
+                    const noTrans = `${notrans}/${kode}/${findArea.nama_area}/${rome}/${year}-OPNM`
                     const hasil = []
                     for (let i = 0; i < result.length; i++) {
                       const data = {
-                        kode_plant: level === 5 ? kode : cost,
+                        kode_plant: kode,
                         area: `${findArea.nama_area}`,
                         deskripsi: result[i].nama_asset,
                         no_asset: result[i].no_asset,
@@ -218,7 +236,7 @@ module.exports = {
                       const findAllStock = await stock.findAll({
                         where: {
                           [Op.and]: [
-                            { kode_plant: level === 5 ? kode : cost },
+                            { kode_plant: kode },
                             { status_form: null }
                           ]
                         }
@@ -238,7 +256,7 @@ module.exports = {
                         if (cek.length > 0) {
                           const findDepo = await depo.findOne({
                             where: {
-                              kode_plant: level === 5 ? kode : cost
+                              kode_plant: kode
                             }
                           })
                           if (findDepo) {
@@ -310,10 +328,10 @@ module.exports = {
                   return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
                 }
               } else {
-                return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length, findaset: findAsset.length }, 400, false)
+                return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result, findaset: findAsset, partArea, detailUser }, 400, false)
               }
             } else {
-              return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length }, 400, false)
+              return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length, partArea, detailUser }, 400, false)
             }
           }
         }
@@ -328,13 +346,21 @@ module.exports = {
     try {
       const { no } = req.body
       const kode = req.user.kode
-      const cost = req.user.name
-      const level = req.user.level
+      // const cost = req.user.name
+      // const level = req.user.level
       const name = req.user.fullname
       const role = req.user.role
+      const id = req.user.id
+      const { asetPart } = req.body
+      const partArea = asetPart === undefined || asetPart === 'undefined' || asetPart === null || asetPart === 'null' || asetPart === 'all' ? 'all' : asetPart
       const findArea = await depo.findOne({
         where: {
-          kode_plant: level === 5 ? kode : cost
+          kode_plant: kode
+        }
+      })
+      const detailUser = await user.findOne({
+        where: {
+          id: id
         }
       })
       if (findArea) {
@@ -356,11 +382,16 @@ module.exports = {
         })
         const findAsset = await asset.findAll({
           where: {
-            cost_center: level === 5 ? findArea.cost_center : cost,
-            [Op.or]: [
-              { status: '1' },
-              { status: '11' },
-              { status: null }
+            [Op.and]: [
+              partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
+              {
+                [Op.or]: [
+                  { status: '1' },
+                  { status: '11' },
+                  { status: null }
+                ]
+              },
+              detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }
             ]
           }
         })
@@ -1275,9 +1306,14 @@ module.exports = {
               })
               if (result.length > 0) {
                 const findArea = await ttd.findByPk(result[0].id)
-                if (findArea) {
+                const findUser = await user.findOne({
+                  where: {
+                    kode_plant: getDepo.kode_plant
+                  }
+                })
+                if (findArea && findUser) {
                   const data = {
-                    nama: getDepo.nama_aos,
+                    nama: findUser.fullname,
                     status: 1
                   }
                   const updateArea = await findArea.update(data)

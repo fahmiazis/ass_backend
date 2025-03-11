@@ -1659,9 +1659,14 @@ module.exports = {
               })
               if (result.length > 0) {
                 const findArea = await ttd.findByPk(result[0].id)
-                if (findArea) {
+                const findUser = await user.findOne({
+                  where: {
+                    kode_plant: getDepo.kode_plant
+                  }
+                })
+                if (findArea && findUser) {
                   const data = {
-                    nama: getDepo.nama_aos,
+                    nama: findUser.fullname,
                     status: 1
                   }
                   const updateArea = await findArea.update(data)
@@ -1778,7 +1783,7 @@ module.exports = {
             } else {
               if (author) {
                 const data = {
-                  nama: name,
+                  nama: fullname,
                   status: 1,
                   path: null
                 }
@@ -1822,13 +1827,13 @@ module.exports = {
                 }
               } else {
                 if (arr === 0 || find[arr - 1].status === 1) {
-                  const findDepo = await depo.findOne({
-                    where: {
-                      kode_plant: name
-                    }
-                  })
+                  // const findDepo = await depo.findOne({
+                  //   where: {
+                  //     kode_plant: name
+                  //   }
+                  // })
                   const data = {
-                    nama: level === 5 || level === 9 ? findDepo.nama_aos : name,
+                    nama: fullname,
                     status: 1,
                     path: null
                   }
@@ -1903,7 +1908,7 @@ module.exports = {
   rejectMutasi: async (req, res) => {
     try {
       const level = req.user.level
-      const name = req.user.name
+      // const name = req.user.name
       const fullname = req.user.fullname
       // const { no } = req.body
       const schema = joi.object({
@@ -1983,7 +1988,7 @@ module.exports = {
                   } else {
                     if (arr === 0 || find[arr - 1].status === 1) {
                       const data = {
-                        nama: name,
+                        nama: fullname,
                         status: 0,
                         path: results.alasan
                       }

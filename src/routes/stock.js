@@ -1,7 +1,7 @@
 const route = require('express').Router()
 const stock = require('../controllers/stock')
 
-route.get('/submit', stock.submitStock)
+route.patch('/submit', stock.submitStock)
 route.patch('/subfinal', stock.submitStockFinal)
 route.get('/get', stock.getStockAll)
 route.get('/report', stock.getReportAll)

@@ -1610,7 +1610,7 @@ module.exports = {
   approveIo: async (req, res) => {
     try {
       const level = req.user.level
-      const name = req.user.name
+      // const name = req.user.name
       const fullname = req.user.fullname
       const { no } = req.body
       const result = await role.findAll({
@@ -1653,7 +1653,7 @@ module.exports = {
                   })
                   if (level !== 5 || (level === 5 && findDepo)) {
                     const data = {
-                      nama: level === 5 ? findDepo.nama_aos : name,
+                      nama: fullname,
                       status: 1,
                       path: null
                     }

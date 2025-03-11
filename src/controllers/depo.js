@@ -24,6 +24,7 @@ module.exports = {
       const schema = joi.object({
         kode_plant: joi.string().required(),
         nama_area: joi.string().required(),
+        place_asset: joi.string().required(),
         channel: joi.string().required(),
         distribution: joi.string().required(),
         status_area: joi.string().required(),
@@ -96,6 +97,7 @@ module.exports = {
       const schema = joi.object({
         kode_plant: joi.string().required(),
         nama_area: joi.string(),
+        place_asset: joi.string().required(),
         channel: joi.string(),
         distribution: joi.string(),
         status_area: joi.string(),
@@ -236,6 +238,7 @@ module.exports = {
             [Op.or]: [
               { kode_plant: { [Op.like]: `%${searchValue}%` } },
               { nama_area: { [Op.like]: `%${searchValue}%` } },
+              { place_asset: { [Op.like]: `%${searchValue}%` } },
               { channel: { [Op.like]: `%${searchValue}%` } },
               { distribution: { [Op.like]: `%${searchValue}%` } },
               { status_area: { [Op.like]: `%${searchValue}%` } },
@@ -311,7 +314,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Area', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
+          const cek = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             console.log(valid[i] === cek[i])
@@ -330,12 +333,12 @@ module.exports = {
               const a = rows[i]
               plant.push(`Kode Plant ${a[0]}`)
               kode.push(`${a[0]}`)
-              cost.push(`Cost Center ${a[6]}`)
-              if (a[7] !== null) {
-                sap1.push(`Kode SAP 1 ${a[7]}`)
+              cost.push(`Cost Center ${a[7]}`)
+              if (a[8] !== null && a[8] !== '' && a[8] !== 'null') {
+                sap1.push(`Kode SAP 1 ${a[8]}`)
               }
-              if (a[8] !== null) {
-                sap2.push(`Kode SAP 2 ${a[8]}`)
+              if (a[9] !== null && a[9] !== '' && a[9] !== 'null') {
+                sap2.push(`Kode SAP 2 ${a[9]}`)
               }
             }
             const object = {}
@@ -397,22 +400,23 @@ module.exports = {
                 const data = {
                   kode_plant: dataDepo[0],
                   nama_area: dataDepo[1],
-                  channel: dataDepo[2],
-                  distribution: dataDepo[3],
-                  status_area: dataDepo[4],
-                  profit_center: dataDepo[5],
-                  cost_center: dataDepo[6],
-                  kode_sap_1: dataDepo[7],
-                  kode_sap_2: dataDepo[8],
-                  nama_nom: dataDepo[9],
-                  nama_om: dataDepo[10],
-                  nama_bm: dataDepo[11],
-                  nama_aos: dataDepo[12],
-                  nama_pic_1: dataDepo[13],
-                  nama_pic_2: dataDepo[14],
-                  nama_pic_3: dataDepo[15],
-                  nama_pic_4: dataDepo[16],
-                  nama_asman: dataDepo[17]
+                  place_asset: dataDepo[2],
+                  channel: dataDepo[3],
+                  distribution: dataDepo[4],
+                  status_area: dataDepo[5],
+                  profit_center: dataDepo[6],
+                  cost_center: dataDepo[7],
+                  kode_sap_1: dataDepo[8],
+                  kode_sap_2: dataDepo[9],
+                  nama_nom: dataDepo[10],
+                  nama_om: dataDepo[11],
+                  nama_bm: dataDepo[12],
+                  nama_aos: dataDepo[13],
+                  nama_pic_1: dataDepo[14],
+                  nama_pic_2: dataDepo[15],
+                  nama_pic_3: dataDepo[16],
+                  nama_pic_4: dataDepo[17],
+                  nama_asman: dataDepo[18]
                 }
                 const select = await depo.findOne({
                   where: {
@@ -462,10 +466,11 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Area', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
+        const header = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
         const key = [
           'kode_plant',
           'nama_area',
+          'place_asset',
           'channel',
           'distribution',
           'status_area',
