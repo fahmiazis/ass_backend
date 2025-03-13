@@ -1,6 +1,6 @@
 const joi = require('joi')
 const response = require('../helpers/response')
-const { user, role, depo, approve, ttd } = require('../models')
+const { user, role, depo, approve, ttd, role_user } = require('../models') // eslint-disable-line
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
 const jwt = require('jsonwebtoken')
@@ -25,12 +25,14 @@ module.exports = {
         kode_plant: joi.string().allow(''),
         user_level: joi.number().required(),
         status: joi.string().required(),
-        status_it: joi.string().allow('')
+        status_it: joi.string().allow(''),
+        multi_role: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
+        const listRole = results.multi_role.split(',')
         if (level === 1) {
           if (results.user_level === 5 || results.user_level === 9) {
             const result = await user.findAll({ where: { username: results.username } })
@@ -65,7 +67,39 @@ module.exports = {
               results.password = await bcrypt.hash(results.password, await bcrypt.genSalt())
               const result = await user.create(results)
               if (result) {
-                return response(res, 'Add User succesfully', { result })
+                if (listRole.length > 0) {
+                  const cek = []
+                  for (let i = 0; i < listRole.length; i++) {
+                    const find = await role_user.findOne({
+                      where: {
+                        [Op.and]: [
+                          { username: results.username },
+                          { id_role: listRole[i] }
+                        ]
+                      }
+                    })
+                    if (find) {
+                      cek.push(find)
+                    } else {
+                      const send = {
+                        username: results.username,
+                        id_role: listRole[i],
+                        status: 1
+                      }
+                      const createRole = await role_user.create(send)
+                      if (createRole) {
+                        cek.push(createRole)
+                      }
+                    }
+                  }
+                  if (cek.length > 0) {
+                    return response(res, 'Add User succesfully', { result })
+                  } else {
+                    return response(res, 'Add User succesfully', { result })
+                  }
+                } else {
+                  return response(res, 'Add User succesfully', { result })
+                }
               } else {
                 return response(res, 'Fail to create user', {}, 400, false)
               }
@@ -130,12 +164,14 @@ module.exports = {
         user_level: joi.number().required(),
         email: joi.string().email().required(),
         status: joi.string().required(),
-        status_it: joi.string().allow('')
+        status_it: joi.string().allow(''),
+        multi_role: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
+        const listRole = results.multi_role.split(',')
         if (level !== 0) {
           if (results.user_level === 5 || results.user_level === 9) {
             const result = await user.findAll({
@@ -178,10 +214,64 @@ module.exports = {
             if (result.length > 0) {
               return response(res, 'username already exist', { result }, 404, false)
             } else {
+              const findName = await user.findByPk(id)
               const result = await user.findByPk(id)
-              if (result) {
-                await result.update(results)
-                return response(res, 'update User succesfully', { result })
+              if (result && findName) {
+                const updateUser = await result.update(results)
+                if (updateUser) {
+                  if (listRole.length > 0) {
+                    const findRole = await role_user.findAll({
+                      where: {
+                        username: result.username
+                      }
+                    })
+                    const cek = []
+                    for (let i = 0; i < listRole.length; i++) {
+                      const find = await role_user.findOne({
+                        where: {
+                          [Op.and]: [
+                            { username: findName.username },
+                            { id_role: listRole[i] }
+                          ]
+                        }
+                      })
+                      const send = {
+                        username: results.username,
+                        id_role: listRole[i],
+                        status: 1
+                      }
+                      if (find) {
+                        const updateRole = await find.update(send)
+                        if (updateRole) {
+                          cek.push(updateRole)
+                        }
+                      } else {
+                        const createRole = await role_user.create(send)
+                        if (createRole) {
+                          cek.push(createRole)
+                        }
+                      }
+                    }
+                    for (let i = 0; i < findRole.length; i++) {
+                      const cekRole = listRole.find(item => item === findRole[i].id_role)
+                      if (cekRole === undefined) {
+                        const findId = await role_user.findByPk(findRole[i].id)
+                        if (findId) {
+                          await findId.destroy()
+                        }
+                      }
+                    }
+                    if (cek.length > 0) {
+                      return response(res, 'Update User succesfully', { result })
+                    } else {
+                      return response(res, 'Update User succesfully', { result })
+                    }
+                  } else {
+                    return response(res, 'Update User succesfully', { result })
+                  }
+                } else {
+                  return response(res, 'Fail to update user', {}, 400, false)
+                }
               } else {
                 return response(res, 'Fail to update user', {}, 400, false)
               }
@@ -306,7 +396,17 @@ module.exports = {
   getDetailUser: async (req, res) => {
     try {
       const id = req.params.id
-      const result = await user.findByPk(id)
+      const result = await user.findOne({
+        where: {
+          id: id
+        },
+        include: [
+          {
+            model: role_user,
+            as: 'detail_role'
+          }
+        ]
+      })
       if (result) {
         return response(res, `Profile of user with id ${id}`, { result })
       } else {

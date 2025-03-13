@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
-  class user extends Model {
+  class role_user extends Model { // eslint-disable-line
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,31 +11,25 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate (models) {
       // define association here
-      user.hasOne(models.role, {
+      role_user.hasOne(models.role, {
         foreignKey: 'nomor',
-        as: 'role',
-        sourceKey: 'user_level'
-      })
-      user.hasMany(models.role_user, {
-        foreignKey: 'username',
         as: 'detail_role',
+        sourceKey: 'id_role'
+      })
+      role_user.hasOne(models.user, {
+        foreignKey: 'username',
+        as: 'detail_user',
         sourceKey: 'username'
       })
     }
   };
-  user.init({
+  role_user.init({
     username: DataTypes.STRING,
-    fullname: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password: DataTypes.STRING,
-    kode_plant: DataTypes.STRING,
-    user_level: DataTypes.INTEGER,
-    status: DataTypes.ENUM('active', 'inactive'),
-    status_it: DataTypes.STRING,
-    multi_role: DataTypes.TEXT
+    id_role: DataTypes.INTEGER,
+    status: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'user'
+    modelName: 'role_user'
   })
-  return user
+  return role_user // eslint-disable-line
 }

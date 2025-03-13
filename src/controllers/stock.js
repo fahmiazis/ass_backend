@@ -350,19 +350,17 @@ module.exports = {
       // const level = req.user.level
       const name = req.user.fullname
       const role = req.user.role
-      const id = req.user.id
-      const { asetPart } = req.body
-      const partArea = asetPart === undefined || asetPart === 'undefined' || asetPart === null || asetPart === 'null' || asetPart === 'all' ? 'all' : asetPart
+      // const id = req.user.id
       const findArea = await depo.findOne({
         where: {
           kode_plant: kode
         }
       })
-      const detailUser = await user.findOne({
-        where: {
-          id: id
-        }
-      })
+      // const detailUser = await user.findOne({
+      //   where: {
+      //     id: id
+      //   }
+      // })
       if (findArea) {
         const findStock = await stock.findAll({
           where: {
@@ -380,22 +378,7 @@ module.exports = {
             }
           ]
         })
-        const findAsset = await asset.findAll({
-          where: {
-            [Op.and]: [
-              partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-              {
-                [Op.or]: [
-                  { status: '1' },
-                  { status: '11' },
-                  { status: null }
-                ]
-              },
-              detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }
-            ]
-          }
-        })
-        if (findStock && findAsset) {
+        if (findStock) {
           const cekDoc = []
           const temp = []
           for (let i = 0; i < findStock.length; i++) {
@@ -454,14 +437,18 @@ module.exports = {
           }
           if (temp.length > 0) {
             const updateAsset = []
-            for (let i = 0; i < findAsset.length; i++) {
+            for (let i = 0; i < findStock.length; i++) {
               const data = {
                 status_fisik: null,
                 keterangan: null,
                 kondisi: null,
                 grouping: null
               }
-              const result = await asset.findByPk(findAsset[i].id)
+              const result = await asset.findOne({
+                where: {
+                  no_asset: findStock[i].no_asset
+                }
+              })
               if (result) {
                 await result.update(data)
                 updateAsset.push(result)
