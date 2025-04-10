@@ -867,7 +867,7 @@ module.exports = {
             }
             if (temp.length > 0) {
               let noLevel = null
-              const tipeStat = 5
+              const tipeStat = cekLevel
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
                   where: {
