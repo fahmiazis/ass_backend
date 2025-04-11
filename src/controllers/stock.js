@@ -23,7 +23,7 @@ module.exports = {
       const id = req.user.id
       // const level = req.user.level
       const { asetPart } = req.body
-      const partArea = asetPart === undefined || asetPart === 'undefined' || asetPart === null || asetPart === 'null' || asetPart === 'all' ? 'all' : asetPart
+      const partArea = asetPart === undefined || asetPart === 'undefined' || asetPart === null || asetPart === 'null' || asetPart === 'all' || asetPart.length === 4 ? 'all' : asetPart
       const findArea = await depo.findOne({
         where: {
           kode_plant: kode
