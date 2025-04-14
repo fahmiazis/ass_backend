@@ -94,17 +94,17 @@ module.exports = {
               }
               const createNotif = await newnotif.create(data)
               if (createNotif) {
-                return response(res, 'success create newnotif', { createNotif })
+                return response(res, 'success create newnotif', { createNotif, nameTo })
               } else {
-                return response(res, 'failed create newnotif', { createNotif })
+                return response(res, 'failed create newnotif 1', { createNotif, nameTo })
               }
             }
           }
         } else {
-          return response(res, 'failed create newnotif', { findData })
+          return response(res, 'failed create newnotif 2', { findData, nameTo })
         }
       } else {
-        return response(res, 'failed get newnotif', { findRole })
+        return response(res, 'failed get newnotif 3', { findRole, nameTo })
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

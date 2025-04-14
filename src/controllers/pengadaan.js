@@ -954,7 +954,8 @@ module.exports = {
         const temp = []
         for (let i = 0; i < findIo.length; i++) {
           const data = {
-            status_form: findIo[i].kategori === 'return' ? 2 : 1,
+            // status_form: findIo[i].kategori === 'return' ? 2 : 1,
+            status_form: 1,
             isAsset: findIo[i].kategori === 'return' ? 'true' : null,
             history: `submit pengajuan by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
             tglIo: moment()
@@ -1213,7 +1214,7 @@ module.exports = {
   getApproveIo: async (req, res) => {
     try {
       const { no } = req.body
-      const level = req.user.level
+      // const level = req.user.level
       const result = await ttd.findAll({
         where: {
           [Op.or]: [
@@ -1264,22 +1265,22 @@ module.exports = {
             }
           })
           if (getApp) {
-            const getArea = await user.findOne({
-              where: {
-                kode_plant: result[0].kode_plant
-              }
-            })
+            // const getArea = await user.findOne({
+            //   where: {
+            //     kode_plant: result[0].kode_plant
+            //   }
+            // })
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
-              const cekApp = getApp[i].jabatan.toLowerCase() === 'aos' && result[0].kategori === 'return' && (level === 5 || level === 9)
+              // const cekApp = getApp[i].jabatan.toLowerCase() === 'aos' && result[0].kategori === 'return' && (level === 5 || level === 9)
               const send = {
                 jabatan: getApp[i].jabatan,
                 jenis: getApp[i].jenis,
                 sebagai: getApp[i].sebagai,
                 kategori: getApp[i].kategori,
-                no_doc: no,
-                nama: cekApp ? getArea.fullname : null,
-                status: cekApp ? 1 : null
+                no_doc: no
+                // nama: cekApp ? getArea.fullname : null,
+                // status: cekApp ? 1 : null
               }
               const make = await ttd.create(send)
               if (make) {
@@ -2586,7 +2587,12 @@ module.exports = {
                                 no_pengadaan: no
                               }
                             })
-                            if (findDoc) {
+                            const findRole = await role.findOne({
+                              where: {
+                                name: find[1].jabatan
+                              }
+                            })
+                            if (findDoc && findRole) {
                               const cek = []
                               for (let i = 0; i < findDis.length; i++) {
                                 const findIo = await pengadaan.findByPk(findDis[i].id)
@@ -2596,7 +2602,7 @@ module.exports = {
                                   isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                                   reason: results.alasan,
                                   menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
-                                  user_reject: level,
+                                  user_reject: findRole.nomor,
                                   history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`
                                 }
                                 if (findIo) {
@@ -3564,7 +3570,8 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const findData = await pengadaan.findByPk(findIo[i].id)
           const data = {
-            status_form: findData.kategori === 'return' ? 4 : 2,
+            // status_form: findData.kategori === 'return' ? 4 : 2,
+            status_form: 2,
             status_reject: null,
             isreject: null,
             date_ident_asset: moment(),
