@@ -254,10 +254,22 @@ module.exports = {
                   for (let i = 0; i < findDraftUser.length; i++) {
                     const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                     const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                    if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                      const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
-                      if (cekTemp === undefined) {
-                        temp.push(findDraftUser[i])
+                    if (cekLevel === 9) {
+                      const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
+                      if (cekBm || cekOm || cekAos) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
+                      }
+                    } else {
+                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
                       }
                     }
                   }
@@ -440,10 +452,22 @@ module.exports = {
                     for (let i = 0; i < findDraftUser.length; i++) {
                       const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                       const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
-                        if (cekTemp === undefined) {
-                          temp.push(findDraftUser[i])
+                      if (cekLevel === 9) {
+                        const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                        const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                        const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
+                        if (cekBm || cekOm || cekAos) {
+                          const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                          if (cekTemp === undefined) {
+                            temp.push(findDraftUser[i])
+                          }
+                        }
+                      } else {
+                        if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                          const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                          if (cekTemp === undefined) {
+                            temp.push(findDraftUser[i])
+                          }
                         }
                       }
                     }
@@ -552,8 +576,16 @@ module.exports = {
                         const findName = findUser[i].fullname === null ? '' : findUser[i].fullname
                         const findEmail = findUser[i].email === null ? '' : findUser[i].email
                         cekName.push(findName)
-                        if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                          toMail = findUser[i]
+                        if (cekLevel === 9) {
+                          const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                          const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                          if (cekBm || cekOm) {
+                            toMail = findUser[i]
+                          }
+                        } else {
+                          if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                            toMail = findUser[i]
+                          }
                         }
                       }
                       if (toMail !== null) {
@@ -657,10 +689,22 @@ module.exports = {
                   for (let i = 0; i < findDraftUser.length; i++) {
                     const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                     const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                    if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                      const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
-                      if (cekTemp === undefined) {
-                        temp.push(findDraftUser[i])
+                    if (cekLevel === 9) {
+                      const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
+                      if (cekBm || cekOm || cekAos) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
+                      }
+                    } else {
+                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
                       }
                     }
                   }
@@ -841,10 +885,22 @@ module.exports = {
                   for (let i = 0; i < findDraftUser.length; i++) {
                     const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                     const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                    if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                      const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
-                      if (cekTemp === undefined) {
-                        temp.push(findDraftUser[i])
+                    if (cekLevel === 9) {
+                      const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
+                      if (cekBm || cekOm || cekAos) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
+                      }
+                    } else {
+                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
                       }
                     }
                   }
@@ -1031,10 +1087,22 @@ module.exports = {
                   for (let i = 0; i < findDraftUser.length; i++) {
                     const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                     const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                    if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                      const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
-                      if (cekTemp === undefined) {
-                        temp.push(findDraftUser[i])
+                    if (cekLevel === 9) {
+                      const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                      const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
+                      if (cekBm || cekOm || cekAos) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
+                      }
+                    } else {
+                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
                       }
                     }
                   }
@@ -1216,10 +1284,22 @@ module.exports = {
                     for (let i = 0; i < findDraftUser.length; i++) {
                       const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                       const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                      if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
-                        if (cekTemp === undefined) {
-                          temp.push(findDraftUser[i])
+                      if (cekLevel === 9) {
+                        const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                        const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                        const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
+                        if (cekBm || cekOm || cekAos) {
+                          const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                          if (cekTemp === undefined) {
+                            temp.push(findDraftUser[i])
+                          }
+                        }
+                      } else {
+                        if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                          const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                          if (cekTemp === undefined) {
+                            temp.push(findDraftUser[i])
+                          }
                         }
                       }
                     }
