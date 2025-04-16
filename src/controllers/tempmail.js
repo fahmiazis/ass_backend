@@ -499,7 +499,7 @@ module.exports = {
                     console.log(arr)
                     const findLevel = await role.findOne({
                       where: {
-                        name: findApp[arr].jabatan === 'AOS' && cekLevel === 9 ? 'HO' : findApp[arr].jabatan
+                        name: (findApp[arr].jabatan === 'AOS' && jenis === 'mutasi' && findTrans.kode_plant_rec.length > 4) ? 'HO' : findApp[arr].jabatan
                       }
                     })
                     if (findLevel) {
