@@ -92,6 +92,7 @@ module.exports = {
       const timeVal2 = time2 === 'undefined' ? 'all' : time2
       const timeV1 = moment(timeVal1)
       const timeV2 = timeVal1 !== 'all' && timeVal1 === timeVal2 ? moment(timeVal2).add(1, 'd') : moment(timeVal2).add(1, 'd')
+      const statTrans = status === 'undefined' || status === null ? 'all' : status
       let searchValue = ''
       let sortValue = ''
       if (typeof search === 'object') {
@@ -103,11 +104,6 @@ module.exports = {
         sortValue = Object.values(sort)[0]
       } else {
         sortValue = sort || 'id'
-      }
-      if (!status) {
-        status = 1
-      } else {
-        status = parseInt(status)
       }
       if (!limit) {
         limit = 100
@@ -124,6 +120,9 @@ module.exports = {
       const result = await mutasi.findAll({
         where: {
           [Op.and]: [
+            statTrans === 'all'
+              ? { [Op.not]: { no_mutasi: null } }
+              : { status_form: parseInt(statTrans) },
             timeVal1 === 'all'
               ? { [Op.not]: { id: null } }
               : {
