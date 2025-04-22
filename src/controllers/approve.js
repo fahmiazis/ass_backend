@@ -15,7 +15,8 @@ module.exports = {
         kategori: joi.string().allow(''),
         nama_approve: joi.string().required(),
         tipe: joi.string().required(),
-        kode_plant: joi.string().required()
+        kode_plant: joi.string().required(),
+        struktur: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -122,8 +123,8 @@ module.exports = {
               const findApp = await approve.findAll({
                 where: {
                   [Op.and]: [
-                    { kode_plant: results.kode_plant },
-                    { nama_approve: results.name }
+                    { kode_plant: findName.kode_plant },
+                    { nama_approve: findName.name }
                   ]
                 }
               })
@@ -185,7 +186,8 @@ module.exports = {
         kategori: joi.string().allow(''),
         nama_approve: joi.string().required(),
         tipe: joi.string().required(),
-        kode_plant: joi.string().required()
+        kode_plant: joi.string().required(),
+        struktur: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {

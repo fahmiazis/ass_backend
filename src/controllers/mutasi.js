@@ -1,5 +1,5 @@
 const response = require('../helpers/response')
-const { mutasi, asset, depo, ttd, approve, role, user, docUser, document, path, email, reservoir } = require('../models')
+const { mutasi, asset, depo, ttd, approve, role, user, docUser, document, path, email, reservoir, role_user } = require('../models') // eslint-disable-line
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const joi = require('joi')
@@ -247,6 +247,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
+      const idUser = req.user.id
       const fullname = req.user.fullname
       const cost = req.user.name
       const { status, time1, time2 } = req.query
@@ -280,6 +281,36 @@ module.exports = {
         page = 1
       } else {
         page = parseInt(page)
+      }
+      const dumpLevel = []
+      // const listApp = [12, 7, 26, 27, 5, 9]
+      const listApp = [12, 7, 5, 9, 28]
+      const findUser = await user.findOne({
+        where: {
+          id: idUser
+        },
+        include: [
+          {
+            model: role_user,
+            as: 'detail_role'
+          }
+        ]
+      })
+      for (let i = 0; i < findUser.detail_role.length + 1; i++) {
+        if (i === findUser.detail_role.length) {
+          const dataCek = parseInt(findUser.user_level)
+          const select = listApp.find(x => x === dataCek)
+          if (select !== undefined) {
+            dumpLevel.push(dataCek)
+          }
+        } else {
+          const data = findUser.detail_role[i]
+          const dataCek = parseInt(data.id_role)
+          const select = listApp.find(x => x === dataCek)
+          if (select !== undefined) {
+            dumpLevel.push(dataCek)
+          }
+        }
       }
 
       if (level === 5 || level === 9) {
@@ -358,13 +389,18 @@ module.exports = {
         } else {
           return response(res, 'failed to get mutasi', {}, 404, false)
         }
-      } else if (level === 12 || level === 7 || level === 26 || level === 27) {
+      // } else if (level === 12 || level === 7 || level === 26 || level === 27) {
+      } else if (listApp.find(item => dumpLevel.find(x => x === item)) !== undefined) {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              { nama_bm: level === 12 || level === 27 ? fullname : 'undefined' },
-              { nama_om: level === 7 ? fullname : 'undefined' },
-              { nama_asman: level === 26 ? fullname : 'undefined' }
+              // { nama_bm: level === 12 || level === 27 ? fullname : 'undefined' },
+              // { nama_om: level === 7 ? fullname : 'undefined' },
+              // { nama_asman: level === 26 ? fullname : 'undefined' }
+              { nama_bm: dumpLevel.find(x => x === 12) || dumpLevel.find(x => x === 27) ? fullname : 'undefined' },
+              { nama_om: dumpLevel.find(x => x === 7) ? fullname : 'undefined' },
+              { nama_asman: dumpLevel.find(x => x === 26) ? fullname : 'undefined' },
+              { nama_nom: dumpLevel.find(x => x === 28) ? fullname : 'undefined' }
             ]
           }
         })
@@ -375,11 +411,15 @@ module.exports = {
               const depoArr = listDepo.split(',')
               if (depoArr.find(item => item === findDepo[i].kode_plant) !== undefined) {
                 const data = { kode_plant: findDepo[i].kode_plant }
+                const rec = { kode_plant_rec: findDepo[i].kode_plant }
                 dataDepo.push(data)
+                dataDepo.push(rec)
               }
             } else {
               const data = { kode_plant: findDepo[i].kode_plant }
+              const rec = { kode_plant_rec: findDepo[i].kode_plant }
               dataDepo.push(data)
+              dataDepo.push(rec)
             }
           }
           const result = await mutasi.findAndCountAll({
@@ -450,397 +490,6 @@ module.exports = {
         } else {
           return response(res, 'failed get mutasi', {}, 400, false)
         }
-      } else if (level === 13 || level === 16) {
-        const findRole = await role.findOne({
-          where: {
-            nomor: '27'
-          }
-        })
-        const findDepo = await depo.findAll({
-          where: {
-            [Op.or]: [
-              { nama_bm: fullname },
-              { nama_om: fullname }
-            ]
-          }
-        })
-        if (findRole && findDepo.length > 0) {
-          const hasil = []
-          for (let i = 0; i < findDepo.length; i++) {
-            const result = await mutasi.findAll({
-              where: {
-                kode_plant: findDepo[i].kode_plant,
-                [Op.or]: [
-                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                  { cost_center: { [Op.like]: `%${searchValue}%` } },
-                  { area: { [Op.like]: `%${searchValue}%` } },
-                  { no_asset: { [Op.like]: `%${searchValue}%` } },
-                  { no_mutasi: { [Op.like]: `%${searchValue}%` } }
-                ],
-                status_form: 2
-              },
-              order: [
-                [sortValue, 'ASC'],
-                [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-              ],
-              include: [
-                {
-                  model: ttd,
-                  as: 'appForm'
-                },
-                {
-                  model: path,
-                  as: 'pict'
-                },
-                {
-                  model: docUser,
-                  as: 'docAsset'
-                }
-              ]
-            })
-            if (result.length > 0) {
-              for (let j = 0; j < result.length; j++) {
-                hasil.push(result[j])
-              }
-            }
-          }
-          if (hasil.length > 0) {
-            const tempDis = []
-            hasil.map(x => {
-              return (
-                tempDis.push(x.no_mutasi)
-              )
-            })
-            const setDis = new Set(tempDis)
-            const noSet = [...setDis]
-            if (level === 13) {
-              const result = await mutasi.findAndCountAll({
-                where: {
-                  kategori: 'IT',
-                  [Op.or]: [
-                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                    { cost_center: { [Op.like]: `%${searchValue}%` } },
-                    { area: { [Op.like]: `%${searchValue}%` } },
-                    { no_asset: { [Op.like]: `%${searchValue}%` } },
-                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
-                  ],
-                  status_form: 2
-                },
-                order: [
-                  [sortValue, 'ASC'],
-                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-                ],
-                limit: limit,
-                offset: (page - 1) * limit,
-                include: [
-                  {
-                    model: ttd,
-                    as: 'appForm'
-                  },
-                  {
-                    model: path,
-                    as: 'pict'
-                  },
-                  {
-                    model: docUser,
-                    as: 'docAsset'
-                  }
-                ],
-                group: 'no_mutasi'
-              })
-              if (result.rows.length > 0) {
-                const data = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  if (result.rows[i].appForm.length > 0) {
-                    const app = result.rows[i].appForm
-                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
-                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
-                      data.push(result.rows[i].no_mutasi)
-                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
-                      data.push(result.rows[i].no_mutasi)
-                    }
-                  }
-                }
-                const set = new Set(data)
-                const noMut = [...set]
-                const newData = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  for (let j = 0; j < noMut.length; j++) {
-                    if (result.rows[i].no_mutasi === noMut[j]) {
-                      newData.push(result.rows[i])
-                    }
-                  }
-                }
-                const tempAll = hasil.concat(newData)
-                const setMerge = new Set(tempAll)
-                const mergeData = [...setMerge]
-                const tempNo = noMut.concat(noSet)
-                const setNo = new Set(tempNo)
-                const mergeNo = [...setNo]
-                if (newData.length) {
-                  const result = { rows: mergeData, count: mergeData.length }
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
-                } else {
-                  const result = { rows: [], count: 0 }
-                  const noMut = []
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
-                }
-              } else {
-                const result = { rows: [], count: 0 }
-                const noMut = []
-                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                return response(res, 'success get mutasi', { result, pageInfo, noMut })
-              }
-            } else {
-              const result = await mutasi.findAndCountAll({
-                where: {
-                  [Op.or]: [
-                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                    { cost_center: { [Op.like]: `%${searchValue}%` } },
-                    { area: { [Op.like]: `%${searchValue}%` } },
-                    { no_asset: { [Op.like]: `%${searchValue}%` } },
-                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
-                  ],
-                  status_form: 2
-                },
-                order: [
-                  [sortValue, 'ASC'],
-                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-                ],
-                limit: limit,
-                offset: (page - 1) * limit,
-                include: [
-                  {
-                    model: ttd,
-                    as: 'appForm'
-                  },
-                  {
-                    model: path,
-                    as: 'pict'
-                  },
-                  {
-                    model: docUser,
-                    as: 'docAsset'
-                  }
-                ],
-                group: 'no_mutasi'
-              })
-              if (result.rows.length > 0) {
-                const data = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  if (result.rows[i].appForm.length > 0) {
-                    const app = result.rows[i].appForm
-                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
-                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
-                      data.push(result.rows[i].no_mutasi)
-                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
-                      data.push(result.rows[i].no_mutasi)
-                    }
-                  }
-                }
-                const set = new Set(data)
-                const noMut = [...set]
-                const newData = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  for (let j = 0; j < noMut.length; j++) {
-                    if (result.rows[i].no_mutasi === noMut[j]) {
-                      newData.push(result.rows[i])
-                    }
-                  }
-                }
-                const tempAll = hasil.concat(newData)
-                const setMerge = new Set(tempAll)
-                const mergeData = [...setMerge]
-                const tempNo = noMut.concat(noSet)
-                const setNo = new Set(tempNo)
-                const mergeNo = [...setNo]
-                if (newData.length) {
-                  const result = { rows: mergeData, count: mergeData.length }
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
-                } else {
-                  const result = { rows: [], count: 0 }
-                  const noMut = []
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
-                }
-              } else {
-                const result = { rows: [], count: 0 }
-                const noMut = []
-                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                return response(res, 'success get mutasi', { result, pageInfo, noMut })
-              }
-            }
-          } else {
-            const tempDis = []
-            const setDis = new Set(tempDis)
-            const noSet = [...setDis]
-            if (level === 13) {
-              const result = await mutasi.findAndCountAll({
-                where: {
-                  kategori: 'IT',
-                  [Op.or]: [
-                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                    { cost_center: { [Op.like]: `%${searchValue}%` } },
-                    { area: { [Op.like]: `%${searchValue}%` } },
-                    { no_asset: { [Op.like]: `%${searchValue}%` } },
-                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
-                  ],
-                  status_form: 2
-                },
-                order: [
-                  [sortValue, 'ASC'],
-                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-                ],
-                limit: limit,
-                offset: (page - 1) * limit,
-                include: [
-                  {
-                    model: ttd,
-                    as: 'appForm'
-                  },
-                  {
-                    model: path,
-                    as: 'pict'
-                  },
-                  {
-                    model: docUser,
-                    as: 'docAsset'
-                  }
-                ],
-                group: 'no_mutasi'
-              })
-              if (result.rows.length > 0) {
-                const data = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  if (result.rows[i].appForm.length > 0) {
-                    const app = result.rows[i].appForm
-                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
-                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
-                      data.push(result.rows[i].no_mutasi)
-                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
-                      data.push(result.rows[i].no_mutasi)
-                    }
-                  }
-                }
-                const set = new Set(data)
-                const noMut = [...set]
-                const newData = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  for (let j = 0; j < noMut.length; j++) {
-                    if (result.rows[i].no_mutasi === noMut[j]) {
-                      newData.push(result.rows[i])
-                    }
-                  }
-                }
-                const tempAll = hasil.concat(newData)
-                const setMerge = new Set(tempAll)
-                const mergeData = [...setMerge]
-                const tempNo = noMut.concat(noSet)
-                const setNo = new Set(tempNo)
-                const mergeNo = [...setNo]
-                if (newData.length) {
-                  const result = { rows: mergeData, count: mergeData.length }
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
-                } else {
-                  const result = { rows: [], count: 0 }
-                  const noMut = []
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
-                }
-              } else {
-                const result = { rows: [], count: 0 }
-                const noMut = []
-                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                return response(res, 'success get mutasi', { result, pageInfo, noMut })
-              }
-            } else {
-              const result = await mutasi.findAndCountAll({
-                where: {
-                  [Op.or]: [
-                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                    { cost_center: { [Op.like]: `%${searchValue}%` } },
-                    { area: { [Op.like]: `%${searchValue}%` } },
-                    { no_asset: { [Op.like]: `%${searchValue}%` } },
-                    { no_mutasi: { [Op.like]: `%${searchValue}%` } }
-                  ],
-                  status_form: 2
-                },
-                order: [
-                  [sortValue, 'ASC'],
-                  [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-                ],
-                limit: limit,
-                offset: (page - 1) * limit,
-                include: [
-                  {
-                    model: ttd,
-                    as: 'appForm'
-                  },
-                  {
-                    model: path,
-                    as: 'pict'
-                  },
-                  {
-                    model: docUser,
-                    as: 'docAsset'
-                  }
-                ],
-                group: 'no_mutasi'
-              })
-              if (result.rows.length > 0) {
-                const data = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  if (result.rows[i].appForm.length > 0) {
-                    const app = result.rows[i].appForm
-                    // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
-                    if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
-                      data.push(result.rows[i].no_mutasi)
-                    } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
-                      data.push(result.rows[i].no_mutasi)
-                    }
-                  }
-                }
-                const set = new Set(data)
-                const noMut = [...set]
-                const newData = []
-                for (let i = 0; i < result.rows.length; i++) {
-                  for (let j = 0; j < noMut.length; j++) {
-                    if (result.rows[i].no_mutasi === noMut[j]) {
-                      newData.push(result.rows[i])
-                    }
-                  }
-                }
-                const tempAll = hasil.concat(newData)
-                const setMerge = new Set(tempAll)
-                const mergeData = [...setMerge]
-                const tempNo = noMut.concat(noSet)
-                const setNo = new Set(tempNo)
-                const mergeNo = [...setNo]
-                if (newData.length) {
-                  const result = { rows: mergeData, count: mergeData.length }
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
-                } else {
-                  const result = { rows: [], count: 0 }
-                  const noMut = []
-                  const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                  return response(res, 'success get mutasi', { result, pageInfo, noMut })
-                }
-              } else {
-                const result = { rows: [], count: 0 }
-                const noMut = []
-                const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
-                return response(res, 'success get mutasi', { result, pageInfo, noMut })
-              }
-            }
-          }
-        } else {
-          return response(res, 'failed get mutasi', {}, 404, false)
-        }
       } else {
         const result = await mutasi.findAndCountAll({
           where: {
@@ -905,6 +554,398 @@ module.exports = {
           return response(res, 'success get mutasi', { result, pageInfo, noMut })
         }
       }
+      // else if (level === 13 || level === 16) {
+      //   const findRole = await role.findOne({
+      //     where: {
+      //       nomor: '27'
+      //     }
+      //   })
+      //   const findDepo = await depo.findAll({
+      //     where: {
+      //       [Op.or]: [
+      //         { nama_bm: fullname },
+      //         { nama_om: fullname }
+      //       ]
+      //     }
+      //   })
+      //   if (findRole && findDepo.length > 0) {
+      //     const hasil = []
+      //     for (let i = 0; i < findDepo.length; i++) {
+      //       const result = await mutasi.findAll({
+      //         where: {
+      //           kode_plant: findDepo[i].kode_plant,
+      //           [Op.or]: [
+      //             { kode_plant: { [Op.like]: `%${searchValue}%` } },
+      //             { cost_center: { [Op.like]: `%${searchValue}%` } },
+      //             { area: { [Op.like]: `%${searchValue}%` } },
+      //             { no_asset: { [Op.like]: `%${searchValue}%` } },
+      //             { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+      //           ],
+      //           status_form: 2
+      //         },
+      //         order: [
+      //           [sortValue, 'ASC'],
+      //           [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+      //         ],
+      //         include: [
+      //           {
+      //             model: ttd,
+      //             as: 'appForm'
+      //           },
+      //           {
+      //             model: path,
+      //             as: 'pict'
+      //           },
+      //           {
+      //             model: docUser,
+      //             as: 'docAsset'
+      //           }
+      //         ]
+      //       })
+      //       if (result.length > 0) {
+      //         for (let j = 0; j < result.length; j++) {
+      //           hasil.push(result[j])
+      //         }
+      //       }
+      //     }
+      //     if (hasil.length > 0) {
+      //       const tempDis = []
+      //       hasil.map(x => {
+      //         return (
+      //           tempDis.push(x.no_mutasi)
+      //         )
+      //       })
+      //       const setDis = new Set(tempDis)
+      //       const noSet = [...setDis]
+      //       if (level === 13) {
+      //         const result = await mutasi.findAndCountAll({
+      //           where: {
+      //             kategori: 'IT',
+      //             [Op.or]: [
+      //               { kode_plant: { [Op.like]: `%${searchValue}%` } },
+      //               { cost_center: { [Op.like]: `%${searchValue}%` } },
+      //               { area: { [Op.like]: `%${searchValue}%` } },
+      //               { no_asset: { [Op.like]: `%${searchValue}%` } },
+      //               { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+      //             ],
+      //             status_form: 2
+      //           },
+      //           order: [
+      //             [sortValue, 'ASC'],
+      //             [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+      //           ],
+      //           limit: limit,
+      //           offset: (page - 1) * limit,
+      //           include: [
+      //             {
+      //               model: ttd,
+      //               as: 'appForm'
+      //             },
+      //             {
+      //               model: path,
+      //               as: 'pict'
+      //             },
+      //             {
+      //               model: docUser,
+      //               as: 'docAsset'
+      //             }
+      //           ],
+      //           group: 'no_mutasi'
+      //         })
+      //         if (result.rows.length > 0) {
+      //           const data = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             if (result.rows[i].appForm.length > 0) {
+      //               const app = result.rows[i].appForm
+      //               // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+      //               if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               }
+      //             }
+      //           }
+      //           const set = new Set(data)
+      //           const noMut = [...set]
+      //           const newData = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             for (let j = 0; j < noMut.length; j++) {
+      //               if (result.rows[i].no_mutasi === noMut[j]) {
+      //                 newData.push(result.rows[i])
+      //               }
+      //             }
+      //           }
+      //           const tempAll = hasil.concat(newData)
+      //           const setMerge = new Set(tempAll)
+      //           const mergeData = [...setMerge]
+      //           const tempNo = noMut.concat(noSet)
+      //           const setNo = new Set(tempNo)
+      //           const mergeNo = [...setNo]
+      //           if (newData.length) {
+      //             const result = { rows: mergeData, count: mergeData.length }
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+      //           } else {
+      //             const result = { rows: [], count: 0 }
+      //             const noMut = []
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //           }
+      //         } else {
+      //           const result = { rows: [], count: 0 }
+      //           const noMut = []
+      //           const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //           return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //         }
+      //       } else {
+      //         const result = await mutasi.findAndCountAll({
+      //           where: {
+      //             [Op.or]: [
+      //               { kode_plant: { [Op.like]: `%${searchValue}%` } },
+      //               { cost_center: { [Op.like]: `%${searchValue}%` } },
+      //               { area: { [Op.like]: `%${searchValue}%` } },
+      //               { no_asset: { [Op.like]: `%${searchValue}%` } },
+      //               { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+      //             ],
+      //             status_form: 2
+      //           },
+      //           order: [
+      //             [sortValue, 'ASC'],
+      //             [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+      //           ],
+      //           limit: limit,
+      //           offset: (page - 1) * limit,
+      //           include: [
+      //             {
+      //               model: ttd,
+      //               as: 'appForm'
+      //             },
+      //             {
+      //               model: path,
+      //               as: 'pict'
+      //             },
+      //             {
+      //               model: docUser,
+      //               as: 'docAsset'
+      //             }
+      //           ],
+      //           group: 'no_mutasi'
+      //         })
+      //         if (result.rows.length > 0) {
+      //           const data = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             if (result.rows[i].appForm.length > 0) {
+      //               const app = result.rows[i].appForm
+      //               // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+      //               if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               }
+      //             }
+      //           }
+      //           const set = new Set(data)
+      //           const noMut = [...set]
+      //           const newData = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             for (let j = 0; j < noMut.length; j++) {
+      //               if (result.rows[i].no_mutasi === noMut[j]) {
+      //                 newData.push(result.rows[i])
+      //               }
+      //             }
+      //           }
+      //           const tempAll = hasil.concat(newData)
+      //           const setMerge = new Set(tempAll)
+      //           const mergeData = [...setMerge]
+      //           const tempNo = noMut.concat(noSet)
+      //           const setNo = new Set(tempNo)
+      //           const mergeNo = [...setNo]
+      //           if (newData.length) {
+      //             const result = { rows: mergeData, count: mergeData.length }
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+      //           } else {
+      //             const result = { rows: [], count: 0 }
+      //             const noMut = []
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //           }
+      //         } else {
+      //           const result = { rows: [], count: 0 }
+      //           const noMut = []
+      //           const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //           return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //         }
+      //       }
+      //     } else {
+      //       const tempDis = []
+      //       const setDis = new Set(tempDis)
+      //       const noSet = [...setDis]
+      //       if (level === 13) {
+      //         const result = await mutasi.findAndCountAll({
+      //           where: {
+      //             kategori: 'IT',
+      //             [Op.or]: [
+      //               { kode_plant: { [Op.like]: `%${searchValue}%` } },
+      //               { cost_center: { [Op.like]: `%${searchValue}%` } },
+      //               { area: { [Op.like]: `%${searchValue}%` } },
+      //               { no_asset: { [Op.like]: `%${searchValue}%` } },
+      //               { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+      //             ],
+      //             status_form: 2
+      //           },
+      //           order: [
+      //             [sortValue, 'ASC'],
+      //             [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+      //           ],
+      //           limit: limit,
+      //           offset: (page - 1) * limit,
+      //           include: [
+      //             {
+      //               model: ttd,
+      //               as: 'appForm'
+      //             },
+      //             {
+      //               model: path,
+      //               as: 'pict'
+      //             },
+      //             {
+      //               model: docUser,
+      //               as: 'docAsset'
+      //             }
+      //           ],
+      //           group: 'no_mutasi'
+      //         })
+      //         if (result.rows.length > 0) {
+      //           const data = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             if (result.rows[i].appForm.length > 0) {
+      //               const app = result.rows[i].appForm
+      //               // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+      //               if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               }
+      //             }
+      //           }
+      //           const set = new Set(data)
+      //           const noMut = [...set]
+      //           const newData = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             for (let j = 0; j < noMut.length; j++) {
+      //               if (result.rows[i].no_mutasi === noMut[j]) {
+      //                 newData.push(result.rows[i])
+      //               }
+      //             }
+      //           }
+      //           const tempAll = hasil.concat(newData)
+      //           const setMerge = new Set(tempAll)
+      //           const mergeData = [...setMerge]
+      //           const tempNo = noMut.concat(noSet)
+      //           const setNo = new Set(tempNo)
+      //           const mergeNo = [...setNo]
+      //           if (newData.length) {
+      //             const result = { rows: mergeData, count: mergeData.length }
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+      //           } else {
+      //             const result = { rows: [], count: 0 }
+      //             const noMut = []
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //           }
+      //         } else {
+      //           const result = { rows: [], count: 0 }
+      //           const noMut = []
+      //           const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //           return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //         }
+      //       } else {
+      //         const result = await mutasi.findAndCountAll({
+      //           where: {
+      //             [Op.or]: [
+      //               { kode_plant: { [Op.like]: `%${searchValue}%` } },
+      //               { cost_center: { [Op.like]: `%${searchValue}%` } },
+      //               { area: { [Op.like]: `%${searchValue}%` } },
+      //               { no_asset: { [Op.like]: `%${searchValue}%` } },
+      //               { no_mutasi: { [Op.like]: `%${searchValue}%` } }
+      //             ],
+      //             status_form: 2
+      //           },
+      //           order: [
+      //             [sortValue, 'ASC'],
+      //             [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+      //           ],
+      //           limit: limit,
+      //           offset: (page - 1) * limit,
+      //           include: [
+      //             {
+      //               model: ttd,
+      //               as: 'appForm'
+      //             },
+      //             {
+      //               model: path,
+      //               as: 'pict'
+      //             },
+      //             {
+      //               model: docUser,
+      //               as: 'docAsset'
+      //             }
+      //           ],
+      //           group: 'no_mutasi'
+      //         })
+      //         if (result.rows.length > 0) {
+      //           const data = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             if (result.rows[i].appForm.length > 0) {
+      //               const app = result.rows[i].appForm
+      //               // console.log(app.find(({ jabatan }) => jabatan === findRole.name))
+      //               if (app.find(({ jabatan }) => jabatan === findRole.name) === undefined) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               } else if (app.find(({ jabatan }) => jabatan === findRole.name) !== undefined && app.find(({ jabatan }) => jabatan === findRole.name).status !== null) {
+      //                 data.push(result.rows[i].no_mutasi)
+      //               }
+      //             }
+      //           }
+      //           const set = new Set(data)
+      //           const noMut = [...set]
+      //           const newData = []
+      //           for (let i = 0; i < result.rows.length; i++) {
+      //             for (let j = 0; j < noMut.length; j++) {
+      //               if (result.rows[i].no_mutasi === noMut[j]) {
+      //                 newData.push(result.rows[i])
+      //               }
+      //             }
+      //           }
+      //           const tempAll = hasil.concat(newData)
+      //           const setMerge = new Set(tempAll)
+      //           const mergeData = [...setMerge]
+      //           const tempNo = noMut.concat(noSet)
+      //           const setNo = new Set(tempNo)
+      //           const mergeNo = [...setNo]
+      //           if (newData.length) {
+      //             const result = { rows: mergeData, count: mergeData.length }
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut: mergeNo })
+      //           } else {
+      //             const result = { rows: [], count: 0 }
+      //             const noMut = []
+      //             const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //             return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //           }
+      //         } else {
+      //           const result = { rows: [], count: 0 }
+      //           const noMut = []
+      //           const pageInfo = pagination('/mutasi/get', req.query, page, limit, result.count)
+      //           return response(res, 'success get mutasi', { result, pageInfo, noMut })
+      //         }
+      //       }
+      //     }
+      //   } else {
+      //     return response(res, 'failed get mutasi', {}, 404, false)
+      //   }
+      // }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
@@ -1293,14 +1334,15 @@ module.exports = {
   submitMutasiFinal: async (req, res) => {
     try {
       const { no } = req.body
-      const kode = req.user.kode
+      // const kode = req.user.kode
       // const name = req.user.name
       const fullname = req.user.fullname
       const findMut = await mutasi.findAll({
         where: {
           [Op.and]: [
-            { kode_plant: kode },
-            { status_form: 1 }
+            // { kode_plant: kode },
+            // { status_form: 1 }
+            { no_mutasi: no }
           ]
         }
       })
@@ -1319,14 +1361,15 @@ module.exports = {
           }
         }
         if (temp.length > 0) {
+          // return response(res, 'successs submit cart')
           const prev = moment().format('L').split('/')
           const cek = []
           for (let i = 0; i < findMut.length; i++) {
             const find = await mutasi.findByPk(findMut[i].id)
             if (find) {
-              const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+              const findApi = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
               if (findApi.status === 200) {
-                const findCost = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findCost = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 if (findCost.status === 200) {
                   const data = {
                     isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
@@ -1334,14 +1377,15 @@ module.exports = {
                     cost_centerawal: findCost.data[0] === undefined ? null : findCost.data[0].kostv === undefined ? null : findCost.data[0].kostv === null ? null : findCost.data[0].kostv === '' ? null : findCost.data[0].kostv
                   }
                   await find.update(data)
+                  cek.push(1)
                 } else {
                   const data = {
                     isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
                     no_io: findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn
                   }
                   await find.update(data)
+                  cek.push(1)
                 }
-                cek.push(1)
               } else {
                 const data = {
                   isbudget: 'tidak',
@@ -1372,10 +1416,10 @@ module.exports = {
             return response(res, 'success submit cart')
           }
         } else {
-          return response(res, 'failed submit cart', {}, 404, false)
+          return response(res, 'failed submit cart 1', {}, 404, false)
         }
       } else {
-        return response(res, 'failed submit cart', {}, 404, false)
+        return response(res, 'failed submit cart 2', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -1476,9 +1520,9 @@ module.exports = {
       //     for (let i = 0; i < result.length; i++) {
       //       const find = await mutasi.findByPk(result[i].id)
       //       if (find) {
-      //         const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+      //         const findApi = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
       //         if (findApi.status === 200) {
-      //           const findCost = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+      //           const findCost = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
       //           if (findCost.status === 200) {
       //             const data = {
       //               isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
@@ -1576,7 +1620,7 @@ module.exports = {
   getApproveMut: async (req, res) => {
     try {
       const no = req.body.no
-      const nama = req.body.nama
+      // const nama = req.body.nama
       const result = await ttd.findAll({
         where: {
           no_doc: no
@@ -1613,6 +1657,9 @@ module.exports = {
           }
         })
         if (findDis) {
+          const cekFrm = findDis[0].kode_plant.length > 4 ? 9 : 5
+          const cekTo = findDis[0].kode_plant_rec.length > 4 ? 9 : 5
+          const finName = cekFrm === 9 && cekTo === 9 ? 'Mutasi HO HO' : cekFrm === 9 && cekTo === 5 ? 'Mutasi HO area' : cekFrm === 5 && cekTo === 9 ? 'Mutasi area HO' : 'Mutasi area area'
           const cekIt = []
           const cekNonIt = []
           for (let i = 0; i < findDis.length; i++) {
@@ -1629,7 +1676,7 @@ module.exports = {
           })
           const getApp = await approve.findAll({
             where: {
-              nama_approve: nama,
+              nama_approve: finName,
               [Op.or]: [
                 { jenis: cekIt.length > 0 ? 'it' : cekNonIt.length > 0 ? 'non-it' : 'all' },
                 { jenis: 'all' }
@@ -1640,11 +1687,12 @@ module.exports = {
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
-                jabatan: getApp[i].jabatan,
+                jabatan: getApp[i].jabatan === 'AOS' && ((cekFrm === 9 && i === 0) || (cekTo === 9 && i === (getApp.length - 1))) ? 'HO' : getApp[i].jabatan,
                 jenis: getApp[i].jenis,
                 sebagai: getApp[i].sebagai,
                 kategori: null,
-                no_doc: no
+                no_doc: no,
+                struktur: getApp[i].struktur
               }
               const make = await ttd.create(send)
               if (make) {
@@ -1713,170 +1761,386 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  // approveMutasi: async (req, res) => {
+  //   try {
+  //     const level = req.user.level
+  //     const name = req.user.name
+  //     const fullname = req.user.fullname
+  //     const no = req.body.no
+  //     const findMut = await mutasi.findOne({
+  //       where: {
+  //         no_mutasi: no
+  //       }
+  //     })
+  //     const result = await role.findAll({
+  //       where: {
+  //         nomor: level
+  //       }
+  //     })
+  //     if (result.length > 0 && findMut) {
+  //       const find = await ttd.findAll({
+  //         where: {
+  //           no_doc: no
+  //         }
+  //       })
+  //       if (find.length > 0) {
+  //         const author = level === 13 || level === 16 || level === 12 || level === 27
+  //         const divisi = author && 'Manager'
+  //         let hasil = 0
+  //         let div = 0
+  //         let arr = null
+  //         let who = 0
+  //         // let position = ''
+  //         if (author) {
+  //           const findPlant = await depo.findOne({
+  //             where: {
+  //               kode_plant: findMut.kode_plant
+  //             }
+  //           })
+  //           if (findPlant && (findPlant.nama_bm === name)) {
+  //             who = 1
+  //           } else {
+  //             const findPlantRec = await depo.findOne({
+  //               where: {
+  //                 kode_plant: findMut.kode_plant_rec
+  //               }
+  //             })
+  //             if (findPlantRec && (findPlantRec.nama_bm === name)) {
+  //               who = 2
+  //             }
+  //           }
+  //         }
+  //         for (let i = 0; i < find.length; i++) {
+  //           if (result[0].name === find[i].jabatan) {
+  //             hasil = find[i].id
+  //             arr = i
+  //             // position = find[i].jabatan
+  //           } else if (who === 1 && author && divisi === find[i].jabatan && find[i].sebagai === 'pembuat') {
+  //             div = find[i].id
+  //             // num = i
+  //             // post = find[i].jabatan
+  //           } else if (who === 2 && author && divisi === find[i].jabatan && find[i].sebagai === 'penerima') {
+  //             div = find[i].id
+  //             // num = i
+  //             // post = find[i].jabatan
+  //           }
+  //         }
+  //         if (hasil !== 0 || (hasil === 0 && author)) {
+  //           if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0) && !author) {
+  //             return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
+  //           } else {
+  //             if (author) {
+  //               const data = {
+  //                 nama: fullname,
+  //                 status: 1,
+  //                 path: null
+  //               }
+  //               const findTtd = await ttd.findByPk(hasil === 0 ? div : hasil)
+  //               if (findTtd && findMut) {
+  //                 const findTd = await ttd.findByPk(div === 0 ? hasil : div)
+  //                 const upTd = await findTd.update(data)
+  //                 const sent = await findTtd.update(data)
+  //                 if (sent && upTd) {
+  //                   const findTrans = await mutasi.findAll({
+  //                     where: {
+  //                       no_mutasi: no
+  //                     }
+  //                   })
+  //                   if (findTrans) {
+  //                     const valid = []
+  //                     for (let i = 0; i < findTrans.length; i++) {
+  //                       const data = {
+  //                         status_form: findTrans[i].status_form,
+  //                         status_reject: null,
+  //                         isreject: null,
+  //                         history: `${findTrans[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+  //                       }
+  //                       const findAsset = await mutasi.findByPk(findTrans[i].id)
+  //                       if (findAsset) {
+  //                         await findAsset.update(data)
+  //                         valid.push(1)
+  //                       }
+  //                     }
+  //                     if (valid.length === findTrans.length) {
+  //                       return response(res, 'success approve mutasi')
+  //                     } else {
+  //                       return response(res, 'success approve mutasi')
+  //                     }
+  //                   } else {
+  //                     return response(res, 'failed approve mutasi', {}, 404, false)
+  //                   }
+  //                 } else {
+  //                   return response(res, 'failed approve mutasi', {}, 404, false)
+  //                 }
+  //               }
+  //             } else {
+  //               if (arr === 0 || find[arr - 1].status === 1) {
+  //                 // const findDepo = await depo.findOne({
+  //                 //   where: {
+  //                 //     kode_plant: name
+  //                 //   }
+  //                 // })
+  //                 const data = {
+  //                   nama: fullname,
+  //                   status: 1,
+  //                   path: null
+  //                 }
+  //                 const findTtd = await ttd.findByPk(hasil)
+  //                 if (findTtd) {
+  //                   const sent = await findTtd.update(data)
+  //                   if (sent) {
+  //                     const results = await ttd.findAll({
+  //                       where: {
+  //                         [Op.and]: [
+  //                           { no_doc: no },
+  //                           { status: 1 }
+  //                         ]
+  //                       }
+  //                     })
+  //                     if (results.length) {
+  //                       const findTrans = await mutasi.findAll({
+  //                         where: {
+  //                           no_mutasi: no
+  //                         }
+  //                       })
+  //                       if (findTrans) {
+  //                         const valid = []
+  //                         for (let i = 0; i < findTrans.length; i++) {
+  //                           const data = {
+  //                             status_form: results.length === find.length && findTrans[i].isbudget === 'ya' ? 3 : results.length === find.length && findTrans[i].isbudget !== 'ya' ? 4 : findTrans[i].status_form,
+  //                             status_reject: null,
+  //                             isreject: null,
+  //                             history: `${findTrans[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+  //                           }
+  //                           const findData = await mutasi.findByPk(findTrans[i].id)
+  //                           if (findData) {
+  //                             await findData.update(data)
+  //                             valid.push(1)
+  //                           }
+  //                         }
+  //                         if (valid.length === findTrans.length) {
+  //                           return response(res, 'success approve mutasi1')
+  //                         } else {
+  //                           return response(res, 'success approve mutasi2')
+  //                         }
+  //                       } else {
+  //                         return response(res, 'failed approve mutasi', {}, 404, false)
+  //                       }
+  //                     } else {
+  //                       return response(res, 'failed approve mutasi', {}, 404, false)
+  //                     }
+  //                   } else {
+  //                     return response(res, 'failed approve mutasi', {}, 404, false)
+  //                   }
+  //                 } else {
+  //                   return response(res, 'failed approve mutasi', {}, 404, false)
+  //                 }
+  //               } else {
+  //                 return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+  //               }
+  //             }
+  //           }
+  //         } else {
+  //           return response(res, 'failed approve mutasi', {}, 404, false)
+  //         }
+  //       } else {
+  //         return response(res, 'failed approve mutasi', {}, 404, false)
+  //       }
+  //     } else {
+  //       return response(res, 'failed approve mutasi', {}, 404, false)
+  //     }
+  //   } catch (error) {
+  //     return response(res, error.message, {}, 500, false)
+  //   }
+  // },
   approveMutasi: async (req, res) => {
     try {
       const level = req.user.level
-      const name = req.user.name
+      // const name = req.user.name
       const fullname = req.user.fullname
-      const no = req.body.no
-      const findMut = await mutasi.findOne({
-        where: {
-          no_mutasi: no
-        }
-      })
+      const { no, indexApp } = req.body
       const result = await role.findAll({
         where: {
           nomor: level
         }
       })
-      if (result.length > 0 && findMut) {
+      if (result.length > 0) {
         const find = await ttd.findAll({
           where: {
             no_doc: no
           }
         })
         if (find.length > 0) {
-          const author = level === 13 || level === 16 || level === 12 || level === 27
-          const divisi = author && 'Manager'
-          let hasil = 0
-          let div = 0
-          let arr = null
-          let who = 0
+          const convIndex = (find.length - 1) - parseInt(indexApp)
+          const hasil = find[convIndex].id
+          const arr = convIndex
           // let position = ''
-          if (author) {
-            const findPlant = await depo.findOne({
-              where: {
-                kode_plant: findMut.kode_plant
-              }
-            })
-            if (findPlant && (findPlant.nama_bm === name)) {
-              who = 1
-            } else {
-              const findPlantRec = await depo.findOne({
-                where: {
-                  kode_plant: findMut.kode_plant_rec
-                }
-              })
-              if (findPlantRec && (findPlantRec.nama_bm === name)) {
-                who = 2
-              }
-            }
-          }
-          for (let i = 0; i < find.length; i++) {
-            if (result[0].name === find[i].jabatan) {
-              hasil = find[i].id
-              arr = i
-              // position = find[i].jabatan
-            } else if (who === 1 && author && divisi === find[i].jabatan && find[i].sebagai === 'pembuat') {
-              div = find[i].id
-              // num = i
-              // post = find[i].jabatan
-            } else if (who === 2 && author && divisi === find[i].jabatan && find[i].sebagai === 'penerima') {
-              div = find[i].id
-              // num = i
-              // post = find[i].jabatan
-            }
-          }
-          if (hasil !== 0 || (hasil === 0 && author)) {
-            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0) && !author) {
+          // for (let i = 0; i < find.length; i++) {
+          //   if (result[0].name === find[i].jabatan) {
+          //     hasil = find[i].id
+          //     arr = i
+          //     // position = find[i].jabatan
+          //   }
+          // }
+          if (hasil !== 0) {
+            if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
               return response(res, 'Anda tidak memiliki akses lagi untuk mengapprove', {}, 404, false)
             } else {
-              if (author) {
-                const data = {
-                  nama: fullname,
-                  status: 1,
-                  path: null
-                }
-                const findTtd = await ttd.findByPk(hasil === 0 ? div : hasil)
-                if (findTtd && findMut) {
-                  const findTd = await ttd.findByPk(div === 0 ? hasil : div)
-                  const upTd = await findTd.update(data)
-                  const sent = await findTtd.update(data)
-                  if (sent && upTd) {
-                    const findTrans = await mutasi.findAll({
-                      where: {
-                        no_mutasi: no
-                      }
-                    })
-                    if (findTrans) {
-                      const valid = []
-                      for (let i = 0; i < findTrans.length; i++) {
-                        const data = {
-                          status_form: findTrans[i].status_form,
-                          status_reject: null,
-                          isreject: null,
-                          history: `${findTrans[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
-                        }
-                        const findAsset = await mutasi.findByPk(findTrans[i].id)
-                        if (findAsset) {
-                          await findAsset.update(data)
-                          valid.push(1)
-                        }
-                      }
-                      if (valid.length === findTrans.length) {
-                        return response(res, 'success approve mutasi')
-                      } else {
-                        return response(res, 'success approve mutasi')
-                      }
-                    } else {
-                      return response(res, 'failed approve mutasi', {}, 404, false)
+              if (arr === 0 || find[arr - 1].status === 1) {
+                const dataTemp = await mutasi.findOne({
+                  where: {
+                    no_mutasi: no
+                  }
+                })
+                if (dataTemp) {
+                  const findDepo = await depo.findOne({
+                    where: {
+                      kode_plant: dataTemp.kode_plant_rec
                     }
-                  } else {
-                    return response(res, 'failed approve mutasi', {}, 404, false)
-                  }
-                }
-              } else {
-                if (arr === 0 || find[arr - 1].status === 1) {
-                  // const findDepo = await depo.findOne({
-                  //   where: {
-                  //     kode_plant: name
-                  //   }
-                  // })
-                  const data = {
-                    nama: fullname,
-                    status: 1,
-                    path: null
-                  }
-                  const findTtd = await ttd.findByPk(hasil)
-                  if (findTtd) {
-                    const sent = await findTtd.update(data)
-                    if (sent) {
-                      const results = await ttd.findAll({
-                        where: {
-                          [Op.and]: [
-                            { no_doc: no },
-                            { status: 1 }
-                          ]
-                        }
-                      })
-                      if (results.length) {
-                        const findTrans = await mutasi.findAll({
-                          where: {
-                            no_mutasi: no
-                          }
-                        })
-                        if (findTrans) {
-                          const valid = []
-                          for (let i = 0; i < findTrans.length; i++) {
-                            const data = {
-                              status_form: results.length === find.length && findTrans[i].isbudget === 'ya' ? 3 : results.length === find.length && findTrans[i].isbudget !== 'ya' ? 4 : findTrans[i].status_form,
-                              status_reject: null,
-                              isreject: null,
-                              history: `${findTrans[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                  })
+                  if (level !== 5 || (level === 5 && findDepo)) {
+                    const data = {
+                      nama: fullname,
+                      status: 1,
+                      path: null
+                    }
+                    const findTtd = await ttd.findByPk(hasil)
+                    if (findTtd) {
+                      const sent = await findTtd.update(data)
+                      if (sent) {
+                        if (arr < 2) {
+                          const findDoc = await mutasi.findOne({
+                            where: {
+                              no_mutasi: no
                             }
-                            const findData = await mutasi.findByPk(findTrans[i].id)
-                            if (findData) {
-                              await findData.update(data)
-                              valid.push(1)
+                          })
+                          if (findDoc) {
+                            const findRole = await role.findAll({
+                              where: {
+                                name: find[arr + 1].jabatan
+                              }
+                            })
+                            if (findRole.length > 0) {
+                              const findMut = await mutasi.findAll({
+                                where: {
+                                  no_mutasi: no
+                                }
+                              })
+                              if (findMut.length > 0) {
+                                const cek = []
+                                for (let i = 0; i < findMut.length; i++) {
+                                  const upData = {
+                                    status_reject: null,
+                                    isreject: null,
+                                    history: `${findMut[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                                  }
+                                  const findId = await mutasi.findByPk(findMut[i].id)
+                                  if (findId) {
+                                    await findId.update(upData)
+                                    cek.push(findId)
+                                  }
+                                }
+                                if (cek.length > 0) {
+                                  return response(res, 'success approve pengajuan mutasi')
+                                } else {
+                                  return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
+                                }
+                              } else {
+                                return response(res, 'failed approve mutasi', {}, 404, false)
+                              }
                             }
-                          }
-                          if (valid.length === findTrans.length) {
-                            return response(res, 'success approve mutasi1')
-                          } else {
-                            return response(res, 'success approve mutasi2')
                           }
                         } else {
-                          return response(res, 'failed approve mutasi', {}, 404, false)
+                          const results = await ttd.findAll({
+                            where: {
+                              [Op.and]: [
+                                { no_doc: no },
+                                { status: 1 }
+                              ]
+                            }
+                          })
+                          if (results.length === find.length) {
+                            const findDoc = await mutasi.findAll({
+                              where: {
+                                no_mutasi: no
+                              }
+                            })
+                            if (findDoc.length > 0) {
+                              const valid = []
+                              for (let i = 0; i < findDoc.length; i++) {
+                                const data = {
+                                  status_form: findDoc[i].isbudget === 'ya' ? 3 : findDoc[i].isbudget !== 'ya' && 4,
+                                  // date_fullapp: moment(),
+                                  status_reject: null,
+                                  isreject: null,
+                                  history: `${findDoc[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                                }
+                                const findAsset = await mutasi.findByPk(findDoc[i].id)
+                                if (findAsset) {
+                                  await findAsset.update(data)
+                                  valid.push(1)
+                                }
+                              }
+                              if (valid.length === findDoc.length) {
+                                const findUser = await user.findOne({
+                                  where: {
+                                    user_level: 8
+                                  }
+                                })
+                                if (findUser) {
+                                  return response(res, 'success approve pengajuan mutasi')
+                                } else {
+                                  return response(res, 'success approve mutasi')
+                                }
+                              } else {
+                                return response(res, 'success approve mutasi')
+                              }
+                            } else {
+                              return response(res, 'success approve mutasi')
+                            }
+                          } else {
+                            const findDoc = await mutasi.findOne({
+                              where: {
+                                no_mutasi: no
+                              }
+                            })
+                            if (findDoc) {
+                              const findRole = await role.findAll({
+                                where: {
+                                  name: find[arr + 1].jabatan
+                                }
+                              })
+                              if (findRole.length > 0) {
+                                const findMut = await mutasi.findAll({
+                                  where: {
+                                    no_mutasi: no
+                                  }
+                                })
+                                if (findMut.length > 0) {
+                                  const cek = []
+                                  for (let i = 0; i < findMut.length; i++) {
+                                    const upData = {
+                                      status_reject: null,
+                                      isreject: null,
+                                      history: `${findMut[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                                    }
+                                    const findId = await mutasi.findByPk(findMut[i].id)
+                                    if (findId) {
+                                      await findId.update(upData)
+                                      cek.push(findId)
+                                    }
+                                  }
+                                  if (cek.length > 0) {
+                                    return response(res, 'success approve pengajuan mutasi')
+                                  } else {
+                                    return response(res, 'berhasil approve, tidak berhasil kirim notif email 2')
+                                  }
+                                } else {
+                                  return response(res, 'failed approve mutasi', {}, 404, false)
+                                }
+                              }
+                            }
+                          }
                         }
                       } else {
                         return response(res, 'failed approve mutasi', {}, 404, false)
@@ -1888,8 +2152,10 @@ module.exports = {
                     return response(res, 'failed approve mutasi', {}, 404, false)
                   }
                 } else {
-                  return response(res, `${find[arr - 1].jabatan} belum approve`, {}, 404, false)
+                  return response(res, 'failed approve mutasi', {}, 404, false)
                 }
+              } else {
+                return response(res, `${find[arr - 1].jabatan} belum approve atau telah mereject`, {}, 404, false)
               }
             }
           } else {
@@ -2010,7 +2276,12 @@ module.exports = {
                                 no_mutasi: no
                               }
                             })
-                            if (findDoc) {
+                            const findRole = await role.findOne({
+                              where: {
+                                name: find[1].jabatan
+                              }
+                            })
+                            if (findDoc && findRole) {
                               const cek = []
                               for (let i = 0; i < findDis.length; i++) {
                                 const findMut = await mutasi.findByPk(findDis[i].id)
@@ -2020,7 +2291,7 @@ module.exports = {
                                   isreject: listId.find(e => e === findDis[i].id) ? 1 : null,
                                   reason: results.alasan,
                                   menu_rev: results.type_reject === 'pembatalan' ? null : results.menu,
-                                  user_reject: level,
+                                  user_reject: findRole.nomor,
                                   history: `${findDis[i].history}, ${results.type_reject === 'pembatalan' ? histBatal : histRev}`,
                                   user_rev: userRev
                                 }
@@ -2071,7 +2342,7 @@ module.exports = {
       try {
         if (err instanceof multer.MulterError) {
           if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
-            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            // console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
             return response(res, 'fieldname doesnt match', {}, 500, false)
           }
           return response(res, err.message, {}, 500, false)

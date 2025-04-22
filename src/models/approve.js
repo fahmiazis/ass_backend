@@ -23,7 +23,8 @@ module.exports = (sequelize, DataTypes) => {
     status: DataTypes.STRING,
     access: DataTypes.STRING,
     tipe: DataTypes.STRING,
-    kode_plant: DataTypes.STRING
+    kode_plant: DataTypes.STRING,
+    struktur: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'approve'

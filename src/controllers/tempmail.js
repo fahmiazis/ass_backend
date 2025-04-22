@@ -157,7 +157,7 @@ module.exports = {
     try {
       const name = req.user.name
       const level = req.user.level
-      const { no, kode, tipe, menu, jenis, typeReject } = req.body
+      const { no, kode, tipe, menu, jenis, typeReject, indexApp } = req.body
       const transaksi = jenis === 'pengadaan' ? pengadaan : jenis === 'disposal' ? disposal : jenis === 'mutasi' ? mutasi : stock
       const noTrans = jenis === 'pengadaan'
         ? { no_pengadaan: no } : jenis === 'disposal'   // eslint-disable-line
@@ -494,9 +494,20 @@ module.exports = {
                 let arr = null
                 console.log(findApp)
                 for (let i = 0; i < findApp.length; i++) {
-                  if (findRole.name === findApp[i].jabatan) {
+                  if (jenis === 'mutasi') {
+                    const convIndex = (findApp.length - 1) - parseInt(indexApp === 'first' ? (findApp.length - 1) : indexApp)
+                    arr = convIndex + 1
+                    const findLevel = await role.findOne({
+                      where: {
+                        name: (findApp[arr].jabatan === 'AOS' && jenis === 'mutasi' && findTrans.kode_plant_rec.length > 4) ? 'HO' : findApp[arr].jabatan
+                      }
+                    })
+                    if (findLevel) {
+                      noLevel = findLevel
+                    }
+                    break
+                  } else if (findRole.name === findApp[i].jabatan) {
                     arr = i + 1
-                    console.log(arr)
                     const findLevel = await role.findOne({
                       where: {
                         name: (findApp[arr].jabatan === 'AOS' && jenis === 'mutasi' && findTrans.kode_plant_rec.length > 4) ? 'HO' : findApp[arr].jabatan
@@ -545,7 +556,7 @@ module.exports = {
                   ]
                   const cekName = []
                   if (findUser.length > 0) {
-                    if (jenis === 'mutasi' && (parseInt(noLevel.nomor) === 5 || parseInt(noLevel.nomor) === 9)) {
+                    if (jenis === 'mutasi' && findApp[arr].struktur === 'penerima') {
                       const findArea = await depo.findOne({
                         where: {
                           kode_plant: findTrans.kode_plant_rec
@@ -557,8 +568,17 @@ module.exports = {
                         const findName = findUser[i].fullname === null ? '' : findUser[i].fullname
                         const findEmail = findUser[i].email === null ? '' : findUser[i].email
                         cekName.push(findName)
-                        if (listUser.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
-                          toMail = findUser[i]
+                        if (cekLevel === 9) {
+                          const cekBm = findArea.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findArea.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
+                          const cekOm = findArea.nama_om.toString().toLowerCase() === findName.toLowerCase() || findArea.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
+                          const cekAos = findArea.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findArea.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
+                          if (cekBm || cekOm || cekAos) {
+                            toMail = findUser[i]
+                          }
+                        } else {
+                          if (listUser.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
+                            toMail = findUser[i]
+                          }
                         }
                       }
                       if (toMail !== null) {
