@@ -2069,7 +2069,7 @@ module.exports = {
                               const valid = []
                               for (let i = 0; i < findDoc.length; i++) {
                                 const data = {
-                                  status_form: findDoc[i].isbudget === 'ya' ? 3 : findDoc[i].isbudget !== 'ya' && 4,
+                                  status_form: findDoc.find(item => item.isbudget === 'ya') !== undefined ? 3 : findDoc[i].isbudget !== 'ya' && 4,
                                   // date_fullapp: moment(),
                                   status_reject: null,
                                   isreject: null,
@@ -3888,6 +3888,7 @@ module.exports = {
   submitBudget: async (req, res) => {
     try {
       // const level = req.user.level
+      const fullname = req.user.fullname
       const no = req.body.no
       const findMutasi = await mutasi.findAll({
         where: {
@@ -3899,28 +3900,31 @@ module.exports = {
         for (let i = 0; i < findMutasi.length; i++) {
           const data = {
             status_form: 4,
-            tgl_mutasisap: null
+            tgl_mutasisap: null,
+            status_reject: null,
+            isreject: null,
+            pic_budget: fullname
           }
-          const send = {
-            kode_plant: findMutasi[i].kode_plant_rec,
-            status: null,
-            area: findMutasi[i].area_rec,
-            keterangan: null
-          }
+          // const send = {
+          //   kode_plant: findMutasi[i].kode_plant_rec,
+          //   status: null,
+          //   area: findMutasi[i].area_rec,
+          //   keterangan: null
+          // }
           const findData = await mutasi.findByPk(findMutasi[i].id)
-          const findAsset = await asset.findOne({
-            where: {
-              no_asset: findMutasi[i].no_asset
-            }
-          })
-          if (findData && findAsset) {
+          // const findAsset = await asset.findOne({
+          //   where: {
+          //     no_asset: findMutasi[i].no_asset
+          //   }
+          // })
+          if (findData) {
             await findData.update(data)
-            await findAsset.update(send)
+            // await findAsset.update(send)
             cek.push(1)
           }
         }
-        if (cek.length === findMutasi.length) {
-          return response(res, 'success submit budget', {}, 404, false)
+        if (cek.length > 0) {
+          return response(res, 'success submit budget')
         } else {
           return response(res, 'failed submit budget', {}, 404, false)
         }

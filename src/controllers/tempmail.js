@@ -753,7 +753,7 @@ module.exports = {
               // const tipeStat = tempStat === 2 ? 2 : 5
               // const tipeStat = cekData === 'ya' ? 2 : 4
               // const tipeStat = jenis === 'pengadaan' && findTrans.kategori === 'return' ? 2 : jenis === 'pengadaan' ? 8 : jenis === 'mutasi' && findTrans.isbudget === 'ya' ? 8 : 2
-              const tipeStat = jenis === 'pengadaan' ? 8 : jenis === 'mutasi' && findTrans.isbudget === 'ya' ? 8 : 2
+              const tipeStat = jenis === 'pengadaan' ? 8 : jenis === 'mutasi' && findAllTrans.find(item => item.isbudget === 'ya') !== undefined ? 8 : 2
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
                   where: {
