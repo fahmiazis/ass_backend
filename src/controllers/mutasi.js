@@ -2184,7 +2184,8 @@ module.exports = {
         list: joi.array(),
         type: joi.string(),
         type_reject: joi.string(),
-        user_rev: joi.string()
+        user_rev: joi.string(),
+        indexApp: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -2238,16 +2239,17 @@ module.exports = {
                 }
               })
               if (find.length > 0) {
-                let hasil = 0
-                let arr = null
+                const convIndex = (find.length - 1) - parseInt(results.indexApp)
+                const hasil = find[convIndex].id
+                const arr = convIndex
                 // let position = ''
-                for (let i = 0; i < find.length; i++) {
-                  if (result[0].name === find[i].jabatan) {
-                    hasil = find[i].id
-                    arr = i
-                  // position = find[i].jabatan
-                  }
-                }
+                // for (let i = 0; i < find.length; i++) {
+                //   if (result[0].name === find[i].jabatan) {
+                //     hasil = find[i].id
+                //     arr = i
+                //   // position = find[i].jabatan
+                //   }
+                // }
                 if (hasil !== 0) {
                   if (arr !== find.length - 1 && (find[arr + 1].status !== null || find[arr + 1].status === 1 || find[arr + 1].status === 0)) {
                     return response(res, 'Anda tidak memiliki akses lagi untuk mereject', {}, 404, false)
