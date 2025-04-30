@@ -36,7 +36,8 @@ module.exports = (sequelize, DataTypes) => {
     periode: DataTypes.DATE,
     no_stock: DataTypes.STRING,
     desc: DataTypes.STRING,
-    status_dokumen: DataTypes.TEXT
+    status_dokumen: DataTypes.TEXT,
+    no_asset: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'docUser'

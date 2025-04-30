@@ -163,15 +163,12 @@ module.exports = {
         ? { no_pengadaan: no } : jenis === 'disposal'   // eslint-disable-line
             ? { no_disposal: no } : jenis === 'mutasi'  // eslint-disable-line
                 ? { no_mutasi: no } : { no_stock: no }  // eslint-disable-line
-
-      const findRole = await role.findOne({
-        where: {
-          nomor: level
-        }
-      })
       const findDepo = await depo.findOne({
         where: {
           kode_plant: kode
+        },
+        attributes: {
+          exclude: ['nama_pic_4', 'nama_pic_3']
         }
       })
       const cekLevel = kode.length > 4 ? 9 : 5
@@ -189,6 +186,11 @@ module.exports = {
           [Op.and]: [
             noTrans
           ]
+        }
+      })
+      const findRole = await role.findOne({
+        where: {
+          nomor: jenis === 'disposal' && findTrans.status_form === 26 ? cekLevel : level
         }
       })
       if (findRole && findDepo && findTrans && findAllTrans.length > 0) {
@@ -293,7 +295,10 @@ module.exports = {
             }
             if (temp.length > 0) {
               let noLevel = null
-              const tipeStat = (parseInt(findTrans.status_form) === 1 && jenis === 'disposal') ? 6 : (parseInt(findTrans.status_form) === 1 || parseInt(findTrans.status_form) === 9 || (parseInt(findTrans.status_form) === 4 && jenis === 'mutasi')) ? cekLevel : 2
+              const cek1 = (parseInt(findTrans.status_form) === 1 && jenis === 'disposal')
+              const cek2 = (parseInt(findTrans.status_form) === 1 || parseInt(findTrans.status_form) === 9 || (parseInt(findTrans.status_form) === 4 && jenis === 'mutasi'))
+              const cek3 = (parseInt(findTrans.status_form) === 26 && jenis === 'disposal')
+              const tipeStat = cek1 ? 6 : cek2 || cek3 ? cekLevel : 2
               // const tipeStat = 5
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({

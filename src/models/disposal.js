@@ -77,7 +77,10 @@ module.exports = (sequelize, DataTypes) => {
     history: DataTypes.TEXT,
     user_rev: DataTypes.STRING,
     pic_aset: DataTypes.STRING,
-    pic_budget: DataTypes.STRING
+    pic_budget: DataTypes.STRING,
+    pic_tax: DataTypes.STRING,
+    pic_purch: DataTypes.STRING,
+    pic_finance: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'disposal'
