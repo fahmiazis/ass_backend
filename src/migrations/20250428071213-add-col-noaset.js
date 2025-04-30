@@ -2,12 +2,12 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('docusers', 'no_asset', {
+    await queryInterface.addColumn('docUsers', 'no_asset', {
       type: Sequelize.DataTypes.STRING
     })
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('docusers', 'no_asset', {})
+    await queryInterface.removeColumn('docUsers', 'no_asset', {})
   }
 }
