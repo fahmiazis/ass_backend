@@ -699,7 +699,7 @@ module.exports = {
       const timeSync1 = moment().format('L').split('/')
       const time = date1 === undefined || date1 === 'undefined' || date1 === null || date1 === 'null' || date1 === '' ? timeSync1 : moment(date1).format('L').split('/')
       if (type === 'no') {
-        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${noAset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`, { timeout: (6) }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${noAset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`, { timeout: (1000 * 60 * 10) }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
         console.log(findApi)
         if (findApi.status === 200 && findApi.data.length > 0) {
           const data = findApi.data[0]
@@ -737,7 +737,7 @@ module.exports = {
           return response(res, 'failed sync asset', { findApi, time, type, noAset }, 404, false)
         }
       } else {
-        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`, { timeout: (6) }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`, { timeout: (1000 * 60 * 10) }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
         const findDepo = await depo.findAll()
         if (findApi.status === 200 && findApi.data.length > 0 && findDepo.length > 0) {
           const cekSync = []
