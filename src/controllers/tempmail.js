@@ -615,7 +615,7 @@ module.exports = {
                       }
                       if (toMail !== null) {
                         if (findDraft) {
-                          return response(res, 'success get draft email area', { from: name, to: toMail, cc: temp, result: findDraft, findDepo })
+                          return response(res, 'success get draft email area', { from: name, to: toMail, cc: temp, result: findDraft, findDepo, noLevel, findRole, findApp })
                         } else {
                           return response(res, 'failed get emai7l', { toMail, findUser, listName, cekName }, 404, false)
                         }
@@ -639,7 +639,7 @@ module.exports = {
                     ]
                   })
                   if (findUser) {
-                    return response(res, 'success get draft email nasional', { from: name, to: findUser, cc: temp, result: findDraft, findDepo })
+                    return response(res, 'success get draft email nasional', { from: name, to: findUser, cc: temp, result: findDraft, findDepo, noLevel })
                   } else {
                     return response(res, 'failed get emai4l', { findUser, noLevel }, 404, false)
                   }
@@ -1699,12 +1699,12 @@ module.exports = {
             const mailOptions = {
               from: 'noreply_aset@pinusmerahabadi.co.id',
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
-              to: `${to}`,
-              cc: `${cc.split(',')}, neng_rina@pinusmerahabadi.co.id, pmaho_asset1@pinusmerahabadi.co.id, noreplyofr@gmail.com`,
+              // to: `${to}`,
+              // cc: `${cc.split(',')}, neng_rina@pinusmerahabadi.co.id, pmaho_asset1@pinusmerahabadi.co.id, noreplyofr@gmail.com`,
               // to: 'neng_rina@pinusmerahabadi.co.id',
               // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
-              // to: 'noreplyofr@gmail.com',
-              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              to: 'noreplyofr@gmail.com',
+              cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>

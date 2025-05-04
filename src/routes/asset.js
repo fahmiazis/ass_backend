@@ -9,5 +9,6 @@ route.patch('/update/:id', asset.updateAsset)
 route.delete('/delete/:id', asset.deleteAsset)
 route.post('/master', asset.uploadMasterAsset)
 route.get('/export', asset.exportSqlAsset)
+route.get('/sync', asset.syncAsset)
 
 module.exports = route

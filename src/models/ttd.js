@@ -25,7 +25,8 @@ module.exports = (sequelize, DataTypes) => {
     status: DataTypes.INTEGER,
     no_set: DataTypes.STRING,
     recent: DataTypes.STRING,
-    struktur: DataTypes.STRING
+    struktur: DataTypes.STRING,
+    id_role: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'ttd'

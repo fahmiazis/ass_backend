@@ -630,5 +630,37 @@ module.exports = {
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
+  },
+  updateTtd: async (req, res) => {
+    try {
+      const findAllTtd = await ttd.findAll()
+      const findRole = await role.findAll()
+      if (findAllTtd.length > 0) {
+        const cekTtd = []
+        const dataCek = []
+        for (let i = 0; i < findAllTtd.length; i++) {
+          const data = findAllTtd[i]
+          const cek = findRole.find((item) => item.name === data.jabatan)
+          dataCek.push(cek)
+          if (cek !== undefined) {
+            const findId = await ttd.findByPk(data.id)
+            const send = {
+              id_role: cek.nomor
+            }
+            await findId.update(send)
+            cekTtd.push(findId)
+          }
+        }
+        if (cekTtd.length > 0) {
+          return response(res, 'success to update ttd', { result: cekTtd })
+        } else {
+          return response(res, 'failed to update ttd1', { dataCek }, 404, false)
+        }
+      } else {
+        return response(res, 'failed to update ttd2', { }, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   }
 }

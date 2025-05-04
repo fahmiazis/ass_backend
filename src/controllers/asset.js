@@ -9,7 +9,9 @@ const uploadMaster = require('../helpers/uploadMaster')
 const fs = require('fs')
 const excel = require('exceljs')
 const vs = require('fs-extra')
-const { APP_BE } = process.env
+const moment = require('moment')
+const axios = require('axios')
+const { APP_BE, APP_SAP } = process.env
 
 module.exports = {
   addAsset: async (req, res) => {
@@ -688,6 +690,113 @@ module.exports = {
       })
     } else {
       return response(res, "You're not super administrator", {}, 404, false)
+    }
+  },
+  syncAsset: async (req, res) => {
+    try {
+      req.setTimeout(1000 * 60 * 60)
+      const { date1, type, noAset } = req.query
+      const timeSync1 = moment().format('L').split('/')
+      const time = date1 === undefined || date1 === 'undefined' || date1 === null || date1 === 'null' || date1 === '' ? timeSync1 : moment(date1).format('L').split('/')
+      if (type === 'no') {
+        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${noAset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`, { timeout: (6) }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+        console.log(findApi)
+        if (findApi.status === 200 && findApi.data.length > 0) {
+          const data = findApi.data[0]
+          const findDepo = await depo.findOne({
+            where: {
+              cost_center: data.kostl
+            }
+          })
+          const findAset = await asset.findOne({
+            where: {
+              no_asset: noAset
+            }
+          })
+          const send = {
+            no_asset: (data.anln1 + '0').slice(2, -1),
+            no_doc: 0,
+            tanggal: data.aktiv === undefined ? '' : data.aktiv,
+            nama_asset: data.txt50 === undefined ? '' : data.txt50,
+            nilai_acquis: data.kansw === undefined ? 0 : data.kansw.toString().split('.')[0],
+            accum_dep: data.knafa === undefined ? 0 : data.knafa.toString().split('.')[0],
+            nilai_buku: data.nafap === undefined ? 0 : data.nafap.toString().split('.')[0],
+            kode_plant: data.werks,
+            cost_center: data.kostl,
+            area: findDepo ? findDepo.nama_area : '',
+            unit: 1
+          }
+          if (findAset) {
+            const updateAset = await findAset.update(send)
+            return response(res, 'success sync aset', { result: updateAset })
+          } else {
+            const createAset = await asset.create(send)
+            return response(res, 'success sync aset', { result: createAset })
+          }
+        } else {
+          return response(res, 'failed sync asset', { findApi, time, type, noAset }, 404, false)
+        }
+      } else {
+        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`, { timeout: (6) }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+        const findDepo = await depo.findAll()
+        if (findApi.status === 200 && findApi.data.length > 0 && findDepo.length > 0) {
+          const cekSync = []
+          const data = findApi.data
+          for (let i = 0; i < data.length; i++) {
+            const cekArea = findDepo.find(item => item.cost_center === data[i].kostl)
+            const send = {
+              no_asset: (data[i].anln1 + '0').slice(2, -1),
+              no_doc: 0,
+              tanggal: data[i].aktiv === undefined ? '' : data[i].aktiv,
+              nama_asset: data[i].txt50 === undefined ? '' : data[i].txt50,
+              nilai_acquis: data[i].kansw === undefined ? 0 : data[i].kansw.toString().split('.')[0],
+              accum_dep: data[i].knafa === undefined ? 0 : data[i].knafa.toString().split('.')[0],
+              nilai_buku: data[i].nafap === undefined ? 0 : data[i].nafap.toString().split('.')[0],
+              kode_plant: data[i].werks,
+              cost_center: data[i].kostl,
+              area: cekArea ? cekArea.nama_area : '',
+              unit: 1
+            }
+            // const findAset = await asset.findOne({
+            //   where: {
+            //     [Op.or]: [
+            //       { no_asset: data[i].anln1 },
+            //       { no_asset: (data[i].anln1 + '0').slice(2, -1) }
+            //     ]
+            //   }
+            // })
+            const updateAset = await asset.update(send, {
+              where: {
+                no_asset: send.no_asset
+                // [Op.or]: [
+                //   { no_asset: data[i].anln1 },
+                //   { no_asset: (data[i].anln1 + '0').slice(2, -1) }
+                // ]
+              }
+            })
+            if (updateAset) {
+              // const send = {
+              //   no_asset: findAset.no_asset,
+              //   ...send
+              // }
+              // const updateAset = await findAset.update(send)
+              cekSync.push(updateAset)
+            } else {
+              const createAset = await asset.create(send)
+              cekSync.push(createAset)
+            }
+          }
+          if (cekSync.length > 0) {
+            return response(res, 'success sync asset')
+          } else {
+            return response(res, 'failed sync asset', {}, 404, false)
+          }
+        } else {
+          return response(res, 'failed sync asset', {}, 404, false)
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
     }
   },
   exportSqlAsset: async (req, res) => {

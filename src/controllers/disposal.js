@@ -337,11 +337,12 @@ module.exports = {
             {
               model: ttd,
               as: 'appForm'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
             }
+            // ,
+            // {
+            //   model: docUser,
+            //   as: 'docAsset'
+            // }
           ],
           limit: limit,
           offset: (page - 1) * limit,
@@ -403,7 +404,8 @@ module.exports = {
             },
             order: [
               [sortValue, 'DESC'],
-              [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
+              [{ model: ttd, as: 'appForm' }, 'id', 'DESC'],
+              [{ model: ttd, as: 'ttdSet' }, 'id', 'DESC']
             ],
             include: [
               {
@@ -415,9 +417,14 @@ module.exports = {
                 as: 'pict'
               },
               {
-                model: docUser,
-                as: 'docAsset'
+                model: ttd,
+                as: 'ttdSet'
               }
+              // ,
+              // {
+              //   model: docUser,
+              //   as: 'docAsset'
+              // }
             ],
             limit: limit,
             offset: (page - 1) * limit,
@@ -483,15 +490,17 @@ module.exports = {
             {
               model: ttd,
               as: 'ttdSet'
-            },
-            {
-              model: asset,
-              as: 'dataAsset'
-            },
-            {
-              model: docUser,
-              as: 'docAsset'
             }
+            // ,
+            // {
+            //   model: asset,
+            //   as: 'dataAsset'
+            // }
+            // ,
+            // {
+            //   model: docUser,
+            //   as: 'docAsset'
+            // }
           ],
           limit: limit,
           offset: (page - 1) * limit,
@@ -1202,7 +1211,7 @@ module.exports = {
           if (find) {
             const cekJual = result.find((item) => item.nilai_jual !== '0' || item.nilai_jual !== 0)
             const prev = moment().subtract(1, 'month').format('L').split('/')
-            const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+            const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
             const dataHistory = `submit pengajuan disposal by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
             if (findApi.status === 200) {
               const send = {
@@ -5238,253 +5247,254 @@ module.exports = {
                       }
                     }
                     if (valid.length > 0) {
-                      const set = new Set(valid)
-                      const noDis = [...set]
-                      const cekEmail = []
-                      for (let i = 0; i < noDis.length; i++) {
-                        const findEmail = await email.findOne({
-                          where: {
-                            kode_plant: noDis[i]
-                          }
-                        })
-                        if (findEmail) {
-                          const findDis = await disposal.findAll({
-                            where: {
-                              [Op.and]: [
-                                { kode_plant: noDis[i] },
-                                { no_persetujuan: no }
-                              ]
-                            }
-                          })
-                          if (findDis.length > 0) {
-                            // const data = {
-                            //   list_appr: noDis[i],
-                            //   response: 'full'
-                            // }
-                            // const findNotif = await notif.findOne({
-                            //   where: {
-                            //     [Op.and]: [
-                            //       { no_proses: 'D' + findDis[0].no_disposal },
-                            //       { kode_plant: noDis[i] }
-                            //     ]
-                            //   }
-                            // })
-                            // if (findNotif) {
-                            // const createNotif = await findNotif.update(data)
-                            // if (createNotif) {
-                            let tableTd = ''
-                            for (let i = 0; i < findDis.length; i++) {
-                              const element = `
-                                    <tr>
-                                      <td>${findDis.indexOf(findDis[i]) + 1}</td>
-                                      <td>D${findDis[i].no_disposal}</td>
-                                      <td>${findDis[i].no_asset}</td>
-                                      <td>${findDis[i].nama_asset}</td>
-                                      <td>${findDis[i].cost_center}</td>
-                                      <td>${findDis[i].area}</td>
-                                    </tr>`
-                              tableTd = tableTd + element
-                            }
-                            // const ccIt = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_it_spv, findEmail.email_ism, findEmail.email_staff_it, findEmail.email_ga_spv, findEmail.email_staff_ga]
-                            // const cc = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_ga_spv, findEmail.email_staff_ga]
-                            const mailOptions = {
-                              from: 'noreply_asset@pinusmerahabadi.co.id',
-                              replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-                              // to: `${findEmail.email_area_aos}`,
-                              to: `${emailAss}, ${emailAss2}`,
-                              // cc: findDis.find(({ kategori }) => kategori === 'IT') === undefined && findDis.find(({ kategori }) => kategori === 'it') === undefined ? `${cc}` : `${ccIt}`,
-                              subject: `DISPOSAL ASSET ${findDis[0].area} `,
-                              html: `
-                                    <head>
-                                    <style type="text/css">
-                                    body {
-                                        display: flexbox;
-                                        flex-direction: column;
-                                    }
-                                    .tittle {
-                                      font-size: 15px;
-                                      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-                                    }
-                                    .textItalic {
-                                      font-style: italic;
-                                      font-weight: bold;
-                                      font-size: 15px;
-                                      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-                                      margin-top: 10px;
-                                    }
-                                    .tittleBold {
-                                      font-weight: bold;
-                                      font-size: 15px;
-                                      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-                                      margin-top: 10px;
-                                    }
-                                    .mar {
-                                        margin-bottom: 20px;
-                                    }
-                                    .mar1 {
-                                        margin-bottom: 10px;
-                                    }
-                                    .mar2 {
-                                      margin-top: 10px;
-                                    }
-                                    .foot {
-                                        font-size: 15px;
-                                        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-                                        margin-top: 20px;
-                                        margin-bottom: 10px;
-                                    }
-                                    .foot1 {
-                                        font-size: 15px;
-                                        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-                                        margin-bottom: 50px;
-                                    }
-                                    .position {
-                                        display: flexbox;
-                                        flex-direction: row;
-                                        justify-content: left;
-                                        margin-top: 10px;
-                                        margin-bottom: 10px;
-                                    }
-                                    table {
-                                        font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-                                        font-size: 12px;
-                                    }
-                                    .demo-table {
-                                        border-collapse: collapse;
-                                        font-size: 13px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td {
-                                        border-bottom: 1px solid #e1edff;
-                                        border-left: 1px solid #e1edff;
-                                        padding: 7px 17px;
-                                    }
-                                    .demo-table th, 
-                                    .demo-table td:last-child {
-                                        border-right: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:first-child {
-                                        border-top: 1px solid #e1edff;
-                                    }
-                                    .demo-table td:last-child{
-                                        border-bottom: 0;
-                                    }
-                                    caption {
-                                        caption-side: top;
-                                        margin-bottom: 10px;
-                                    }
-                                    
-                                    /* Table Header */
-                                    .demo-table thead th {
-                                        background-color: #508abb;
-                                        color: #FFFFFF;
-                                        border-color: #6ea1cc !important;
-                                        text-transform: uppercase;
-                                    }
-                                    
-                                    /* Table Body */
-                                    .demo-table tbody td {
-                                        color: #353535;
-                                    }
-                                    
-                                    .demo-table tbody tr:nth-child(odd) td {
-                                        background-color: #f4fbff;
-                                    }
-                                    .demo-table tbody tr:hover th
-                                    .demo-table tbody tr:hover td {
-                                        background-color: #ffffa2;
-                                        border-color: #ffff0f;
-                                        transition: all .2s;
-                                    }
-                                    .textUnder {
-                                        text-decoration: underline;
-                                        font-weight: bold;
-                                    }
-                                </style>
-                                  </head>
-                                  <body>
-                                      <div class="tittle mar">
-                                          Dear Bapak/Ibu AOS,
-                                      </div>
-                                      <div class="tittle mar1">
-                                          <div class="tittle">Berikut list aset disposal yang sudah full approved, mohon segera dieksekusi.</div>
-                                      </div>
-                                      <div class="position mar1">
-                                          <table class="demo-table">
-                                              <thead>
-                                                  <tr>
-                                                      <th>No</th>
-                                                      <th>No Disposal</th>
-                                                      <th>Asset</th>
-                                                      <th>Asset description</th>
-                                                      <th>Cost Ctr</th>
-                                                      <th>Cost Ctr Name</th>
-                                                  </tr>
-                                              </thead>
-                                              <tbody>
-                                                  ${tableTd}
-                                              </tbody>
-                                          </table>
-                                      </div>
-                                      <div class="tittle">Lengkapi dokumen eksekusi sbb:</div>
-                                      <div></div>
-                                      <div class="tittleBold">A. Penjualan Aset:</div>
-                                      <div class="tittle">1. Kwitansi </div>
-                                      <div class="tittle">2. Bukti Transfer</div>
-                                      <div class="tittle">3. BAST penjualan aset (link download : https://pinusmerahabadi.co.id/portal)</div>
-                                      <div class="tittle">4. Dokumentasi serah terima uang dan aset</div>
-                                      <div class="tittle">5. Scan/copyan NPWP pembeli aset (Jika Ada)</div>
-                                      <div class="tittle">6. Document eksekusi discan dan diupload ke web aset</div>
-                                      <div class="tittle">7. Uang hasil penjualan aset maksimal di transfer ke rek HO H+1 (wajib cantumkan di berita transaksi/keterangan penjualan aset+nama area). Transfer ke No.rek : 130.007.611.2112</div>
-                                      <div class="tittle">8. Ketika aset sudah dijual mohon segera diinformasikan ke tim aset, karena ada kaitannya dengan faktur pajak yang harus HO terbitkan ditanggal yang sama saat transaksi.</div>
-                                      <div class="tittle">9. Document asli point 1-5 dikirim ke HO Bandung UP Rifaldi / Neng Rina / Ervyanty (Accounting Asset) PT. Pinus Merah Abadi (HO Bandung). Jl. Soekarno Hatta No. 112, Bandung, Jawa Barat - 40235.</div>
-                                      <div></div>
-                                      <div class="tittleBold">B. Pemusnahan Aset:</div>
-                                      <div class="tittle">1. BA pemusnahan aset dan lampiran foto pemusnahan (link download : https://pinusmerahabadi.co.id/portal)</div>
-                                      <div class="tittle">2. Document eksekusi discan dan diupload ke web aset</div>
-                                      <div></div>
-                                      <div class="textItalic">NOTE:</div>
-                                      <div class="tittle">A. Aset yang sudah  diperbolehkan untuk dieksekusi maka segera eksekusi (maksimal 1 minggu dari tanggal email)</div>
-                                      <div class="tittle">B. Jika aset sudah dijual/dimusnahkan area harap melengkapi semua dokumen yang di request aset (tanpa kekurangan apapun) jika belum mengerti dapat bertanya ke PIC aset</div>
-                                      <div class="mar2"></div>
-                                      <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-                                      <div class="tittle foot">
-                                          Terima kasih,
-                                      </div>
-                                      <div class="tittle foot1">
-                                          Regards,
-                                      </div>
-                                      <div class="tittle">
-                                          Team Asset
-                                      </div>
-                                  </body>
-                                    `
-                            }
-                            const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-                            if (sendEmail) {
-                              cekEmail.push('success send email')
-                            } else {
-                              cekEmail.push('failed send email')
-                            }
-                            // }
-                            // }
-                          }
-                        }
-                      }
-                      if (cekEmail.length === noDis.length) {
-                        return response(res, 'success approve disposal', { cekEmail, noDis })
-                      } else {
-                        return response(res, 'success approve fail send email', { cekEmail, noDis })
-                      }
+                      return response(res, 'success approve disposal')
+                      // const set = new Set(valid)
+                      // const noDis = [...set]
+                      // const cekEmail = []
+                      // for (let i = 0; i < noDis.length; i++) {
+                      //   const findEmail = await email.findOne({
+                      //     where: {
+                      //       kode_plant: noDis[i]
+                      //     }
+                      //   })
+                      //   if (findEmail) {
+                      //     const findDis = await disposal.findAll({
+                      //       where: {
+                      //         [Op.and]: [
+                      //           { kode_plant: noDis[i] },
+                      //           { no_persetujuan: no }
+                      //         ]
+                      //       }
+                      //     })
+                      //     if (findDis.length > 0) {
+                      //       // const data = {
+                      //       //   list_appr: noDis[i],
+                      //       //   response: 'full'
+                      //       // }
+                      //       // const findNotif = await notif.findOne({
+                      //       //   where: {
+                      //       //     [Op.and]: [
+                      //       //       { no_proses: 'D' + findDis[0].no_disposal },
+                      //       //       { kode_plant: noDis[i] }
+                      //       //     ]
+                      //       //   }
+                      //       // })
+                      //       // if (findNotif) {
+                      //       // const createNotif = await findNotif.update(data)
+                      //       // if (createNotif) {
+                      //       let tableTd = ''
+                      //       for (let i = 0; i < findDis.length; i++) {
+                      //         const element = `
+                      //               <tr>
+                      //                 <td>${findDis.indexOf(findDis[i]) + 1}</td>
+                      //                 <td>D${findDis[i].no_disposal}</td>
+                      //                 <td>${findDis[i].no_asset}</td>
+                      //                 <td>${findDis[i].nama_asset}</td>
+                      //                 <td>${findDis[i].cost_center}</td>
+                      //                 <td>${findDis[i].area}</td>
+                      //               </tr>`
+                      //         tableTd = tableTd + element
+                      //       }
+                      //       // const ccIt = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_it_spv, findEmail.email_ism, findEmail.email_staff_it, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                      //       // const cc = [findEmail.email_am, findEmail.email_aam, findEmail.email_spv_asset, findEmail.email_staff_asset1, findEmail.email_staff_asset2, findEmail.email_nom, findEmail.email_bm, findEmail.email_area_om, findEmail.email_ga_spv, findEmail.email_staff_ga]
+                      //       const mailOptions = {
+                      //         from: 'noreply_asset@pinusmerahabadi.co.id',
+                      //         replyTo: 'noreply_asset@pinusmerahabadi.co.id',
+                      //         // to: `${findEmail.email_area_aos}`,
+                      //         to: `${emailAss}, ${emailAss2}`,
+                      //         // cc: findDis.find(({ kategori }) => kategori === 'IT') === undefined && findDis.find(({ kategori }) => kategori === 'it') === undefined ? `${cc}` : `${ccIt}`,
+                      //         subject: `DISPOSAL ASSET ${findDis[0].area} `,
+                      //         html: `
+                      //               <head>
+                      //               <style type="text/css">
+                      //               body {
+                      //                   display: flexbox;
+                      //                   flex-direction: column;
+                      //               }
+                      //               .tittle {
+                      //                 font-size: 15px;
+                      //                 font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                      //               }
+                      //               .textItalic {
+                      //                 font-style: italic;
+                      //                 font-weight: bold;
+                      //                 font-size: 15px;
+                      //                 font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                      //                 margin-top: 10px;
+                      //               }
+                      //               .tittleBold {
+                      //                 font-weight: bold;
+                      //                 font-size: 15px;
+                      //                 font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                      //                 margin-top: 10px;
+                      //               }
+                      //               .mar {
+                      //                   margin-bottom: 20px;
+                      //               }
+                      //               .mar1 {
+                      //                   margin-bottom: 10px;
+                      //               }
+                      //               .mar2 {
+                      //                 margin-top: 10px;
+                      //               }
+                      //               .foot {
+                      //                   font-size: 15px;
+                      //                   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                      //                   margin-top: 20px;
+                      //                   margin-bottom: 10px;
+                      //               }
+                      //               .foot1 {
+                      //                   font-size: 15px;
+                      //                   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                      //                   margin-bottom: 50px;
+                      //               }
+                      //               .position {
+                      //                   display: flexbox;
+                      //                   flex-direction: row;
+                      //                   justify-content: left;
+                      //                   margin-top: 10px;
+                      //                   margin-bottom: 10px;
+                      //               }
+                      //               table {
+                      //                   font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
+                      //                   font-size: 12px;
+                      //               }
+                      //               .demo-table {
+                      //                   border-collapse: collapse;
+                      //                   font-size: 13px;
+                      //               }
+                      //               .demo-table th,
+                      //               .demo-table td {
+                      //                   border-bottom: 1px solid #e1edff;
+                      //                   border-left: 1px solid #e1edff;
+                      //                   padding: 7px 17px;
+                      //               }
+                      //               .demo-table th,
+                      //               .demo-table td:last-child {
+                      //                   border-right: 1px solid #e1edff;
+                      //               }
+                      //               .demo-table td:first-child {
+                      //                   border-top: 1px solid #e1edff;
+                      //               }
+                      //               .demo-table td:last-child{
+                      //                   border-bottom: 0;
+                      //               }
+                      //               caption {
+                      //                   caption-side: top;
+                      //                   margin-bottom: 10px;
+                      //               }
+
+                      //               /* Table Header */
+                      //               .demo-table thead th {
+                      //                   background-color: #508abb;
+                      //                   color: #FFFFFF;
+                      //                   border-color: #6ea1cc !important;
+                      //                   text-transform: uppercase;
+                      //               }
+
+                      //               /* Table Body */
+                      //               .demo-table tbody td {
+                      //                   color: #353535;
+                      //               }
+
+                      //               .demo-table tbody tr:nth-child(odd) td {
+                      //                   background-color: #f4fbff;
+                      //               }
+                      //               .demo-table tbody tr:hover th
+                      //               .demo-table tbody tr:hover td {
+                      //                   background-color: #ffffa2;
+                      //                   border-color: #ffff0f;
+                      //                   transition: all .2s;
+                      //               }
+                      //               .textUnder {
+                      //                   text-decoration: underline;
+                      //                   font-weight: bold;
+                      //               }
+                      //           </style>
+                      //             </head>
+                      //             <body>
+                      //                 <div class="tittle mar">
+                      //                     Dear Bapak/Ibu AOS,
+                      //                 </div>
+                      //                 <div class="tittle mar1">
+                      //                     <div class="tittle">Berikut list aset disposal yang sudah full approved, mohon segera dieksekusi.</div>
+                      //                 </div>
+                      //                 <div class="position mar1">
+                      //                     <table class="demo-table">
+                      //                         <thead>
+                      //                             <tr>
+                      //                                 <th>No</th>
+                      //                                 <th>No Disposal</th>
+                      //                                 <th>Asset</th>
+                      //                                 <th>Asset description</th>
+                      //                                 <th>Cost Ctr</th>
+                      //                                 <th>Cost Ctr Name</th>
+                      //                             </tr>
+                      //                         </thead>
+                      //                         <tbody>
+                      //                             ${tableTd}
+                      //                         </tbody>
+                      //                     </table>
+                      //                 </div>
+                      //                 <div class="tittle">Lengkapi dokumen eksekusi sbb:</div>
+                      //                 <div></div>
+                      //                 <div class="tittleBold">A. Penjualan Aset:</div>
+                      //                 <div class="tittle">1. Kwitansi </div>
+                      //                 <div class="tittle">2. Bukti Transfer</div>
+                      //                 <div class="tittle">3. BAST penjualan aset (link download : https://pinusmerahabadi.co.id/portal)</div>
+                      //                 <div class="tittle">4. Dokumentasi serah terima uang dan aset</div>
+                      //                 <div class="tittle">5. Scan/copyan NPWP pembeli aset (Jika Ada)</div>
+                      //                 <div class="tittle">6. Document eksekusi discan dan diupload ke web aset</div>
+                      //                 <div class="tittle">7. Uang hasil penjualan aset maksimal di transfer ke rek HO H+1 (wajib cantumkan di berita transaksi/keterangan penjualan aset+nama area). Transfer ke No.rek : 130.007.611.2112</div>
+                      //                 <div class="tittle">8. Ketika aset sudah dijual mohon segera diinformasikan ke tim aset, karena ada kaitannya dengan faktur pajak yang harus HO terbitkan ditanggal yang sama saat transaksi.</div>
+                      //                 <div class="tittle">9. Document asli point 1-5 dikirim ke HO Bandung UP Rifaldi / Neng Rina / Ervyanty (Accounting Asset) PT. Pinus Merah Abadi (HO Bandung). Jl. Soekarno Hatta No. 112, Bandung, Jawa Barat - 40235.</div>
+                      //                 <div></div>
+                      //                 <div class="tittleBold">B. Pemusnahan Aset:</div>
+                      //                 <div class="tittle">1. BA pemusnahan aset dan lampiran foto pemusnahan (link download : https://pinusmerahabadi.co.id/portal)</div>
+                      //                 <div class="tittle">2. Document eksekusi discan dan diupload ke web aset</div>
+                      //                 <div></div>
+                      //                 <div class="textItalic">NOTE:</div>
+                      //                 <div class="tittle">A. Aset yang sudah  diperbolehkan untuk dieksekusi maka segera eksekusi (maksimal 1 minggu dari tanggal email)</div>
+                      //                 <div class="tittle">B. Jika aset sudah dijual/dimusnahkan area harap melengkapi semua dokumen yang di request aset (tanpa kekurangan apapun) jika belum mengerti dapat bertanya ke PIC aset</div>
+                      //                 <div class="mar2"></div>
+                      //                 <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
+                      //                 <div class="tittle foot">
+                      //                     Terima kasih,
+                      //                 </div>
+                      //                 <div class="tittle foot1">
+                      //                     Regards,
+                      //                 </div>
+                      //                 <div class="tittle">
+                      //                     Team Asset
+                      //                 </div>
+                      //             </body>
+                      //               `
+                      //       }
+                      //       const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
+                      //       if (sendEmail) {
+                      //         cekEmail.push('success send email')
+                      //       } else {
+                      //         cekEmail.push('failed send email')
+                      //       }
+                      //       // }
+                      //       // }
+                      //     }
+                      //   }
+                      // }
+                      // if (cekEmail.length === noDis.length) {
+                      //   return response(res, 'success approve disposal', { cekEmail, noDis })
+                      // } else {
+                      //   return response(res, 'success approve fail send email', { cekEmail, noDis })
+                      // }
                     }
                   } else {
-                    return response(res, 'success approve fail send email')
+                    return response(res, 'failed approve disposal1', {}, 404, false)
                   }
                 } else {
-                  return response(res, 'failed approve disposal', {}, 404, false)
+                  return response(res, 'failed approve disposal2', {}, 404, false)
                 }
               } else {
-                return response(res, 'failed approve disposal', {}, 404, false)
+                return response(res, 'failed approve disposal3', {}, 404, false)
               }
             } else {
               return response(res, `${findTtd[1].jabatan} belum approve atau telah mereject`, {}, 404, false)
@@ -6884,7 +6894,7 @@ module.exports = {
               }
               if (cek.length === findDoc.length) {
                 const prev = moment().subtract(1, 'month').format('L').split('/')
-                const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 let data = {}
                 if (findApi.status === 200) {
                   data = {
@@ -7105,7 +7115,7 @@ module.exports = {
                     }
                     if (cek.length === findDoc.length) {
                       const prev = moment().subtract(1, 'month').format('L').split('/')
-                      const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                      const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                       let data = {}
                       if (findApi.status === 200) {
                         data = {
@@ -7659,7 +7669,7 @@ module.exports = {
                 }
                 if (cek.length === findDoc.length) {
                   const prev = moment().subtract(1, 'month').format('L').split('/')
-                  const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                  const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${result.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                   let data = {}
                   if (findApi.status === 200) {
                     data = {

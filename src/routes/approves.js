@@ -17,5 +17,6 @@ route.patch('/rom', approve.updateRom)
 route.patch('/change/:id', approve.changeName)
 
 route.get('/tipe/all', approve.updateTipeAll)
+route.patch('/ttd', approve.updateTtd)
 
 module.exports = route
