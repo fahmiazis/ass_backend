@@ -362,7 +362,11 @@ module.exports = {
         }
       } else {
         console.log('masuk id')
-        const findRole = await role.findByPk(filter)
+        const findRole = await role.findOne({
+          where: {
+            nomor: filter
+          }
+        })
         if (findRole) {
           const result = await user.findAndCountAll({
             where: {

@@ -24,7 +24,8 @@ module.exports = (sequelize, DataTypes) => {
     access: DataTypes.STRING,
     tipe: DataTypes.STRING,
     kode_plant: DataTypes.STRING,
-    struktur: DataTypes.STRING
+    struktur: DataTypes.STRING,
+    way_app: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'approve'

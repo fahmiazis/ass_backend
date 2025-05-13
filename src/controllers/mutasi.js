@@ -1631,6 +1631,7 @@ module.exports = {
           nomor: '27'
         }
       })
+      const findAllRole = await role.findAll()
       if (result.length > 0 && findRole) {
         const penyetuju = []
         const pembuat = []
@@ -1692,7 +1693,8 @@ module.exports = {
                 sebagai: getApp[i].sebagai,
                 kategori: null,
                 no_doc: no,
-                struktur: getApp[i].struktur
+                struktur: getApp[i].struktur,
+                id_role: findAllRole.find(item => item.name === getApp[i].jabatan).nomor
               }
               const make = await ttd.create(send)
               if (make) {

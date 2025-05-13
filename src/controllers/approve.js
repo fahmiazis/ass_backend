@@ -16,7 +16,8 @@ module.exports = {
         nama_approve: joi.string().required(),
         tipe: joi.string().required(),
         kode_plant: joi.string().required(),
-        struktur: joi.string()
+        struktur: joi.string(),
+        way_app: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -187,7 +188,8 @@ module.exports = {
         nama_approve: joi.string().required(),
         tipe: joi.string().required(),
         kode_plant: joi.string().required(),
-        struktur: joi.string()
+        struktur: joi.string(),
+        way_app: joi.string()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {

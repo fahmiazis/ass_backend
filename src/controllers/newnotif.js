@@ -15,10 +15,11 @@ module.exports = {
         }
       })
       if (findRole) {
-        const transaksi = tipe === 'pengadaan' ? pengadaan : tipe === 'disposal' ? disposal : tipe === 'mutasi' ? mutasi : stock
+        const transaksi = tipe === 'pengadaan' ? pengadaan : tipe === 'disposal' || tipe === 'persetujuan' ? disposal : tipe === 'mutasi' ? mutasi : stock
         const noTrans = tipe === 'pengadaan'
         ? { no_pengadaan: no } : tipe === 'disposal'   // eslint-disable-line
-            ? { no_disposal: no } : tipe === 'mutasi'  // eslint-disable-line
+            ? { no_disposal: no } : tipe === 'persetujuan'   // eslint-disable-line
+              ? { no_persetujuan: no } : tipe === 'mutasi'  // eslint-disable-line
                 ? { no_mutasi: no } : { no_stock: no }  // eslint-disable-line
         const findData = await transaksi.findAll({
           where: {
@@ -28,8 +29,7 @@ module.exports = {
           }
         })
         if (findData) {
-          if (jenis === 'ajuan') {
-            console.log('ajuan bayar king')
+          if (jenis === 'reject persetujuan') {
             const cekData = []
             const dataTo = draft.to !== undefined && draft.to.length !== undefined && draft.to.length > 0 ? draft.to : [{ username: nameTo }]
             console.log(dataTo)
@@ -46,7 +46,7 @@ module.exports = {
                 }
               })
               if (findNotif) {
-                return response(res, 'success create newnotif', { findNotif, dataTo, tipe: 'ajuan bayar' })
+                return response(res, 'success create newnotif', { findNotif, dataTo, tipe: tipe })
               } else {
                 const data = {
                   user: dataTo[i].username,

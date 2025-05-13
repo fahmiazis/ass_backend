@@ -1223,6 +1223,7 @@ module.exports = {
           ]
         }
       })
+      const findRole = await role.findAll()
       if (result.length > 0) {
         const penyetuju = []
         const pembuat = []
@@ -1278,7 +1279,9 @@ module.exports = {
                 jenis: getApp[i].jenis,
                 sebagai: getApp[i].sebagai,
                 kategori: getApp[i].kategori,
-                no_doc: no
+                no_doc: no,
+                struktur: getApp[i].struktur,
+                id_role: findRole.find(item => item.name === getApp[i].jabatan).nomor
                 // nama: cekApp ? getArea.fullname : null,
                 // status: cekApp ? 1 : null
               }

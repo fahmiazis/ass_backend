@@ -1231,6 +1231,7 @@ module.exports = {
           no_doc: findId.no_stock
         }
       })
+      const findRole = await role.findAll()
       if (result.length > 0) {
         const penyetuju = []
         const pembuat = []
@@ -1270,7 +1271,9 @@ module.exports = {
                 jenis: getApp[i].jenis === '' || getApp[i].jenis === null ? null : getApp[i].jenis,
                 sebagai: getApp[i].sebagai === '' || getApp[i].sebagai === null ? null : getApp[i].sebagai,
                 kategori: null,
-                no_doc: findId.no_stock
+                no_doc: findId.no_stock,
+                struktur: getApp[i].struktur,
+                id_role: findRole.find(item => item.name === getApp[i].jabatan).nomor
               }
               if (getDepo.kode_plant.split('').length > 4 && getDepo.nama_asman === null && getApp[i].jabatan === 'Asisten Manager') {
                 hasil.push(1)

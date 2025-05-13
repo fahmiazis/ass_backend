@@ -30,6 +30,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'temp',
         sourceKey: 'id'
       })
+      pengadaan.hasMany(models.assettemp, {
+        foreignKey: 'no_pengadaan',
+        as: 'temp_return',
+        sourceKey: 'no_ref'
+      })
       // define association here
     }
   };
