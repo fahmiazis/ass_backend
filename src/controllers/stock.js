@@ -945,7 +945,7 @@ module.exports = {
             where: {
               [Op.or]: [
                 { nama_bm: level === 12 || level === 27 || level === 13 || level === 16 ? fullname : 'undefined' },
-                { nama_om: level === 7 ? fullname : 'undefined' },
+                { nama_om: level === 7 || level === 27 || level === 13 || level === 16 ? fullname : 'undefined' },
                 { nama_asman: level === 26 ? fullname : 'undefined' },
                 { nama_pic_1: level === 2 ? fullname : 'undefined' },
                 { nama_nom: level === 28 ? fullname : 'undefined' }

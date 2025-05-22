@@ -39,7 +39,12 @@ module.exports = {
         nama_pic_1: joi.string().allow(''),
         nama_pic_2: joi.string().allow(''),
         nama_pic_3: joi.string().allow(''),
-        nama_pic_4: joi.string().allow('')
+        nama_pic_4: joi.string().allow(''),
+        nama_asman: joi.string().allow(''),
+        pic_budget: joi.string().allow(''),
+        pic_finance: joi.string().allow(''),
+        pic_tax: joi.string().allow(''),
+        pic_purchasing: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -112,7 +117,12 @@ module.exports = {
         nama_pic_1: joi.string().allow(''),
         nama_pic_2: joi.string().allow(''),
         nama_pic_3: joi.string().allow(''),
-        nama_pic_4: joi.string().allow('')
+        nama_pic_4: joi.string().allow(''),
+        nama_asman: joi.string().allow(''),
+        pic_budget: joi.string().allow(''),
+        pic_finance: joi.string().allow(''),
+        pic_tax: joi.string().allow(''),
+        pic_purchasing: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -254,7 +264,12 @@ module.exports = {
               { nama_pic_1: { [Op.like]: `%${searchValue}%` } },
               { nama_pic_2: { [Op.like]: `%${searchValue}%` } },
               { nama_pic_3: { [Op.like]: `%${searchValue}%` } },
-              { nama_pic_4: { [Op.like]: `%${searchValue}%` } }
+              { nama_pic_4: { [Op.like]: `%${searchValue}%` } },
+              { nama_asman: { [Op.like]: `%${searchValue}%` } },
+              { pic_budget: { [Op.like]: `%${searchValue}%` } },
+              { pic_finance: { [Op.like]: `%${searchValue}%` } },
+              { pic_tax: { [Op.like]: `%${searchValue}%` } },
+              { pic_purchasing: { [Op.like]: `%${searchValue}%` } }
             ]
           },
           order: [[sortValue, 'ASC']],
@@ -314,7 +329,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
+          const cek = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager', 'PIC Budget', 'PIC Finance', 'PIC Tax', 'PIC Purchasing']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             console.log(valid[i] === cek[i])
@@ -416,7 +431,11 @@ module.exports = {
                   nama_pic_2: dataDepo[15],
                   nama_pic_3: dataDepo[16],
                   nama_pic_4: dataDepo[17],
-                  nama_asman: dataDepo[18]
+                  nama_asman: dataDepo[18],
+                  pic_budget: dataDepo[19],
+                  pic_finance: dataDepo[20],
+                  pic_tax: dataDepo[21],
+                  pic_purchasing: dataDepo[22]
                 }
                 const select = await depo.findOne({
                   where: {
@@ -466,7 +485,7 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
+        const header = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager', 'PIC Budget', 'PIC Finance', 'PIC Tax', 'PIC Purchasing']
         const key = [
           'kode_plant',
           'nama_area',
@@ -486,7 +505,11 @@ module.exports = {
           'nama_pic_2',
           'nama_pic_3',
           'nama_pic_4',
-          'nama_asman'
+          'nama_asman',
+          'pic_budget',
+          'pic_finance',
+          'pic_tax',
+          'pic_purchasing'
         ]
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }

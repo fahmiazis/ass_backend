@@ -282,36 +282,35 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      const dumpLevel = []
-      // const listApp = [12, 7, 26, 27, 5, 9]
-      const listApp = [12, 7, 5, 9, 28]
+      // const dumpLevel = []
+      // const listApp = [12, 7, 5, 9, 28]
       const findUser = await user.findOne({
         where: {
           id: idUser
         },
         include: [
           {
-            model: role_user,
-            as: 'detail_role'
+            model: role,
+            as: 'role'
           }
         ]
       })
-      for (let i = 0; i < findUser.detail_role.length + 1; i++) {
-        if (i === findUser.detail_role.length) {
-          const dataCek = parseInt(findUser.user_level)
-          const select = listApp.find(x => x === dataCek)
-          if (select !== undefined) {
-            dumpLevel.push(dataCek)
-          }
-        } else {
-          const data = findUser.detail_role[i]
-          const dataCek = parseInt(data.id_role)
-          const select = listApp.find(x => x === dataCek)
-          if (select !== undefined) {
-            dumpLevel.push(dataCek)
-          }
-        }
-      }
+      // for (let i = 0; i < findUser.detail_role.length + 1; i++) {
+      //   if (i === findUser.detail_role.length) {
+      //     const dataCek = parseInt(findUser.user_level)
+      //     const select = listApp.find(x => x === dataCek)
+      //     if (select !== undefined) {
+      //       dumpLevel.push(dataCek)
+      //     }
+      //   } else {
+      //     const data = findUser.detail_role[i]
+      //     const dataCek = parseInt(data.id_role)
+      //     const select = listApp.find(x => x === dataCek)
+      //     if (select !== undefined) {
+      //       dumpLevel.push(dataCek)
+      //     }
+      //   }
+      // }
 
       if (level === 5 || level === 9) {
         const result = await mutasi.findAndCountAll({
@@ -390,17 +389,24 @@ module.exports = {
           return response(res, 'failed to get mutasi', {}, 404, false)
         }
       // } else if (level === 12 || level === 7 || level === 26 || level === 27) {
-      } else if (listApp.find(item => dumpLevel.find(x => x === item)) !== undefined) {
+      // } else if (listApp.find(item => dumpLevel.find(x => x === item)) !== undefined) {
+      } else if (findUser.role.type === 'area') {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
-              // { nama_bm: level === 12 || level === 27 ? fullname : 'undefined' },
-              // { nama_om: level === 7 ? fullname : 'undefined' },
-              // { nama_asman: level === 26 ? fullname : 'undefined' }
-              { nama_bm: dumpLevel.find(x => x === 12) || dumpLevel.find(x => x === 27) ? fullname : 'undefined' },
-              { nama_om: dumpLevel.find(x => x === 7) ? fullname : 'undefined' },
-              { nama_asman: dumpLevel.find(x => x === 26) ? fullname : 'undefined' },
-              { nama_nom: dumpLevel.find(x => x === 28) ? fullname : 'undefined' }
+              // { nama_bm: dumpLevel.find(x => x === 12) || dumpLevel.find(x => x === 27) ? fullname : 'undefined' },
+              // { nama_om: dumpLevel.find(x => x === 7) ? fullname : 'undefined' },
+              // { nama_asman: dumpLevel.find(x => x === 26) ? fullname : 'undefined' },
+              // { nama_nom: dumpLevel.find(x => x === 28) ? fullname : 'undefined' }
+              { nama_bm: level === 12 || level === 27 ? fullname : 'undefined' },
+              { nama_om: level === 7 || level === 27 ? fullname : 'undefined' },
+              { nama_nom: level === 28 ? fullname : 'undefined' },
+              { nama_asman: level === 26 ? fullname : 'undefined' },
+              { nama_pic_1: level === 2 ? fullname : 'undefined' },
+              { pic_budget: level === 8 ? fullname : 'undefined' },
+              { pic_finance: level === 3 ? fullname : 'undefined' },
+              { pic_tax: level === 4 ? fullname : 'undefined' },
+              { pic_purchasing: level === 6 ? fullname : 'undefined' }
             ]
           }
         })

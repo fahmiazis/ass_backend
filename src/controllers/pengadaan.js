@@ -18,6 +18,7 @@ const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 module.exports = {
   getPengadaan: async (req, res) => {
     try {
+      const idUser = req.user.id
       const level = req.user.level
       const kode = req.user.kode
       const name = req.user.name
@@ -45,7 +46,17 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-
+      const findUser = await user.findOne({
+        where: {
+          id: idUser
+        },
+        include: [
+          {
+            model: role,
+            as: 'role'
+          }
+        ]
+      })
       if (level === 5 || level === 9) {
         const result = await pengadaan.findAndCountAll({
           where: {
@@ -97,14 +108,19 @@ module.exports = {
         } else {
           return response(res, 'success get', { result: [] })
         }
-      } else if (level === 12 || level === 7 || level === 28 || level === 2) {
+      } else if (findUser.role.type === 'area') {
         const findDepo = await depo.findAll({
           where: {
             [Op.or]: [
+              { nama_bm: level === 12 || level === 27 ? fullname : 'undefined' },
+              { nama_om: level === 7 || level === 27 ? fullname : 'undefined' },
+              { nama_nom: level === 28 ? fullname : 'undefined' },
+              { nama_asman: level === 26 ? fullname : 'undefined' },
               { nama_pic_1: level === 2 ? fullname : 'undefined' },
-              { nama_bm: level === 12 ? fullname : 'undefined' },
-              { nama_om: level === 7 ? fullname : 'undefined' },
-              { nama_nom: level === 28 ? fullname : 'undefined' }
+              { pic_budget: level === 8 ? fullname : 'undefined' },
+              { pic_finance: level === 3 ? fullname : 'undefined' },
+              { pic_tax: level === 4 ? fullname : 'undefined' },
+              { pic_purchasing: level === 6 ? fullname : 'undefined' }
             ]
           }
         })

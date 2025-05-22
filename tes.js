@@ -1,10 +1,17 @@
-const moment = require('moment')
-
-const item = {
-  tgl_faktur: '2023-03-30T17:00:00.000Z'
+function eliminationArray (arr1, arr2) {
+  const result = []
+  for (let i = 0; i < arr1.length; i++) {
+    let cek = null
+    for (let j = 0; j < arr2.length; j++) {
+      if (j === (arr2.length - 1) && cek === null) {
+        result.push(arr1[i])
+      } else if (arr1[i] === arr2[j]) {
+        cek = true
+        break
+      }
+    }
+  }
+  return result
 }
-const king = moment().format('YYYY') - moment(item.tgl_faktur).format('YYYY') > 1
-const num = moment().format('YYYY') - moment(item.tgl_faktur).format('YYYY') === 1 && moment().format('M') <= 3 && Math.abs((parseInt(moment().format('M')) + 12) - moment(item.tgl_faktur).format('M'))
 
-console.log(num)
-console.log(king)
+console.log(eliminationArray([1, 2, 30, 10, 15], [1, 2, 3, 20, 50]))
