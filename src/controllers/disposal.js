@@ -487,7 +487,8 @@ module.exports = {
                 : parseInt(statTrans) === 3
                   ? { date_persetujuan: { [Op.gte]: timeV1, [Op.lt]: timeV2 } }
                   : { tanggalDis: { [Op.gte]: timeV1, [Op.lt]: timeV2 } },
-              { [Op.not]: { status_form: 1 } }
+              { [Op.not]: { status_form: 1 } },
+              tipe === 'persetujuan' ? { [Op.not]: { no_persetujuan: null } } : { [Op.not]: { status_form: 1 } }
             ],
             [Op.or]: [
               { kode_plant: { [Op.like]: `%${searchValue}%` } },
