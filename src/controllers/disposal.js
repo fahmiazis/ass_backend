@@ -1104,8 +1104,8 @@ module.exports = {
             no_disposal: no
           }
         })
-        if (findDis) {
-          const nama = findDis.kode_plant.length > 4 ? 'disposal pengajuan HO' : 'disposal pengajuan'
+        if (findDis.length > 0) {
+          const nama = findDis[0].kode_plant.length > 4 ? 'disposal pengajuan HO' : 'disposal pengajuan'
           const cekIt = []
           for (let i = 0; i < findDis.length; i++) {
             if (findDis[i].kategori === 'IT') {
