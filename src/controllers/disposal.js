@@ -750,7 +750,7 @@ module.exports = {
               const send = {
                 status_form: cekJual ? 26 : 2,
                 no_disposal: noTrans,
-                nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                nilai_buku: findApi.data.length > 0 && findApi.data[0].nafap !== undefined ? findApi.data[0].nafap : find.nilai_buku,
                 tanggalDis: moment(),
                 history: dataHistory
               }
@@ -760,7 +760,7 @@ module.exports = {
               const send = {
                 status_form: cekJual ? 26 : 2,
                 no_disposal: noTrans,
-                nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
+                nilai_buku: find.nilai_buku,
                 tanggalDis: moment(),
                 history: dataHistory
               }
