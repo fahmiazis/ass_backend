@@ -260,7 +260,7 @@ module.exports = {
       const level = req.user.level
       const kode = req.user.kode
       const idUser = req.user.id
-      const fullname = req.user.name
+      const fullname = req.user.fullname
       let { limit, page, search, sort, status, tipe, form } = req.query
       const { time1, time2 } = req.query
       const timeVal1 = time1 === 'undefined' ? 'all' : time1
