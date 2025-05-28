@@ -1709,19 +1709,38 @@ module.exports = {
             if (getDoc) {
               const hasil = []
               for (let i = 0; i < getDoc.length; i++) {
-                const send = {
-                  nama_dokumen: getDoc[i].nama_dokumen,
-                  jenis_dokumen: getDoc[i].jenis_dokumen,
-                  divisi: getDoc[i].divisi,
-                  no_pengadaan: results.id,
-                  no_asset: noAsset,
-                  jenis_form: tipeDoValue,
-                  tipe: tipeValue,
-                  path: null
-                }
-                const make = await docUser.create(send)
-                if (make) {
-                  hasil.push(make)
+                if (getDoc[i].jenis_dokumen === 'it') {
+                  if (results.kategori === 'IT') {
+                    const send = {
+                      nama_dokumen: getDoc[i].nama_dokumen,
+                      jenis_dokumen: getDoc[i].jenis_dokumen,
+                      divisi: getDoc[i].divisi,
+                      no_pengadaan: results.id,
+                      no_asset: noAsset,
+                      jenis_form: tipeDoValue,
+                      tipe: tipeValue,
+                      path: null
+                    }
+                    const make = await docUser.create(send)
+                    if (make) {
+                      hasil.push(make)
+                    }
+                  }
+                } else if (getDoc[i].jenis_dokumen !== 'it') {
+                  const send = {
+                    nama_dokumen: getDoc[i].nama_dokumen,
+                    jenis_dokumen: getDoc[i].jenis_dokumen,
+                    divisi: getDoc[i].divisi,
+                    no_pengadaan: results.id,
+                    no_asset: noAsset,
+                    jenis_form: tipeDoValue,
+                    tipe: tipeValue,
+                    path: null
+                  }
+                  const make = await docUser.create(send)
+                  if (make) {
+                    hasil.push(make)
+                  }
                 }
               }
               if (hasil.length === getDoc.length) {
@@ -1762,19 +1781,38 @@ module.exports = {
             if (getDoc) {
               const hasil = []
               for (let i = 0; i < getDoc.length; i++) {
-                const send = {
-                  nama_dokumen: getDoc[i].nama_dokumen,
-                  jenis_dokumen: getDoc[i].jenis_dokumen,
-                  divisi: getDoc[i].divisi,
-                  no_pengadaan: results.id,
-                  no_asset: noAsset,
-                  jenis_form: tipeDoValue,
-                  tipe: tipeValue,
-                  path: null
-                }
-                const make = await docUser.create(send)
-                if (make) {
-                  hasil.push(make)
+                if (getDoc[i].jenis_dokumen === 'it') {
+                  if (results.kategori === 'IT') {
+                    const send = {
+                      nama_dokumen: getDoc[i].nama_dokumen,
+                      jenis_dokumen: getDoc[i].jenis_dokumen,
+                      divisi: getDoc[i].divisi,
+                      no_pengadaan: results.id,
+                      no_asset: noAsset,
+                      jenis_form: tipeDoValue,
+                      tipe: tipeValue,
+                      path: null
+                    }
+                    const make = await docUser.create(send)
+                    if (make) {
+                      hasil.push(make)
+                    }
+                  }
+                } else if (getDoc[i].jenis_dokumen !== 'it') {
+                  const send = {
+                    nama_dokumen: getDoc[i].nama_dokumen,
+                    jenis_dokumen: getDoc[i].jenis_dokumen,
+                    divisi: getDoc[i].divisi,
+                    no_pengadaan: results.id,
+                    no_asset: noAsset,
+                    jenis_form: tipeDoValue,
+                    tipe: tipeValue,
+                    path: null
+                  }
+                  const make = await docUser.create(send)
+                  if (make) {
+                    hasil.push(make)
+                  }
                 }
               }
               if (hasil.length === getDoc.length) {
