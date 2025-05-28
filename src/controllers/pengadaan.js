@@ -2508,7 +2508,7 @@ module.exports = {
   rejectIo: async (req, res) => {
     try {
       const level = req.user.level
-      const name = req.user.name
+      const name = req.user.fullname
       // const { no } = req.body
       const schema = joi.object({
         alasan: joi.string().required(),
@@ -3578,7 +3578,7 @@ module.exports = {
   submitIsAsset: async (req, res) => {
     try {
       const { no } = req.body
-      const name = req.user.name
+      const name = req.user.fullname
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3807,7 +3807,7 @@ module.exports = {
   submitBudget: async (req, res) => {
     try {
       const { no } = req.body
-      const name = req.user.name
+      const name = req.user.fullname
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3860,7 +3860,7 @@ module.exports = {
   submitEks: async (req, res) => {
     try {
       const { no } = req.body
-      const name = req.user.name
+      const name = req.user.fullname
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -3910,7 +3910,7 @@ module.exports = {
   submitRevisi: async (req, res) => {
     try {
       const { no } = req.body
-      const name = req.user.name
+      const name = req.user.fullname
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
@@ -4198,7 +4198,7 @@ module.exports = {
   submitNotAsset: async (req, res) => {
     try {
       const { no } = req.body
-      const name = req.user.name
+      const name = req.user.fullname
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no
