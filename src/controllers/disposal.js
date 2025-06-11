@@ -386,8 +386,8 @@ module.exports = {
               { nama_asman: level === 26 ? fullname : 'undefined' },
               { nama_pic_1: level === 2 ? fullname : 'undefined' },
               { pic_budget: level === 8 ? fullname : 'undefined' },
-              { pic_finance: level === 3 ? fullname : 'undefined' },
-              { pic_tax: level === 4 ? fullname : 'undefined' },
+              { pic_finance: level === 4 ? fullname : 'undefined' },
+              { pic_tax: level === 3 ? fullname : 'undefined' },
               { pic_purchasing: level === 6 ? fullname : 'undefined' }
             ]
           }
@@ -475,7 +475,7 @@ module.exports = {
             return response(res, 'success get disposal', { result, pageInfo, noDis, findDepo })
           }
         } else {
-          return response(res, 'failed get disposal', {}, 400, false)
+          return response(res, 'failed get disposal, depo not found', { level }, 400, false)
         }
       } else {
         const result = await disposal.findAll({
