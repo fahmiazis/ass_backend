@@ -742,30 +742,30 @@ module.exports = {
         for (let i = 0; i < result.length; i++) {
           const find = await disposal.findByPk(result[i].id)
           if (find) {
-            const cekJual = result.find((item) => item.nilai_jual !== '0' || item.nilai_jual !== 0)
+            const cekJual = result.find((item) => item.nilai_jual === '0' || item.nilai_jual === 0)
             const prev = moment().subtract(1, 'month').format('L').split('/')
             const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
             const dataHistory = `submit pengajuan disposal by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
             if (findApi.status === 200) {
               const send = {
-                status_form: cekJual ? 26 : 2,
+                status_form: cekJual ? 2 : 26,
                 no_disposal: noTrans,
                 nilai_buku: findApi.data.length > 0 && findApi.data[0].nafap !== undefined ? findApi.data[0].nafap : find.nilai_buku,
                 tanggalDis: moment(),
                 history: dataHistory
               }
               await find.update(send)
-              temp.push(cekJual ? 'jual' : 'musnah')
+              temp.push(cekJual ? 'musnah' : 'jual')
             } else {
               const send = {
-                status_form: cekJual ? 26 : 2,
+                status_form: cekJual ? 2 : 26,
                 no_disposal: noTrans,
                 nilai_buku: find.nilai_buku,
                 tanggalDis: moment(),
                 history: dataHistory
               }
               await find.update(send)
-              temp.push(cekJual ? 'jual' : 'musnah')
+              temp.push(cekJual ? 'musnah' : 'jual')
             }
           }
         }
