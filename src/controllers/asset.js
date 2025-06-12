@@ -100,8 +100,9 @@ module.exports = {
               [Op.and]: [
                 {
                   [Op.and]: [
-                    { cost_center: findDep.cost_center },
-                    { status: null }
+                    { cost_center: findDep.cost_center }
+                    // ,
+                    // { status: null }
                   ]
                 },
                 {
@@ -153,8 +154,9 @@ module.exports = {
             [Op.and]: [
               {
                 [Op.and]: [
-                  { cost_center: cost },
-                  { status: null }
+                  { cost_center: cost }
+                  // ,
+                  // { status: null }
                 ]
               },
               {
@@ -229,14 +231,15 @@ module.exports = {
                   { lokasi: { [Op.like]: `%${searchValue}%` } },
                   { kategori: { [Op.like]: `%${searchValue}%` } }
                 ]
-              },
-              {
-                [Op.or]: [
-                  { status: '1' },
-                  { status: '11' },
-                  { status: null }
-                ]
               }
+              // ,
+              // {
+              //   [Op.or]: [
+              //     { status: '1' },
+              //     { status: '11' },
+              //     { status: null }
+              //   ]
+              // }
             ]
           },
           include: [

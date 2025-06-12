@@ -3304,7 +3304,7 @@ module.exports = {
         }
       })
       if (findTemp.length > 0) {
-        return response(res, 'success get detail', { result: findTemp })
+        return response(res, 'success get detail1', { result: findTemp })
       } else {
         const result = await pengadaan.findAll({
           where: {
@@ -3340,7 +3340,7 @@ module.exports = {
               }
             })
             if (findAsset.length > 0) {
-              return response(res, 'success get detail', { result: findAsset })
+              return response(res, 'success get detail2', { result: findAsset, temp: result })
             } else {
               return response(res, 'failed get detail', {}, 404, false)
             }
@@ -3891,6 +3891,44 @@ module.exports = {
                   status: '0'
                 }
                 await findAsset.update(send)
+              }
+            } else {
+              const findTemp = await assettemp.findAll({
+                where: {
+                  no_pengadaan: no
+                }
+              })
+              const findDepo = await depo.findOne({
+                where: {
+                  kode_plant: findIo[i].kode_plant
+                }
+              })
+              for (let x = 0; x < findTemp.length; x++) {
+                const findId = await asset.findOne({
+                  where: {
+                    no_asset: findTemp[x].no_asset
+                  }
+                })
+                const data = {
+                  no_asset: findTemp[x].no_asset,
+                  tanggal: moment(),
+                  nama_asset: findTemp[x].nama_asset,
+                  nilai_acquis: findTemp[x].price,
+                  accum_dep: findTemp[x].price,
+                  nilai_buku: findTemp[x].price,
+                  kode_plant: findTemp[x].kode_plant,
+                  cost_center: findDepo.cost_center,
+                  area: findDepo.nama_area,
+                  merk: '',
+                  satuan: 'unit',
+                  unit: 1,
+                  lokasi: '',
+                  kategori: findIo[i].jenis,
+                  status: '100'
+                }
+                if (!findId) {
+                  await asset.create(data)
+                }
               }
             }
           }

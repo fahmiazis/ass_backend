@@ -306,18 +306,14 @@ module.exports = {
   },
   getUser: async (req, res) => {
     try {
-      let { limit, page, search, sort, filter } = req.query
+      let { limit, page, search, sortName, filter, sortType } = req.query
       let searchValue = ''
-      let sortValue = ''
+      const sortNameVal = sortName === undefined || sortName === 'undefined' || sortName === '' || sortName === null ? 'id' : sortName
+      const sortTypeVal = sortType === undefined || sortType === 'undefined' || sortType === '' || sortType === null ? 'ASC' : sortType
       if (typeof search === 'object') {
         searchValue = Object.values(search)[0]
       } else {
         searchValue = search || ''
-      }
-      if (typeof sort === 'object') {
-        sortValue = Object.values(sort)[0]
-      } else {
-        sortValue = sort || 'id'
       }
       if (!limit) {
         limit = 10
@@ -333,7 +329,7 @@ module.exports = {
         page = parseInt(page)
       }
       console.log(filter)
-      if (filter === 'null' || filter === undefined) {
+      if (filter === 'null' || filter === undefined || filter === 'All' || filter === 'all') {
         const result = await user.findAndCountAll({
           where: {
             [Op.or]: [
@@ -350,7 +346,7 @@ module.exports = {
               as: 'role'
             }
           ],
-          order: [[sortValue, 'ASC']],
+          order: [[sortNameVal, sortTypeVal]],
           limit: limit,
           offset: (page - 1) * limit
         })
@@ -379,7 +375,7 @@ module.exports = {
               ],
               [Op.not]: { user_level: 1 }
             },
-            order: [[sortValue, 'ASC']],
+            order: [[sortNameVal, sortTypeVal]],
             limit: limit,
             offset: (page - 1) * limit
           })
