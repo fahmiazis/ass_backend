@@ -3912,7 +3912,7 @@ module.exports = {
                 const data = {
                   no_asset: findTemp[x].no_asset,
                   tanggal: moment(),
-                  nama_asset: findTemp[x].nama_asset,
+                  nama_asset: findTemp[x].nama,
                   nilai_acquis: findTemp[x].price,
                   accum_dep: findTemp[x].price,
                   nilai_buku: findTemp[x].price,

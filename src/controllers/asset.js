@@ -727,7 +727,8 @@ module.exports = {
             kode_plant: data.werks,
             cost_center: data.kostl,
             area: findDepo ? findDepo.nama_area : '',
-            unit: 1
+            unit: 1,
+            status: (data.deakt !== undefined && data.deakt !== null) ? '0' : (findAset && findAset.status === '100') ? null : findAset ? findAset.status : null
           }
           if (findAset) {
             const updateAset = await findAset.update(send)
@@ -760,6 +761,9 @@ module.exports = {
               area: cekArea ? cekArea.nama_area : '',
               unit: 1
             }
+            if (data[i].deakt !== undefined && data[i].deakt !== null) {
+              send.status = '0'
+            }
             // const findAset = await asset.findOne({
             //   where: {
             //     [Op.or]: [
@@ -790,7 +794,28 @@ module.exports = {
             }
           }
           if (cekSync.length > 0) {
-            return response(res, 'success sync asset')
+            const findGr = await asset.findAll({
+              where: {
+                status: '100'
+              }
+            })
+            const cekGr = []
+            if (findGr.length > 0) {
+              for (let x = 0; x < findGr.length; x++) {
+                const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${findGr[x].no_asset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`, { timeout: (1000 * 60 * 10) }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                if (findApi.status === 200 && findApi.data.length > 0) {
+                  const findId = await asset.findByPk(findGr[x].id)
+                  const data = {
+                    status: null
+                  }
+                  await findId.update(data)
+                  cekGr.push(findId)
+                }
+              }
+              return response(res, 'success sync asset', { dataGr: cekGr })
+            } else {
+              return response(res, 'success sync asset', { dataGr: cekGr })
+            }
           } else {
             return response(res, 'failed sync asset', {}, 404, false)
           }
