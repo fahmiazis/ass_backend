@@ -839,7 +839,10 @@ module.exports = {
             { name: { [Op.like]: `%${searchValue}%` } },
             { fullname: { [Op.like]: `%${searchValue}%` } }
           ]
-        }
+        },
+        order: [
+          ['name', 'ASC']
+        ]
       })
       if (result) {
         return response(res, 'succes get role', { result })
