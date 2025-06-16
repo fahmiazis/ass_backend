@@ -1798,7 +1798,10 @@ module.exports = {
                 ]
               }
             ]
-          }
+          },
+          order: [
+            ['status', 'ASC']
+          ]
         })
         if (result) {
           return response(res, 'success get status stock', { result })
@@ -1813,7 +1816,10 @@ module.exports = {
               { fisik: fisik },
               { kondisi: kondisi }
             ]
-          }
+          },
+          order: [
+            ['status', 'ASC']
+          ]
         })
         if (result) {
           return response(res, 'success get status stock', { result })
@@ -1827,7 +1833,11 @@ module.exports = {
   },
   getStatusAll: async (req, res) => {
     try {
-      const result = await status_stock.findAll()
+      const result = await status_stock.findAll({
+        order: [
+          ['status', 'ASC']
+        ]
+      })
       if (result) {
         return response(res, 'success get status stock', { result })
       } else {
