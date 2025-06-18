@@ -420,6 +420,11 @@ module.exports = {
                   ...data[i].dataValues,
                   no_asset_temp: dataTemp[j].no_asset
                 }
+                if (finData.find(item => item.no_asset === dataTemp[j].no_asset && item.no_pengadaan === data[i].no_pengadaan) !== undefined) {
+                  finData.push()
+                } else {
+                  finData.push(dataSend)
+                }
                 finData.push(dataSend)
               }
             } else if (data[i].temp_return.length > 0) {
@@ -429,7 +434,11 @@ module.exports = {
                   ...data[i].dataValues,
                   no_asset_temp: dataTemp[j].no_asset
                 }
-                finData.push(dataSend)
+                if (finData.find(item => item.no_asset === dataTemp[j].no_asset && item.no_pengadaan === data[i].no_pengadaan) !== undefined) {
+                  finData.push()
+                } else {
+                  finData.push(dataSend)
+                }
               }
             } else {
               const dataSend = {
