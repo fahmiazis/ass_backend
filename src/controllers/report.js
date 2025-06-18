@@ -413,7 +413,7 @@ module.exports = {
           const data = result.rows
           const finData = []
           for (let i = 0; i < data.length; i++) {
-            if (data[i].temp.length > 0) {
+            if (data[i].temp.length > 0 && data[i].kategori !== 'return') {
               const dataTemp = data[i].temp
               for (let j = 0; j < dataTemp.length; j++) {
                 const dataSend = {
@@ -431,7 +431,8 @@ module.exports = {
               for (let j = 0; j < dataTemp.length; j++) {
                 const dataSend = {
                   ...data[i].dataValues,
-                  no_asset_temp: dataTemp[j].no_asset
+                  no_asset_temp: dataTemp[j].no_asset,
+                  king: 'masuk temp return'
                 }
                 if (finData.find(item => item.no_asset === dataTemp[j].no_asset && item.no_pengadaan === data[i].no_pengadaan) !== undefined) {
                   finData.push()
