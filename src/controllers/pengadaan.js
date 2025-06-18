@@ -685,7 +685,7 @@ module.exports = {
               kode_plant: kode,
               area: `${findDepo.nama_area} ${findDepo.channel}`,
               tipe: results.tipe,
-              no_ref: results.no_ref.replaceAll('_', '/'),
+              no_ref: results.no_ref.replace(/_/g, '/'),
               jenis: results.jenis,
               akta: results.akta === '' ? null : results.akta,
               start: results.start === null || results.start === '' ? null : results.start,
@@ -749,7 +749,7 @@ module.exports = {
             kode_plant: kode,
             tipe: results.tipe,
             jenis: results.jenis,
-            no_ref: results.no_ref.replaceAll('_', '/'),
+            no_ref: results.no_ref.replace(/_/g, '/'),
             akta: results.akta === '' ? null : results.akta,
             start: results.start === null || results.start === '' ? null : results.start,
             end: results.end === null || results.end === '' ? null : results.end
@@ -4424,7 +4424,7 @@ module.exports = {
         for (let i = 0; i < findIo.length; i++) {
           const noRef = findIo[i].no_ref
           const data = {
-            no_ref: noRef === '' ? noRef : noRef.replaceAll('_', '/')
+            no_ref: noRef === '' ? noRef : noRef.replace(/_/g, '/')
           }
           const findId = await pengadaan.findByPk(findIo[i].id)
           if (findId) {
@@ -4433,7 +4433,7 @@ module.exports = {
           }
         }
         if (cek.length > 0) {
-          return response(res, 'success remove underscore', { findIo })
+          return response(res, 'success remove underscore king', { findIo })
         } else {
           return response(res, 'data return not found', { findIo })
         }
