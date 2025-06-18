@@ -4422,8 +4422,9 @@ module.exports = {
       if (findIo.length > 0) {
         const cek = []
         for (let i = 0; i < findIo.length; i++) {
+          const noRef = findIo[i].no_ref
           const data = {
-            no_ref: findIo[i].no_ref.replaceAll('_', '/')
+            no_ref: noRef === '' ? noRef : noRef.replaceAll('_', '/')
           }
           const findId = await pengadaan.findByPk(findIo[i].id)
           if (findId) {
