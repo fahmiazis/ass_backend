@@ -48,4 +48,7 @@ route.patch('/subnot', pengadaan.submitNotAsset)
 // remove sparator all ajuan asset
 route.patch('/remspar', pengadaan.removeSpar)
 
+// remove underline in no ref
+route.patch('/underline', pengadaan.removeUnderline)
+
 module.exports = route

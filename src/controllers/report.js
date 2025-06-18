@@ -425,7 +425,6 @@ module.exports = {
                 } else {
                   finData.push(dataSend)
                 }
-                finData.push(dataSend)
               }
             } else if (data[i].temp_return.length > 0) {
               const dataTemp = data[i].temp_return

@@ -685,7 +685,7 @@ module.exports = {
               kode_plant: kode,
               area: `${findDepo.nama_area} ${findDepo.channel}`,
               tipe: results.tipe,
-              no_ref: results.no_ref,
+              no_ref: results.no_ref.replaceAll('_', '/'),
               jenis: results.jenis,
               akta: results.akta === '' ? null : results.akta,
               start: results.start === null || results.start === '' ? null : results.start,
@@ -749,7 +749,7 @@ module.exports = {
             kode_plant: kode,
             tipe: results.tipe,
             jenis: results.jenis,
-            no_ref: results.no_ref,
+            no_ref: results.no_ref.replaceAll('_', '/'),
             akta: results.akta === '' ? null : results.akta,
             start: results.start === null || results.start === '' ? null : results.start,
             end: results.end === null || results.end === '' ? null : results.end
@@ -4405,6 +4405,39 @@ module.exports = {
         }
       } else {
         return response(res, 'Failed get pengadaan', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  removeUnderline: async (req, res) => {
+    try {
+      const findIo = await pengadaan.findAll({
+        where: {
+          [Op.not]: {
+            no_ref: null
+          }
+        }
+      })
+      if (findIo.length > 0) {
+        const cek = []
+        for (let i = 0; i < findIo.length; i++) {
+          const data = {
+            no_ref: findIo[i].no_ref.replaceAll('_', '/')
+          }
+          const findId = await pengadaan.findByPk(findIo[i].id)
+          if (findId) {
+            await findId.update(data)
+            cek.push(findId)
+          }
+        }
+        if (cek.length > 0) {
+          return response(res, 'success remove underscore', { findIo })
+        } else {
+          return response(res, 'data return not found', { findIo })
+        }
+      } else {
+        return response(res, 'data return not found', { findIo })
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
