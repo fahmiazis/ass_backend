@@ -585,17 +585,18 @@ module.exports = {
   },
   submitDisposal: async (req, res) => {
     try {
-      const timeV1 = moment().startOf('month')
-      const timeV2 = moment().endOf('month').add(1, 'd')
+      // const timeV1 = moment().startOf('month')
+      // const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
       const findNo = await reservoir.findAll({
         where: {
           transaksi: 'disposal',
-          tipe: 'area',
-          createdAt: {
-            [Op.gte]: timeV1,
-            [Op.lt]: timeV2
-          }
+          tipe: 'area'
+          // ,
+          // createdAt: {
+          //   [Op.gte]: timeV1,
+          //   [Op.lt]: timeV2
+          // }
         },
         order: [['id', 'DESC']],
         limit: 50
@@ -4074,16 +4075,17 @@ module.exports = {
   },
   genNoSetDisposal: async (req, res) => {
     try {
-      const timeV1 = moment().startOf('month')
-      const timeV2 = moment().endOf('month').add(1, 'd')
+      // const timeV1 = moment().startOf('month')
+      // const timeV2 = moment().endOf('month').add(1, 'd')
       const name = req.user.fullname
       const findNo = await reservoir.findAll({
         where: {
-          tipe: 'ho',
-          createdAt: {
-            [Op.gte]: timeV1,
-            [Op.lt]: timeV2
-          }
+          tipe: 'ho'
+          // ,
+          // createdAt: {
+          //   [Op.gte]: timeV1,
+          //   [Op.lt]: timeV2
+          // }
         },
         order: [['id', 'DESC']],
         limit: 50

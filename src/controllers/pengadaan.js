@@ -817,17 +817,18 @@ module.exports = {
   },
   submitIo: async (req, res) => {
     try {
-      const timeV1 = moment().startOf('month')
-      const timeV2 = moment().endOf('month').add(1, 'd')
+      // const timeV1 = moment().startOf('month')
+      // const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
       const findNo = await reservoir.findAll({
         where: {
           transaksi: 'pengadaan',
-          tipe: 'area',
-          createdAt: {
-            [Op.gte]: timeV1,
-            [Op.lt]: timeV2
-          }
+          tipe: 'area'
+          // ,
+          // createdAt: {
+          //   [Op.gte]: timeV1,
+          //   [Op.lt]: timeV2
+          // }
         },
         order: [['id', 'DESC']],
         limit: 50
@@ -2822,18 +2823,19 @@ module.exports = {
                 kode_sap_1: data.prinfo.salespoint_code
               }
             })
-            const timeV1 = moment().startOf('month')
-            const timeV2 = moment().endOf('month').add(1, 'd')
+            // const timeV1 = moment().startOf('month')
+            // const timeV2 = moment().endOf('month').add(1, 'd')
             const kodeDepo = findDepo === null || findDepo.kode_plant === undefined || findDepo.kode_plant === null ? data.prinfo.salespoint_code : findDepo.kode_plant
 
             const findNo = await reservoir.findAll({
               where: {
                 transaksi: 'pengadaan',
-                tipe: 'area',
-                createdAt: {
-                  [Op.gte]: timeV1,
-                  [Op.lt]: timeV2
-                }
+                tipe: 'area'
+                // ,
+                // createdAt: {
+                //   [Op.gte]: timeV1,
+                //   [Op.lt]: timeV2
+                // }
               },
               order: [['id', 'DESC']],
               limit: 50

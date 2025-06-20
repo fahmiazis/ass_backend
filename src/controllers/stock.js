@@ -17,8 +17,8 @@ const uploadHelper = require('../helpers/upload')
 module.exports = {
   submitStock: async (req, res) => {
     try {
-      const timeV1 = moment().startOf('month')
-      const timeV2 = moment().endOf('month').add(1, 'd')
+      // const timeV1 = moment().startOf('month')
+      // const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
       const id = req.user.id
       // const level = req.user.level
@@ -150,11 +150,12 @@ module.exports = {
                     const findNo = await reservoir.findAll({
                       where: {
                         transaksi: 'stock opname',
-                        tipe: 'area',
-                        createdAt: {
-                          [Op.gte]: timeV1,
-                          [Op.lt]: timeV2
-                        }
+                        tipe: 'area'
+                        // ,
+                        // createdAt: {
+                        //   [Op.gte]: timeV1,
+                        //   [Op.lt]: timeV2
+                        // }
                       },
                       order: [['id', 'DESC']],
                       limit: 50
