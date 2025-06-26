@@ -8,7 +8,7 @@ module.exports = {
   addNotif: async (req, res) => {
     try {
       const level = req.user.level
-      const { nameTo, no, tipe, jenis, menu, proses, route, draft } = req.body
+      const { nameTo, no, tipe, jenis, menu, proses, route, draft, filter } = req.body
       const findRole = await role.findOne({
         where: {
           nomor: level
@@ -29,7 +29,7 @@ module.exports = {
           }
         })
         if (findData) {
-          if (jenis === 'reject persetujuan') {
+          if (jenis === 'reject persetujuan' || jenis === 'full approve persetujuan') {
             const cekData = []
             const dataTo = draft.to !== undefined && draft.to.length !== undefined && draft.to.length > 0 ? draft.to : [{ username: nameTo }]
             console.log(dataTo)
@@ -50,12 +50,13 @@ module.exports = {
               } else {
                 const data = {
                   user: dataTo[i].username,
-                  kode_plant: findData[0].kode_plant,
+                  kode_plant: dataTo[i].kode_plant,
                   transaksi: tipe,
                   proses: menu,
                   no_transaksi: no,
                   tipe: proses,
-                  routes: route
+                  routes: route,
+                  filter: filter
                 }
                 const createNotif = await newnotif.create(data)
                 if (createNotif) {
@@ -63,10 +64,10 @@ module.exports = {
                 }
               }
             }
-            if (cekData.length) {
-              return response(res, 'success create newnotif', { cekData, dataTo, tipe: 'ajuan bayar' })
+            if (cekData.length > 0) {
+              return response(res, 'success create newnotif', { cekData, dataTo, tipe: 'persetujuan' })
             } else {
-              return response(res, 'failed create newnotif', { cekData, dataTo, tipe: 'ajuan bayar' })
+              return response(res, 'failed create newnotif', { cekData, dataTo, tipe: 'persetujuan' })
             }
           } else {
             const findNotif = await newnotif.findOne({
@@ -90,7 +91,8 @@ module.exports = {
                 proses: menu,
                 no_transaksi: no,
                 tipe: proses,
-                routes: route
+                routes: route,
+                filter: filter
               }
               const createNotif = await newnotif.create(data)
               if (createNotif) {

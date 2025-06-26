@@ -86,7 +86,7 @@ module.exports = {
     try {
       const name = req.user.name
       const level = req.user.level
-      const { no, tipeNpwp } = req.body
+      const { no } = req.body
       const kode = req.user.kode
       const result = await asset.findOne({
         where: {
@@ -120,8 +120,8 @@ module.exports = {
               nilai_buku: result.nilai_buku,
               status_form: 1,
               kategori: result.kategori,
-              merk: result.merk,
-              npwp: tipeNpwp
+              merk: result.merk
+              // npwp: tipeNpwp
             }
             const make = await disposal.create(send)
             if (make) {
@@ -132,19 +132,19 @@ module.exports = {
               if (update) {
                 return response(res, 'success add sell', { result: make })
               } else {
-                return response(res, 'failed add sell', {}, 400, false)
+                return response(res, 'failed add sell1', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add sell', {}, 400, false)
+              return response(res, 'failed add sell2', {}, 400, false)
             }
           } else {
-            return response(res, 'failed add sell', {}, 400, false)
+            return response(res, 'failed add sell3', {}, 400, false)
           }
         } else {
-          return response(res, 'failed add sell', {}, 400, false)
+          return response(res, 'failed add sell4', {}, 400, false)
         }
       } else {
-        return response(res, 'failed add sell', {}, 400, false)
+        return response(res, 'failed add sell5', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -388,7 +388,8 @@ module.exports = {
               { pic_budget: level === 8 ? fullname : 'undefined' },
               { pic_finance: level === 4 ? fullname : 'undefined' },
               { pic_tax: level === 3 ? fullname : 'undefined' },
-              { pic_purchasing: level === 6 ? fullname : 'undefined' }
+              { pic_purchasing: level === 6 ? fullname : 'undefined' },
+              { nama_pic_2: level === 32 ? fullname : 'undefined' }
             ]
           }
         })
@@ -418,7 +419,8 @@ module.exports = {
                   : parseInt(statTrans) === 3
                     ? { date_persetujuan: { [Op.gte]: timeV1, [Op.lt]: timeV2 } }
                     : { tanggalDis: { [Op.gte]: timeV1, [Op.lt]: timeV2 } },
-                { [Op.not]: { status_form: 1 } }
+                { [Op.not]: { status_form: 1 } },
+                tipe === 'persetujuan' ? { [Op.not]: { no_persetujuan: null } } : { [Op.not]: { status_form: 1 } }
               ],
               [Op.or]: [
                 { no_disposal: { [Op.like]: `%${searchValue}%` } },
@@ -454,7 +456,7 @@ module.exports = {
             ],
             limit: limit,
             offset: (page - 1) * limit,
-            group: ['disposal.no_disposal'],
+            group: [`${tipe === 'persetujuan' ? 'disposal.no_persetujuan' : 'disposal.no_disposal'}`],
             distinct: true
           })
 
@@ -2192,7 +2194,8 @@ module.exports = {
             const send = {
               status: result.status === 0 ? 1 : result.status,
               path: dokumen,
-              divisi: result.divisi === '0' ? 'asset' : result.divisi
+              divisi: result.divisi === '0' ? 'asset' : result.divisi,
+              desc: req.file.originalname
             }
             await result.update(send)
             const findDis = await disposal.findOne({
@@ -2209,7 +2212,8 @@ module.exports = {
             const send = {
               status: result.status === 0 ? 1 : result.status,
               path: dokumen,
-              divisi: 'asset'
+              divisi: 'asset',
+              desc: req.file.originalname
             }
             await result.update(send)
             return response(res, 'successfully upload dokumen', { send })
@@ -2217,7 +2221,8 @@ module.exports = {
             const send = {
               status: tipe === 'disposal' ? 4 : 1,
               path: dokumen,
-              divisi: 'asset'
+              divisi: 'asset',
+              desc: req.file.originalname
             }
             await result.update(send)
             return response(res, 'successfully upload dokumen', { send })
@@ -3331,7 +3336,7 @@ module.exports = {
                           if (findAsset) {
                             const data = {
                               date_fullset: findFull.length === findTtd.length ? moment() : null,
-                              status_form: findFull.length === findTtd.length ? 4 : findAsset.status_form,
+                              status_form: findFull.length === findTtd.length ? 15 : findAsset.status_form,
                               status_reject: null,
                               isreject: null,
                               history: `${findAsset.history}, approved by ${findUser.fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
@@ -3415,7 +3420,7 @@ module.exports = {
                       for (let i = 0; i < findTransDis.length; i++) {
                         const send = {
                           date_fullset: findFull.length === find.length ? moment() : null,
-                          status_form: findFull.length === find.length ? 4 : findTransDis[i].status_form,
+                          status_form: findFull.length === find.length ? 15 : findTransDis[i].status_form,
                           status_reject: null,
                           isreject: null,
                           history: `${findTransDis[i].history}, approved by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
@@ -4438,12 +4443,12 @@ module.exports = {
               let data = {}
               if (findApi.status === 200) {
                 data = {
-                  status_form: level === 5 ? 5 : 8,
+                  status_form: 4,
                   nilai_buku_eks: findApi.data[0].nafap === undefined ? findId.nilai_buku : findApi.data[0].nafap
                 }
               } else {
                 data = {
-                  status_form: level === 5 ? 5 : 8,
+                  status_form: 4,
                   nilai_buku_eks: findId.nilai_buku,
                   history: `${findId.history}, ${historyEks}`
                 }
@@ -4552,7 +4557,7 @@ module.exports = {
               for (let i = 0; i < result.length; i++) {
                 const findId = await disposal.findByPk(result[i].id)
                 const data = {
-                  status_form: level === 5 ? 5 : 6,
+                  status_form: 4,
                   history: `${findId.history}, ${historyEks}`
                 }
                 const results = await findId.update(data)
@@ -4648,7 +4653,7 @@ module.exports = {
               for (let i = 0; i < result.length; i++) {
                 const findId = await disposal.findByPk(result[i].id)
                 const data = {
-                  status_form: level === 5 ? 5 : 6,
+                  status_form: 4,
                   history: `${findId.history}, ${historyEks}`
                 }
                 const results = await findId.update(data)

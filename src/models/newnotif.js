@@ -23,7 +23,8 @@ module.exports = (sequelize, DataTypes) => {
     tipe: DataTypes.STRING,
     keterangan: DataTypes.STRING,
     status: DataTypes.INTEGER,
-    routes: DataTypes.STRING
+    routes: DataTypes.STRING,
+    filter: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'newnotif'
