@@ -359,11 +359,12 @@ module.exports = {
             {
               model: path,
               as: 'pict'
-            },
-            {
-              model: asset,
-              as: 'dataAsset'
             }
+            // ,
+            // {
+            //   model: asset,
+            //   as: 'dataAsset'
+            // }
           ],
           order: [
             [sortValue, 'ASC'],
@@ -474,11 +475,12 @@ module.exports = {
               {
                 model: docUser,
                 as: 'docAsset'
-              },
-              {
-                model: asset,
-                as: 'dataAsset'
               }
+              // ,
+              // {
+              //   model: asset,
+              //   as: 'dataAsset'
+              // }
             ],
             limit: limit,
             offset: (page - 1) * limit,
@@ -536,11 +538,12 @@ module.exports = {
             {
               model: docUser,
               as: 'docAsset'
-            },
-            {
-              model: asset,
-              as: 'dataAsset'
             }
+            // ,
+            // {
+            //   model: asset,
+            //   as: 'dataAsset'
+            // }
           ],
           order: [
             [sortValue, 'ASC'],

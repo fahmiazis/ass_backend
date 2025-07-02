@@ -978,6 +978,9 @@ module.exports = {
                     // }
                   ],
                   [Op.or]: [
+                    { no_stock: { [Op.like]: `%${searchValue}%` } },
+                    { area: { [Op.like]: `%${searchValue}%` } },
+                    { kode_plant: { [Op.like]: `%${searchValue}%` } },
                     { no_asset: { [Op.like]: `%${searchValue}%` } },
                     { deskripsi: { [Op.like]: `%${searchValue}%` } },
                     { keterangan: { [Op.like]: `%${searchValue}%` } },
@@ -1049,6 +1052,9 @@ module.exports = {
                 // }
               ],
               [Op.or]: [
+                { no_stock: { [Op.like]: `%${searchValue}%` } },
+                { area: { [Op.like]: `%${searchValue}%` } },
+                { kode_plant: { [Op.like]: `%${searchValue}%` } },
                 { no_asset: { [Op.like]: `%${searchValue}%` } },
                 { deskripsi: { [Op.like]: `%${searchValue}%` } },
                 { keterangan: { [Op.like]: `%${searchValue}%` } },
