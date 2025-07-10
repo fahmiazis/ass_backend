@@ -2115,6 +2115,59 @@ module.exports = {
             }
           }
         }
+      } else if (tipeValue === 'persetujuan') {
+        const result = await docUser.findAll({
+          where: {
+            [Op.and]: [
+              { no_asset: noAsset },
+              { no_pengadaan: results.no_persetujuan },
+              { jenis_form: tipeDoValue },
+              { tipe: tipeValue }
+            ]
+          }
+        })
+        if (result.length > 0) {
+          return response(res, 'success get document 13', { result })
+        } else {
+          const getDoc = await document.findAll({
+            where: {
+              [Op.and]: [
+                { tipe_dokumen: tipeDoValue },
+                { tipe: tipeValue }
+              ],
+              [Op.or]: [
+                { jenis_dokumen: results.kategori },
+                { jenis_dokumen: 'all' }
+              ]
+            }
+          })
+          if (getDoc) {
+            const hasil = []
+            for (let i = 0; i < getDoc.length; i++) {
+              const send = {
+                nama_dokumen: getDoc[i].nama_dokumen,
+                jenis_dokumen: getDoc[i].jenis_dokumen,
+                divisi: getDoc[i].divisi,
+                no_pengadaan: results.no_persetujuan,
+                no_asset: noAsset,
+                jenis_form: tipeDoValue,
+                tipe: tipeValue,
+                path: null
+              }
+              const make = await docUser.create(send)
+              if (make) {
+                hasil.push(make)
+              }
+            }
+            if (hasil.length === getDoc.length) {
+              return response(res, 'success get document 14', { result: hasil })
+            } else {
+              return response(res, 'failed get data', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed get data', {}, 404, false)
+          }
+        }
       } else {
         const result = await docUser.findAll({
           where: {
@@ -3279,7 +3332,7 @@ module.exports = {
           } else if (err) {
             return response(res, err.message, {}, 401, false)
           } else {
-            const dokumen = `uploads/${req.file.filename}`
+            const dokumen = `assets/documents/${req.file.filename}`
             const findTtd = await ttd.findAll({
               where: {
                 no_doc: no
@@ -3349,6 +3402,18 @@ module.exports = {
                     }
                   }
                   if (valid.length > 0) {
+                    const dataDoc = {
+                      nama_dokumen: 'Dokumen Approval Persetujuan',
+                      jenis_dokumen: 'all',
+                      divisi: 'approval',
+                      no_pengadaan: findDoc[0].no_persetujuan,
+                      no_asset: findDoc[0].no_asset,
+                      jenis_form: 'disposal',
+                      tipe: 'persetujuan',
+                      path: dokumen,
+                      desc: req.file.originalname
+                    }
+                    await docUser.create(dataDoc)
                     return response(res, 'success approve disposal')
                   } else {
                     return response(res, 'failed approve disposal0', {}, 404, false)
