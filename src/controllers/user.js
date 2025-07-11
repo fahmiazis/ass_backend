@@ -446,11 +446,16 @@ module.exports = {
             const cek = []
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
-              if (a[4].split('-')[0] === '5' || a[4].split('-')[0] === 5) {
-                plant.push(`Kode depo ${a[3]} dan  User level ${a[4]}`)
+              const cekArea = (a[4].split('-')[0] === '5' || a[4].split('-')[0] === 5)
+              const cekHo = (a[4].split('-')[0] === '9' || a[4].split('-')[0] === 9)
+              if (cekArea || cekHo) {
+                plant.push(`Kode area ${a[2]} dan  User level ${a[4]}`)
+                userData.push(`Terdapat duplikasi username ${a[0]} dan kode area ${a[2]}`)
+                cek.push(`${a[0]}`)
+              } else {
+                userData.push(`Terdapat duplikasi username ${a[0]}`)
+                cek.push(`${a[0]}`)
               }
-              userData.push(`User Name ${a[0]}`)
-              cek.push(`${a[0]}`)
             }
             const object = {}
             const result = []
@@ -478,7 +483,7 @@ module.exports = {
               }
             }
             if (result.length > 0) {
-              return response(res, 'there is duplication in your file master', { result }, 404, false)
+              return response(res, 'Terdapat duplikasi data', { result }, 404, false)
             } else {
               rows.shift()
               const create = []
@@ -516,7 +521,7 @@ module.exports = {
                     user_level: dataUser[4].split('-')[0],
                     password: dataUser[5]
                   }
-                  if (parseInt(dataUser[4].split('-')[0]) === 5) {
+                  if (parseInt(dataUpdate.user_level) === 5 || parseInt(dataUpdate.user_level) === 9) {
                     const findUser = await user.findOne({
                       where: {
                         kode_plant: dataUser[2]
@@ -534,20 +539,52 @@ module.exports = {
                       }
                     }
                   } else {
-                    const findUser = await user.findOne({
-                      where: {
-                        username: dataUser[0]
-                      }
+                    const findRole = await role.findOne({
+                      where: dataUpdate.user_level
                     })
-                    if (findUser) {
-                      const upUser = await findUser.update(dataUpdate)
-                      if (upUser) {
-                        arr.push(upUser)
+                    if (findRole.type === 'area') {
+                      const findUser = await user.findOne({
+                        where: {
+                          username: dataUser[0]
+                        }
+                      })
+                      if (findUser) {
+                        const upUser = await findUser.update(dataUpdate)
+                        if (upUser) {
+                          arr.push(upUser)
+                        }
+                      } else {
+                        const createUser = await user.create(dataCreate)
+                        if (createUser) {
+                          arr.push(createUser)
+                        }
                       }
                     } else {
-                      const createUser = await user.create(dataCreate)
-                      if (createUser) {
-                        arr.push(createUser)
+                      const findUser = await user.findOne({
+                        where: {
+                          username: dataUser[0]
+                        }
+                      })
+                      const findUserRole = await user.findOne({
+                        where: {
+                          user_level: parseInt(dataUpdate.user_level)
+                        }
+                      })
+                      if (findUser) {
+                        const upUser = await findUser.update(dataUpdate)
+                        if (upUser) {
+                          arr.push(upUser)
+                        }
+                      } else if (findUserRole) {
+                        const upUser = await findUserRole.update(dataUpdate)
+                        if (upUser) {
+                          arr.push(upUser)
+                        }
+                      } else {
+                        const createUser = await user.create(dataCreate)
+                        if (createUser) {
+                          arr.push(createUser)
+                        }
                       }
                     }
                   }
