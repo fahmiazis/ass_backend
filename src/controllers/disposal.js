@@ -3414,7 +3414,7 @@ module.exports = {
                       desc: req.file.originalname
                     }
                     await docUser.create(dataDoc)
-                    return response(res, 'success approve disposal')
+                    return response(res, 'success approve disposal1')
                   } else {
                     return response(res, 'failed approve disposal0', {}, 404, false)
                   }
@@ -3497,7 +3497,7 @@ module.exports = {
                         }
                       }
                       if (cek.length > 0) {
-                        return response(res, 'success approve disposal')
+                        return response(res, 'success approve disposal2')
                       } else {
                         return response(res, 'failed approve disposal1', {}, 404, false)
                       }
@@ -4524,7 +4524,7 @@ module.exports = {
               }
             }
             if (cekData.length > 0) {
-              return response(res, 'success submit disposal', {}, 400, false)
+              return response(res, 'success submit disposal', {})
             } else {
               return response(res, 'failed submit disposal', {}, 400, false)
             }
