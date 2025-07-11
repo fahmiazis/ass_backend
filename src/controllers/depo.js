@@ -346,14 +346,14 @@ module.exports = {
             const kode = []
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
-              plant.push(`Kode Plant ${a[0]}`)
+              plant.push(`Terdapat duplikasi Kode Plant ${a[0]}`)
               kode.push(`${a[0]}`)
-              cost.push(`Cost Center ${a[7]}`)
+              cost.push(`Terdapat duplikasi Cost Center ${a[7]}`)
               if (a[8] !== null && a[8] !== '' && a[8] !== 'null') {
-                sap1.push(`Kode SAP 1 ${a[8]}`)
+                sap1.push(`Terdapat duplikasi Kode SAP 1 ${a[8]}`)
               }
               if (a[9] !== null && a[9] !== '' && a[9] !== 'null') {
-                sap2.push(`Kode SAP 2 ${a[9]}`)
+                sap2.push(`Terdapat duplikasi Kode SAP 2 ${a[9]}`)
               }
             }
             const object = {}
