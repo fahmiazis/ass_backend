@@ -540,9 +540,11 @@ module.exports = {
                     }
                   } else {
                     const findRole = await role.findOne({
-                      where: dataUpdate.user_level
+                      where: {
+                        nomor: dataUpdate.user_level
+                      }
                     })
-                    if (findRole.type === 'area') {
+                    if (findRole && findRole.type === 'area') {
                       const findUser = await user.findOne({
                         where: {
                           username: dataUser[0]
