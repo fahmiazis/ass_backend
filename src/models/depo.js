@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     nama_area: DataTypes.STRING,
     channel: DataTypes.STRING,
     distribution: DataTypes.STRING,
-    status_area: DataTypes.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla'),
+    status_area: DataTypes.STRING,
     nama_nom: DataTypes.STRING,
     nama_om: DataTypes.STRING,
     nama_bm: DataTypes.STRING,
