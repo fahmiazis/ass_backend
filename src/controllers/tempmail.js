@@ -247,7 +247,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                  dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                 }
                 const findDraftUser = [
                   ...findDataUser,
@@ -343,7 +343,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                  dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                 }
                 const findUser = [
                   ...findDataUser,
@@ -464,7 +464,7 @@ module.exports = {
                       })
                       const dataRole = []
                       for (let y = 0; y < findRoleUser.length; y++) {
-                        dataRole.push({ ...findRoleUser[y].detail_user.dataValues, role: findRoleUser[y].detail_role })
+                        dataRole.push({ ...findRoleUser[y].detail_user, role: findRoleUser[y].detail_role })
                       }
                       const findDraftUser = [
                         ...findDataUser,
@@ -554,7 +554,7 @@ module.exports = {
                     })
                     const dataRole = []
                     for (let i = 0; i < findRoleUser.length; i++) {
-                      dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                      dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                     }
                     const findDraftUser = [
                       ...findDataUser,
@@ -684,7 +684,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findUser = [
                     ...findDataUser,
@@ -846,7 +846,7 @@ module.exports = {
                     })
                     const dataRole = []
                     for (let i = 0; i < findRoleUser.length; i++) {
-                      dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                      dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                     }
                     const findDraftUser = [
                       ...findDataUser,
@@ -941,7 +941,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findUser = [
                     ...findDataUser,
@@ -1049,7 +1049,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findDraftUser = [
                     ...findDataUser,
@@ -1143,7 +1143,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findUser = [
                     ...findDataUser,
@@ -1257,7 +1257,7 @@ module.exports = {
                     })
                     const dataRole = []
                     for (let i = 0; i < findRoleUser.length; i++) {
-                      dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                      dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                     }
                     const findDraftUser = [
                       ...findDataUser,
@@ -1352,7 +1352,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findUser = [
                     ...findDataUser,
@@ -1460,7 +1460,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findDraftUser = [
                     ...findDataUser,
@@ -1549,7 +1549,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findUser = [
                     ...findDataUser,
@@ -1663,7 +1663,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                  dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                 }
                 const findDraftUser = [
                   ...findDataUser,
@@ -1752,7 +1752,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                  dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                 }
                 const findUser = [
                   ...findDataUser,
@@ -1860,7 +1860,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findDraftUser = [
                     ...findDataUser,
@@ -1952,7 +1952,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
+                    dataRole.push({ ...findRoleUser[i].detail_user, role: findRoleUser[i].detail_role })
                   }
                   const findUser = [
                     ...findDataUser,

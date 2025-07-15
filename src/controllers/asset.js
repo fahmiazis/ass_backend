@@ -726,7 +726,7 @@ module.exports = {
             nilai_buku: data.nafap === undefined ? 0 : data.nafap.toString().split('.')[0],
             kode_plant: data.werks,
             cost_center: data.kostl,
-            area: findDepo ? findDepo.nama_area : '',
+            area: findDepo ? findDepo.place_asset : '',
             unit: 1,
             status: (data.deakt !== undefined && data.deakt !== null) ? '0' : (findAset && findAset.status === '100') ? null : findAset ? findAset.status : null
           }
@@ -758,7 +758,7 @@ module.exports = {
               nilai_buku: data[i].nafap === undefined ? 0 : data[i].nafap.toString().split('.')[0],
               kode_plant: data[i].werks,
               cost_center: data[i].kostl,
-              area: cekArea ? cekArea.nama_area : '',
+              area: cekArea ? cekArea.place_asset : '',
               unit: 1
             }
             if (data[i].deakt !== undefined && data[i].deakt !== null) {
