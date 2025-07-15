@@ -87,7 +87,8 @@ module.exports = {
             where: {
               [Op.or]: [
                 { username: results.username },
-                { email: results.username }
+                { email: results.username },
+                { kode_plant: results.username }
               ]
             },
             include: [
