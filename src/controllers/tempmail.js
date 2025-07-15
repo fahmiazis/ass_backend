@@ -247,7 +247,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                  if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                     dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                   }
                 }
@@ -345,7 +345,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                  if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                     dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                   }
                 }
@@ -468,7 +468,7 @@ module.exports = {
                       })
                       const dataRole = []
                       for (let y = 0; y < findRoleUser.length; y++) {
-                        if (findRoleUser[y].detail_user.dataValues !== undefined) {
+                        if (findRoleUser[y].detail_user.dataValues !== undefined && findRoleUser[y].detail_user.dataValues !== null) {
                           dataRole.push({ ...findRoleUser[y].detail_user.dataValues, role: findRoleUser[y].detail_role })
                         }
                       }
@@ -560,7 +560,7 @@ module.exports = {
                     })
                     const dataRole = []
                     for (let i = 0; i < findRoleUser.length; i++) {
-                      if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                      if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                         dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                       }
                     }
@@ -692,7 +692,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -856,7 +856,7 @@ module.exports = {
                     })
                     const dataRole = []
                     for (let i = 0; i < findRoleUser.length; i++) {
-                      if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                      if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                         dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                       }
                     }
@@ -953,7 +953,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -1063,7 +1063,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -1159,7 +1159,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -1275,7 +1275,7 @@ module.exports = {
                     })
                     const dataRole = []
                     for (let i = 0; i < findRoleUser.length; i++) {
-                      if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                      if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                         dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                       }
                     }
@@ -1372,7 +1372,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -1482,7 +1482,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -1573,7 +1573,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -1689,7 +1689,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                  if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                     dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                   }
                 }
@@ -1780,7 +1780,7 @@ module.exports = {
                 })
                 const dataRole = []
                 for (let i = 0; i < findRoleUser.length; i++) {
-                  if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                  if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                     dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                   }
                 }
@@ -1890,7 +1890,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
@@ -1984,7 +1984,7 @@ module.exports = {
                   })
                   const dataRole = []
                   for (let i = 0; i < findRoleUser.length; i++) {
-                    if (findRoleUser[i].detail_user.dataValues !== undefined) {
+                    if (findRoleUser[i].detail_user.dataValues !== undefined && findRoleUser[i].detail_user.dataValues !== null) {
                       dataRole.push({ ...findRoleUser[i].detail_user.dataValues, role: findRoleUser[i].detail_role })
                     }
                   }
