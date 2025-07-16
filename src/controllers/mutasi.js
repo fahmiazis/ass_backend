@@ -16,11 +16,11 @@ module.exports = {
   getDataCart: async (req, res) => {
     try {
       const kode = req.user.kode
-      const cost = req.user.name
-      const level = req.user.level
+      // const cost = req.user.name
+      // const level = req.user.level
       const result = await mutasi.findAndCountAll({
         where: {
-          kode_plant: level === '5' ? kode : cost,
+          kode_plant: kode,
           status_form: 1
         },
         include: [
@@ -48,7 +48,7 @@ module.exports = {
       const no = req.params.no
       const plant = req.params.plant
       const kode = req.user.kode
-      const cost = req.user.name
+      // const cost = req.user.name
       const level = req.user.level
       const result = await asset.findOne({
         where: {
@@ -59,7 +59,7 @@ module.exports = {
         const findArea = await mutasi.findAll({
           where: {
             [Op.and]: [
-              { kode_plant: level === '5' ? kode : cost },
+              { kode_plant: kode },
               { status_form: 1 }
             ]
           }
@@ -68,7 +68,7 @@ module.exports = {
           const findPlant = await mutasi.findAll({
             where: {
               [Op.and]: [
-                { kode_plant: level === '5' ? kode : cost },
+                { kode_plant: kode },
                 { kode_plant_rec: plant }
               ],
               status_form: 1
@@ -79,16 +79,16 @@ module.exports = {
               where: {
                 [Op.and]: [
                   { no_asset: result.no_asset },
-                  { kode_plant: level === '5' ? kode : cost }
+                  { kode_plant: kode }
                 ]
               }
             })
             if (findAsset.length > 0) {
               return response(res, 'success add mutasi', { result: findAsset })
-            } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && result.cost_center === cost)) {
+            } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && result.cost_center === kode)) {
               const findDepo = await depo.findOne({
                 where: {
-                  kode_plant: level === '5' ? kode : cost
+                  kode_plant: kode
                 }
               })
               if (findDepo) {
@@ -99,7 +99,7 @@ module.exports = {
                 })
                 if (findRec) {
                   const send = {
-                    kode_plant: level === '5' ? kode : cost,
+                    kode_plant: kode,
                     area: findDepo.nama_area,
                     no_doc: result.no_doc,
                     no_asset: result.no_asset,
@@ -145,16 +145,16 @@ module.exports = {
             where: {
               [Op.and]: [
                 { no_asset: result.no_asset },
-                { kode_plant: level === '5' ? kode : cost }
+                { kode_plant: kode }
               ]
             }
           })
           if (findAsset.length > 0) {
             return response(res, 'success add mutasi', { result: findAsset })
-          } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && result.cost_center === cost)) {
+          } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && result.cost_center === kode)) {
             const findDepo = await depo.findOne({
               where: {
-                kode_plant: level === '5' ? kode : cost
+                kode_plant: kode
               }
             })
             if (findDepo) {
@@ -165,7 +165,7 @@ module.exports = {
               })
               if (findRec) {
                 const send = {
-                  kode_plant: level === '5' ? kode : cost,
+                  kode_plant: kode,
                   area: findDepo.nama_area,
                   no_doc: result.no_doc,
                   no_asset: result.no_asset,
@@ -189,23 +189,23 @@ module.exports = {
                   if (update) {
                     return response(res, 'success add mutasi', { result: make })
                   } else {
-                    return response(res, 'failed add mutasi', {}, 400, false)
+                    return response(res, 'failed add mutasi1', {}, 400, false)
                   }
                 } else {
-                  return response(res, 'failed add mutasi', {}, 400, false)
+                  return response(res, 'failed add mutasi2', {}, 400, false)
                 }
               } else {
-                return response(res, 'failed add mutasi', {}, 400, false)
+                return response(res, 'failed add mutasi3', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add mutasi', {}, 400, false)
+              return response(res, 'failed add mutasi4', {}, 400, false)
             }
           } else {
-            return response(res, 'failed add mutasi', {}, 400, false)
+            return response(res, 'failed add mutasi5', {}, 400, false)
           }
         }
       } else {
-        return response(res, 'failed add mutasi', {}, 400, false)
+        return response(res, 'failed add mutasi6', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
@@ -249,7 +249,7 @@ module.exports = {
       const kode = req.user.kode
       const idUser = req.user.id
       const fullname = req.user.fullname
-      const cost = req.user.name
+      // const cost = req.user.name
       const { status, time1, time2 } = req.query
       let { limit, page, search, sort } = req.query
       const statTrans = status === 'undefined' || status === null ? 'all' : status
@@ -318,8 +318,8 @@ module.exports = {
             [Op.and]: [
               {
                 [Op.or]: [
-                  { kode_plant: level === '5' ? kode : cost },
-                  { kode_plant_rec: level === '5' ? kode : cost }
+                  { kode_plant: kode },
+                  { kode_plant_rec: kode }
                 ]
               },
               statTrans === 'all'
@@ -963,7 +963,7 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      const cost = req.user.name
+      // const cost = req.user.name
       const fullname = req.user.fullname
       let { limit, page, search, sort, tipe } = req.query
       let searchValue = ''
@@ -993,7 +993,7 @@ module.exports = {
           const result = await mutasi.findAndCountAll({
             where: {
               [Op.and]: [
-                { kode_plant_rec: level === '5' ? kode : cost },
+                { kode_plant_rec: kode },
                 { status_form: 9 }
               ],
               [Op.or]: [
@@ -1039,7 +1039,7 @@ module.exports = {
           const result = await mutasi.findAndCountAll({
             where: {
               [Op.and]: [
-                { kode_plant_rec: level === '5' ? kode : cost },
+                { kode_plant_rec: kode },
                 { status_form: 2 }
               ],
               [Op.or]: [
@@ -1195,8 +1195,8 @@ module.exports = {
       // const timeV1 = moment().startOf('month')
       // const timeV2 = moment().endOf('month').add(1, 'd')
       const kode = req.user.kode
-      const cost = req.user.name
-      const level = req.user.level
+      // const cost = req.user.name
+      // const level = req.user.level
       const schema = joi.object({
         alasan: joi.string().required()
       })
@@ -1230,7 +1230,7 @@ module.exports = {
         const findMut = await mutasi.findAll({
           where: {
             [Op.and]: [
-              { kode_plant: level === '5' ? kode : cost },
+              { kode_plant: kode },
               { status_form: 1 }
             ]
           }
