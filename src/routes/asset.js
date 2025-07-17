@@ -10,5 +10,6 @@ route.delete('/delete/:id', asset.deleteAsset)
 route.post('/master', asset.uploadMasterAsset)
 route.get('/export', asset.exportSqlAsset)
 route.get('/sync', asset.syncAsset)
+route.delete('/duplikat', asset.deleteDuplikat)
 
 module.exports = route

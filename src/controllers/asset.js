@@ -1,4 +1,4 @@
-const { asset, path, depo, user } = require('../models')
+const { asset, path, depo, user, sequelize } = require('../models')
 const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
@@ -558,7 +558,7 @@ module.exports = {
         const dokumen = `assets/masters/${req.files[0].filename}`
         const rows = await readXlsxFile(dokumen)
         const count = []
-        const cek = ['Asset', 'SNo.', 'Cap.Date', 'Asset Description', 'Acquis.val.', 'Accum.dep.', 'Book val.', 'Plant', 'Cost Ctr', 'Cost Ctr Name', 'MERK', 'SATUAN', 'JUMLAH', 'LOKASI', 'KATEGORI']
+        const cek = ['Asset', 'SNo.', 'Cap.Date', 'Asset Description', 'Acquis.val.', 'Accum.dep.', 'Book val.', 'Plant', 'Cost Ctr', 'Cost Ctr Name', 'MERK', 'SATUAN', 'JUMLAH', 'LOKASI', 'KATEGORI', 'STATUS']
         const valid = rows[0]
         for (let i = 0; i < cek.length; i++) {
           console.log(valid[i] === cek[i])
@@ -852,6 +852,23 @@ module.exports = {
       } else {
         return response(res, 'failed', {}, 404, false)
       }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  deleteDuplikat: async (req, res) => {
+    try {
+      await sequelize.query(`
+          DELETE FROM assets
+          WHERE id NOT IN (
+            SELECT min_id FROM (
+              SELECT MIN(id) as min_id
+              FROM assets
+              GROUP BY no_asset
+            ) AS sub
+          );
+        `)
+      return response(res, 'Duplicate assets deleted successfully.', {})
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
