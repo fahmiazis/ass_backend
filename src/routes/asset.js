@@ -11,5 +11,6 @@ route.post('/master', asset.uploadMasterAsset)
 route.get('/export', asset.exportSqlAsset)
 route.get('/sync', asset.syncAsset)
 route.delete('/duplikat', asset.deleteDuplikat)
+route.post('/delete/gudang', asset.deleteAsetGudang)
 
 module.exports = route

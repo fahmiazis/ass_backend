@@ -634,7 +634,7 @@ module.exports = {
               }
             }
             if (arr.length > 0) {
-              return response(res, 'success upload asset balance', { rows })
+              return response(res, 'success upload asset balance', { result: arr })
             } else {
               return response(res, 'failed upload asset balance')
             }
@@ -871,6 +871,87 @@ module.exports = {
       return response(res, 'Duplicate assets deleted successfully.', {})
     } catch (error) {
       return response(res, error.message, {}, 500, false)
+    }
+  },
+  deleteAsetGudang: async (req, res) => {
+    const level = req.user.level
+    if (level === 1) {
+      uploadMaster(req, res, async function (err) {
+        // try {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+            console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+            return response(res, 'fieldname doesnt match', {}, 500, false)
+          }
+          return response(res, err.message, {}, 500, false)
+        } else if (err) {
+          return response(res, err.message, {}, 401, false)
+        }
+        const dokumen = `assets/masters/${req.files[0].filename}`
+        const rows = await readXlsxFile(dokumen)
+        const count = []
+        const cek = ['Asset', 'SNo.', 'Cap.Date', 'Asset Description', 'Acquis.val.', 'Accum.dep.', 'Book val.', 'Plant', 'Cost Ctr', 'Cost Ctr Name', 'MERK', 'SATUAN', 'JUMLAH', 'LOKASI', 'KATEGORI', 'STATUS']
+        const valid = rows[0]
+        for (let i = 0; i < cek.length; i++) {
+          console.log(valid[i] === cek[i])
+          if (valid[i] === cek[i]) {
+            count.push(1)
+          }
+        }
+        if (count.length === cek.length) {
+          const arr = []
+          rows.shift()
+          for (let i = 0; i < rows.length; i++) {
+            const dataAsset = rows[i]
+            const send = {
+              no_asset: dataAsset[0],
+              no_doc: dataAsset[1],
+              tanggal: dataAsset[2],
+              nama_asset: dataAsset[3],
+              nilai_acquis: dataAsset[4],
+              accum_dep: dataAsset[5],
+              nilai_buku: dataAsset[6],
+              kode_plant: dataAsset[7],
+              cost_center: dataAsset[8],
+              area: dataAsset[9],
+              merk: dataAsset[10],
+              satuan: dataAsset[11],
+              unit: dataAsset[12],
+              lokasi: dataAsset[13],
+              kategori: dataAsset[14]
+            }
+            const cekAsset = await asset.findOne({
+              where: {
+                no_asset: send.no_asset
+              }
+            })
+            if (cekAsset) {
+              const updateAsset = await cekAsset.destroy()
+              if (updateAsset) {
+                arr.push(updateAsset)
+              }
+            } else {
+              arr.push(cekAsset)
+            }
+          }
+          if (arr.length > 0) {
+            return response(res, 'success delete asset', { result: arr })
+          } else {
+            return response(res, 'failed delete asset balance')
+          }
+        } else {
+          fs.unlink(dokumen, function (err) {
+            if (err) throw err
+            console.log('success')
+          })
+          return response(res, 'Failed to delete master file, please use the template provided', {}, 400, false)
+        }
+        // } catch (error) {
+        //   return response(res, error.message, {}, 500, false)
+        // }
+      })
+    } else {
+      return response(res, "You're not super administrator", {}, 404, false)
     }
   }
 }

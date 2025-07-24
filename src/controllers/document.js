@@ -1,5 +1,5 @@
 const { pagination } = require('../helpers/pagination')
-const { document, sequelize, depo, docUser } = require('../models')
+const { document, sequelize, depo, docUser, namedocs } = require('../models')
 const { Op, QueryTypes } = require('sequelize')
 const response = require('../helpers/response')
 const joi = require('joi')
@@ -558,6 +558,266 @@ module.exports = {
         return response(res, 'success get document', { result, no, jenis })
       } else {
         return response(res, 'success get document', { result, no, jenis })
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDetailDocument: async (req, res) => {
+    try {
+      const { nama, kode } = req.query
+      const result = await document.findAll({
+        where: {
+          type: nama,
+          kode_plant: kode
+        }
+      })
+      if (result) {
+        return response(res, 'success get detail document', { result })
+      } else {
+        return response(res, 'failed get detail document', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getDetailId: async (req, res) => {
+    try {
+      const id = req.params.id
+      const result = await document.findByPk(id)
+      if (result) {
+        return response(res, 'success get detail name document', { result })
+      } else {
+        return response(res, 'failed get detail name document', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  createNameDocument: async (req, res) => {
+    try {
+      const level = req.user.level
+      const schema = joi.object({
+        name: joi.string().required(),
+        type: joi.string().required(),
+        kode_plant: joi.string().required(),
+        menu: joi.string().required(),
+        status: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        if (level === 1) {
+          const findPlant = await namedocs.findAll({
+            where: {
+              [Op.and]: [
+                { kode_plant: results.kode_plant },
+                { name: results.name }
+              ]
+            }
+          })
+          if (findPlant.length > 0) {
+            return response(res, 'Telah terdaftar', {}, 404, false)
+          } else {
+            const result = await namedocs.create(results)
+            if (result) {
+              return response(res, 'succesfully create name dokumen', { result })
+            } else {
+              return response(res, 'failed to create name dokumen', {}, 404, false)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  updateNameDocument: async (req, res) => {
+    try {
+      const level = req.user.level
+      const id = req.params.id
+      const schema = joi.object({
+        name: joi.string().required(),
+        type: joi.string().required(),
+        kode_plant: joi.string().required(),
+        menu: joi.string().required(),
+        status: joi.string().required()
+      })
+      const { value: results, error } = schema.validate(req.body)
+      if (error) {
+        return response(res, 'Error', { error: error.message }, 401, false)
+      } else {
+        if (level === 1) {
+          const findName = await namedocs.findByPk(id)
+          if (findName) {
+            const findPlant = await namedocs.findAll({
+              where: {
+                [Op.and]: [
+                  { kode_plant: results.kode_plant },
+                  { name: results.name }
+                ],
+                [Op.not]: { id: id }
+              }
+            })
+            if (findPlant.length > 0) {
+              return response(res, 'Telah terdaftar', {}, 404, false)
+            } else {
+              const findApp = await document.findAll({
+                where: {
+                  [Op.and]: [
+                    { kode_plant: results.kode_plant },
+                    { type: results.name }
+                  ]
+                }
+              })
+              if (findApp.length > 0) {
+                const temp = []
+                const data = {
+                  type: results.name,
+                  kode_plant: results.kode_plant
+                }
+                for (let i = 0; i < findApp.length; i++) {
+                  const findData = await document.findByPk(findApp[i].id)
+                  if (findData) {
+                    await findData.update(data)
+                    temp.push(findData)
+                  }
+                }
+                if (temp.length > 0) {
+                  const result = await findName.update(results)
+                  if (result) {
+                    return response(res, 'succesfully update name dokumen', { result })
+                  } else {
+                    return response(res, 'failed to update name dokumen 1', {}, 404, false)
+                  }
+                } else {
+                  const result = await findName.update(results)
+                  if (result) {
+                    return response(res, 'succesfully update name dokumen2', { result })
+                  } else {
+                    return response(res, 'failed to update name dokumen 3', {}, 404, false)
+                  }
+                }
+              } else {
+                const result = await findName.update(results)
+                if (result) {
+                  return response(res, 'succesfully update name dokumen', { result })
+                } else {
+                  return response(res, 'failed to update name dokumen 4', {}, 404, false)
+                }
+              }
+            }
+          } else {
+            return response(res, 'failed to update name dokumen 5', {}, 404, false)
+          }
+        }
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  deleteNameDocument: async (req, res) => {
+    try {
+      const id = req.params.id
+      const level = req.user.level
+      if (level === 1) {
+        const result = await namedocs.findByPk(id)
+        if (result) {
+          const findApp = await document.findAll({
+            where: {
+              type: result.name,
+              kode_plant: result.kode_plant
+            }
+          })
+          if (findApp.length > 0) {
+            const temp = []
+            for (let i = 0; i < findApp.length; i++) {
+              const findId = await document.findByPk(findApp[i].id)
+              if (findId) {
+                await findId.destroy()
+                temp.push(findId)
+              }
+            }
+            if (temp.length > 0) {
+              await result.destroy()
+              return response(res, 'success delete name docs')
+            } else {
+              await result.destroy()
+              return response(res, 'success delete name docs')
+            }
+          } else {
+            await result.destroy()
+            return response(res, 'success delete name dokumen')
+          }
+        } else {
+          return response(res, 'failed to delete name dokumen', {}, 404, false)
+        }
+      } else {
+        return response(res, "you're not super admin", {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getTempDocument: async (req, res) => {
+    try {
+      const { id } = req.query
+      const findTemp = await namedocs.findByPk(id)
+      if (findTemp) {
+        return response(res, 'success get template', { result: findTemp })
+      } else {
+        return response(res, 'data tidak ditemukan', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getNameDocument: async (req, res) => {
+    try {
+      let { limit, page, search, sort } = req.query
+      let searchValue = ''
+      let sortValue = ''
+      if (typeof search === 'object') {
+        searchValue = Object.values(search)[0]
+      } else {
+        searchValue = search || ''
+      }
+      if (typeof sort === 'object') {
+        sortValue = Object.values(sort)[0]
+      } else {
+        sortValue = sort || 'id'
+      }
+      if (!limit) {
+        limit = 100
+      } else if (limit === 'all') {
+        const findLimit = await namedocs.findAll()
+        limit = findLimit.length
+      } else {
+        limit = parseInt(limit)
+      }
+      if (!page) {
+        page = 1
+      } else {
+        page = parseInt(page)
+      }
+      const result = await namedocs.findAndCountAll({
+        where: {
+          [Op.or]: [
+            { name: { [Op.like]: `%${searchValue}%` } },
+            { type: { [Op.like]: `%${searchValue}%` } },
+            { kode_plant: { [Op.like]: `%${searchValue}%` } }
+          ]
+        },
+        order: [[sortValue, 'ASC']],
+        limit: limit,
+        offset: (page - 1) * limit
+      })
+      const pageInfo = pagination('/document/name', req.query, page, limit, result.count)
+      if (result) {
+        return response(res, 'list document', { result, pageInfo })
+      } else {
+        return response(res, 'failed to get user', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
