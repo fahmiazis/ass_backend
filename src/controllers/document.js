@@ -21,7 +21,10 @@ module.exports = {
         jenis_dokumen: joi.string().required(),
         divisi: joi.string().required(),
         tipe_dokumen: joi.string().required(),
-        tipe: joi.string().required()
+        tipe: joi.string().required(),
+        template: joi.string().required(),
+        kode_plant: joi.string().required(),
+        stat_upload: joi.number().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -59,38 +62,31 @@ module.exports = {
       const level = req.user.level
       const id = req.params.id
       const schema = joi.object({
-        nama_dokumen: joi.string(),
+        nama_dokumen: joi.string().required(),
         jenis_dokumen: joi.string().required().valid('it', 'non_it', 'all'),
         divisi: joi.string().disallow('-Pilih Divisi-'),
-        tipe_dokumen: joi.string(),
-        tipe: joi.string()
+        tipe_dokumen: joi.string().required(),
+        tipe: joi.string().required(),
+        template: joi.string().required(),
+        kode_plant: joi.string().required(),
+        stat_upload: joi.number().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
         if (level === 1 || level === 2) {
-          if (results.nama_dokumen) {
-            const result = await document.findAll({
-              where: {
-                [Op.and]: [
-                  { nama_dokumen: results.nama_dokumen },
-                  { tipe_dokumen: results.tipe_dokumen }
-                ],
-                [Op.not]: { id: id }
-              }
-            })
-            if (result.length > 0) {
-              return response(res, 'dokumen already exist', {}, 404, false)
-            } else {
-              const result = await document.findByPk(id)
-              if (result) {
-                await result.update(results)
-                return response(res, 'succesfully update dokumen', { result })
-              } else {
-                return response(res, 'failed to update dokumen', {}, 404, false)
-              }
+          const result = await document.findAll({
+            where: {
+              [Op.and]: [
+                { nama_dokumen: results.nama_dokumen },
+                { tipe_dokumen: results.tipe_dokumen }
+              ],
+              [Op.not]: { id: id }
             }
+          })
+          if (result.length > 0) {
+            return response(res, 'dokumen already exist', {}, 404, false)
           } else {
             const result = await document.findByPk(id)
             if (result) {
@@ -568,7 +564,7 @@ module.exports = {
       const { nama, kode } = req.query
       const result = await document.findAll({
         where: {
-          type: nama,
+          template: nama,
           kode_plant: kode
         }
       })
@@ -667,14 +663,14 @@ module.exports = {
                 where: {
                   [Op.and]: [
                     { kode_plant: results.kode_plant },
-                    { type: results.name }
+                    { template: results.name }
                   ]
                 }
               })
               if (findApp.length > 0) {
                 const temp = []
                 const data = {
-                  type: results.name,
+                  template: results.name,
                   kode_plant: results.kode_plant
                 }
                 for (let i = 0; i < findApp.length; i++) {
@@ -726,7 +722,7 @@ module.exports = {
         if (result) {
           const findApp = await document.findAll({
             where: {
-              type: result.name,
+              template: result.name,
               kode_plant: result.kode_plant
             }
           })
