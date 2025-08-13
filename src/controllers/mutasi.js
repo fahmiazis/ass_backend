@@ -135,7 +135,7 @@ module.exports = {
                 return response(res, 'failed add mutasi4', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add mutasi5', {}, 400, false)
+              return response(res, 'failed add mutasi5', { findDepo, result }, 400, false)
             }
           } else {
             return response(res, 'Hanya bisa menambahkan item dengan area tujuan yang sama. Kosongkan atau submit cart terlebih dahulu !', { findArea }, 400, false)
