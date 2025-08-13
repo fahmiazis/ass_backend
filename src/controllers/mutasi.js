@@ -149,14 +149,14 @@ module.exports = {
               ]
             }
           })
+          const findDepo = await depo.findOne({
+            where: {
+              kode_plant: kode
+            }
+          })
           if (findAsset.length > 0) {
             return response(res, 'success add mutasi', { result: findAsset })
-          } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && result.cost_center === kode)) {
-            const findDepo = await depo.findOne({
-              where: {
-                kode_plant: kode
-              }
-            })
+          } else if ((level === 5 && result.cost_center === findDepo.cost_center) || (level === 9 && result.cost_center === kode)) {
             if (findDepo) {
               const findRec = await depo.findOne({
                 where: {
@@ -201,7 +201,7 @@ module.exports = {
               return response(res, 'failed add mutasi4', {}, 400, false)
             }
           } else {
-            return response(res, 'failed add mutasi5', {}, 400, false)
+            return response(res, 'failed add mutasi5', { result, findDepo }, 400, false)
           }
         }
       } else {
