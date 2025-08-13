@@ -1660,7 +1660,7 @@ module.exports = {
             penerima.push(result[i])
           }
         }
-        return response(res, 'success get template approve', { result: { pembuat, penerima, pemeriksa, penyetuju } })
+        return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, penerima } })
       } else {
         const findDis = await mutasi.findAll({
           where: {
@@ -1754,7 +1754,7 @@ module.exports = {
                           penerima.push(findRes[i])
                         }
                       }
-                      return response(res, 'success get template approve', { result: { pembuat, penerima, pemeriksa, penyetuju } })
+                      return response(res, 'success get template approve', { result: { pembuat, pemeriksa, penyetuju, penerima } })
                     }
                   }
                 }
