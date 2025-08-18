@@ -212,7 +212,7 @@ module.exports = {
         tipe = 'all'
       }
       if (!limit) {
-        limit = 12
+        limit = 10
       } else {
         limit = parseInt(limit)
       }

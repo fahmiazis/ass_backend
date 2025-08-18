@@ -9,8 +9,8 @@ const moment = require('moment')
 const wrapMail = require('../helpers/wrapMail')
 const axios = require('axios')
 
-const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
-const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
+const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
 module.exports = {
   addDisposal: async (req, res) => {
@@ -1032,6 +1032,42 @@ module.exports = {
             cekNo.push(parseInt(findNo[i].no_disposal === null ? 0 : findNo[i].no_disposal))
           }
           const noDis = Math.max(...cekNo) + 1
+
+          const change = noDis.toString().split('')
+          const notrans = change.length === 2 ? '00' + noDis : change.length === 1 ? '000' + noDis : change.length === 3 ? '0' + noDis : noDis
+          const month = parseInt(moment().format('MM'))
+          const year = moment().format('YYYY')
+          let rome = ''
+          if (month === 1) {
+            rome = 'I'
+          } else if (month === 2) {
+            rome = 'II'
+          } else if (month === 3) {
+            rome = 'III'
+          } else if (month === 4) {
+            rome = 'IV'
+          } else if (month === 5) {
+            rome = 'V'
+          } else if (month === 6) {
+            rome = 'VI'
+          } else if (month === 7) {
+            rome = 'VII'
+          } else if (month === 8) {
+            rome = 'VIII'
+          } else if (month === 9) {
+            rome = 'IX'
+          } else if (month === 10) {
+            rome = 'X'
+          } else if (month === 11) {
+            rome = 'XI'
+          } else if (month === 12) {
+            rome = 'XII'
+          }
+
+          // const tempData = findKlaim.find(({no_transaksi}) => no_transaksi !== null) // eslint-disable-line
+          // const cekData = tempData === undefined ? 'ya' : 'no'
+          const noTrans = `${notrans}/${kode}/${rome}/${year}-DPS`
+
           const temp = []
           for (let i = 0; i < result.length; i++) {
             const find = await disposal.findByPk(result[i].id)
@@ -1042,7 +1078,7 @@ module.exports = {
                 if (find.nilai_jual !== '0') {
                   const send = {
                     status_form: 26,
-                    no_disposal: noDis === undefined ? 1 : noDis,
+                    no_disposal: noTrans === undefined ? 1 : noTrans,
                     nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
                     tanggalDis: moment()
                   }
@@ -1051,7 +1087,7 @@ module.exports = {
                 } else {
                   const send = {
                     status_form: 2,
-                    no_disposal: noDis === undefined ? 1 : noDis,
+                    no_disposal: noTrans === undefined ? 1 : noTrans,
                     nilai_buku: findApi.data[0].nafap === undefined ? find.nilai_buku : findApi.data[0].nafap,
                     tanggalDis: moment()
                   }
@@ -1062,7 +1098,7 @@ module.exports = {
                 if (find.nilai_jual !== '0') {
                   const send = {
                     status_form: 26,
-                    no_disposal: noDis === undefined ? 1 : noDis,
+                    no_disposal: noTrans === undefined ? 1 : noTrans,
                     nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
                     tanggalDis: moment()
                   }
@@ -1071,7 +1107,7 @@ module.exports = {
                 } else {
                   const send = {
                     status_form: 2,
-                    no_disposal: noDis === undefined ? 1 : noDis,
+                    no_disposal: noTrans === undefined ? 1 : noTrans,
                     nilai_buku: findApi.data === undefined ? find.nilai_buku : findApi.data[0].nafap,
                     tanggalDis: moment()
                   }
@@ -1501,7 +1537,7 @@ module.exports = {
   },
   getDetailDisposal: async (req, res) => {
     try {
-      const nomor = req.params.nomor
+      const { nomor } = req.body
       let { tipe } = req.query
       if (!tipe) {
         tipe = 'pengajuan'

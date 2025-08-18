@@ -12,8 +12,8 @@ const uploadHelper = require('../helpers/upload')
 const fs = require('fs')
 const axios = require('axios')
 
-const emailAss = 'pmaho_asset1@pinusmerahabadi.co.id'
-const emailAss2 = 'neng_rina@pinusmerahabadi.co.id'
+const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
+const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
 module.exports = {
   home: async (req, res) => {
@@ -3203,7 +3203,7 @@ module.exports = {
   },
   cekApi: async (req, res) => {
     try {
-      const { ticket_code } = req.query
+      const { ticket_code } = req.query // eslint-disable-line
       const findCode = await pengadaan.findOne({
         where: {
           ticket_code: ticket_code
