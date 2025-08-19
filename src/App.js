@@ -35,6 +35,7 @@ const newnotifRoute = require('./routes/newnotif')
 const trackingRoute = require('./routes/tracking')
 const reportRoute = require('./routes/report')
 const menuRoute = require('./routes/menu')
+const dashboardRoute = require('./routes/dashboard')
 
 const authMiddleware = require('./middlewares/auth')
 
@@ -63,6 +64,7 @@ app.use('/newnotif', authMiddleware, newnotifRoute)
 app.use('/track', authMiddleware, trackingRoute)
 app.use('/report', authMiddleware, reportRoute)
 app.use('/menu', authMiddleware, menuRoute)
+app.use('/dashboard', authMiddleware, dashboardRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)

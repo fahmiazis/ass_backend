@@ -1,5 +1,5 @@
 const response = require('../helpers/response')
-const { mutasi, asset, depo, ttd, approve, role, user, docUser, document, path, email, reservoir, role_user } = require('../models') // eslint-disable-line
+const { mutasi, asset, depo, ttd, approve, role, user, docUser, document, path, email, reservoir, role_user, sequelize } = require('../models') // eslint-disable-line
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const joi = require('joi')
@@ -8,6 +8,9 @@ const uploadHelper = require('../helpers/upload')
 const multer = require('multer')
 const moment = require('moment')
 const axios = require('axios')
+const { generateToken } = require('../helpers/signjwt')
+const jwt = require('jsonwebtoken')
+const { APP_KEY } = process.env
 
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
@@ -1274,6 +1277,7 @@ module.exports = {
             no_mutasi: noTrans,
             alasan: results.alasan
           }
+          const noJwt = await generateToken({ no: noTrans })
           for (let i = 0; i < findMut.length; i++) {
             const find = await mutasi.findByPk(findMut[i].id)
             if (find) {
@@ -1306,9 +1310,9 @@ module.exports = {
               if (findReser && !findNewReser) {
                 await findReser.update(upDataReser)
                 await reservoir.create(creDataReser)
-                return response(res, 'success submit cart', { no_mutasi: noTrans })
+                return response(res, 'success submit cart', { no_mutasi: noTrans, no_jwt: noJwt })
               } else {
-                return response(res, 'success submit cart', { no_mutasi: noTrans })
+                return response(res, 'success submit cart', { no_mutasi: noTrans, no_jwt: noJwt })
               }
             } else {
               const findNewReser = await reservoir.findOne({
@@ -1317,7 +1321,7 @@ module.exports = {
                 }
               })
               if (findNewReser) {
-                return response(res, 'success submit cart', { no_mutasi: noTrans })
+                return response(res, 'success submit cart', { no_mutasi: noTrans, no_jwt: noJwt })
               } else {
                 const creDataReser = {
                   no_transaksi: noTrans,
@@ -1327,7 +1331,7 @@ module.exports = {
                   status: 'delayed'
                 }
                 await reservoir.create(creDataReser)
-                return response(res, 'success submit cart', { no_mutasi: noTrans })
+                return response(res, 'success submit cart', { no_mutasi: noTrans, no_jwt: noJwt })
               }
             }
           } else {
@@ -4240,6 +4244,20 @@ module.exports = {
         }
       } else {
         return response(res, 'approval tidak ditemukan', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  scanQrMutasi: async (req, res) => {
+    try {
+      const no = req.body.no
+      const verifyToken = jwt.verify(no, `${APP_KEY}`)
+      if (verifyToken) {
+        const dataToken = verifyToken
+        return response(res, 'qr berhasil diverifikasi', { result: dataToken })
+      } else {
+        return response(res, 'qr code tidak valid', {}, 400, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
