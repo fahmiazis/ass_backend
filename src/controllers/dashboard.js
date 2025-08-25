@@ -4,6 +4,7 @@ const response = require('../helpers/response')
 module.exports = {
   getDashboard: async (req, res) => {
     try {
+      const { year } = req.query
       const result = await sequelize.query(`
             SELECT
               r.transaksi,
@@ -25,7 +26,7 @@ module.exports = {
               AND YEAR(r.createdAt) = :year
             GROUP BY r.transaksi
           `, {
-        replacements: { year: 2025 },
+        replacements: { year: year },
         type: sequelize.QueryTypes.SELECT
       })
       if (result) {
