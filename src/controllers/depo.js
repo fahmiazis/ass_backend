@@ -191,7 +191,7 @@ module.exports = {
   getDepo: async (req, res) => {
     try {
       const level = req.user.level
-      const fullname = req.user.name
+      const fullname = req.user.fullname
       let { limit, page, search, sort } = req.query
       let searchValue = ''
       let sortValue = ''
