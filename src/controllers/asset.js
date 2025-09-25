@@ -725,6 +725,7 @@ module.exports = {
             cost_center: data.kostl,
             area: findDepo ? findDepo.place_asset : '',
             unit: 1,
+            no_io: data.eaufn,
             status: (data.deakt !== undefined && data.deakt !== null)
               ? '0'
               : (findAset && findAset.status === '100')
@@ -776,7 +777,8 @@ module.exports = {
             kode_plant: item.werks,
             cost_center: item.kostl,
             area: depoData ? depoData.place_asset : '',
-            unit: 1
+            unit: 1,
+            no_io: item.eaufn
           }
 
           if (item.deakt !== undefined && item.deakt !== null) {

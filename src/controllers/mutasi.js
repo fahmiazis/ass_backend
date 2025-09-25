@@ -10,7 +10,7 @@ const moment = require('moment')
 const axios = require('axios')
 const { generateToken } = require('../helpers/signjwt')
 const jwt = require('jsonwebtoken')
-const { APP_KEY } = process.env
+const { APP_KEY, APP_SAP } = process.env
 
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
@@ -1381,9 +1381,9 @@ module.exports = {
           for (let i = 0; i < findMut.length; i++) {
             const find = await mutasi.findByPk(findMut[i].id)
             if (find) {
-              const findApi = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+              const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
               if (findApi.status === 200) {
-                const findCost = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findCost = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 if (findCost.status === 200) {
                   const data = {
                     isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
@@ -1472,161 +1472,6 @@ module.exports = {
       } else {
         return response(res, 'failed get mutasi', {}, 404, false)
       }
-      // if (tipe === 'budget') {
-      //   const result = await mutasi.findAll({
-      //     where: {
-      //       [Op.and]: [
-      //         { no_mutasi: no },
-      //         { status_form: level === 2 ? 4 : 3 }
-      //       ]
-      //     },
-      //     include: [
-      //       {
-      //         model: ttd,
-      //         as: 'appForm'
-      //       },
-      //       {
-      //         model: path,
-      //         as: 'pict'
-      //       },
-      //       {
-      //         model: docUser,
-      //         as: 'docAsset'
-      //       }
-      //     ],
-      //     order: [
-      //       ['id', 'ASC'],
-      //       [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-      //     ]
-      //   })
-      //   if (result.length > 0) {
-      //     return response(res, 'success get mutasi', { result })
-      //   } else {
-      //     return response(res, 'failed get mutasi', {}, 404, false)
-      //   }
-      // } else if (tipe === 'eks') {
-      //   const result = await mutasi.findAll({
-      //     where: {
-      //       no_mutasi: no
-      //     },
-      //     include: [
-      //       {
-      //         model: ttd,
-      //         as: 'appForm'
-      //       },
-      //       {
-      //         model: path,
-      //         as: 'pict'
-      //       },
-      //       {
-      //         model: docUser,
-      //         as: 'docAsset'
-      //       }
-      //     ],
-      //     order: [
-      //       ['id', 'ASC'],
-      //       [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-      //     ]
-      //   })
-      //   if (result.length > 0) {
-      //     const prev = moment().format('L').split('/')
-      //     const cek = []
-      //     for (let i = 0; i < result.length; i++) {
-      //       const find = await mutasi.findByPk(result[i].id)
-      //       if (find) {
-      //         const findApi = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
-      //         if (findApi.status === 200) {
-      //           const findCost = await axios.get(`http://prdhana.nabatigroup.com:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
-      //           if (findCost.status === 200) {
-      //             const data = {
-      //               isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
-      //               no_io: findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn,
-      //               cost_centerawal: findCost.data[0] === undefined ? null : findCost.data[0].kostv === undefined ? null : findCost.data[0].kostv === null ? null : findCost.data[0].kostv === '' ? null : findCost.data[0].kostv
-      //             }
-      //             await find.update(data)
-      //           } else {
-      //             const data = {
-      //               isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
-      //               no_io: findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn
-      //             }
-      //             await find.update(data)
-      //           }
-      //           cek.push(1)
-      //         } else {
-      //           const data = {
-      //             isbudget: 'tidak',
-      //             no_io: null
-      //           }
-      //           await find.update(data)
-      //           cek.push(1)
-      //         }
-      //       }
-      //     }
-      //     if (cek.length > 0) {
-      //       const result = await mutasi.findAll({
-      //         where: {
-      //           no_mutasi: no
-      //         },
-      //         include: [
-      //           {
-      //             model: ttd,
-      //             as: 'appForm'
-      //           },
-      //           {
-      //             model: path,
-      //             as: 'pict'
-      //           },
-      //           {
-      //             model: docUser,
-      //             as: 'docAsset'
-      //           }
-      //         ],
-      //         order: [
-      //           ['id', 'ASC'],
-      //           [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-      //         ]
-      //       })
-      //       if (result) {
-      //         return response(res, 'success get mutasi', { result })
-      //       } else {
-      //         return response(res, 'success get mutasi', { result })
-      //       }
-      //     } else {
-      //       return response(res, 'success get mutasi', { result })
-      //     }
-      //   } else {
-      //     return response(res, 'failed get mutasi', {}, 404, false)
-      //   }
-      // } else {
-      //   const result = await mutasi.findAll({
-      //     where: {
-      //       no_mutasi: no
-      //     },
-      //     include: [
-      //       {
-      //         model: ttd,
-      //         as: 'appForm'
-      //       },
-      //       {
-      //         model: path,
-      //         as: 'pict'
-      //       },
-      //       {
-      //         model: docUser,
-      //         as: 'docAsset'
-      //       }
-      //     ],
-      //     order: [
-      //       ['id', 'ASC'],
-      //       [{ model: ttd, as: 'appForm' }, 'id', 'DESC']
-      //     ]
-      //   })
-      //   if (result.length > 0) {
-      //     return response(res, 'success get mutasi', { result })
-      //   } else {
-      //     return response(res, 'failed get mutasi', {}, 404, false)
-      //   }
-      // }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
     }
@@ -2770,513 +2615,6 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  // submitEks: async (req, res) => {
-  //   try {
-  //     const no = req.body.no
-  //     const findBud = await mutasi.findAll({
-  //       where: {
-  //         [Op.and]: [
-  //           { no_mutasi: no },
-  //           { isbudget: 'ya' }
-  //         ]
-  //       }
-  //     })
-  //     if (findBud.length > 0) {
-  //       let tableTd = ''
-  //       const cek = []
-  //       for (let i = 0; i < findBud.length; i++) {
-  //         const data = {
-  //           status_form: 8
-  //         }
-  //         const findData = await mutasi.findByPk(findBud[i].id)
-  //         if (findData) {
-  //           await findData.update(data)
-  //           const element = `
-  //             <tr>
-  //               <td>${findBud.indexOf(findBud[i]) + 1}</td>
-  //               <td>${findBud[i].no_mutasi}</td>
-  //               <td>${findBud[i].no_asset}</td>
-  //               <td>${findBud[i].nama_asset}</td>
-  //               <td>${findBud[i].area}</td>
-  //               <td>${findBud[i].cost_center}</td>
-  //               <td>${findBud[i].area_rec}</td>
-  //               <td>${findBud[i].cost_center_rec}</td>
-  //               <td>${findBud[i].no_io}</td>
-  //             </tr>`
-  //           tableTd = tableTd + element
-  //           cek.push(1)
-  //         }
-  //       }
-  //       if (cek.length === findBud.length) {
-  //         const findUser = await user.findOne({
-  //           where: {
-  //             user_level: 8
-  //           }
-  //         })
-  //         if (findUser) {
-  //           const mailOptions = {
-  //             from: 'noreply_asset@pinusmerahabadi.co.id',
-  //             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-  //             // to: `${findUser.email}`,
-  //             to: `${emailAss}, ${emailAss2}`,
-  //             // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-  //             subject: `PERMINTAAN RUBAH COST CENTER MUTASI ASSET ${findBud[0].area} (TESTING)`,
-  //             html: `
-  //             <head>
-  //               <style type="text/css">
-  //               body {
-  //                   display: flexbox;
-  //                   flex-direction: column;
-  //               }
-  //               .tittle {
-  //                   font-size: 15px;
-  //               }
-  //               .mar {
-  //                   margin-bottom: 20px;
-  //               }
-  //               .mar1 {
-  //                   margin-bottom: 10px;
-  //               }
-  //               .foot {
-  //                   margin-top: 20px;
-  //                   margin-bottom: 10px;
-  //               }
-  //               .foot1 {
-  //                   margin-bottom: 50px;
-  //               }
-  //               .position {
-  //                   display: flexbox;
-  //                   flex-direction: row;
-  //                   justify-content: left;
-  //                   margin-top: 10px;
-  //               }
-  //               table {
-  //                   font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-  //                   font-size: 12px;
-  //               }
-  //               .demo-table {
-  //                   border-collapse: collapse;
-  //                   font-size: 13px;
-  //               }
-  //               .demo-table th,
-  //               .demo-table td {
-  //                   border-bottom: 1px solid #e1edff;
-  //                   border-left: 1px solid #e1edff;
-  //                   padding: 7px 17px;
-  //               }
-  //               .demo-table th,
-  //               .demo-table td:last-child {
-  //                   border-right: 1px solid #e1edff;
-  //               }
-  //               .demo-table td:first-child {
-  //                   border-top: 1px solid #e1edff;
-  //               }
-  //               .demo-table td:last-child{
-  //                   border-bottom: 0;
-  //               }
-  //               caption {
-  //                   caption-side: top;
-  //                   margin-bottom: 10px;
-  //               }
-
-  //               /* Table Header */
-  //               .demo-table thead th {
-  //                   background-color: #508abb;
-  //                   color: #FFFFFF;
-  //                   border-color: #6ea1cc !important;
-  //                   text-transform: uppercase;
-  //               }
-
-  //               /* Table Body */
-  //               .demo-table tbody td {
-  //                   color: #353535;
-  //               }
-
-  //               .demo-table tbody tr:nth-child(odd) td {
-  //                   background-color: #f4fbff;
-  //               }
-  //               .demo-table tbody tr:hover th,
-  //               .demo-table tbody tr:hover td {
-  //                   background-color: #ffffa2;
-  //                   border-color: #ffff0f;
-  //                   transition: all .2s;
-  //               }
-  //           </style>
-  //             </head>
-  //             <body>
-  //                 <div class="tittle mar">
-  //                     Dear Bapak/Ibu,
-  //                 </div>
-  //                 <div class="tittle mar1">
-  //                     <div>Mohon untuk mengubah cost center asset mutasi sebagai berikut:</div>
-  //                 </div>
-  //                 <div class="position mar1">
-  //                     <table class="demo-table">
-  //                         <thead>
-  //                             <tr>
-  //                               <th>No</th>
-  //                               <th>No Mutasi</th>
-  //                               <th>Asset</th>
-  //                               <th>Asset description</th>
-  //                               <th>Cabang / Depo</th>
-  //                               <th>Cost Ctr</th>
-  //                               <th>Cabang / Depo Penerima</th>
-  //                               <th>Cost Ctr Penerima</th>
-  //                               <th>No io</th>
-  //                             </tr>
-  //                         </thead>
-  //                         <tbody>
-  //                           ${tableTd}
-  //                         </tbody>
-  //                     </table>
-  //                 </div>
-  //                 <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-  //                 <div class="tittle foot">
-  //                     Terima kasih,
-  //                 </div>
-  //                 <div class="tittle foot1">
-  //                     Regards,
-  //                 </div>
-  //                 <div class="tittle">
-  //                     Team Asset
-  //                 </div>
-  //             </body>
-  //             `
-  //           }
-  //           const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-  //           if (sendEmail) {
-  //             const findMut = await mutasi.findAll({
-  //               where: {
-  //                 [Op.and]: [
-  //                   { no_mutasi: no },
-  //                   { isbudget: 'tidak' }
-  //                 ]
-  //               }
-  //             })
-  //             if (findMut.length > 0) {
-  //               let tableTd = ''
-  //               const cek = []
-  //               for (let i = 0; i < findMut.length; i++) {
-  //                 const data = {
-  //                   status_form: 7
-  //                 }
-  //                 // const send = {
-  //                 //   kode_plant: findMut[i].kode_plant_rec,
-  //                 //   status: null,
-  //                 //   area: findMut[i].area_rec
-  //                 // }
-  //                 const findData = await mutasi.findByPk(findMut[i].id)
-  //                 // const findAsset = await asset.findOne({
-  //                 //   where: {
-  //                 //     no_asset: findMut[i].no_asset
-  //                 //   }
-  //                 // })
-  //                 if (findData) {
-  //                   await findData.update(data)
-  //                   // await findAsset.update(send)
-  //                   const element = `
-  //                   <tr>
-  //                     <td>${findMut.indexOf(findMut[i]) + 1}</td>
-  //                     <td>${findMut[i].no_mutasi}</td>
-  //                     <td>${findMut[i].no_asset}</td>
-  //                     <td>${findMut[i].nama_asset}</td>
-  //                     <td>${findMut[i].area}</td>
-  //                     <td>${findMut[i].cost_center}</td>
-  //                     <td>${findMut[i].area_rec}</td>
-  //                     <td>${findMut[i].cost_center_rec}</td>
-  //                   </tr>`
-  //                   tableTd = tableTd + element
-  //                   cek.push(1)
-  //                 }
-  //               }
-  //               if (cek.length === findMut.length) {
-  //                 const findUser = await email.findOne({
-  //                   where: {
-  //                     kode_plant: findMut[0].kode_plant
-  //                   }
-  //                 })
-  //                 if (findUser) {
-  //                   return response(res, 'success submit eksekusi mutasi')
-  //                 } else {
-  //                   return response(res, 'success submit eksekusi fail send email')
-  //                 }
-  //               } else {
-  //                 return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
-  //               }
-  //             } else {
-  //               return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
-  //             }
-  //           } else {
-  //             const findMut = await mutasi.findAll({
-  //               where: {
-  //                 [Op.and]: [
-  //                   { no_mutasi: no },
-  //                   { isbudget: 'tidak' }
-  //                 ]
-  //               }
-  //             })
-  //             if (findMut.length > 0) {
-  //               let tableTd = ''
-  //               const cek = []
-  //               for (let i = 0; i < findMut.length; i++) {
-  //                 const data = {
-  //                   status_form: 7
-  //                 }
-  //                 // const send = {
-  //                 //   kode_plant: findMut[i].kode_plant_rec,
-  //                 //   status: null,
-  //                 //   area: findMut[i].area_rec
-  //                 // }
-  //                 const findData = await mutasi.findByPk(findMut[i].id)
-  //                 // const findAsset = await asset.findOne({
-  //                 //   where: {
-  //                 //     no_asset: findMut[i].no_asset
-  //                 //   }
-  //                 // })
-  //                 if (findData) {
-  //                   await findData.update(data)
-  //                   // await findAsset.update(send)
-  //                   const element = `
-  //                   <tr>
-  //                     <td>${findMut.indexOf(findMut[i]) + 1}</td>
-  //                     <td>${findMut[i].no_mutasi}</td>
-  //                     <td>${findMut[i].no_asset}</td>
-  //                     <td>${findMut[i].nama_asset}</td>
-  //                     <td>${findMut[i].area}</td>
-  //                     <td>${findMut[i].cost_center}</td>
-  //                     <td>${findMut[i].area_rec}</td>
-  //                     <td>${findMut[i].cost_center_rec}</td>
-  //                   </tr>`
-  //                   tableTd = tableTd + element
-  //                   cek.push(1)
-  //                 }
-  //               }
-  //               if (cek.length === findMut.length) {
-  //                 const findUser = await email.findOne({
-  //                   where: {
-  //                     kode_plant: findMut[0].kode_plant
-  //                   }
-  //                 })
-  //                 if (findUser) {
-  //                   return response(res, 'success submit eksekusi mutasi')
-  //                 } else {
-  //                   return response(res, 'success submit eksekusi fail send email')
-  //                 }
-  //               } else {
-  //                 return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
-  //               }
-  //             } else {
-  //               return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
-  //             }
-  //           }
-  //         } else {
-  //           return response(res, 'success submit eksekusi fail send email')
-  //         }
-  //       } else {
-  //         return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
-  //       }
-  //     } else {
-  //       const findMut = await mutasi.findAll({
-  //         where: {
-  //           [Op.and]: [
-  //             { no_mutasi: no },
-  //             { isbudget: 'tidak' }
-  //           ]
-  //         }
-  //       })
-  //       if (findMut.length > 0) {
-  //         let tableTd = ''
-  //         const cek = []
-  //         for (let i = 0; i < findMut.length; i++) {
-  //           const data = {
-  //             status_form: 8,
-  //             tgl_mutasisap: moment()
-  //           }
-  //           const send = {
-  //             kode_plant: findMut[i].kode_plant_rec,
-  //             status: null,
-  //             area: findMut[i].area_rec,
-  //             keterangan: null
-  //           }
-  //           const findData = await mutasi.findByPk(findMut[i].id)
-  //           const findAsset = await asset.findOne({
-  //             where: {
-  //               no_asset: findMut[i].no_asset
-  //             }
-  //           })
-  //           if (findData && findAsset) {
-  //             await findData.update(data)
-  //             await findAsset.update(send)
-  //             const element = `
-  //             <tr>
-  //               <td>${findMut.indexOf(findMut[i]) + 1}</td>
-  //               <td>${findMut[i].no_mutasi}</td>
-  //               <td>${findMut[i].no_asset}</td>
-  //               <td>${findMut[i].nama_asset}</td>
-  //               <td>${findMut[i].area}</td>
-  //               <td>${findMut[i].cost_center}</td>
-  //               <td>${findMut[i].area_rec}</td>
-  //               <td>${findMut[i].cost_center_rec}</td>
-  //             </tr>`
-  //             tableTd = tableTd + element
-  //             cek.push(1)
-  //           }
-  //         }
-  //         if (cek.length === findMut.length) {
-  //           const findUser = await email.findOne({
-  //             where: {
-  //               kode_plant: findMut[0].kode_plant
-  //             }
-  //           })
-  //           if (findUser) {
-  //             const mailOptions = {
-  //               from: 'noreply_asset@pinusmerahabadi.co.id',
-  //               replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-  //               // to: `${findUser.email_area_aos}`,
-  //               to: `${emailAss}, ${emailAss2}`,
-  //               // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-  //               subject: `SELESAI MUTASI ASSET ${findMut[0].area} (TESTING)`,
-  //               html: `
-  //               <head>
-  //                 <style type="text/css">
-  //                 body {
-  //                     display: flexbox;
-  //                     flex-direction: column;
-  //                 }
-  //                 .tittle {
-  //                     font-size: 15px;
-  //                 }
-  //                 .mar {
-  //                     margin-bottom: 20px;
-  //                 }
-  //                 .mar1 {
-  //                     margin-bottom: 10px;
-  //                 }
-  //                 .foot {
-  //                     margin-top: 20px;
-  //                     margin-bottom: 10px;
-  //                 }
-  //                 .foot1 {
-  //                     margin-bottom: 50px;
-  //                 }
-  //                 .position {
-  //                     display: flexbox;
-  //                     flex-direction: row;
-  //                     justify-content: left;
-  //                     margin-top: 10px;
-  //                 }
-  //                 table {
-  //                     font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-  //                     font-size: 12px;
-  //                 }
-  //                 .demo-table {
-  //                     border-collapse: collapse;
-  //                     font-size: 13px;
-  //                 }
-  //                 .demo-table th,
-  //                 .demo-table td {
-  //                     border-bottom: 1px solid #e1edff;
-  //                     border-left: 1px solid #e1edff;
-  //                     padding: 7px 17px;
-  //                 }
-  //                 .demo-table th,
-  //                 .demo-table td:last-child {
-  //                     border-right: 1px solid #e1edff;
-  //                 }
-  //                 .demo-table td:first-child {
-  //                     border-top: 1px solid #e1edff;
-  //                 }
-  //                 .demo-table td:last-child{
-  //                     border-bottom: 0;
-  //                 }
-  //                 caption {
-  //                     caption-side: top;
-  //                     margin-bottom: 10px;
-  //                 }
-
-  //                 /* Table Header */
-  //                 .demo-table thead th {
-  //                     background-color: #508abb;
-  //                     color: #FFFFFF;
-  //                     border-color: #6ea1cc !important;
-  //                     text-transform: uppercase;
-  //                 }
-
-  //                 /* Table Body */
-  //                 .demo-table tbody td {
-  //                     color: #353535;
-  //                 }
-
-  //                 .demo-table tbody tr:nth-child(odd) td {
-  //                     background-color: #f4fbff;
-  //                 }
-  //                 .demo-table tbody tr:hover th,
-  //                 .demo-table tbody tr:hover td {
-  //                     background-color: #ffffa2;
-  //                     border-color: #ffff0f;
-  //                     transition: all .2s;
-  //                 }
-  //             </style>
-  //               </head>
-  //               <body>
-  //                   <div class="tittle mar">
-  //                       Dear Bapak/Ibu,
-  //                   </div>
-  //                   <div class="tittle mar1">
-  //                       <div>asset berikut telah berhasil dimutasikan:</div>
-  //                   </div>
-  //                   <div class="position mar1">
-  //                       <table class="demo-table">
-  //                           <thead>
-  //                               <tr>
-  //                                 <th>No</th>
-  //                                 <th>No Mutasi</th>
-  //                                 <th>Asset</th>
-  //                                 <th>Asset description</th>
-  //                                 <th>Cabang / Depo</th>
-  //                                 <th>Cost Ctr</th>
-  //                                 <th>Cabang / Depo Penerima</th>
-  //                                 <th>Cost Ctr Penerima</th>
-  //                               </tr>
-  //                           </thead>
-  //                           <tbody>
-  //                             ${tableTd}
-  //                           </tbody>
-  //                       </table>
-  //                   </div>
-  //                   <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-  //                   <div class="tittle foot">
-  //                       Terima kasih,
-  //                   </div>
-  //                   <div class="tittle foot1">
-  //                       Regards,
-  //                   </div>
-  //                   <div class="tittle">
-  //                       Team Asset
-  //                   </div>
-  //               </body>
-  //               `
-  //             }
-  //             const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-  //             if (sendEmail) {
-  //               return response(res, 'success submit eksekusi mutasi', { sendEmail })
-  //             } else {
-  //               return response(res, 'berhasil submit eksekusi mutasi, tidak berhasil kirim notif email 1')
-  //             }
-  //           } else {
-  //             return response(res, 'success submit eksekusi fail send email')
-  //           }
-  //         } else {
-  //           return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
-  //         }
-  //       } else {
-  //         return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
-  //       }
-  //     }
-  //   } catch (error) {
-  //     return response(res, error.message, {}, 500, false)
-  //   }
-  // },
   submitEks: async (req, res) => {
     try {
       const no = req.body.no
@@ -3289,7 +2627,18 @@ module.exports = {
         }
       })
       if (findMut.length > 0) {
+        const findDepo = await depo.findOne({
+          where: {
+            kode_plant: findMut[0].kode_plant
+          }
+        })
+        const findDepoRec = await depo.findOne({
+          where: {
+            kode_plant: findMut[0].kode_plant_rec
+          }
+        })
         const cek = []
+        const failSap = []
         for (let i = 0; i < findMut.length; i++) {
           const data = {
             status_form: 8,
@@ -3306,31 +2655,88 @@ module.exports = {
             status: null,
             keterangan: null
           }
-          const findData = await mutasi.findByPk(findMut[i].id)
-          const findAsset = await asset.findOne({
-            where: {
-              no_asset: findMut[i].no_asset
-            }
+          const body = {
+            id: `${findMut[i].no_mutasi}-${findMut[i].no_asset}`,
+            companycode: 'PP01',
+            asset: findMut[i].no_asset,
+            subnumber: '0',
+            descript1: `${findMut[i].nama_asset} -> ${findMut[i].area_rec}`,
+            descript2: '',
+            main_descript: `${findMut[i].nama_asset} -> ${findMut[i].area_rec}`,
+            costcenter: findDepoRec.cost_center,
+            plant: findDepoRec.kode_plant,
+            location: findDepoRec.kode_plant,
+            profit_ctr: findDepoRec.profit_center
+          }
+          const prosesSap = await axios({
+            method: 'get',
+            url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=110&q=assetmutation`,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+            },
+            data: body,
+            timeout: 1000 * 60 * 5
           })
-          if (findData && findAsset) {
-            await findData.update(data)
-            await findAsset.update(send)
-            cek.push(1)
+
+          if (prosesSap && prosesSap.data !== undefined && prosesSap.data.details[0].type === 'S') {
+            if (findMut[i].isbudget === 'ya') {
+              const findAsset = await asset.findOne({
+                where: {
+                  no_asset: findMut[i].no_asset
+                }
+              })
+              if (findAsset) {
+                const changeCost = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=110&q=mutation`,
+                  {
+                    internal_order: findAsset.no_io,
+                    co_area: 'PP00',
+                    cost_center: findDepo.cost_center,
+                    profit_center: findDepo.profit_center
+                  },
+                  {
+                    timeout: 1000 * 60 * 5,
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+                    }
+                  }
+                )
+                if (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') {
+                  const findData = await mutasi.findByPk(findMut[i].id)
+                  const findAsset = await asset.findOne({
+                    where: {
+                      no_asset: findMut[i].no_asset
+                    }
+                  })
+                  if (findData && findAsset) {
+                    await findData.update(data)
+                    await findAsset.update(send)
+                    cek.push(1)
+                  }
+                }
+              }
+            } else {
+              const findData = await mutasi.findByPk(findMut[i].id)
+              const findAsset = await asset.findOne({
+                where: {
+                  no_asset: findMut[i].no_asset
+                }
+              })
+              if (findData && findAsset) {
+                await findData.update(data)
+                await findAsset.update(send)
+                cek.push(1)
+              }
+            }
+          } else {
+            failSap.push(findMut[i])
           }
         }
         if (cek.length === findMut.length) {
-          const findUser = await email.findOne({
-            where: {
-              kode_plant: findMut[0].kode_plant
-            }
-          })
-          if (findUser) {
-            return response(res, 'success submit eksekusi')
-          } else {
-            return response(res, 'success submit eksekusi fail send email')
-          }
+          return response(res, 'success submit eksekusi')
         } else {
-          return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
+          return response(res, 'failed submit eksekusi mutasi', { result: failSap }, 404, false)
         }
       } else {
         return response(res, 'failed submit eksekusi mutasi', {}, 404, false)
@@ -3374,369 +2780,6 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  // submitBudget: async (req, res) => {
-  //   try {
-  //     const level = req.user.level
-  //     const no = req.body.no
-  //     const findBud = await mutasi.findAll({
-  //       where: {
-  //         no_mutasi: no,
-  //         [Op.or]: [
-  //           { status_form: level === 2 ? 4 : 3 },
-  //           { status_form: level === 2 ? 7 : 3 },
-  //           { status_form: level === 2 ? 8 : 3 }
-  //         ]
-  //       }
-  //     })
-  //     if (findBud.length > 0) {
-  //       let tableTd = ''
-  //       const cek = []
-  //       for (let i = 0; i < findBud.length; i++) {
-  //         const data = {
-  //           status_form: level === 2 ? 8 : 4,
-  //           tgl_mutasisap: level === 2 ? moment() : null
-  //         }
-  //         const send = {
-  //           kode_plant: findBud[i].kode_plant_rec,
-  //           status: null,
-  //           area: findBud[i].area_rec,
-  //           keterangan: null
-  //         }
-  //         const findData = await mutasi.findByPk(findBud[i].id)
-  //         const findAsset = await asset.findOne({
-  //           where: {
-  //             no_asset: findBud[i].no_asset
-  //           }
-  //         })
-  //         if (findData && findAsset) {
-  //           await findData.update(data)
-  //           await findAsset.update(send)
-  //           const element = `
-  //             <tr>
-  //               <td>${findBud.indexOf(findBud[i]) + 1}</td>
-  //               <td>${findBud[i].no_mutasi}</td>
-  //               <td>${findBud[i].no_asset}</td>
-  //               <td>${findBud[i].nama_asset}</td>
-  //               <td>${findBud[i].area}</td>
-  //               <td>${findBud[i].cost_center}</td>
-  //               <td>${findBud[i].area_rec}</td>
-  //               <td>${findBud[i].cost_center_rec}</td>
-  //               <td>${findBud[i].no_io}</td>
-  //               <td>${findBud[i].cost_centerawal}</td>
-  //             </tr>`
-  //           tableTd = tableTd + element
-  //           cek.push(1)
-  //         }
-  //       }
-  //       if (cek.length === findBud.length) {
-  //         const findUser = await user.findOne({
-  //           where: {
-  //             user_level: level === 2 ? 8 : 2
-  //           }
-  //         })
-  //         const findEmail = await email.findOne({
-  //           where: {
-  //             kode_plant: findBud[0].kode_plant
-  //           }
-  //         })
-  //         if (findUser && findEmail) {
-  //           const mailOptions = {
-  //             from: 'noreply_asset@pinusmerahabadi.co.id',
-  //             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-  //             // to: `${findUser.email}`,
-  //             to: `${emailAss}, ${emailAss2}`,
-  //             // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-  //             subject: `${level === 2 ? `PERMINTAAN PENGEMBALIAN COST CENTER MUTASI ASSET ${findBud[0].area}` : `COST CENTER MUTASI ASSET TELAH DIUBAH ${findBud[0].area}`} (TESTING)`,
-  //             html: `
-  //             <head>
-  //               <style type="text/css">
-  //               body {
-  //                   display: flexbox;
-  //                   flex-direction: column;
-  //               }
-  //               .tittle {
-  //                   font-size: 15px;
-  //               }
-  //               .mar {
-  //                   margin-bottom: 20px;
-  //               }
-  //               .mar1 {
-  //                   margin-bottom: 10px;
-  //               }
-  //               .foot {
-  //                   margin-top: 20px;
-  //                   margin-bottom: 10px;
-  //               }
-  //               .foot1 {
-  //                   margin-bottom: 50px;
-  //               }
-  //               .position {
-  //                   display: flexbox;
-  //                   flex-direction: row;
-  //                   justify-content: left;
-  //                   margin-top: 10px;
-  //               }
-  //               table {
-  //                   font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-  //                   font-size: 12px;
-  //               }
-  //               .demo-table {
-  //                   border-collapse: collapse;
-  //                   font-size: 13px;
-  //               }
-  //               .demo-table th,
-  //               .demo-table td {
-  //                   border-bottom: 1px solid #e1edff;
-  //                   border-left: 1px solid #e1edff;
-  //                   padding: 7px 17px;
-  //               }
-  //               .demo-table th,
-  //               .demo-table td:last-child {
-  //                   border-right: 1px solid #e1edff;
-  //               }
-  //               .demo-table td:first-child {
-  //                   border-top: 1px solid #e1edff;
-  //               }
-  //               .demo-table td:last-child{
-  //                   border-bottom: 0;
-  //               }
-  //               caption {
-  //                   caption-side: top;
-  //                   margin-bottom: 10px;
-  //               }
-
-  //               /* Table Header */
-  //               .demo-table thead th {
-  //                   background-color: #508abb;
-  //                   color: #FFFFFF;
-  //                   border-color: #6ea1cc !important;
-  //                   text-transform: uppercase;
-  //               }
-
-  //               /* Table Body */
-  //               .demo-table tbody td {
-  //                   color: #353535;
-  //               }
-
-  //               .demo-table tbody tr:nth-child(odd) td {
-  //                   background-color: #f4fbff;
-  //               }
-  //               .demo-table tbody tr:hover th,
-  //               .demo-table tbody tr:hover td {
-  //                   background-color: #ffffa2;
-  //                   border-color: #ffff0f;
-  //                   transition: all .2s;
-  //               }
-  //           </style>
-  //             </head>
-  //             <body>
-  //                 <div class="tittle mar">
-  //                     Dear Bapak/Ibu,
-  //                 </div>
-  //                 <div class="tittle mar1">
-  //                     <div>${level === 2 ? 'Mohon untuk mengembalikan cost center seperti semula terkait asset mutasi sebagai berikut:' : 'Cost center telah diubah terkait asset mutasi sebagai berikut:'}</div>
-  //                 </div>
-  //                 <div class="position mar1">
-  //                     <table class="demo-table">
-  //                         <thead>
-  //                             <tr>
-  //                               <th>No</th>
-  //                               <th>No Mutasi</th>
-  //                               <th>Asset</th>
-  //                               <th>Asset description</th>
-  //                               <th>Cabang / Depo</th>
-  //                               <th>Cost Ctr</th>
-  //                               <th>Cabang / Depo Penerima</th>
-  //                               <th>Cost Ctr Penerima</th>
-  //                               <th>No io</th>
-  //                               <th>Cost Center Io</th>
-  //                             </tr>
-  //                         </thead>
-  //                         <tbody>
-  //                           ${tableTd}
-  //                         </tbody>
-  //                     </table>
-  //                 </div>
-  //                 <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-  //                 <div class="tittle foot">
-  //                     Terima kasih,
-  //                 </div>
-  //                 <div class="tittle foot1">
-  //                     Regards,
-  //                 </div>
-  //                 <div class="tittle">
-  //                     Team Asset
-  //                 </div>
-  //             </body>
-  //             `
-  //           }
-  //           const mailOptionsArea = {
-  //             from: 'noreply_asset@pinusmerahabadi.co.id',
-  //             replyTo: 'noreply_asset@pinusmerahabadi.co.id',
-  //             // to: `${findEmail.email_area_aos}`,
-  //             to: `${emailAss}, ${emailAss2}`,
-  //             // cc: findDis.kategori === 'it' || findDis.kategori === 'IT' ? `${ccIt}` : `${cc}`,
-  //             subject: `SELESAI MUTASI ASSET ${findBud[0].area} (TESTING)`,
-  //             html: `
-  //             <head>
-  //               <style type="text/css">
-  //               body {
-  //                   display: flexbox;
-  //                   flex-direction: column;
-  //               }
-  //               .tittle {
-  //                   font-size: 15px;
-  //               }
-  //               .mar {
-  //                   margin-bottom: 20px;
-  //               }
-  //               .mar1 {
-  //                   margin-bottom: 10px;
-  //               }
-  //               .foot {
-  //                   margin-top: 20px;
-  //                   margin-bottom: 10px;
-  //               }
-  //               .foot1 {
-  //                   margin-bottom: 50px;
-  //               }
-  //               .position {
-  //                   display: flexbox;
-  //                   flex-direction: row;
-  //                   justify-content: left;
-  //                   margin-top: 10px;
-  //               }
-  //               table {
-  //                   font-family: "Lucida Sans Unicode", "Lucida Grande", "Segoe Ui";
-  //                   font-size: 12px;
-  //               }
-  //               .demo-table {
-  //                   border-collapse: collapse;
-  //                   font-size: 13px;
-  //               }
-  //               .demo-table th,
-  //               .demo-table td {
-  //                   border-bottom: 1px solid #e1edff;
-  //                   border-left: 1px solid #e1edff;
-  //                   padding: 7px 17px;
-  //               }
-  //               .demo-table th,
-  //               .demo-table td:last-child {
-  //                   border-right: 1px solid #e1edff;
-  //               }
-  //               .demo-table td:first-child {
-  //                   border-top: 1px solid #e1edff;
-  //               }
-  //               .demo-table td:last-child{
-  //                   border-bottom: 0;
-  //               }
-  //               caption {
-  //                   caption-side: top;
-  //                   margin-bottom: 10px;
-  //               }
-
-  //               /* Table Header */
-  //               .demo-table thead th {
-  //                   background-color: #508abb;
-  //                   color: #FFFFFF;
-  //                   border-color: #6ea1cc !important;
-  //                   text-transform: uppercase;
-  //               }
-
-  //               /* Table Body */
-  //               .demo-table tbody td {
-  //                   color: #353535;
-  //               }
-
-  //               .demo-table tbody tr:nth-child(odd) td {
-  //                   background-color: #f4fbff;
-  //               }
-  //               .demo-table tbody tr:hover th,
-  //               .demo-table tbody tr:hover td {
-  //                   background-color: #ffffa2;
-  //                   border-color: #ffff0f;
-  //                   transition: all .2s;
-  //               }
-  //           </style>
-  //             </head>
-  //             <body>
-  //                 <div class="tittle mar">
-  //                     Dear Bapak/Ibu,
-  //                 </div>
-  //                 <div class="tittle mar1">
-  //                     <div>asset berikut telah berhasil dimutasikan:</div>
-  //                 </div>
-  //                 <div class="position mar1">
-  //                     <table class="demo-table">
-  //                         <thead>
-  //                             <tr>
-  //                               <th>No</th>
-  //                               <th>No Mutasi</th>
-  //                               <th>Asset</th>
-  //                               <th>Asset description</th>
-  //                               <th>Cabang / Depo</th>
-  //                               <th>Cost Ctr</th>
-  //                               <th>Cabang / Depo Penerima</th>
-  //                               <th>Cost Ctr Penerima</th>
-  //                               <th>No io</th>
-  //                               <th>Cost Center Io</th>
-  //                             </tr>
-  //                         </thead>
-  //                         <tbody>
-  //                           ${tableTd}
-  //                         </tbody>
-  //                     </table>
-  //                 </div>
-  //                 <a href="http://aset.pinusmerahabadi.co.id/">Klik link berikut untuk akses web asset</a>
-  //                 <div class="tittle foot">
-  //                     Terima kasih,
-  //                 </div>
-  //                 <div class="tittle foot1">
-  //                     Regards,
-  //                 </div>
-  //                 <div class="tittle">
-  //                     Team Asset
-  //                 </div>
-  //             </body>
-  //             `
-  //           }
-  //           const sendEmail = await wrapMail.wrapedSendMail(mailOptions)
-  //           if (sendEmail) {
-  //             if (level === 2) {
-  //               const sendEmail = await wrapMail.wrapedSendMail(mailOptionsArea)
-  //               if (sendEmail) {
-  //                 return response(res, 'success submit budget mutasi', { sendEmail })
-  //               } else {
-  //                 return response(res, 'berhasil submit budget mutasi, tidak berhasil kirim notif email 1')
-  //               }
-  //             } else {
-  //               return response(res, 'success submit budget mutasi', { sendEmail })
-  //             }
-  //           } else {
-  //             if (level === 2) {
-  //               const sendEmail = await wrapMail.wrapedSendMail(mailOptionsArea)
-  //               if (sendEmail) {
-  //                 return response(res, 'success submit budget mutasi', { sendEmail })
-  //               } else {
-  //                 return response(res, 'berhasil submit budget mutasi, tidak berhasil kirim notif email 1')
-  //               }
-  //             } else {
-  //               return response(res, 'berhasil submit budget mutasi, tidak berhasil kirim notif email 1')
-  //             }
-  //           }
-  //         } else {
-  //           return response(res, 'failed submit budget', {}, 404, false)
-  //         }
-  //       } else {
-  //         return response(res, 'failed submit budget', {}, 404, false)
-  //       }
-  //     } else {
-  //       return response(res, 'failed submit budget', {}, 404, false)
-  //     }
-  //   } catch (error) {
-  //     return response(res, error.message, {}, 500, false)
-  //   }
-  // },
   updateReason: async (req, res) => {
     try {
       const { alasan, no } = req.body
@@ -3914,6 +2957,11 @@ module.exports = {
         }
       })
       if (findMutasi.length > 0) {
+        const findDepo = await depo.findOne({
+          where: {
+            kode_plant: findMutasi[0].kode_plant_rec
+          }
+        })
         const cek = []
         for (let i = 0; i < findMutasi.length; i++) {
           const data = {
@@ -3929,16 +2977,42 @@ module.exports = {
           //   area: findMutasi[i].area_rec,
           //   keterangan: null
           // }
-          const findData = await mutasi.findByPk(findMutasi[i].id)
-          // const findAsset = await asset.findOne({
-          //   where: {
-          //     no_asset: findMutasi[i].no_asset
-          //   }
-          // })
-          if (findData) {
-            await findData.update(data)
-            // await findAsset.update(send)
-            cek.push(1)
+          if (findMutasi[i].isbudget === 'ya') {
+            const findAsset = await asset.findOne({
+              where: {
+                no_asset: findMutasi[i].no_asset
+              }
+            })
+            if (findAsset && findDepo) {
+              const changeCost = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=110&q=mutation`,
+                {
+                  internal_order: findAsset.no_io,
+                  co_area: 'PP00',
+                  cost_center: findDepo.cost_center,
+                  profit_center: findDepo.profit_center
+                },
+                {
+                  timeout: 1000 * 60 * 5,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+                  }
+                }
+              )
+              if (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') {
+                const findData = await mutasi.findByPk(findMutasi[i].id)
+                if (findData) {
+                  await findData.update(data)
+                  cek.push(1)
+                }
+              }
+            }
+          } else {
+            const findData = await mutasi.findByPk(findMutasi[i].id)
+            if (findData) {
+              await findData.update(data)
+              cek.push(1)
+            }
           }
         }
         if (cek.length > 0) {
