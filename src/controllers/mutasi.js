@@ -10,7 +10,7 @@ const moment = require('moment')
 const axios = require('axios')
 const { generateToken } = require('../helpers/signjwt')
 const jwt = require('jsonwebtoken')
-const { APP_KEY, APP_SAP } = process.env
+const { APP_KEY, APP_SAP, APP_CLIENT } = process.env
 
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
@@ -1381,9 +1381,9 @@ module.exports = {
           for (let i = 0; i < findMut.length; i++) {
             const find = await mutasi.findByPk(findMut[i].id)
             if (find) {
-              const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+              const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
               if (findApi.status === 200) {
-                const findCost = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=300&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findCost = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 if (findCost.status === 200) {
                   const data = {
                     isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
@@ -2670,10 +2670,10 @@ module.exports = {
           }
           const prosesSap = await axios({
             method: 'get',
-            url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=110&q=assetmutation`,
+            url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=${APP_CLIENT}&q=assetmutation`,
             headers: {
               'Content-Type': 'application/json',
-              'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+              'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
             },
             data: body,
             timeout: 1000 * 60 * 5
@@ -2687,7 +2687,7 @@ module.exports = {
                 }
               })
               if (findAsset) {
-                const changeCost = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=110&q=mutation`,
+                const changeCost = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=mutation`,
                   {
                     internal_order: findAsset.no_io,
                     co_area: 'PP00',
@@ -2698,7 +2698,7 @@ module.exports = {
                     timeout: 1000 * 60 * 5,
                     headers: {
                       'Content-Type': 'application/json',
-                      'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+                      'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
                     }
                   }
                 )
@@ -2984,7 +2984,7 @@ module.exports = {
               }
             })
             if (findAsset && findDepo) {
-              const changeCost = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=110&q=mutation`,
+              const changeCost = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=mutation`,
                 {
                   internal_order: findAsset.no_io,
                   co_area: 'PP00',
@@ -2995,7 +2995,7 @@ module.exports = {
                   timeout: 1000 * 60 * 5,
                   headers: {
                     'Content-Type': 'application/json',
-                    'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+                    'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
                   }
                 }
               )

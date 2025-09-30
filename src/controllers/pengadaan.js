@@ -14,7 +14,7 @@ const axios = require('axios')
 
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
-const { APP_SAP } = process.env
+const { APP_SAP, APP_CLIENT } = process.env
 
 module.exports = {
   getPengadaan: async (req, res) => {
@@ -3670,7 +3670,7 @@ module.exports = {
               const temp = parseInt(findIo[i].price) * parseInt(findIo[i].qty)
               total += temp
             }
-            const getIo = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=110&q=capex`,
+            const getIo = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=capex`,
               {
                 order_type: 'CP10',
                 description: dataSend.nama,
@@ -3689,12 +3689,12 @@ module.exports = {
                 timeout: 1000 * 60 * 5,
                 headers: {
                   'Content-Type': 'application/json',
-                  'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+                  'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
                 }
               }
             )
             if (getIo && getIo.data !== undefined) {
-              const inputBudgetIo = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=110&q=budget`,
+              const inputBudgetIo = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=budget`,
                 {
                   internal_order: getIo.data.document_number,
                   co_area: 'PP00',
@@ -3706,7 +3706,7 @@ module.exports = {
                   timeout: 1000 * 60 * 5,
                   headers: {
                     'Content-Type': 'application/json',
-                    'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+                    'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
                   }
                 }
               )
@@ -4243,10 +4243,10 @@ module.exports = {
           }
           const getSap = await axios({
             method: 'get',
-            url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=110&q=assetcreate`,
+            url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=${APP_CLIENT}&q=assetcreate`,
             headers: {
               'Content-Type': 'application/json',
-              'Cookie': 'sap-usercontext=sap-client=110' // eslint-disable-line
+              'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
             },
             data: body,
             timeout: 1000 * 60 * 5
