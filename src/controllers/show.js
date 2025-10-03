@@ -4,6 +4,7 @@ const axios = require('axios')
 const https = require('https')
 // const path = require('path')
 const fs = require('fs')
+const { APP_SAP, APP_CLIENT } = process.env
 
 module.exports = {
   showDokumen: async (req, res) => {
@@ -132,7 +133,7 @@ module.exports = {
   },
   showApi: async (req, res) => {
     try {
-      const findAset = await axios.get('http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=4200000002&p_bukrs=pp01&p_gjahr=2021&p_monat=06')
+      const findAset = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=4200000002&p_bukrs=pp01&p_gjahr=2021&p_monat=06`)
       console.log(findAset.status)
       if (findAset.status === 200) {
         return response(res, 'success get api', { data: findAset.data })

@@ -28,5 +28,6 @@ route.delete('/delapp', mutasi.deleteApprove)
 route.patch('/apprev/:id/:type', mutasi.appRevisi)
 route.patch('/subrev', mutasi.submitRevisi)
 route.patch('/upreason', mutasi.updateReason)
+route.patch('/scan', mutasi.scanQrMutasi)
 
 module.exports = route

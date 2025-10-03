@@ -21,7 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     no_pengadaan: DataTypes.STRING,
     nama: DataTypes.STRING,
     price: DataTypes.STRING,
-    idIo: DataTypes.STRING
+    idIo: DataTypes.STRING,
+    no_pengadaan_sap: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'assettemp'

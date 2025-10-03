@@ -89,7 +89,8 @@ module.exports = (sequelize, DataTypes) => {
     date_tax: DataTypes.DATE,
     date_finance: DataTypes.DATE,
     date_finish: DataTypes.DATE,
-    ceo: DataTypes.STRING
+    ceo: DataTypes.STRING,
+    date_ba: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'disposal'

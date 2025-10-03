@@ -14,6 +14,7 @@ const axios = require('axios')
 
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
+const { APP_SAP, APP_CLIENT } = process.env
 
 module.exports = {
   getPengadaan: async (req, res) => {
@@ -3324,6 +3325,7 @@ module.exports = {
                   qty: 1,
                   kode_plant: result[i].kode_plant,
                   no_pengadaan: result[i].no_pengadaan,
+                  no_pengadaan_sap: `${result[i].no_pengadaan}-${j + 1}`,
                   nama: result[i].nama,
                   price: result[i].price.replace(/[^a-z0-9-]/g, ''),
                   idIo: result[i].id
@@ -3642,7 +3644,8 @@ module.exports = {
     try {
       const schema = joi.object({
         no_io: joi.string().required(),
-        no: joi.string().required()
+        no: joi.string().required(),
+        type: joi.string().required()
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -3655,20 +3658,96 @@ module.exports = {
         })
         if (findIo.length > 0) {
           const cek = []
-          for (let i = 0; i < findIo.length; i++) {
-            const findData = await pengadaan.findByPk(findIo[i].id)
-            if (findData) {
-              const data = {
-                no_io: results.no_io
+          if (results.type === 'sap') {
+            const dataSend = findIo[0]
+            const findDepo = await depo.findOne({
+              where: {
+                kode_plant: dataSend.kode_plant
               }
-              await findData.update(data)
-              cek.push(1)
+            })
+            let total = 0
+            for (let i = 0; i < findIo.length; i++) {
+              const temp = parseInt(findIo[i].price) * parseInt(findIo[i].qty)
+              total += temp
             }
-          }
-          if (cek.length > 0) {
-            return response(res, 'success update')
+            const getIo = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=capex`,
+              {
+                order_type: 'CP10',
+                description: dataSend.nama,
+                controlling_area: 'PP00',
+                company_code: 'PP01',
+                plant: dataSend.kode_plant,
+                profit_center: findDepo.profit_center,
+                cost_center: findDepo.cost_center,
+                currency: 'IDR',
+                applicant: 'Web Asset',
+                user_responsible: findDepo.nama_pic_1,
+                estimated_cost: total,
+                application_date: moment().format('YYYYMMDD')
+              }, // body raw
+              {
+                timeout: 1000 * 60 * 5,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
+                }
+              }
+            )
+            if (getIo && getIo.data !== undefined) {
+              const inputBudgetIo = await axios.post(`${APP_SAP}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=budget`,
+                {
+                  internal_order: getIo.data.document_number,
+                  co_area: 'PP00',
+                  year: moment().format('YYYY'),
+                  amount: `${total}`,
+                  currency: 'IDR'
+                }, // body raw
+                {
+                  timeout: 1000 * 60 * 5,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
+                  }
+                }
+              )
+              if (inputBudgetIo && inputBudgetIo.data !== undefined) {
+                for (let i = 0; i < findIo.length; i++) {
+                  const findData = await pengadaan.findByPk(findIo[i].id)
+                  if (findData) {
+                    const data = {
+                      no_io: getIo.data.document_number
+                    }
+                    await findData.update(data)
+                    cek.push(1)
+                  }
+                }
+                if (cek.length > 0) {
+                  return response(res, 'success update')
+                } else {
+                  return response(res, 'failed update', {}, 404, false)
+                }
+              } else {
+                return response(res, 'failed update', {}, 404, false)
+              }
+            } else {
+              return response(res, 'failed update', {}, 404, false)
+            }
           } else {
-            return response(res, 'failed update', {}, 404, false)
+            for (let i = 0; i < findIo.length; i++) {
+              const findData = await pengadaan.findByPk(findIo[i].id)
+              if (findData) {
+                const data = {
+                  no_io: results.no_io
+                }
+                await findData.update(data)
+                cek.push(1)
+              }
+            }
+            if (cek.length > 0) {
+              return response(res, 'success update')
+            } else {
+              return response(res, 'failed update', {}, 404, false)
+            }
           }
         } else {
           return response(res, 'failed update', {}, 404, false)
@@ -4132,6 +4211,69 @@ module.exports = {
         return response(res, error.message, {}, 500, false)
       }
     })
+  },
+  generateAssetSap: async (req, res) => {
+    try {
+      const { no } = req.body
+      const findData = await assettemp.findAll({
+        where: {
+          no_pengadaan: no
+        }
+      })
+      if (findData.length > 0) {
+        const findDepo = await depo.findOne({
+          where: {
+            kode_plant: findData[0].kode_plant
+          }
+        })
+        const cek = []
+        for (let i = 0; i < findData.length; i++) {
+          const body = {
+            id: findData[i].no_pengadaan_sap,
+            companycode: 'PP01',
+            assetclass: findDepo.kode_plant.length === 4 ? '4100' : '4000',
+            descript1: findData[i].nama,
+            descript2: '',
+            main_descript: findData[i].nama,
+            costcenter: findDepo.cost_center,
+            plant: findDepo.kode_plant,
+            location: findDepo.kode_plant,
+            profit_ctr: findDepo.profit_center,
+            invest_ord: findData[i].no_io
+          }
+          const getSap = await axios({
+            method: 'get',
+            url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=${APP_CLIENT}&q=assetcreate`,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
+            },
+            data: body,
+            timeout: 1000 * 60 * 5
+          })
+          if (getSap && getSap.data.details !== undefined) {
+            const cekNumb = getSap.data.details
+            if (cekNumb[0].message_v1 !== undefined) {
+              const findItem = await assettemp.findByPk(findData[i].id)
+              const dataUpdate = {
+                no_asset: cekNumb[0].message_v1
+              }
+              await findItem.update(dataUpdate)
+            }
+            cek.push(getSap.data.details)
+          }
+        }
+        if (cek.length > 0) {
+          return response(res, 'success genereate asset number', { result: cek })
+        } else {
+          return response(res, 'failed generate asset number by SAP', { result: cek }, 400, false)
+        }
+      } else {
+        return response(res, 'failed generate asset number by SAP', { result: findData }, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
   },
   deleteTransaksi: async (req, res) => {
     try {

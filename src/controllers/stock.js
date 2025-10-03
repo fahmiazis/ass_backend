@@ -6,6 +6,7 @@ const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
+// const { APP_SAP, APP_CLIENT } = process.env
 // const fs = require('fs')
 // const { exiftool } = require('exiftool-vendored')
 // const wrapMail = require('../helpers/wrapMail')
@@ -2005,7 +2006,7 @@ module.exports = {
           // const valid = []
           // const prev = moment().subtract(1, 'month').format('L').split('/')
           // for (let i = 0; i < findStock.length; i++) {
-          //   const findApi = await axios.get(`http://10.3.212.38:8000/sap/bc/zast/?sap-client=300&pgmna=zfir0090&p_anln1=${findStock[i].no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+          //   const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${findStock[i].no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
           // }
           return response(res, 'success submit stock opname')
         } else {

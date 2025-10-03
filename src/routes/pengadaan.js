@@ -26,6 +26,7 @@ route.patch('/rej', pengadaan.rejectIo)
 route.post('/master', pengadaan.uploadMasterTemp)
 route.patch('/del', pengadaan.deleteTransaksi)
 route.get('/cart', pengadaan.getDataCart)
+route.patch('/asetsap', pengadaan.generateAssetSap)
 
 // route.patch('/subcart', pengadaan.submitCart)
 route.patch('/submit', pengadaan.submitIo)
