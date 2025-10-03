@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_pengadaan',
         as: 'disposal'
       })
+      docUser.hasOne(models.stock, {
+        foreignKey: 'id_doc',
+        sourceKey: 'id',
+        as: 'stock'
+      })
     }
   };
   docUser.init({
@@ -29,7 +34,10 @@ module.exports = (sequelize, DataTypes) => {
     jenis_form: DataTypes.ENUM('disposal', 'pengadaan', 'stock'),
     tipe: DataTypes.STRING,
     periode: DataTypes.DATE,
-    no_stock: DataTypes.STRING
+    no_stock: DataTypes.STRING,
+    desc: DataTypes.STRING,
+    status_dokumen: DataTypes.TEXT,
+    no_asset: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'docUser'

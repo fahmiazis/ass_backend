@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_asset'
       })
       disposal.hasMany(models.ttd, {
-        foreignKey: 'no_set',
+        foreignKey: 'no_doc',
         as: 'ttdSet',
         sourceKey: 'no_persetujuan'
       })
@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
     nilai_buku: DataTypes.STRING,
     nilai_jual: DataTypes.STRING,
     keterangan: DataTypes.STRING,
-    no_persetujuan: DataTypes.INTEGER,
+    no_persetujuan: DataTypes.STRING,
     status_reject: DataTypes.INTEGER,
     status_form: DataTypes.INTEGER,
     nominal: DataTypes.STRING,
@@ -71,7 +71,25 @@ module.exports = (sequelize, DataTypes) => {
     nilai_buku_eks: DataTypes.STRING,
     tgl_eksekusi: DataTypes.DATE,
     isreject: DataTypes.INTEGER,
-    reason: DataTypes.STRING
+    reason: DataTypes.STRING,
+    menu_rev: DataTypes.STRING,
+    user_reject: DataTypes.INTEGER,
+    history: DataTypes.TEXT,
+    user_rev: DataTypes.STRING,
+    pic_aset: DataTypes.STRING,
+    pic_budget: DataTypes.STRING,
+    pic_tax: DataTypes.STRING,
+    pic_purch: DataTypes.STRING,
+    pic_finance: DataTypes.STRING,
+    date_budget: DataTypes.DATE,
+    date_fulldis: DataTypes.DATE,
+    date_fullset: DataTypes.DATE,
+    date_persetujuan: DataTypes.DATE,
+    date_purch: DataTypes.DATE,
+    date_tax: DataTypes.DATE,
+    date_finance: DataTypes.DATE,
+    date_finish: DataTypes.DATE,
+    ceo: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'disposal'

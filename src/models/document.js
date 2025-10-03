@@ -18,7 +18,10 @@ module.exports = (sequelize, DataTypes) => {
     jenis_dokumen: DataTypes.ENUM('it', 'non_it', 'all'),
     divisi: DataTypes.STRING,
     tipe_dokumen: DataTypes.STRING,
-    tipe: DataTypes.STRING
+    tipe: DataTypes.STRING,
+    template: DataTypes.STRING,
+    kode_plant: DataTypes.STRING,
+    stat_upload: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'document'

@@ -2,6 +2,7 @@ const { docUser, pengadaan } = require('../models')
 const response = require('../helpers/response')
 const axios = require('axios')
 const https = require('https')
+// const path = require('path')
 const fs = require('fs')
 
 module.exports = {
@@ -14,7 +15,7 @@ module.exports = {
       }
       const result = await docUser.findByPk(id)
       if (result) {
-        if (no === null) {
+        if (no === null || no === 'undefined' || no === undefined) {
           const url = result.path
           fs.readFile(url, function (err, data) {
             if (err) {
@@ -140,6 +141,59 @@ module.exports = {
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
+    }
+  },
+  tesDok: async (req, res) => {
+    const id = req.params.id
+    // const fileUrl = 'https://pods.pinusmerahabadi.co.id/storage/attachments/ticketing/barangjasa/P01-LPG1-2609240303/item9011/files/Armada_Aset_Penawaran_resmi_dari_2_vendor_(dilengkapi_KTP_dan_NPWP)_Area_LAMPUNG.pdf' // URL file PDF eksternal
+    // const tempFilePath = path.join(__dirname, 'temp.pdf') // Path untuk file sementara
+
+    try {
+      // Unduh file dari URL eksternal
+      const result = await docUser.findByPk(id)
+      const fileUrl = result.path
+      // const response = await axios.get(fileUrl, { responseType: 'stream' })
+
+      // // Simpan file sementara
+      // const writer = fs.createWriteStream(tempFilePath)
+      // response.data.pipe(writer)
+
+      // // Tunggu hingga file selesai diunduh
+      // writer.on('finish', () => {
+      //   // Baca file menggunakan fs.readFile
+      //   fs.readFile(tempFilePath, (err, data) => {
+      //     if (err) {
+      //       console.error(err)
+      //       return res.status(500).send('Failed to read the file')
+      //     }
+
+      //     // Kirim file ke frontend untuk didownload
+      //     res.setHeader('Content-Type', 'application/pdf')
+      //     res.setHeader('Content-Disposition', 'attachment; filename="downloaded.pdf"')
+      //     res.send(data)
+
+      //     // Hapus file sementara
+      //     fs.unlink(tempFilePath, (unlinkErr) => {
+      //       if (unlinkErr) console.error('Failed to delete temp file:', unlinkErr)
+      //     })
+      //   })
+      // })
+
+      // writer.on('error', (error) => {
+      //   console.error(error)
+      //   res.status(500).send('Failed to save the file')
+      // })
+
+      const response = await axios.get(fileUrl, {
+        responseType: 'arraybuffer'
+      })
+
+      res.setHeader('Content-Type', response.headers['content-type'])
+      res.setHeader('Content-Disposition', `attachment; filename="${result.nama_dokumen}"`)
+      res.send(response.data)
+    } catch (error) {
+      console.error(error)
+      res.status(500).send('Failed to fetch the file')
     }
   }
 }

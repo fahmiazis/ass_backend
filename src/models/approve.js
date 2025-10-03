@@ -19,7 +19,13 @@ module.exports = (sequelize, DataTypes) => {
     jabatan: DataTypes.STRING,
     jenis: DataTypes.ENUM('it', 'non-it', 'all'),
     sebagai: DataTypes.ENUM('pembuat', 'pemeriksa', 'penyetuju', 'penerima'),
-    kategori: DataTypes.ENUM('budget', 'non-budget', 'return', 'all')
+    kategori: DataTypes.ENUM('budget', 'non-budget', 'return', 'all'),
+    status: DataTypes.STRING,
+    access: DataTypes.STRING,
+    tipe: DataTypes.STRING,
+    kode_plant: DataTypes.STRING,
+    struktur: DataTypes.STRING,
+    way_app: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'approve'

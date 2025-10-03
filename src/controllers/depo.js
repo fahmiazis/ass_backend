@@ -1,15 +1,21 @@
 const joi = require('joi')
-const { depo, sequelize } = require('../models')
+const { depo } = require('../models')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
-const { Op, QueryTypes } = require('sequelize')
+const { Op } = require('sequelize')
 const readXlsxFile = require('read-excel-file/node')
 const multer = require('multer')
 const uploadMaster = require('../helpers/uploadMaster')
 const fs = require('fs')
 const excel = require('exceljs')
 const vs = require('fs-extra')
-const { APP_URL } = process.env
+const { APP_BE } = process.env
+const borderStyles = {
+  top: { style: 'thin' },
+  left: { style: 'thin' },
+  bottom: { style: 'thin' },
+  right: { style: 'thin' }
+}
 
 module.exports = {
   createDepo: async (req, res) => {
@@ -18,6 +24,7 @@ module.exports = {
       const schema = joi.object({
         kode_plant: joi.string().required(),
         nama_area: joi.string().required(),
+        place_asset: joi.string().required(),
         channel: joi.string().required(),
         distribution: joi.string().required(),
         status_area: joi.string().required(),
@@ -32,7 +39,12 @@ module.exports = {
         nama_pic_1: joi.string().allow(''),
         nama_pic_2: joi.string().allow(''),
         nama_pic_3: joi.string().allow(''),
-        nama_pic_4: joi.string().allow('')
+        nama_pic_4: joi.string().allow(''),
+        nama_asman: joi.string().allow(''),
+        pic_budget: joi.string().allow(''),
+        pic_finance: joi.string().allow(''),
+        pic_tax: joi.string().allow(''),
+        pic_purchasing: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -90,6 +102,7 @@ module.exports = {
       const schema = joi.object({
         kode_plant: joi.string().required(),
         nama_area: joi.string(),
+        place_asset: joi.string().required(),
         channel: joi.string(),
         distribution: joi.string(),
         status_area: joi.string(),
@@ -104,7 +117,12 @@ module.exports = {
         nama_pic_1: joi.string().allow(''),
         nama_pic_2: joi.string().allow(''),
         nama_pic_3: joi.string().allow(''),
-        nama_pic_4: joi.string().allow('')
+        nama_pic_4: joi.string().allow(''),
+        nama_asman: joi.string().allow(''),
+        pic_budget: joi.string().allow(''),
+        pic_finance: joi.string().allow(''),
+        pic_tax: joi.string().allow(''),
+        pic_purchasing: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -189,6 +207,9 @@ module.exports = {
       }
       if (!limit) {
         limit = 10
+      } else if (limit === 'all') {
+        const findLimit = await depo.findAll()
+        limit = findLimit.length
       } else {
         limit = parseInt(limit)
       }
@@ -227,6 +248,7 @@ module.exports = {
             [Op.or]: [
               { kode_plant: { [Op.like]: `%${searchValue}%` } },
               { nama_area: { [Op.like]: `%${searchValue}%` } },
+              { place_asset: { [Op.like]: `%${searchValue}%` } },
               { channel: { [Op.like]: `%${searchValue}%` } },
               { distribution: { [Op.like]: `%${searchValue}%` } },
               { status_area: { [Op.like]: `%${searchValue}%` } },
@@ -242,7 +264,12 @@ module.exports = {
               { nama_pic_1: { [Op.like]: `%${searchValue}%` } },
               { nama_pic_2: { [Op.like]: `%${searchValue}%` } },
               { nama_pic_3: { [Op.like]: `%${searchValue}%` } },
-              { nama_pic_4: { [Op.like]: `%${searchValue}%` } }
+              { nama_pic_4: { [Op.like]: `%${searchValue}%` } },
+              { nama_asman: { [Op.like]: `%${searchValue}%` } },
+              { pic_budget: { [Op.like]: `%${searchValue}%` } },
+              { pic_finance: { [Op.like]: `%${searchValue}%` } },
+              { pic_tax: { [Op.like]: `%${searchValue}%` } },
+              { pic_purchasing: { [Op.like]: `%${searchValue}%` } }
             ]
           },
           order: [[sortValue, 'ASC']],
@@ -302,7 +329,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Plant', 'Home Town', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager']
+          const cek = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager', 'PIC Budget', 'PIC Finance', 'PIC Tax', 'PIC Purchasing']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             console.log(valid[i] === cek[i])
@@ -319,14 +346,14 @@ module.exports = {
             const kode = []
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
-              plant.push(`Kode Plant ${a[0]}`)
+              plant.push(`Terdapat duplikasi Kode Plant ${a[0]}`)
               kode.push(`${a[0]}`)
-              cost.push(`Cost Center ${a[6]}`)
-              if (a[7] !== null) {
-                sap1.push(`Kode SAP 1 ${a[7]}`)
+              cost.push(`Terdapat duplikasi Cost Center ${a[7]}`)
+              if (a[8] !== null && a[8] !== '' && a[8] !== 'null') {
+                sap1.push(`Terdapat duplikasi Kode SAP 1 ${a[8]}`)
               }
-              if (a[8] !== null) {
-                sap2.push(`Kode SAP 2 ${a[8]}`)
+              if (a[9] !== null && a[9] !== '' && a[9] !== 'null') {
+                sap2.push(`Terdapat duplikasi Kode SAP 2 ${a[9]}`)
               }
             }
             const object = {}
@@ -381,58 +408,59 @@ module.exports = {
             if (result.length > 0) {
               return response(res, 'there is duplication in your file master', { result }, 404, false)
             } else {
+              rows.shift()
               const arr = []
-              for (let i = 0; i < rows.length - 1; i++) {
-                const select = await sequelize.query(`SELECT kode_plant, nama_area from depos WHERE kode_plant='${kode[i]}'`, {
-                  type: QueryTypes.SELECT
+              for (let i = 0; i < rows.length; i++) {
+                const dataDepo = rows[i]
+                const data = {
+                  kode_plant: dataDepo[0],
+                  nama_area: dataDepo[1],
+                  place_asset: dataDepo[2],
+                  channel: dataDepo[3],
+                  distribution: dataDepo[4],
+                  status_area: dataDepo[5],
+                  profit_center: dataDepo[6],
+                  cost_center: dataDepo[7],
+                  kode_sap_1: dataDepo[8],
+                  kode_sap_2: dataDepo[9],
+                  nama_nom: dataDepo[10],
+                  nama_om: dataDepo[11],
+                  nama_bm: dataDepo[12],
+                  nama_aos: dataDepo[13],
+                  nama_pic_1: dataDepo[14],
+                  nama_pic_2: dataDepo[15],
+                  nama_pic_3: dataDepo[16],
+                  nama_pic_4: dataDepo[17],
+                  nama_asman: dataDepo[18],
+                  pic_budget: dataDepo[19],
+                  pic_finance: dataDepo[20],
+                  pic_tax: dataDepo[21],
+                  pic_purchasing: dataDepo[22]
+                }
+                const select = await depo.findOne({
+                  where: {
+                    kode_plant: data.kode_plant
+                  }
                 })
-                await sequelize.query(`DELETE from depos WHERE kode_plant='${kode[i]}'`, {
-                  type: QueryTypes.DELETE
-                })
-                if (select.length > 0) {
-                  arr.push(select[0])
+                if (select) {
+                  await select.update(data)
+                  arr.push(select)
+                } else {
+                  await depo.create(data)
+                  arr.push(data)
                 }
               }
               if (arr.length > 0) {
-                rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4, nama_asman) VALUES ${rows.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: rows,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'successfully upload file master')
-                } else {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'failed to upload file', {}, 404, false)
-                }
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
+                  console.log('success')
+                })
+                return response(res, 'successfully upload file master')
               } else {
-                rows.shift()
-                const result = await sequelize.query(`INSERT INTO depos (kode_plant, nama_area, channel, distribution, status_area, profit_center, cost_center, kode_sap_1, kode_sap_2, nama_nom, nama_om, nama_bm, nama_aos, nama_pic_1, nama_pic_2, nama_pic_3, nama_pic_4, nama_asman) VALUES ${rows.map(a => '(?)').join(',')}`,
-                  {
-                    replacements: rows,
-                    type: QueryTypes.INSERT
-                  })
-                if (result) {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
+                fs.unlink(dokumen, function (err) {
+                  if (err) throw err
                   return response(res, 'successfully upload file master')
-                } else {
-                  fs.unlink(dokumen, function (err) {
-                    if (err) throw err
-                    console.log('success')
-                  })
-                  return response(res, 'failed to upload file', {}, 404, false)
-                }
+                })
               }
             }
           } else {
@@ -457,25 +485,61 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Plant', 'Nama Area', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Channel', 'Distribution', 'Status Area', 'Nama GROM', 'Nama ROM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4']
-        const key = ['kode_plant', 'nama_area', 'profit_center', 'distribution', 'status_area', 'profit_center', 'kode_sap_1', 'kode_sap_2', 'nama_nom', 'nama_om', 'nama_aos', 'nama_pic_1', 'nama_pic_2', 'nama_pic_3', 'nama_pic_4']
+        const header = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager', 'PIC Budget', 'PIC Finance', 'PIC Tax', 'PIC Purchasing']
+        const key = [
+          'kode_plant',
+          'nama_area',
+          'place_asset',
+          'channel',
+          'distribution',
+          'status_area',
+          'profit_center',
+          'cost_center',
+          'kode_sap_1',
+          'kode_sap_2',
+          'nama_nom',
+          'nama_om',
+          'nama_bm',
+          'nama_aos',
+          'nama_pic_1',
+          'nama_pic_2',
+          'nama_pic_3',
+          'nama_pic_4',
+          'nama_asman',
+          'pic_budget',
+          'pic_finance',
+          'pic_tax',
+          'pic_purchasing'
+        ]
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
           arr.push(temp)
           temp = {}
         }
         worksheet.columns = arr
-        const cek = worksheet.addRows(result)
+        worksheet.addRows(result)
+        worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+          row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+            cell.border = borderStyles
+          })
+        })
+
+        worksheet.columns.forEach(column => {
+          const lengths = column.values.map(v => v.toString().length)
+          const maxLength = Math.max(...lengths.filter(v => typeof v === 'number'))
+          column.width = maxLength + 5
+        })
+        const cek = [1]
         if (cek) {
           const name = new Date().getTime().toString().concat('-depo').concat('.xlsx')
           await workbook.xlsx.writeFile(name)
           vs.move(name, `assets/exports/${name}`, function (err) {
             if (err) {
               throw err
+            } else {
+              return response(res, 'success', { link: `${APP_BE}/download/${name}` })
             }
-            console.log('success')
           })
-          return response(res, 'success', { link: `${APP_URL}/download/${name}` })
         } else {
           return response(res, 'failed create file', {}, 404, false)
         }

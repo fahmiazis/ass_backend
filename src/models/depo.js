@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     nama_area: DataTypes.STRING,
     channel: DataTypes.STRING,
     distribution: DataTypes.STRING,
-    status_area: DataTypes.ENUM('Cabang SAP', 'Cabang Scylla', 'Depo SAP', 'Depo Scylla'),
+    status_area: DataTypes.STRING,
     nama_nom: DataTypes.STRING,
     nama_om: DataTypes.STRING,
     nama_bm: DataTypes.STRING,
@@ -31,7 +31,12 @@ module.exports = (sequelize, DataTypes) => {
     nama_pic_2: DataTypes.STRING,
     nama_pic_3: DataTypes.STRING,
     nama_pic_4: DataTypes.STRING,
-    nama_asman: DataTypes.STRING
+    nama_asman: DataTypes.STRING,
+    place_asset: DataTypes.STRING,
+    pic_budget: DataTypes.STRING,
+    pic_finance: DataTypes.STRING,
+    pic_tax: DataTypes.STRING,
+    pic_purchasing: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'depo'

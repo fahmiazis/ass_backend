@@ -25,6 +25,16 @@ module.exports = (sequelize, DataTypes) => {
         as: 'appForm',
         sourceKey: 'no_pengadaan'
       })
+      pengadaan.hasMany(models.assettemp, {
+        foreignKey: 'idIo',
+        as: 'temp',
+        sourceKey: 'id'
+      })
+      pengadaan.hasMany(models.assettemp, {
+        foreignKey: 'no_pengadaan',
+        as: 'temp_return',
+        sourceKey: 'no_ref'
+      })
       // define association here
     }
   };
@@ -58,7 +68,20 @@ module.exports = (sequelize, DataTypes) => {
     start: DataTypes.DATE,
     end: DataTypes.DATE,
     tglIo: DataTypes.DATE,
-    reason: DataTypes.STRING
+    reason: DataTypes.STRING,
+    status_reject: DataTypes.INTEGER,
+    isreject: DataTypes.INTEGER,
+    menu_rev: DataTypes.STRING,
+    user_reject: DataTypes.INTEGER,
+    history: DataTypes.TEXT,
+    date_ident_asset: DataTypes.DATE,
+    date_fullapp: DataTypes.DATE,
+    date_budget: DataTypes.DATE,
+    date_eksekusi: DataTypes.DATE,
+    no_ref: DataTypes.STRING,
+    user_rev: DataTypes.STRING,
+    pic_aset: DataTypes.STRING,
+    pic_budget: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'pengadaan'

@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'role',
         sourceKey: 'user_level'
       })
+      user.hasMany(models.role_user, {
+        foreignKey: 'username',
+        as: 'detail_role',
+        sourceKey: 'username'
+      })
     }
   };
   user.init({
@@ -25,7 +30,9 @@ module.exports = (sequelize, DataTypes) => {
     password: DataTypes.STRING,
     kode_plant: DataTypes.STRING,
     user_level: DataTypes.INTEGER,
-    status: DataTypes.ENUM('active', 'inactive')
+    status: DataTypes.ENUM('active', 'inactive'),
+    status_it: DataTypes.STRING,
+    multi_role: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'user'
