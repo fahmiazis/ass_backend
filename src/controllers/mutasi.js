@@ -285,9 +285,6 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-<<<<<<< HEAD
-
-=======
       // const dumpLevel = []
       // const listApp = [12, 7, 5, 9, 28]
       const findUser = await user.findOne({
@@ -317,16 +314,11 @@ module.exports = {
       //     }
       //   }
       // }
->>>>>>> 03ceebf67b2b42bfa42e99e444a232d485fbcb38
 
       if (level === 5 || level === 9) {
         const result = await mutasi.findAndCountAll({
           where: {
             [Op.and]: [
-<<<<<<< HEAD
-              { kode_plant: level === '5' ? kode : cost },
-              { status_form: status }
-=======
               {
                 [Op.or]: [
                   { kode_plant: kode },
@@ -349,7 +341,6 @@ module.exports = {
               statTrans === 'revisi' && { [Op.not]: { status_form: 0 } },
               { [Op.not]: { status_form: 1 } },
               { [Op.not]: { no_mutasi: null } }
->>>>>>> 03ceebf67b2b42bfa42e99e444a232d485fbcb38
             ],
             [Op.or]: [
               { kode_plant_rec: { [Op.like]: `%${searchValue}%` } },
