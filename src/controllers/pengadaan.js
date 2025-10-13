@@ -3722,7 +3722,7 @@ module.exports = {
                   }
                 }
                 if (cek.length > 0) {
-                  return response(res, 'success update', { getIo, inputBudgetIo })
+                  return response(res, 'success update', {})
                 } else {
                   return response(res, 'failed update', {}, 404, false)
                 }
