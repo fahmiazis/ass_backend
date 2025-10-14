@@ -3001,7 +3001,7 @@ module.exports = {
                   }
                 }
               )
-              if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || APP_CLIENT === 110) {
+              if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || (parseInt(APP_CLIENT) === 110)) {
                 const findData = await mutasi.findByPk(findMutasi[i].id)
                 if (findData) {
                   await findData.update(data)
