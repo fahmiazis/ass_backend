@@ -3020,10 +3020,10 @@ module.exports = {
         if (cek.length > 0) {
           return response(res, 'success submit budget')
         } else {
-          return response(res, 'failed submit budget', {}, 404, false)
+          return response(res, 'failed submit budget 1', {}, 404, false)
         }
       } else {
-        return response(res, 'failed submit budget', {}, 404, false)
+        return response(res, 'failed submit budget 2', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
