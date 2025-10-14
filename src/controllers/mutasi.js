@@ -15,6 +15,8 @@ const { APP_KEY, APP_SAP, APP_CLIENT } = process.env
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
+// Delete "APP_CLIENT === 110" untuk production
+
 module.exports = {
   getDataCart: async (req, res) => {
     try {
@@ -2999,7 +3001,7 @@ module.exports = {
                   }
                 }
               )
-              if (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') {
+              if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || APP_CLIENT === 110) {
                 const findData = await mutasi.findByPk(findMutasi[i].id)
                 if (findData) {
                   await findData.update(data)
