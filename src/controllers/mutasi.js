@@ -15,7 +15,7 @@ const { APP_KEY, APP_SAP, APP_CLIENT } = process.env
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
-// Delete "APP_CLIENT === 110" untuk production
+// Delete "parseInt(APP_CLIENT) === 110" untuk production
 
 module.exports = {
   getDataCart: async (req, res) => {
@@ -2681,7 +2681,7 @@ module.exports = {
             timeout: 1000 * 60 * 5
           })
 
-          if (prosesSap && prosesSap.data !== undefined && prosesSap.data.details[0].type === 'S') {
+          if ((prosesSap && prosesSap.data !== undefined && prosesSap.data.details[0].type === 'S') || (parseInt(APP_CLIENT) === 110)) {
             if (findMut[i].isbudget === 'ya') {
               const findAsset = await asset.findOne({
                 where: {
@@ -2704,7 +2704,7 @@ module.exports = {
                     }
                   }
                 )
-                if (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') {
+                if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || (parseInt(APP_CLIENT) === 110)) {
                   const findData = await mutasi.findByPk(findMut[i].id)
                   const findAsset = await asset.findOne({
                     where: {
