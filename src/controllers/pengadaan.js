@@ -3325,7 +3325,7 @@ module.exports = {
                   qty: 1,
                   kode_plant: result[i].kode_plant,
                   no_pengadaan: result[i].no_pengadaan,
-                  no_pengadaan_sap: `${result[i].no_pengadaan}-${j + 1}`,
+                  no_pengadaan_sap: `${result[i].no_pengadaan}-${i + 1}-${j + 1}`,
                   nama: result[i].nama,
                   price: result[i].price.replace(/[^a-z0-9-]/g, ''),
                   idIo: result[i].id
@@ -3722,7 +3722,7 @@ module.exports = {
                   }
                 }
                 if (cek.length > 0) {
-                  return response(res, 'success update')
+                  return response(res, 'success update', {})
                 } else {
                   return response(res, 'failed update', {}, 404, false)
                 }

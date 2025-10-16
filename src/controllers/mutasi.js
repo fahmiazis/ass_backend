@@ -15,6 +15,8 @@ const { APP_KEY, APP_SAP, APP_CLIENT } = process.env
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
+// Delete "parseInt(APP_CLIENT) === 110" untuk production
+
 module.exports = {
   getDataCart: async (req, res) => {
     try {
@@ -2679,7 +2681,7 @@ module.exports = {
             timeout: 1000 * 60 * 5
           })
 
-          if (prosesSap && prosesSap.data !== undefined && prosesSap.data.details[0].type === 'S') {
+          if ((prosesSap && prosesSap.data !== undefined && prosesSap.data.details[0].type === 'S') || (parseInt(APP_CLIENT) === 110)) {
             if (findMut[i].isbudget === 'ya') {
               const findAsset = await asset.findOne({
                 where: {
@@ -2702,7 +2704,7 @@ module.exports = {
                     }
                   }
                 )
-                if (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') {
+                if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || (parseInt(APP_CLIENT) === 110)) {
                   const findData = await mutasi.findByPk(findMut[i].id)
                   const findAsset = await asset.findOne({
                     where: {
@@ -2999,7 +3001,7 @@ module.exports = {
                   }
                 }
               )
-              if (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') {
+              if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || (parseInt(APP_CLIENT) === 110)) {
                 const findData = await mutasi.findByPk(findMutasi[i].id)
                 if (findData) {
                   await findData.update(data)
@@ -3018,10 +3020,10 @@ module.exports = {
         if (cek.length > 0) {
           return response(res, 'success submit budget')
         } else {
-          return response(res, 'failed submit budget', {}, 404, false)
+          return response(res, 'failed submit budget 1', {}, 404, false)
         }
       } else {
-        return response(res, 'failed submit budget', {}, 404, false)
+        return response(res, 'failed submit budget 2', {}, 404, false)
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)
