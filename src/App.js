@@ -36,10 +36,12 @@ const trackingRoute = require('./routes/tracking')
 const reportRoute = require('./routes/report')
 const menuRoute = require('./routes/menu')
 const dashboardRoute = require('./routes/dashboard')
+const apkRoute = require('./routes/apk')
 
 const authMiddleware = require('./middlewares/auth')
 
 app.use('/uploads', express.static('assets/documents'))
+app.use('/android', express.static('assets/android'))
 app.use('/masters', express.static('assets/masters'))
 app.use('/download', express.static('assets/exports'))
 
@@ -65,6 +67,7 @@ app.use('/track', authMiddleware, trackingRoute)
 app.use('/report', authMiddleware, reportRoute)
 app.use('/menu', authMiddleware, menuRoute)
 app.use('/dashboard', authMiddleware, dashboardRoute)
+app.use('/apk', authMiddleware, apkRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)
