@@ -12,7 +12,7 @@ module.exports = {
       let { limit, page, search, filter } = req.query
       let searchValue = ''
       const sortNameVal = 'id'
-      const sortTypeVal = 'ASC'
+      const sortTypeVal = 'DESC'
       if (typeof search === 'object') {
         searchValue = Object.values(search)[0]
       } else {
