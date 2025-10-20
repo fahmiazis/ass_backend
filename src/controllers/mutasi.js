@@ -2642,14 +2642,6 @@ module.exports = {
         const cek = []
         const failSap = []
         for (let i = 0; i < findMut.length; i++) {
-          const data = {
-            status_form: 8,
-            status_reject: null,
-            isreject: null,
-            tgl_mutasisap: moment(),
-            pic_aset: fullname,
-            history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
-          }
           const send = {
             kode_plant: findMut[i].kode_plant_rec,
             cost_center: findMut[i].cost_center_rec,
@@ -2712,6 +2704,15 @@ module.exports = {
                     }
                   })
                   if (findData && findAsset) {
+                    const data = {
+                      status_form: 8,
+                      status_reject: null,
+                      isreject: null,
+                      tgl_mutasisap: moment(),
+                      pic_aset: fullname,
+                      history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+                      message_sap: parseInt(APP_CLIENT) === 110 ? '' : prosesSap.data.details[0].message
+                    }
                     await findData.update(data)
                     await findAsset.update(send)
                     cek.push(1)
