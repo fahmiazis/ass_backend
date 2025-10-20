@@ -13,6 +13,8 @@ const { APP_SAP, APP_CLIENT } = process.env
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
+// Delete "parseInt(APP_CLIENT) === 110" untuk production
+
 module.exports = {
   addDisposal: async (req, res) => {
     try {
@@ -1514,7 +1516,8 @@ module.exports = {
         doc_sap: joi.string().allow(''),
         npwp: joi.string().allow(''),
         doc_clearing: joi.string().allow(''),
-        date_ba: joi.string().allow('')
+        date_ba: joi.string().allow(''),
+        date_faktur: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -4449,7 +4452,7 @@ module.exports = {
                 timeout: 1000 * 60 * 5
               })
 
-              if (prosesSap && prosesSap.data !== undefined && prosesSap.data.success) {
+              if ((prosesSap && prosesSap.data !== undefined && prosesSap.data.success) || parseInt(APP_CLIENT) === 110) {
                 const findId = await disposal.findByPk(result[i].id)
                 const prev = moment().subtract(1, 'month').format('L').split('/')
                 const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
@@ -4458,7 +4461,8 @@ module.exports = {
                   pic_aset: fullname,
                   nilai_buku_eks: findApi.status === 200 ? (findApi.data[0].nafap === undefined ? findId.nilai_buku : findApi.data[0].nafap) : findId.nilai_buku,
                   tgl_eksekusi: moment(),
-                  history: `${findId.history}, ${historyEks}`
+                  history: `${findId.history}, ${historyEks}`,
+                  message_sap: parseInt(APP_CLIENT) === 110 ? '' : prosesSap.data.message
                 }
                 const results = await findId.update(data)
                 if (results) {
@@ -4785,37 +4789,99 @@ module.exports = {
   },
   submitFinal: async (req, res) => {
     try {
-      const { no } = req.body
+      const { no, gl_debit, gl_credit } = req.body
       const fullname = req.user.fullname
+      const finalDebit = (gl_debit === undefined || gl_debit === '') ? "11020909" : gl_debit
+      const finalCredit = (gl_credit === undefined || gl_credit === '') ? "71050001" : gl_credit
       const result = await disposal.findAll({
         where: {
           no_disposal: no
         }
       })
       if (result.length > 0) {
+        const getDepo = await depo.findOne({
+          where: {
+            kode_plant: result[0].kode_plant
+          }
+        })
         const cek = []
         for (let i = 0; i < result.length; i++) {
-          const findId = await disposal.findByPk(result[i].id)
-          if (findId) {
-            const data = {
-              date_finish: moment(),
-              status_form: 8,
-              history: `${findId.history}, submit verifikasi final disposal by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+
+          const body = {
+            id: `${result[i].no_disposal}-${result[i].no_asset}`,
+            header: {
+              bukrs: "PP01",
+              doc_date: moment(result[i].date_faktur).format('DDMMYYYY'),
+              pstng_date: moment(result[i].date_faktur).format('DDMMYYYY'),
+              monat: moment().format('MM'),
+              currency: "IDR",
+              ref_doc_no: result[i].pic_aset,
+              header_txt: "PENJUALAN ASSET"
+            },
+            debit: {
+              gl_account: finalDebit,
+              amount: `${result[i].nilai_jual}`,
+              valut: moment(result[i].date_faktur).format('DDMMYYYY'),
+              text: `${result[i].no_asset}_${result[i].nama_asset}_${result[i].area}_DIJUAL`,
+              profit_ctr: getDepo.profit_center
+            },
+            credit: {
+              gl_account: finalCredit,
+              amount: `${result[i].nilai_jual}`,
+              tax_code: "A4",
+              text: `${result[i].no_asset}_${result[i].nama_asset}_${result[i].area}_DIJUAL`,
+              costcenter: getDepo.cost_center,
+              profit_ctr: getDepo.profit_center,
+              asset_no: result[i].no_asset,
+              sub_number: "0000",
+              assettrans_type: "210",
+              asset_valdate: moment(result[i].date_faktur).format('DDMMYYYY')
+            },
+            tax: {
+              valut: moment(result[i].date_faktur).format('DDMMYYYY'),
+              text: `${result[i].no_fp}_${result[i].no_asset}`,
+              profit_ctr: getDepo.profit_center
             }
-            const results = await findId.update(data)
-            if (results) {
-              const findAsset = await asset.findOne({
-                where: {
-                  no_asset: findId.no_asset
+          }
+
+          const prosesSap = await axios({
+            method: 'get',
+            url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=${APP_CLIENT}&q=assetselling`,
+            headers: {
+              'Content-Type': 'application/json',
+              'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
+            },
+            data: body,
+            timeout: 1000 * 60 * 5
+          })
+          if ((prosesSap && prosesSap.data !== undefined && prosesSap.data.details.length > 0) || parseInt(APP_CLIENT) === 110) {
+            if ((prosesSap.data.details[0].type === 'S') || parseInt(APP_CLIENT) === 110) {
+              const findId = await disposal.findByPk(result[i].id)
+              if (findId) {
+                const data = {
+                  date_finish: moment(),
+                  status_form: 8,
+                  gl_debit: finalDebit,
+                  gl_credit: finalCredit,
+                  history: `${findId.history}, submit verifikasi final disposal by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+                  message_sap: parseInt(APP_CLIENT) === 110 ? '' : prosesSap.data.details[0].message
                 }
-              })
-              if (findAsset) {
-                const send = {
-                  status: '0'
-                }
-                const upAsset = await findAsset.update(send)
-                if (upAsset) {
-                  cek.push(results)
+                const results = await findId.update(data)
+                if (results) {
+                  const findAsset = await asset.findOne({
+                    where: {
+                      no_asset: findId.no_asset
+                    }
+                  })
+                  if (findAsset) {
+                    const send = {
+                      status: '0'
+                    }
+                    const upAsset = await findAsset.update(send)
+                    if (upAsset) {
+                      cek.push(results)
+                    }
+                  }
                 }
               }
             }
