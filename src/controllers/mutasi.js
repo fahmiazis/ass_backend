@@ -2711,7 +2711,7 @@ module.exports = {
                       tgl_mutasisap: moment(),
                       pic_aset: fullname,
                       history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
-                      message_sap: parseInt(APP_CLIENT) === 110 ? '' : prosesSap.data.details[0].message
+                      message_sap: parseInt(APP_CLIENT) === 110 ? '' : `${prosesSap.data.message}; ${prosesSap.data.details[0].message}`
                     }
                     await findData.update(data)
                     await findAsset.update(send)
