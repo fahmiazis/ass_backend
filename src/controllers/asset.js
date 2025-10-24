@@ -45,7 +45,7 @@ module.exports = {
             if (result) {
               return response(res, 'successfully add asset', { result })
             } else {
-              return response(res, 'failed to add asset', {}, 400, false)
+              return response(res, 'failed to add asset1', {}, 400, false)
             }
           }
         } else {
