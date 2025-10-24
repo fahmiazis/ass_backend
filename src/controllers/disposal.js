@@ -10,6 +10,8 @@ const wrapMail = require('../helpers/wrapMail')
 const axios = require('axios')
 
 const { APP_SAP, APP_CLIENT } = process.env
+const SAP_PROD_URL = 'http://prdhana.nabatigroup.com:8000'
+const SAP_PROD_CLIENT = 300
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
 
@@ -749,7 +751,7 @@ module.exports = {
           if (find) {
             const cekJual = result.find((item) => item.nilai_jual === '0' || item.nilai_jual === 0)
             const prev = moment().subtract(1, 'month').format('L').split('/')
-            const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+            const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
             const dataHistory = `submit pengajuan disposal by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
             if (findApi.status === 200) {
               const send = {
@@ -4455,7 +4457,7 @@ module.exports = {
               if ((prosesSap && prosesSap.data !== undefined && prosesSap.data.success) || parseInt(APP_CLIENT) === 110) {
                 const findId = await disposal.findByPk(result[i].id)
                 const prev = moment().subtract(1, 'month').format('L').split('/')
-                const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 const data = {
                   status_form: 8,
                   pic_aset: fullname,
@@ -4503,7 +4505,7 @@ module.exports = {
             for (let i = 0; i < result.length; i++) {
               const findId = await disposal.findByPk(result[i].id)
               const prev = moment().subtract(1, 'month').format('L').split('/')
-              const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+              const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
               let data = {}
               if (findApi.status === 200) {
                 data = {
@@ -4575,7 +4577,7 @@ module.exports = {
               for (let i = 0; i < result.length; i++) {
                 const findId = await disposal.findByPk(result[i].id)
                 const prev = moment().subtract(1, 'month').format('L').split('/')
-                const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 let data = {}
                 if (findApi.status === 200) {
                   data = {
@@ -4671,7 +4673,7 @@ module.exports = {
               for (let i = 0; i < result.length; i++) {
                 const findId = await disposal.findByPk(result[i].id)
                 const prev = moment().subtract(1, 'month').format('L').split('/')
-                const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${findId.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 let data = {}
                 if (findApi.status === 200) {
                   data = {

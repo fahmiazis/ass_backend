@@ -12,6 +12,8 @@ const vs = require('fs-extra')
 const moment = require('moment')
 const axios = require('axios')
 const { APP_BE, APP_SAP, APP_CLIENT } = process.env
+const SAP_PROD_URL = 'http://prdhana.nabatigroup.com:8000'
+const SAP_PROD_CLIENT = 300
 
 module.exports = {
   addAsset: async (req, res) => {
@@ -705,7 +707,7 @@ module.exports = {
         : moment(date1).format('L').split('/')
 
       if (type === 'no') {
-        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${noAset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
+        const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${noAset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
           { timeout: (1000 * 60 * 10) }).then(response => response).catch(err => err.isAxiosError)
 
         if (findApi.status === 200 && findApi.data.length > 0) {
@@ -807,7 +809,7 @@ module.exports = {
         const cekGr = []
 
         for (let x = 0; x < findGr.length; x++) {
-          const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${findGr[x].no_asset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
+          const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${findGr[x].no_asset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
             { timeout: (1000 * 60 * 10) })
           if (findApi.status === 200 && findApi.data.length > 0) {
             await asset.update({ status: null }, { where: { id: findGr[x].id } })

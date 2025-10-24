@@ -11,6 +11,8 @@ const axios = require('axios')
 const { generateToken } = require('../helpers/signjwt')
 const jwt = require('jsonwebtoken')
 const { APP_KEY, APP_SAP, APP_CLIENT } = process.env
+const SAP_PROD_URL = 'http://prdhana.nabatigroup.com:8000'
+const SAP_PROD_CLIENT = 300
 
 const emailAss = 'fahmi_aziz@pinusmerahabadi.co.id'
 const emailAss2 = 'fahmi_aziz@pinusmerahabadi.co.id'
@@ -1383,9 +1385,9 @@ module.exports = {
           for (let i = 0; i < findMut.length; i++) {
             const find = await mutasi.findByPk(findMut[i].id)
             if (find) {
-              const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+              const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${find.no_asset}&p_bukrs=pp01&p_gjahr=${prev[2]}&p_monat=${prev[0]}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
               if (findApi.status === 200) {
-                const findCost = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
+                const findCost = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0091&p_kokrs=pp00&p_aufnr=${findApi.data[0] === undefined ? null : findApi.data[0].eaufn === undefined ? null : findApi.data[0].eaufn === null ? null : findApi.data[0].eaufn === '' ? null : findApi.data[0].eaufn}`, { timeout: 10000 }).then(response => { return (response) }).catch(err => { return (err.isAxiosError) })
                 if (findCost.status === 200) {
                   const data = {
                     isbudget: findApi.data[0] === undefined ? 'tidak' : findApi.data[0].eaufn === undefined ? 'tidak' : findApi.data[0].eaufn === null ? 'tidak' : findApi.data[0].eaufn === '' ? 'tidak' : 'ya',
@@ -2649,6 +2651,14 @@ module.exports = {
             status: null,
             keterangan: null
           }
+          const data = {
+            status_form: 8,
+            status_reject: null,
+            isreject: null,
+            tgl_mutasisap: moment(),
+            pic_aset: fullname,
+            history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+          }
           const body = {
             id: `${findMut[i].no_mutasi}-${findMut[i].no_asset}`,
             companycode: 'PP01',
@@ -2673,7 +2683,7 @@ module.exports = {
             timeout: 1000 * 60 * 5
           })
 
-          if ((prosesSap && prosesSap.data !== undefined && prosesSap.data.details[0].type === 'S') || (parseInt(APP_CLIENT) === 110)) {
+          if ((parseInt(APP_CLIENT) === 110) || (prosesSap && prosesSap.data !== undefined && prosesSap.data.details[0].type === 'S')) {
             if (findMut[i].isbudget === 'ya') {
               const findAsset = await asset.findOne({
                 where: {
@@ -2696,7 +2706,7 @@ module.exports = {
                     }
                   }
                 )
-                if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || (parseInt(APP_CLIENT) === 110)) {
+                if ((parseInt(APP_CLIENT) === 110) || (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S')) {
                   const findData = await mutasi.findByPk(findMut[i].id)
                   const findAsset = await asset.findOne({
                     where: {
@@ -2704,16 +2714,11 @@ module.exports = {
                     }
                   })
                   if (findData && findAsset) {
-                    const data = {
-                      status_form: 8,
-                      status_reject: null,
-                      isreject: null,
-                      tgl_mutasisap: moment(),
-                      pic_aset: fullname,
-                      history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+                    const finalData = {
+                      ...data,
                       message_sap: parseInt(APP_CLIENT) === 110 ? '' : `${prosesSap.data.message}; ${prosesSap.data.details[0].message}`
                     }
-                    await findData.update(data)
+                    await findData.update(finalData)
                     await findAsset.update(send)
                     cek.push(1)
                   }
@@ -3002,7 +3007,7 @@ module.exports = {
                   }
                 }
               )
-              if ((changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S') || (parseInt(APP_CLIENT) === 110)) {
+              if ((parseInt(APP_CLIENT) === 110) || (changeCost && changeCost.data !== undefined && changeCost.data.succes === 'S')) {
                 const findData = await mutasi.findByPk(findMutasi[i].id)
                 if (findData) {
                   await findData.update(data)
