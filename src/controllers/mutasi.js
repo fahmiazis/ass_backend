@@ -2303,7 +2303,7 @@ module.exports = {
           }
         })
         if (result.length > 0) {
-          return response(res, 'success get document', { result })
+          return response(res, 'success get documents', { result })
         } else {
           const getDoc = await document.findAll({
             where: {
