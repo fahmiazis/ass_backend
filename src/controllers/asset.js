@@ -403,14 +403,12 @@ module.exports = {
                     { status: '11' },
                     { status: null }
                   ]
-                },
-                {
-                  [Op.or]: [
-                    { no_asset: { [Op.like]: `%${searchValue}` } },
-                    { nama_asset: { [Op.like]: `%${searchValue}` } }
-                  ]
                 }
               ],
+              [Op.or]: [
+                { no_asset: { [Op.like]: `%${searchValue}` } },
+                { nama_asset: { [Op.like]: `%${searchValue}` } }
+              ]
               // [Op.not]: { status: '0' }
             },
             include: [
