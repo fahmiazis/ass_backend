@@ -73,6 +73,6 @@ app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)
 })
 
-server.listen(APP_PORT, () => {
+server.listen(APP_PORT, "0.0.0.0", () => {
   console.log(`App is running on port ${APP_URL}`)
 })
