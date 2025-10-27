@@ -3,3 +3,4 @@ assets
 .env
 .env.local
 src/config
+logs
