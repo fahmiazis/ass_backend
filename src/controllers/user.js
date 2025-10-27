@@ -288,12 +288,23 @@ module.exports = {
   deleteUser: async (req, res) => {
     try {
       const level = req.user.level
-      const id = req.params.id
+      const { listId } = req.body
+      console.log(req.body)
       if (level === 1) {
-        const result = await user.findByPk(id)
-        if (result) {
-          await result.destroy()
-          return response(res, 'delete user success', { result })
+        if (listId !== undefined && listId.length > 0) {
+          const cekData = []
+          for (let i = 0; i < listId.length; i++) {
+            const result = await user.findByPk(listId[i])
+            if (result) {
+              await result.destroy()
+              cekData.push(result)
+            }
+          }
+          if (cekData.length > 0) {
+            return response(res, 'success delete user', { result: cekData })
+          } else {
+            return response(res, 'user not found', {}, 404, false)
+          }
         } else {
           return response(res, 'user not found', {}, 404, false)
         }
