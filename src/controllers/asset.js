@@ -748,7 +748,7 @@ module.exports = {
           return response(res, 'failed sync asset1', { findApi, time, type, noAset }, 404, false)
         }
       } else {
-        const findApi = await axios.get(`${APP_SAP}/sap/bc/zast/?sap-client=${APP_CLIENT}&pgmna=zfir0090&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
+        const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
           { timeout: (1000 * 60 * 10) })
         const data = findApi.data
 
