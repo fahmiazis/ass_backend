@@ -1,4 +1,4 @@
-const { asset, path, depo, user, sequelize } = require('../models')
+const { asset, assettemp, path, depo, user, sequelize } = require('../models')
 const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
@@ -764,11 +764,73 @@ module.exports = {
         const allAssets = await asset.findAll({ attributes: ['no_asset', 'status'] })
         const existingAssetMap = new Map(allAssets.map(a => [a.no_asset, a.status]))
 
-        const bulkData = data.map(item => {
-          const no_asset = (item.anln1 + '0').slice(2, -1) // eslint-disable-line
-          const depoData = findDepo.find(d => d.cost_center === item.kostl)
+        // ambil data dari assettemp
+        const assetTempData = await assettemp.findAll({ attributes: ['no_asset'] })
+        const tempAssets = new Set(assetTempData.map(i => i.no_asset))
 
-          const send = {
+        // simpan semua asset dari API ke Set juga
+        const apiAssets = new Set(data.map(item => (item.anln1 + '0').slice(2, -1)))
+
+        const bulkData = allAssets.map(existing => {
+          const no_asset = existing.no_asset
+          const apiItem = data.find(item => (item.anln1 + '0').slice(2, -1) === no_asset)
+          const depoData = apiItem ? findDepo.find(d => d.cost_center === apiItem.kostl) : null
+
+          // kalau asset ada di API, update dari data API
+          if (apiItem) {
+            const send = {
+              no_asset,
+              no_doc: 0,
+              tanggal: apiItem.aktiv || '',
+              nama_asset: apiItem.txt50 || '',
+              nilai_acquis: apiItem.kansw ? apiItem.kansw.toString().split('.')[0] : 0,
+              accum_dep: apiItem.knafa ? apiItem.knafa.toString().split('.')[0] : 0,
+              nilai_buku: apiItem.nafap ? apiItem.nafap.toString().split('.')[0] : 0,
+              kode_plant: apiItem.werks,
+              cost_center: apiItem.kostl,
+              area: depoData ? depoData.place_asset : '',
+              unit: 1,
+              no_io: apiItem.eaufn
+            }
+
+            if (apiItem.deakt !== undefined && apiItem.deakt !== null) {
+              send.status = '0'
+            } else {
+              const existingStatus = existingAssetMap.get(no_asset)
+              if (existingStatus === '100') {
+                send.status = null
+              } else if (existingStatus !== undefined) {
+                send.status = existingStatus
+              }
+            }
+            return send
+          }
+
+          // kalau tidak ada di API
+          // cek apakah ada di assettemp
+          if (!tempAssets.has(no_asset)) {
+            // tidak ada di API dan tidak ada di assettemp → status '0'
+            return {
+              no_asset,
+              status: '0'
+            }
+          }
+
+          // kalau ada di assettemp tapi tidak di API → biarkan status lama
+          return {
+            no_asset,
+            status: existingAssetMap.get(no_asset)
+          }
+        })
+
+        // untuk memastikan ada juga aset baru dari API yg belum ada di asset (insert baru)
+        const newApiAssets = data.filter(item => {
+          const no_asset = (item.anln1 + '0').slice(2, -1)
+          return !existingAssetMap.has(no_asset)
+        }).map(item => {
+          const no_asset = (item.anln1 + '0').slice(2, -1)
+          const depoData = findDepo.find(d => d.cost_center === item.kostl)
+          return {
             no_asset,
             no_doc: 0,
             tanggal: item.aktiv || '',
@@ -780,24 +842,15 @@ module.exports = {
             cost_center: item.kostl,
             area: depoData ? depoData.place_asset : '',
             unit: 1,
-            no_io: item.eaufn
+            no_io: item.eaufn,
+            status: (item.deakt !== undefined && item.deakt !== null) ? '0' : null
           }
-
-          if (item.deakt !== undefined && item.deakt !== null) {
-            send.status = '0'
-          } else {
-            const existingStatus = existingAssetMap.get(no_asset)
-            if (existingStatus === '100') {
-              send.status = null
-            } else if (existingStatus !== undefined) {
-              send.status = existingStatus
-            }
-          }
-
-          return send
         })
 
-        await asset.bulkCreate(bulkData, {
+        // gabungkan keduanya (update existing + insert baru)
+        const finalBulk = [...bulkData, ...newApiAssets]
+
+        await asset.bulkCreate(finalBulk, {
           updateOnDuplicate: [
             'no_doc', 'tanggal', 'nama_asset', 'nilai_acquis',
             'accum_dep', 'nilai_buku', 'kode_plant',
@@ -805,6 +858,7 @@ module.exports = {
           ]
         })
 
+        // cek GR logic tetap
         const findGr = await asset.findAll({ where: { status: '100' } })
         const cekGr = []
 
@@ -819,6 +873,78 @@ module.exports = {
 
         return response(res, 'success sync asset', { updatedGr: cekGr })
       }
+      // else {
+      //   const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
+      //     { timeout: (1000 * 60 * 10) })
+      //   const data = findApi.data
+
+      //   if (!data || data.length === 0) {
+      //     return response(res, 'failed sync asset, no data', {}, 404, false)
+      //   }
+
+      //   const findDepo = await depo.findAll()
+      //   if (findDepo.length === 0) {
+      //     return response(res, 'failed sync asset, no depo data', {}, 404, false)
+      //   }
+
+      //   const allAssets = await asset.findAll({ attributes: ['no_asset', 'status'] })
+      //   const existingAssetMap = new Map(allAssets.map(a => [a.no_asset, a.status]))
+
+      //   const bulkData = data.map(item => {
+      //     const no_asset = (item.anln1 + '0').slice(2, -1) // eslint-disable-line
+      //     const depoData = findDepo.find(d => d.cost_center === item.kostl)
+
+      //     const send = {
+      //       no_asset,
+      //       no_doc: 0,
+      //       tanggal: item.aktiv || '',
+      //       nama_asset: item.txt50 || '',
+      //       nilai_acquis: item.kansw ? item.kansw.toString().split('.')[0] : 0,
+      //       accum_dep: item.knafa ? item.knafa.toString().split('.')[0] : 0,
+      //       nilai_buku: item.nafap ? item.nafap.toString().split('.')[0] : 0,
+      //       kode_plant: item.werks,
+      //       cost_center: item.kostl,
+      //       area: depoData ? depoData.place_asset : '',
+      //       unit: 1,
+      //       no_io: item.eaufn
+      //     }
+
+      //     if (item.deakt !== undefined && item.deakt !== null) {
+      //       send.status = '0'
+      //     } else {
+      //       const existingStatus = existingAssetMap.get(no_asset)
+      //       if (existingStatus === '100') {
+      //         send.status = null
+      //       } else if (existingStatus !== undefined) {
+      //         send.status = existingStatus
+      //       }
+      //     }
+
+      //     return send
+      //   })
+
+      //   await asset.bulkCreate(bulkData, {
+      //     updateOnDuplicate: [
+      //       'no_doc', 'tanggal', 'nama_asset', 'nilai_acquis',
+      //       'accum_dep', 'nilai_buku', 'kode_plant',
+      //       'cost_center', 'area', 'unit', 'status'
+      //     ]
+      //   })
+
+      //   const findGr = await asset.findAll({ where: { status: '100' } })
+      //   const cekGr = []
+
+      //   for (let x = 0; x < findGr.length; x++) {
+      //     const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${findGr[x].no_asset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
+      //       { timeout: (1000 * 60 * 10) })
+      //     if (findApi.status === 200 && findApi.data.length > 0) {
+      //       await asset.update({ status: null }, { where: { id: findGr[x].id } })
+      //       cekGr.push(findGr[x])
+      //     }
+      //   }
+
+      //   return response(res, 'success sync asset', { updatedGr: cekGr })
+      // }
     } catch (error) {
       console.error('Error sync asset:', error)
       return response(res, error.message, {}, 500, false)
