@@ -90,7 +90,7 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
-      if (level === 5) {
+      if (level === 5 || level === 9) {
         const findDep = await depo.findOne({
           where: {
             kode_plant: kode
@@ -149,61 +149,6 @@ module.exports = {
           }
         } else {
           return response(res, 'failed to get aset', {}, 404, false)
-        }
-      } else if (level === 9) {
-        const result = await asset.findAndCountAll({
-          where: {
-            [Op.and]: [
-              {
-                [Op.and]: [
-                  { cost_center: cost }
-                  // ,
-                  // { status: null }
-                ]
-              },
-              {
-                [Op.or]: [
-                  { no_asset: { [Op.like]: `%${searchValue}%` } },
-                  { no_doc: { [Op.like]: `%${searchValue}%` } },
-                  { tanggal: { [Op.like]: `%${searchValue}%` } },
-                  { nama_asset: { [Op.like]: `%${searchValue}%` } },
-                  { nilai_acquis: { [Op.like]: `%${searchValue}%` } },
-                  { accum_dep: { [Op.like]: `%${searchValue}%` } },
-                  { nilai_buku: { [Op.like]: `%${searchValue}%` } },
-                  { kode_plant: { [Op.like]: `%${searchValue}%` } },
-                  { cost_center: { [Op.like]: `%${searchValue}%` } },
-                  { area: { [Op.like]: `%${searchValue}%` } },
-                  { merk: { [Op.like]: `%${searchValue}%` } },
-                  { satuan: { [Op.like]: `%${searchValue}%` } },
-                  { unit: { [Op.like]: `%${searchValue}%` } },
-                  { lokasi: { [Op.like]: `%${searchValue}%` } },
-                  { kategori: { [Op.like]: `%${searchValue}%` } }
-                ]
-              }
-            ]
-            // [Op.or]: [
-            //   { no_asset: { [Op.like]: `%${searchValue}%` } },
-            //   { nama_asset: { [Op.like]: `%${searchValue}%` } }
-            // ]
-          },
-          include: [
-            {
-              model: path,
-              as: 'pict'
-            }
-          ],
-          order: [
-            [sortValue, 'DESC'],
-            [{ model: path, as: 'pict' }, 'id', 'ASC']
-          ],
-          limit: limit,
-          offset: (page - 1) * limit
-        })
-        const pageInfo = pagination('/asset/get', req.query, page, limit, result.count)
-        if (result) {
-          return response(res, 'list asset', { result, pageInfo })
-        } else {
-          return response(res, 'failed to get user', {}, 404, false)
         }
       } else {
         const result = await asset.findAndCountAll({
@@ -268,7 +213,6 @@ module.exports = {
   getAssetAll: async (req, res) => {
     try {
       const kode = req.user.kode
-      const cost = req.user.name
       const level = req.user.level
       const id = req.user.id
       let { limit, page, search, sort, tipe, area } = req.query
@@ -301,7 +245,7 @@ module.exports = {
       }
       const findDep = await depo.findOne({
         where: {
-          kode_plant: level === 5 ? kode : cost
+          kode_plant: kode
         }
       })
       const detailUser = await user.findOne({
@@ -319,7 +263,7 @@ module.exports = {
               }
             })
             for (let i = 0; i < findUser.length; i++) {
-              const data = { cost_center: findUser[i].username }
+              const data = { cost_center: findUser[i].kode_plant }
               listCenter.push(data)
             }
             if (listCenter) {
@@ -350,7 +294,7 @@ module.exports = {
           })
           const listData = []
           for (let i = 0; i < findUser.length; i++) {
-            const data = { cost_center: findUser[i].username }
+            const data = { cost_center: findUser[i].kode_plant }
             listData.push(data)
           }
           const result = await asset.findAndCountAll({
