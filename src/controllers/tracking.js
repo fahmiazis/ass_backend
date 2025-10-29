@@ -575,7 +575,7 @@ module.exports = {
       const kode = req.user.kode
       const level = req.user.level
       const fullname = req.user.fullname
-      const cost = req.user.name
+      const cost = req.user.kode
       if (level === 5 || level === 9) {
         const result = await mutasi.findAndCountAll({
           where: {
@@ -796,7 +796,7 @@ module.exports = {
     try {
       const kode = req.user.kode
       const level = req.user.level
-      const cost = req.user.name
+      const cost = req.user.kode
       const fullname = req.user.fullname
       const findClose = await clossing.findAll({
         where: {

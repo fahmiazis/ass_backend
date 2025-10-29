@@ -344,7 +344,7 @@ module.exports = {
     try {
       const { no } = req.body
       const kode = req.user.kode
-      // const cost = req.user.name
+      // const cost = req.user.kode
       // const level = req.user.level
       const name = req.user.fullname
       const role = req.user.role
@@ -725,7 +725,7 @@ module.exports = {
   getStockArea: async (req, res) => {
     try {
       const kode = req.user.kode
-      const cost = req.user.name
+      const cost = req.user.kode
       const level = req.user.level
       let { limit, page, search, sort, status } = req.query
       let searchValue = ''
@@ -835,7 +835,7 @@ module.exports = {
     try {
       let { limit, page, search, sort, group, status, time1, time2 } = req.query
       const kode = req.user.kode
-      const cost = req.user.name
+      const cost = req.user.kode
       const fullname = req.user.fullname
       let searchValue = ''
       let sortValue = ''
@@ -2137,7 +2137,7 @@ module.exports = {
   },
   addStock: async (req, res) => {
     try {
-      const cost = req.user.name
+      const cost = req.user.kode
       const level = req.user.level
       const kode = req.user.kode
       const schema = joi.object({
@@ -2392,7 +2392,7 @@ module.exports = {
     try {
       const { no } = req.body
       const kode = req.user.kode
-      const cost = req.user.name
+      const cost = req.user.kode
       const level = req.user.level
       const findArea = await depo.findOne({
         where: {
