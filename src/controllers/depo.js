@@ -1,9 +1,10 @@
 const joi = require('joi')
-const { depo } = require('../models')
+const { depo, user } = require('../models')
 const { pagination } = require('../helpers/pagination')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
 const readXlsxFile = require('read-excel-file/node')
+const bcrypt = require('bcryptjs')
 const multer = require('multer')
 const uploadMaster = require('../helpers/uploadMaster')
 const fs = require('fs')
@@ -44,7 +45,9 @@ module.exports = {
         pic_budget: joi.string().allow(''),
         pic_finance: joi.string().allow(''),
         pic_tax: joi.string().allow(''),
-        pic_purchasing: joi.string().allow('')
+        pic_purchasing: joi.string().allow(''),
+        asman_ho: joi.string().allow(''),
+        manager_ho: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -122,7 +125,9 @@ module.exports = {
         pic_budget: joi.string().allow(''),
         pic_finance: joi.string().allow(''),
         pic_tax: joi.string().allow(''),
-        pic_purchasing: joi.string().allow('')
+        pic_purchasing: joi.string().allow(''),
+        asman_ho: joi.string().allow(''),
+        manager_ho: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -269,7 +274,9 @@ module.exports = {
               { pic_budget: { [Op.like]: `%${searchValue}%` } },
               { pic_finance: { [Op.like]: `%${searchValue}%` } },
               { pic_tax: { [Op.like]: `%${searchValue}%` } },
-              { pic_purchasing: { [Op.like]: `%${searchValue}%` } }
+              { pic_purchasing: { [Op.like]: `%${searchValue}%` } },
+              { asman_ho: { [Op.like]: `%${searchValue}%` } },
+              { manager_ho: { [Op.like]: `%${searchValue}%` } }
             ]
           },
           order: [[sortValue, 'ASC']],
@@ -329,7 +336,32 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager', 'PIC Budget', 'PIC Finance', 'PIC Tax', 'PIC Purchasing']
+          const cek = [
+            'Kode Area',
+            'Home Town',
+            'Place Asset',
+            'Channel',
+            'Distribution',
+            'Status Depo',
+            'Profit Center',
+            'Cost Center',
+            'Kode SAP 1',
+            'Kode SAP 2',
+            'Nama AOS',
+            'Nama BM',
+            'Nama OM',
+            'Nama NOM',
+            'PIC Asset',
+            'SPV Asset',
+            'Asman Asset',
+            'Manager Asset',
+            'PIC Budget',
+            'PIC Finance',
+            'PIC Tax',
+            'PIC Purchasing',
+            'Asman HO',
+            'Manager HO'
+          ]
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             console.log(valid[i] === cek[i])
@@ -423,10 +455,10 @@ module.exports = {
                   cost_center: dataDepo[7],
                   kode_sap_1: dataDepo[8],
                   kode_sap_2: dataDepo[9],
-                  nama_nom: dataDepo[10],
-                  nama_om: dataDepo[11],
-                  nama_bm: dataDepo[12],
-                  nama_aos: dataDepo[13],
+                  nama_aos: dataDepo[10],
+                  nama_bm: dataDepo[11],
+                  nama_om: dataDepo[12],
+                  nama_nom: dataDepo[13],
                   nama_pic_1: dataDepo[14],
                   nama_pic_2: dataDepo[15],
                   nama_pic_3: dataDepo[16],
@@ -435,7 +467,9 @@ module.exports = {
                   pic_budget: dataDepo[19],
                   pic_finance: dataDepo[20],
                   pic_tax: dataDepo[21],
-                  pic_purchasing: dataDepo[22]
+                  pic_purchasing: dataDepo[22],
+                  asman_ho: dataDepo[23],
+                  manager_ho: dataDepo[24]
                 }
                 const select = await depo.findOne({
                   where: {
@@ -485,7 +519,32 @@ module.exports = {
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet()
         const arr = []
-        const header = ['Kode Area', 'Home Town', 'Place Aset', 'Channel', 'Distribution', 'Status Depo', 'Profit Center', 'Cost Center', 'Kode SAP 1', 'Kode SAP 2', 'Nama NOM', 'Nama OM', 'Nama BM', 'Nama AOS', 'Nama PIC 1', 'Nama PIC 2', 'Nama PIC 3', 'Nama PIC 4', 'Nama Assistant Manager', 'PIC Budget', 'PIC Finance', 'PIC Tax', 'PIC Purchasing']
+        const header = [
+          'Kode Area',
+          'Home Town',
+          'Place Asset',
+          'Channel',
+          'Distribution',
+          'Status Depo',
+          'Profit Center',
+          'Cost Center',
+          'Kode SAP 1',
+          'Kode SAP 2',
+          'Nama AOS',
+          'Nama BM',
+          'Nama OM',
+          'Nama NOM',
+          'PIC Asset',
+          'SPV Asset',
+          'Asman Asset',
+          'Manager Asset',
+          'PIC Budget',
+          'PIC Finance',
+          'PIC Tax',
+          'PIC Purchasing',
+          'Asman HO',
+          'Manager HO'
+        ]
         const key = [
           'kode_plant',
           'nama_area',
@@ -497,19 +556,20 @@ module.exports = {
           'cost_center',
           'kode_sap_1',
           'kode_sap_2',
-          'nama_nom',
-          'nama_om',
-          'nama_bm',
           'nama_aos',
+          'nama_bm',
+          'nama_om',
+          'nama_nom',
           'nama_pic_1',
           'nama_pic_2',
           'nama_pic_3',
           'nama_pic_4',
-          'nama_asman',
           'pic_budget',
           'pic_finance',
           'pic_tax',
-          'pic_purchasing'
+          'pic_purchasing',
+          'asman_ho',
+          'manager_ho'
         ]
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
@@ -542,6 +602,61 @@ module.exports = {
           })
         } else {
           return response(res, 'failed create file', {}, 404, false)
+        }
+      } else {
+        return response(res, 'failed', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  migrasiUserHo: async (req, res) => {
+    try {
+      const findUser = await user.findAll({
+        where: {
+          user_level: 9
+        }
+      })
+      if (findUser.length > 0) {
+        const cek = []
+        let pw = 'pma12345'
+        pw = await bcrypt.hash(pw, await bcrypt.genSalt())
+        for (let i = 0; i < findUser.length; i++) {
+          const findDepo = await depo.findOne({
+            where: {
+              cost_center: findUser[i].kode_plant
+            }
+          })
+          if (findDepo) {
+            const data = {
+              asman_ho: findDepo.nama_bm,
+              manager_ho: findDepo.nama_om
+            }
+
+            const dataCreate = {
+              username: findDepo.nama_bm,
+              fullname: findDepo.nama_bm,
+              email: `${findDepo.nama_bm}@mail.com`,
+              user_level: 26,
+              password: pw
+            }
+
+            await findDepo.update(data)
+            cek.push(findDepo)
+            const cekUser = await user.findOne({
+              where: {
+                username: findDepo.nama_bm
+              }
+            })
+            if (!cekUser) {
+              await user.create(dataCreate)
+            }
+          }
+        }
+        if (cek.length > 0) {
+          return response(res, 'success migrasi', { result: cek })
+        } else {
+          return response(res, 'failed', {}, 404, false)
         }
       } else {
         return response(res, 'failed', {}, 404, false)

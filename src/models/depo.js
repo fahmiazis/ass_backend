@@ -36,7 +36,9 @@ module.exports = (sequelize, DataTypes) => {
     pic_budget: DataTypes.STRING,
     pic_finance: DataTypes.STRING,
     pic_tax: DataTypes.STRING,
-    pic_purchasing: DataTypes.STRING
+    pic_purchasing: DataTypes.STRING,
+    asman_ho: DataTypes.STRING,
+    manager_ho: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'depo'
