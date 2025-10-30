@@ -24,12 +24,17 @@ module.exports = {
       const kode = req.user.kode
       const name = req.user.name
       const level = req.user.level
+      const findDepo = await depo.findOne({
+        where: {
+          kode_plant: kode
+        }
+      })
       const result = await asset.findOne({
         where: {
           no_asset: no
         }
       })
-      if (result) {
+      if (result && findDepo) {
         const findAsset = await disposal.findAll({
           where: {
             no_asset: result.no_asset,
@@ -38,7 +43,7 @@ module.exports = {
         })
         if (findAsset.length > 0) {
           return response(res, 'success add disposal', { result: findAsset })
-        } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && name === result.cost_center)) {
+        } else if (result.cost_center === findDepo.cost_center) {
           const findDepo = await depo.findAll({
             where: {
               kode_plant: level === 9 ? result.cost_center : kode
@@ -92,12 +97,17 @@ module.exports = {
       const level = req.user.level
       const { no } = req.body
       const kode = req.user.kode
+      const findDepo = await depo.findOne({
+        where: {
+          kode_plant: kode
+        }
+      })
       const result = await asset.findOne({
         where: {
           no_asset: no
         }
       })
-      if (result) {
+      if (result && findDepo) {
         const findAsset = await disposal.findAll({
           where: {
             no_asset: result.no_asset,
@@ -106,7 +116,7 @@ module.exports = {
         })
         if (findAsset.length > 0) {
           return response(res, 'success add sell', { result: findAsset })
-        } else if ((level === 5 && result.kode_plant === kode) || (level === 9 && name === result.cost_center)) {
+        } else if (result.cost_center === findDepo.cost_center) {
           const findDepo = await depo.findAll({
             where: {
               kode_plant: level === 9 ? result.cost_center : kode
