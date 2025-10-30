@@ -77,7 +77,7 @@ module.exports = {
             return response(res, 'failed add disposal 1', {}, 400, false)
           }
         } else {
-          return response(res, 'failed add disposal 2', {}, 400, false)
+          return response(res, 'failed add disposal 2', { result }, 400, false)
         }
       } else {
         return response(res, 'failed add disposal 3', {}, 400, false)
