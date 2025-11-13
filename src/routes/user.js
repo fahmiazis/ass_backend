@@ -20,4 +20,7 @@ route.patch('/chplant', user.choosePlant)
 route.patch('/data/:id', user.getLogin)
 route.patch('/token/:id', user.getToken)
 
+route.get('/onboarding', user.getOnboarding)
+route.get('/offboarding', user.getOffboarding)
+
 module.exports = route

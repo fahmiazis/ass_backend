@@ -12,6 +12,184 @@ const fs = require('fs')
 const excel = require('exceljs')
 const vs = require('fs-extra')
 const { APP_BE, APP_KEY } = process.env
+const axios = require('axios')
+
+const EDOT_CONFIG = {
+  baseUrl: 'https://staging.nabatisnack.co.id',
+  username: 'pma',
+  password: 'C3X6pSRxk3YH732pB00rcQ76x',
+  appId: 'pma',
+  codeCipher: '647445' // Ganti jika ada code cipher khusus
+}
+
+const decodeCustomToken = (token, codeCipher) => {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 4) {
+      throw new Error('Invalid token format')
+    }
+
+    // Ambil jumlah salt dari code cipher
+    const saltCount = parseInt(codeCipher.substring(0, 2))
+    
+    // Remove salt dari setiap part
+    const removeSalt = (str, count) => {
+      return str.substring(count, str.length - count)
+    }
+
+    const header = removeSalt(parts[0], saltCount)
+    const payload = removeSalt(parts[1], saltCount)
+    const signature = removeSalt(parts[2], saltCount)
+
+    // Reconstruct JWT token
+    const reconstructedToken = `${header}.${payload}.${signature}`
+    
+    // Decode JWT
+    const decoded = jwt.decode(reconstructedToken)
+    
+    return decoded
+  } catch (error) {
+    throw new Error(`Failed to decode token: ${error.message}`)
+  }
+}
+
+// Fungsi untuk logout
+const logoutEdot = async () => {
+  try {
+    await axios.post(
+      `${EDOT_CONFIG.baseUrl}/gateway/auth/logout`,
+      {
+        username: EDOT_CONFIG.username,
+        app_id: EDOT_CONFIG.appId
+      },
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    console.log('Logout success')
+  } catch (error) {
+    // Ignore logout error, lanjut login aja
+    console.log('Logout error (ignored):', error.message)
+  }
+}
+
+// Fungsi untuk login dan dapat token
+const getEdotToken = async () => {
+  try {
+    // Logout dulu untuk clear session sebelumnya
+    // await logoutEdot()
+    
+    const loginResponse = await axios.post(
+      `${EDOT_CONFIG.baseUrl}/gateway/auth/login`,
+      {
+        username: EDOT_CONFIG.username,
+        password: EDOT_CONFIG.password,
+        app_id: EDOT_CONFIG.appId
+      },
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    
+    const loginData = loginResponse.data
+    console.log('Login success')
+    
+    // Decode token untuk extract access_token dan jti
+    const decoded = decodeCustomToken(loginData.token, EDOT_CONFIG.codeCipher)
+    
+    return {
+      access_token: decoded.data.access_token,
+      jti: decoded.jti,
+      exp: decoded.exp
+    }
+  } catch (error) {
+    throw new Error(`Login failed: ${error.message}`)
+  }
+}
+
+// Fungsi untuk refresh token
+const refreshEdotToken = async (jti) => {
+  try {
+    const refreshResponse = await axios.post(
+      `${EDOT_CONFIG.baseUrl}/gateway/auth/refresh`,
+      { refresh_token: jti },
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    
+    const refreshData = refreshResponse.data
+    const decoded = decodeCustomToken(refreshData.token, EDOT_CONFIG.codeCipher)
+    
+    return {
+      access_token: decoded.data.access_token,
+      jti: decoded.jti,
+      exp: decoded.exp
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      return null // Need re-login
+    }
+    throw error
+  }
+}
+
+// Fungsi helper untuk make API call dengan auto refresh & re-login
+const makeEdotRequest = async (endpoint, method = 'GET') => {
+  let tokenData = await getEdotToken() // Login pertama kali
+  
+  try {
+    // Try request dengan token
+    const apiResponse = await axios({
+      method: method,
+      url: `${EDOT_CONFIG.baseUrl}${endpoint}`,
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    return apiResponse.data
+  } catch (error) {
+    // Jika error 440 (token expired), coba refresh
+    if (error.response && error.response.status === 440) {
+      console.log('Token expired, trying to refresh...')
+      
+      const refreshedToken = await refreshEdotToken(tokenData.jti)
+      
+      // Jika refresh gagal (return null), login ulang
+      if (!refreshedToken) {
+        console.log('Refresh failed, re-login...')
+        tokenData = await getEdotToken()
+      } else {
+        tokenData = refreshedToken
+      }
+      
+      // Retry request dengan token baru
+      const retryResponse = await axios({
+        method: method,
+        url: `${EDOT_CONFIG.baseUrl}${endpoint}`,
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      return retryResponse.data
+    }
+    
+    throw error
+  }
+}
 
 module.exports = {
   addUser: async (req, res) => {
@@ -1126,6 +1304,38 @@ module.exports = {
         return response(res, 'Failed to get login', {}, 400, false)
       }
     } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getOnboarding: async (req, res) => {
+    try {
+      console.log('Fetching onboarding data...')
+      
+      const result = await makeEdotRequest('/gateway/miniapps/onboarding', 'GET')
+      
+      if (result) {
+        return response(res, 'Success get onboarding data', { result })
+      } else {
+        return response(res, 'Failed to get onboarding data', {}, 404, false)
+      }
+    } catch (error) {
+      console.error('Onboarding Error:', error.message)
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  getOffboarding: async (req, res) => {
+    try {
+      console.log('Fetching offboarding data...')
+      
+      const result = await makeEdotRequest('/gateway/miniapps/offboarding', 'GET')
+      
+      if (result) {
+        return response(res, 'Success get offboarding data', { result })
+      } else {
+        return response(res, 'Failed to get offboarding data', {}, 404, false)
+      }
+    } catch (error) {
+      console.error('Offboarding Error:', error.message)
       return response(res, error.message, {}, 500, false)
     }
   }

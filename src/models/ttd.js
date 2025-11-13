@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     jabatan: DataTypes.STRING,
     jenis: DataTypes.ENUM('it', 'non-it', 'all'),
     sebagai: DataTypes.ENUM('pembuat', 'pemeriksa', 'penyetuju', 'penerima'),
-    kategori: DataTypes.ENUM('budget', 'non-budget', 'return'),
+    kategori: DataTypes.STRING,
     nama: DataTypes.STRING,
     path: DataTypes.STRING,
     no_doc: DataTypes.STRING,
