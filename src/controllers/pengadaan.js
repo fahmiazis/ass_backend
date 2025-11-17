@@ -4000,7 +4000,7 @@ module.exports = {
                   nilai_buku: findTemp[x].price,
                   kode_plant: findTemp[x].kode_plant,
                   cost_center: findDepo.cost_center,
-                  area: findDepo.nama_area,
+                  area: findDepo.place_asset,
                   merk: '',
                   satuan: 'unit',
                   unit: 1,
