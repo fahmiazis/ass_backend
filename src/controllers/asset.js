@@ -850,7 +850,7 @@ module.exports = {
             nilai_buku: data.nafap ? data.nafap.toString().split('.')[0] : 0,
             kode_plant: findDepo ? findDepo.kode_plant : '',
             cost_center: data.kostl,
-            area: findDepo ? findDepo.place_asset : '',
+            area: findDepo ? depoData.place_asset : '',
             unit: 1,
             no_io: data.eaufn,
             status: (data.deakt !== undefined && data.deakt !== null)
@@ -870,6 +870,7 @@ module.exports = {
             return response(res, 'success sync aset', { result: createAset })
           }
         } else {
+          // ✅ LOGIC KAYAK GINI: kalau gak ketemu data, gak usah update apa-apa
           return response(res, 'failed sync asset1', { findApi, time, type, noAset }, 404, false)
         }
       } else {
@@ -886,8 +887,9 @@ module.exports = {
           return response(res, 'failed sync asset, no depo data', {}, 404, false)
         }
 
-        const allAssets = await asset.findAll({ attributes: ['no_asset', 'status'] })
-        const existingAssetMap = new Map(allAssets.map(a => [a.no_asset, a.status]))
+        // ✅ FIX: Ambil SEMUA field dari existing assets, bukan cuma no_asset & status
+        const allAssets = await asset.findAll()
+        const existingAssetMap = new Map(allAssets.map(a => [a.no_asset, a]))
 
         // ambil data dari assettemp
         const assetTempData = await assettemp.findAll({ attributes: ['no_asset'] })
@@ -897,7 +899,7 @@ module.exports = {
         const apiAssets = new Set(data.map(item => (item.anln1 + '0').slice(2, -1)))
 
         // ✅ HELPER FUNCTION: biar gak nulis panjang-panjang
-        const mapApiDataToAsset = (apiItem, depoData, existingStatus = null) => {
+        const mapApiDataToAsset = (apiItem, depoData, existingAsset = null) => {
           const send = {
             no_asset: (apiItem.anln1 + '0').slice(2, -1),
             no_doc: 0,
@@ -916,10 +918,10 @@ module.exports = {
           // handle status
           if (apiItem.deakt !== undefined && apiItem.deakt !== null) {
             send.status = '0'
-          } else if (existingStatus === '100') {
+          } else if (existingAsset && existingAsset.status === '100') {
             send.status = null
-          } else if (existingStatus !== undefined) {
-            send.status = existingStatus
+          } else if (existingAsset && existingAsset.status !== undefined) {
+            send.status = existingAsset.status
           }
 
           return send
@@ -930,29 +932,52 @@ module.exports = {
           const apiItem = data.find(item => (item.anln1 + '0').slice(2, -1) === no_asset)
           const depoData = apiItem ? findDepo.find(d => d.cost_center === apiItem.kostl) : null
 
-          // kalau asset ada di API, update dari data API
+          // ✅ kalau asset ada di API, update dari data API
           if (apiItem) {
-            return mapApiDataToAsset(apiItem, depoData, existingAssetMap.get(no_asset))
+            return mapApiDataToAsset(apiItem, depoData, existing)
           }
 
-          // kalau tidak ada di API
+          // ✅ FIX: kalau tidak ada di API
           // cek apakah ada di assettemp
           if (!tempAssets.has(no_asset)) {
-            // tidak ada di API dan tidak ada di assettemp → status '0'
+            // tidak ada di API dan tidak ada di assettemp → cuma update status jadi '0'
+            // TAPI TETEP PAKE DATA LAMA untuk field lainnya!
             return {
-              no_asset,
-              status: '0'
+              no_asset: existing.no_asset,
+              no_doc: existing.no_doc,
+              tanggal: existing.tanggal,
+              nama_asset: existing.nama_asset,
+              nilai_acquis: existing.nilai_acquis,
+              accum_dep: existing.accum_dep,
+              nilai_buku: existing.nilai_buku,
+              kode_plant: existing.kode_plant,
+              cost_center: existing.cost_center,
+              area: existing.area,
+              unit: existing.unit,
+              no_io: existing.no_io,
+              status: '0'  // ← cuma ini aja yang berubah
             }
           }
 
-          // kalau ada di assettemp tapi tidak di API → biarkan status lama
+          // ✅ kalau ada di assettemp tapi tidak di API → tetep pake data lama semua
           return {
-            no_asset,
-            status: existingAssetMap.get(no_asset)
+            no_asset: existing.no_asset,
+            no_doc: existing.no_doc,
+            tanggal: existing.tanggal,
+            nama_asset: existing.nama_asset,
+            nilai_acquis: existing.nilai_acquis,
+            accum_dep: existing.accum_dep,
+            nilai_buku: existing.nilai_buku,
+            kode_plant: existing.kode_plant,
+            cost_center: existing.cost_center,
+            area: existing.area,
+            unit: existing.unit,
+            no_io: existing.no_io,
+            status: existing.status
           }
         })
 
-        // ✅ FIX: untuk memastikan ada juga aset baru dari API yg belum ada di asset (insert baru)
+        // ✅ untuk memastikan ada juga aset baru dari API yg belum ada di asset (insert baru)
         const newApiAssets = data.filter(item => {
           const no_asset = (item.anln1 + '0').slice(2, -1)
           return !existingAssetMap.has(no_asset)
@@ -972,7 +997,7 @@ module.exports = {
           ]
         })
 
-        // ✅ FIX: cek GR logic - update semua data kalau API return data
+        // ✅ cek GR logic - SAMA KAYAK type === 'no': kalau gak dapat data, skip aja
         const findGr = await asset.findAll({ where: { status: '100' } })
         const cekGr = []
 
@@ -983,26 +1008,27 @@ module.exports = {
               { timeout: (1000 * 60 * 10) }
             )
             
-            // ✅ Kalau API return data, update semua field pakai helper function
+            // ✅ SAMA KAYAK type === 'no': kalau API return data, baru update
             if (findApi.status === 200 && findApi.data.length > 0) {
               const apiData = findApi.data[0]
               const depoData = findDepo.find(d => d.cost_center === apiData.kostl)
               
-              const updateData = mapApiDataToAsset(apiData, depoData, '100')
+              const updateData = mapApiDataToAsset(apiData, depoData, findGr[x])
               delete updateData.no_asset // gak usah update no_asset
               
               await asset.update(updateData, { where: { id: findGr[x].id } })
               cekGr.push({ id: findGr[x].id, no_asset: findGr[x].no_asset, updated: true })
             }
-            // ✅ Kalau gak dapat data, skip aja (gak update apa-apa, pakai data lama)
+            // ✅ Kalau gak dapat data (else) → SKIP, gak update apa-apa
           } catch (err) {
-            console.error(`Error updating GR asset ${findGr[x].no_asset}:`, err.message)
+            console.error(`Error checking GR asset ${findGr[x].no_asset}:`, err.message)
+            // ✅ Kalau error juga di-skip, gak update apa-apa
           }
         }
 
         return response(res, 'success sync asset', { 
           updatedGr: cekGr,
-          totalUpdated: finalBulk.length,
+          totalProcessed: finalBulk.length,
           totalGrChecked: findGr.length
         })
       }
