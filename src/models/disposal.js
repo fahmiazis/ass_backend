@@ -95,8 +95,8 @@ module.exports = (sequelize, DataTypes) => {
     gl_debit: DataTypes.STRING,
     gl_credit: DataTypes.STRING,
     message_sap: DataTypes.STRING,
-    nilai_acquis: DataTypes.STRING,
-    accum_dep: DataTypes.STRING,
+    nilai_acquis: DataTypes.TEXT,
+    accum_dep: DataTypes.TEXT,
     cap_date: DataTypes.DATE,
   }, {
     sequelize,

@@ -3,10 +3,10 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.addColumn('disposals', 'nilai_acquis', {
-      type: Sequelize.DataTypes.STRING
+      type: Sequelize.DataTypes.TEXT
     })
     await queryInterface.addColumn('disposals', 'accum_dep', {
-      type: Sequelize.DataTypes.STRING
+      type: Sequelize.DataTypes.TEXT
     })
     await queryInterface.addColumn('disposals', 'cap_date', {
       type: Sequelize.DataTypes.DATE
