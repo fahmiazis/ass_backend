@@ -218,8 +218,7 @@ module.exports = {
                         lokasi: result[i].lokasi,
                         grouping: result[i].grouping,
                         keterangan: result[i].keterangan,
-                        status_fisik: result[i].status_fisik,
-                        tanggalStock: moment().format('L')
+                        status_fisik: result[i].status_fisik
                       }
                       if (findStock && findStock.no_stock !== undefined && findStock.no_stock !== null) {
                         hasil.push('1')
@@ -404,11 +403,11 @@ module.exports = {
                 const data = {
                   status_form: 1,
                   history: `approved by ${role} (${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
-                  tglIo: moment(),
                   status_app: 1,
                   image: cekPict ? pict : cekImg ? img : null,
                   date_img: moment(),
-                  id_doc: validDoc[j].id
+                  id_doc: validDoc[j].id,
+                  tanggalStock: moment()
                 }
                 const findData = await stock.findByPk(findStock[i].id)
                 if (findData) {
@@ -421,10 +420,10 @@ module.exports = {
               const data = {
                 status_form: 1,
                 history: `approved by ${role} (${name}) at ${moment().format('DD/MM/YYYY h:mm a')}`,
-                tglIo: moment(),
                 status_app: 1,
                 image: cekPict ? pict : cekImg ? img : null,
-                date_img: moment()
+                date_img: moment(),
+                tanggalStock: moment()
               }
               const findData = await stock.findByPk(findStock[i].id)
               if (findData) {

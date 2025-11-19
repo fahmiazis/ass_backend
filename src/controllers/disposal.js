@@ -60,6 +60,9 @@ module.exports = {
               status_depo: findDepo[0].status_area,
               nilai_jual: 0,
               nilai_buku: result.nilai_buku,
+              nilai_acquis: result.nilai_acquis,
+              accum_dep: result.accum_dep,
+              cap_date: result.tanggal,
               status_form: 1,
               kategori: result.kategori,
               merk: result.merk
@@ -132,6 +135,9 @@ module.exports = {
               cost_center: findDepo[0].cost_center,
               status_depo: findDepo[0].status_area,
               nilai_buku: result.nilai_buku,
+              nilai_acquis: result.nilai_acquis,
+              accum_dep: result.accum_dep,
+              cap_date: result.tanggal,
               status_form: 1,
               kategori: result.kategori,
               merk: result.merk
