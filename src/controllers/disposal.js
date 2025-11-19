@@ -4479,6 +4479,7 @@ module.exports = {
                   status_form: 8,
                   pic_aset: fullname,
                   nilai_buku_eks: findApi.status === 200 ? (findApi.data[0].nafap === undefined ? findId.nilai_buku : findApi.data[0].nafap) : findId.nilai_buku,
+                  accum_dep: findApi.status === 200 ? (findApi.data[0].knafa === undefined ? findId.accum_dep : findApi.data[0].knafa) : findId.accum_dep,
                   tgl_eksekusi: moment(),
                   history: `${findId.history}, ${historyEks}`,
                   message_sap: parseInt(APP_CLIENT) === 110 ? '' : prosesSap.data.message
@@ -4527,7 +4528,8 @@ module.exports = {
               if (findApi.status === 200) {
                 data = {
                   status_form: 4,
-                  nilai_buku_eks: findApi.data[0].nafap === undefined ? findId.nilai_buku : findApi.data[0].nafap
+                  nilai_buku_eks: findApi.data[0].nafap === undefined ? findId.nilai_buku : findApi.data[0].nafap,
+                  accum_dep: findApi.data[0].knafa === undefined ? findId.accum_dep : findApi.data[0].knafa
                 }
               } else {
                 data = {
@@ -4602,6 +4604,7 @@ module.exports = {
                     status_form: 5,
                     pic_aset: fullname,
                     nilai_buku_eks: findApi.data[0].nafap === undefined ? findId.nilai_buku : findApi.data[0].nafap,
+                    accum_dep: findApi.data[0].knafa === undefined ? findId.accum_dep : findApi.data[0].knafa,
                     tgl_eksekusi: moment(),
                     history: `${findId.history}, ${historyEks}`
                   }
@@ -4698,6 +4701,7 @@ module.exports = {
                     status_form: 5,
                     pic_aset: fullname,
                     nilai_buku_eks: findApi.data[0].nafap === undefined ? findId.nilai_buku : findApi.data[0].nafap,
+                    accum_dep: findApi.data[0].knafa === undefined ? findId.accum_dep : findApi.data[0].knafa,
                     tgl_eksekusi: moment(),
                     history: `${findId.history}, ${historyEks}`
                   }
