@@ -428,7 +428,8 @@ module.exports = {
         kondisi: joi.string().allow(''),
         lokasi: joi.string().allow(''),
         grouping: joi.string().allow(''),
-        status_fisik: joi.string().allow('')
+        status_fisik: joi.string().allow(''),
+        kategori: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {

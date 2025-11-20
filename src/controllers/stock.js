@@ -87,6 +87,7 @@ module.exports = {
                   { [Op.not]: { grouping: null } },
                   { [Op.not]: { kondisi: null } },
                   { [Op.not]: { status_fisik: null } },
+                  { [Op.not]: { kategori: null } },
                   {
                     [Op.or]: [
                       { status: '1' },
@@ -325,10 +326,10 @@ module.exports = {
                   return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
                 }
               } else {
-                return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result, findaset: findAsset, partArea, detailUser }, 400, false)
+                return response(res, 'Pastikan lokasi, kategori, status fisik, kondisi, dan status asset telah terisi', { result: result, findaset: findAsset, partArea, detailUser }, 400, false)
               }
             } else {
-              return response(res, 'Pastikan lokasi, status fisik, kondisi, dan status asset telah terisi', { result: result.length, partArea, detailUser }, 400, false)
+              return response(res, 'Pastikan lokasi, kategori, status fisik, kondisi, dan status asset telah terisi', { result: result.length, partArea, detailUser }, 400, false)
             }
           }
         }
