@@ -1386,6 +1386,20 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  deleteAdditional: async (req, res) => {
+    try {
+      const id = req.params.id
+      const result = await stock.findByPk(id)
+      if (result) {
+        await result.destroy()
+        return response(res, 'success delete stock')
+      } else {
+        return response(res, 'failed delete stock', {}, 404, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   approveStock: async (req, res) => {
     try {
       const level = req.user.level

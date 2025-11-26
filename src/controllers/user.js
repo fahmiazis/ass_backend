@@ -17,96 +17,123 @@ const axios = require('axios')
 const EDOT_CONFIG = {
   baseUrl: 'https://staging.nabatisnack.co.id',
   username: 'pma',
-  password: 'C3X6pSRxk3YH732pB00rcQ76x',
+  password: 'king',
   appId: 'pma',
-  codeCipher: '647445' // Ganti jika ada code cipher khusus
+  codeCipher: "647445"
 }
+
+// Token static dari login manual via Postman
+const STATIC_TOKEN = "MCzqiWeyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9MJQq.TIVJOcjeyJkYXRhIjp7ImFjY2Vzc190b2tlbiI6IjhTRC1oMXQ3S2FrT0F0eVVvNmhUQ3pmRFRPejd2d0xMIiwiZ3JvdXAiOiIiLCJuYW1lIjoiIiwic2VjdGlvbiI6IiIsInVzZXJfaWQiOiJwbWEiLCJ1c2VybmFtZSI6InBtYSJ9LCJleHAiOjE3NjM3MDUwNDgsImlhdCI6MTc2MzYxODY0OCwiaXNzIjoicG1hIiwianRpIjoieXZZc2I4WWo5RTBtOXpBRjI4TzA3RjE4dmZrNlcyNTkybVFJNW41UnA3SEJRS2hNR3Ftc25MQUVYYUExc05CWURYUFg1LWpqUFh3a2I2QU0xT0F3VUEiLCJuYmYiOjE3NjM2MTg2NDh9oCiS.GeEzamZzZZnAsxr0f1l8_RFzvcqgv5Xl3WiMZhUw5PKiRLS1I3Hrm3-7VKIeTFGJjaxAB0Xs8J2mWueZXYFLYbiZI-XB8eDIhj7LlviBgAWwHqFSV3iWNj3gcO8aPGCnQfS4aaCzoxN6_UJH6H2R0Ha8h2t7ecC9JLb1Wad22NXi6z6QZFxeSxakR6lOkR0Zy4R7CH3T1mvZb6KZ6ME-_4vlLTe1h9akRtR5FdhnD93v5tBae0-EB1VthcuXyX8Ur_JMps3Wh_7tD7gD55coU0rJOBuhxXvBGTO2Psm45Ws-loe6YjcMUa9eWOfjfOLD7SBQTn4arQ9457NQgRcLGadUJQyxRTa.241"
 
 const decodeCustomToken = (token, codeCipher) => {
   try {
-    const parts = token.split('.')
-    if (parts.length !== 4) {
-      throw new Error('Invalid token format')
-    }
-
-    // Ambil jumlah salt dari code cipher
-    const saltCount = parseInt(codeCipher.substring(0, 2))
+    console.log('masuk decode')
+    console.log('Code cipher:', codeCipher)
     
-    // Remove salt dari setiap part
-    const removeSalt = (str, count) => {
-      return str.substring(count, str.length - count)
+    var parts = token.split('.')
+    if (parts.length !== 4) {
+      throw new Error('Invalid token format, expected 4 parts but got ' + parts.length)
     }
 
-    const header = removeSalt(parts[0], saltCount)
-    const payload = removeSalt(parts[1], saltCount)
-    const signature = removeSalt(parts[2], saltCount)
+    // Code cipher format (6 digit):
+    // Digit 1 = Header prefix
+    // Digit 2 = Header suffix
+    // Digit 3 = Payload prefix
+    // Digit 4 = Payload suffix
+    // Digit 5 = Signature prefix
+    // Digit 6 = Signature suffix
+    
+    var headerPrefix = parseInt(codeCipher.substring(0, 1))
+    var headerSuffix = parseInt(codeCipher.substring(1, 2))
+    var payloadPrefix = parseInt(codeCipher.substring(2, 3))
+    var payloadSuffix = parseInt(codeCipher.substring(3, 4))
+    var signaturePrefix = parseInt(codeCipher.substring(4, 5))
+    var signatureSuffix = parseInt(codeCipher.substring(5, 6))
+    
+    console.log('Header salt - prefix:', headerPrefix, 'suffix:', headerSuffix)
+    console.log('Payload salt - prefix:', payloadPrefix, 'suffix:', payloadSuffix)
+    console.log('Signature salt - prefix:', signaturePrefix, 'suffix:', signatureSuffix)
+
+    // Remove salt dari setiap part
+    var removeSalt = function(str, prefix, suffix) {
+      if (suffix === 0) {
+        return str.substring(prefix)
+      }
+      return str.substring(prefix, str.length - suffix)
+    }
+
+    var header = removeSalt(parts[0], headerPrefix, headerSuffix)
+    var payload = removeSalt(parts[1], payloadPrefix, payloadSuffix)
+    var signature = removeSalt(parts[2], signaturePrefix, signatureSuffix)
+    var id = parts[3]
+
+    console.log('Header (cleaned):', header)
+    console.log('Payload (cleaned):', payload.substring(0, 50) + '...')
 
     // Reconstruct JWT token
-    const reconstructedToken = `${header}.${payload}.${signature}`
+    var reconstructedToken = header + '.' + payload + '.' + signature
     
     // Decode JWT
-    const decoded = jwt.decode(reconstructedToken)
+    var decoded = jwt.decode(reconstructedToken)
+    console.log('Decoded token:', decoded)
     
-    return decoded
-  } catch (error) {
-    throw new Error(`Failed to decode token: ${error.message}`)
-  }
-}
-
-// Fungsi untuk logout
-const logoutEdot = async () => {
-  try {
-    await axios.post(
-      `${EDOT_CONFIG.baseUrl}/gateway/auth/logout`,
-      {
-        username: EDOT_CONFIG.username,
-        app_id: EDOT_CONFIG.appId
-      },
-      {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+    // Jika jwt.decode gagal, coba decode payload langsung
+    if (!decoded) {
+      console.log('jwt.decode failed, trying manual base64 decode...')
+      try {
+        var base64Payload = payload.replace(/-/g, '+').replace(/_/g, '/')
+        while (base64Payload.length % 4) {
+          base64Payload += '='
         }
+        var jsonPayload = Buffer.from(base64Payload, 'base64').toString('utf8')
+        console.log('Manual decoded payload:', jsonPayload)
+        decoded = JSON.parse(jsonPayload)
+      } catch (e) {
+        console.log('Manual decode also failed:', e.message)
       }
-    )
-    console.log('Logout success')
-  } catch (error) {
-    // Ignore logout error, lanjut login aja
-    console.log('Logout error (ignored):', error.message)
-  }
-}
-
-// Fungsi untuk login dan dapat token
-const getEdotToken = async () => {
-  try {
-    // Logout dulu untuk clear session sebelumnya
-    // await logoutEdot()
-    
-    const loginResponse = await axios.post(
-      `${EDOT_CONFIG.baseUrl}/gateway/auth/login`,
-      {
-        username: EDOT_CONFIG.username,
-        password: EDOT_CONFIG.password,
-        app_id: EDOT_CONFIG.appId
-      },
-      {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    
-    const loginData = loginResponse.data
-    console.log('Login success')
-    
-    // Decode token untuk extract access_token dan jti
-    const decoded = decodeCustomToken(loginData.token, EDOT_CONFIG.codeCipher)
+    }
     
     return {
-      access_token: decoded.data.access_token,
-      jti: decoded.jti,
-      exp: decoded.exp
+      decoded: decoded,
+      reconstructedToken: reconstructedToken,
+      id: id,
+      saltInfo: {
+        header: { prefix: headerPrefix, suffix: headerSuffix },
+        payload: { prefix: payloadPrefix, suffix: payloadSuffix },
+        signature: { prefix: signaturePrefix, suffix: signatureSuffix }
+      },
+      parts: {
+        original: {
+          header: parts[0],
+          payload: parts[1],
+          signature: parts[2]
+        },
+        cleaned: {
+          header: header,
+          payload: payload,
+          signature: signature
+        }
+      }
+    }
+  } catch (error) {
+    throw new Error('Failed to decode token: ' + error.message)
+  }
+}
+
+// Fungsi untuk login dan dapat token (pakai static token)
+const getEdotToken = async () => {
+  try {
+    console.log('masuk get edot token')
+    
+    // Decode token untuk extract access_token dan jti
+    const result = decodeCustomToken(STATIC_TOKEN, EDOT_CONFIG.codeCipher)
+    
+    return {
+      access_token: result.decoded.data.access_token,
+      jti: result.decoded.jti,
+      exp: result.decoded.exp,
+      decoded: result.decoded, // Return full decoded untuk debugging
+      reconstructedToken: result.reconstructedToken
     }
   } catch (error) {
     throw new Error(`Login failed: ${error.message}`)
@@ -128,12 +155,13 @@ const refreshEdotToken = async (jti) => {
     )
     
     const refreshData = refreshResponse.data
-    const decoded = decodeCustomToken(refreshData.token, EDOT_CONFIG.codeCipher)
+    const result = decodeCustomToken(refreshData.token, EDOT_CONFIG.codeCipher)
     
     return {
-      access_token: decoded.data.access_token,
-      jti: decoded.jti,
-      exp: decoded.exp
+      access_token: result.decoded.data.access_token,
+      jti: result.decoded.jti,
+      exp: result.decoded.exp,
+      decoded: result.decoded
     }
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -143,12 +171,11 @@ const refreshEdotToken = async (jti) => {
   }
 }
 
-// Fungsi helper untuk make API call dengan auto refresh & re-login
+// Fungsi helper untuk make API call dengan auto refresh
 const makeEdotRequest = async (endpoint, method = 'GET') => {
-  let tokenData = await getEdotToken() // Login pertama kali
+  let tokenData = await getEdotToken()
   
   try {
-    // Try request dengan token
     const apiResponse = await axios({
       method: method,
       url: `${EDOT_CONFIG.baseUrl}${endpoint}`,
@@ -158,7 +185,10 @@ const makeEdotRequest = async (endpoint, method = 'GET') => {
       }
     })
     
-    return apiResponse.data
+    return {
+      data: apiResponse.data,
+      tokenInfo: tokenData // Include token info untuk debugging
+    }
   } catch (error) {
     // Jika error 440 (token expired), coba refresh
     if (error.response && error.response.status === 440) {
@@ -166,15 +196,12 @@ const makeEdotRequest = async (endpoint, method = 'GET') => {
       
       const refreshedToken = await refreshEdotToken(tokenData.jti)
       
-      // Jika refresh gagal (return null), login ulang
       if (!refreshedToken) {
-        console.log('Refresh failed, re-login...')
-        tokenData = await getEdotToken()
-      } else {
-        tokenData = refreshedToken
+        throw new Error('Token expired and refresh failed. Please update STATIC_TOKEN with new token from Postman.')
       }
       
-      // Retry request dengan token baru
+      tokenData = refreshedToken
+      
       const retryResponse = await axios({
         method: method,
         url: `${EDOT_CONFIG.baseUrl}${endpoint}`,
@@ -184,7 +211,10 @@ const makeEdotRequest = async (endpoint, method = 'GET') => {
         }
       })
       
-      return retryResponse.data
+      return {
+        data: retryResponse.data,
+        tokenInfo: tokenData
+      }
     }
     
     throw error
@@ -1314,13 +1344,22 @@ module.exports = {
       const result = await makeEdotRequest('/gateway/miniapps/onboarding', 'GET')
       
       if (result) {
-        return response(res, 'Success get onboarding data', { result })
+        return response(res, 'Success get onboarding data', { 
+          result: result.data,
+          tokenInfo: {
+            access_token: result.tokenInfo.access_token,
+            jti: result.tokenInfo.jti,
+            exp: result.tokenInfo.exp,
+            decoded: result.tokenInfo.decoded
+          }
+        })
       } else {
         return response(res, 'Failed to get onboarding data', {}, 404, false)
       }
     } catch (error) {
       console.error('Onboarding Error:', error.message)
-      return response(res, error.message, {}, 500, false)
+      var errMsg = error.response && error.response.data ? error.response.data.message : error.message
+      return response(res, errMsg || error.message, {}, 500, false)
     }
   },
   getOffboarding: async (req, res) => {
@@ -1330,12 +1369,45 @@ module.exports = {
       const result = await makeEdotRequest('/gateway/miniapps/offboarding', 'GET')
       
       if (result) {
-        return response(res, 'Success get offboarding data', { result })
+        return response(res, 'Success get offboarding data', { 
+          result: result.data,
+          tokenInfo: {
+            access_token: result.tokenInfo.access_token,
+            jti: result.tokenInfo.jti,
+            exp: result.tokenInfo.exp,
+            decoded: result.tokenInfo.decoded
+          }
+        })
       } else {
         return response(res, 'Failed to get offboarding data', {}, 404, false)
       }
     } catch (error) {
       console.error('Offboarding Error:', error.message)
+      var errMsg = error.response && error.response.data ? error.response.data.message : error.message
+      return response(res, errMsg || error.message, {}, 500, false)
+    }
+  },
+  // Endpoint khusus untuk test decode token aja
+  testDecodeToken: async (req, res) => {
+    try {
+      console.log('Testing token decode...')
+      
+      const result = decodeCustomToken(STATIC_TOKEN, EDOT_CONFIG.codeCipher)
+      
+      return response(res, 'Token decoded successfully', {
+        decoded: result.decoded,
+        reconstructedToken: result.reconstructedToken,
+        id: result.id,
+        parts: result.parts,
+        extracted: {
+          access_token: result.decoded && result.decoded.data ? result.decoded.data.access_token : null,
+          jti: result.decoded ? result.decoded.jti : null,
+          exp: result.decoded ? result.decoded.exp : null,
+          exp_readable: result.decoded && result.decoded.exp ? new Date(result.decoded.exp * 1000).toISOString() : null
+        }
+      })
+    } catch (error) {
+      console.error('Decode Error:', error.message)
       return response(res, error.message, {}, 500, false)
     }
   }

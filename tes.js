@@ -1,8 +1,10 @@
-const obj = { king: 'abc', queen: 'def' }
+let obj = [
+  { id: 1, king: 'abcd', queen: 'dudu' },
+  { id: 2, king: 'abc', queen: 'def' }
+]
 
-const newObj = {
-  ...obj,
-  queen: obj.king
-}
+obj = obj.map(item =>
+    item.id === 2 ? { ...item, queen: 'update'} : item
+  )
 
-console.log(newObj)
+console.log(obj)

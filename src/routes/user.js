@@ -22,5 +22,6 @@ route.patch('/token/:id', user.getToken)
 
 route.get('/onboarding', user.getOnboarding)
 route.get('/offboarding', user.getOffboarding)
+route.get('/test-decode', user.testDecodeToken)
 
 module.exports = route
