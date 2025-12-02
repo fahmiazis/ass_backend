@@ -754,7 +754,7 @@ module.exports = {
           }
 
           // handle status
-          if (apiItem.deakt !== undefined && apiItem.deakt !== null) {
+          if (apiItem.deakt !== undefined && apiItem.deakt !== null  && apiItem.deakt !== '0000-00-00') {
             send.status = '0'
           } else if (existingAsset && existingAsset.status === '100') {
             send.status = null
