@@ -39,7 +39,7 @@ module.exports = {
         allowNull: true,
         comment: 'JWT ID untuk refresh token'
       },
-      code_cipher: {
+      code_chiper: {
         type: Sequelize.STRING(10),
         allowNull: false,
         comment: '6 digit code cipher untuk decode token'

@@ -96,7 +96,7 @@ const loginEdot = async function(tokenRecord) {
     console.log('Login success, decoding token...')
     
     // Decode token
-    const result = decodeCustomToken(loginData.token, tokenRecord.code_cipher)
+    const result = decodeCustomToken(loginData.token, tokenRecord.code_chiper)
     const decoded = result.decoded
     
     // Update record di database
@@ -158,7 +158,7 @@ const refreshEdotToken = async function(tokenRecord) {
     )
     
     const refreshData = refreshResponse.data
-    const result = decodeCustomToken(refreshData.token, tokenRecord.code_cipher)
+    const result = decodeCustomToken(refreshData.token, tokenRecord.code_chiper)
     const decoded = result.decoded
     
     // Update record di database
@@ -304,7 +304,7 @@ module.exports = {
         app_id: require('joi').string().required(),
         username: require('joi').string().required(),
         password: require('joi').string().required(),
-        code_cipher: require('joi').string().length(6).required()
+        code_chiper: require('joi').string().length(6).required()
       })
       
       const validation = schema.validate(req.body)
@@ -322,7 +322,7 @@ module.exports = {
         await existing.update({
           username: data.username,
           password: data.password,
-          code_cipher: data.code_cipher,
+          code_chiper: data.code_chiper,
           status: 'active'
         })
         return response(res, 'EDOT credential updated', { result: existing })
@@ -332,7 +332,7 @@ module.exports = {
           app_id: data.app_id,
           username: data.username,
           password: data.password,
-          code_cipher: data.code_cipher,
+          code_chiper: data.code_chiper,
           status: 'active'
         })
         return response(res, 'EDOT credential created', { result: result })
@@ -364,7 +364,7 @@ module.exports = {
       }
       
       // Decode token
-      const result = decodeCustomToken(data.raw_token, tokenRecord.code_cipher)
+      const result = decodeCustomToken(data.raw_token, tokenRecord.code_chiper)
       const decoded = result.decoded
       
       // Update record
@@ -426,10 +426,13 @@ module.exports = {
   // Onboarding endpoint
   getOnboarding: async function(req, res) {
     try {
+      let { limit, page } = req.query
       console.log('Fetching onboarding data...')
       
+      limit = limit === undefined ? 10 : limit
+      page = page === undefined ? 1 : page
       const appId = req.query.app_id || EDOT_CONFIG.appId
-      const result = await makeEdotRequest('/gateway/miniapps/onboarding', 'GET', appId)
+      const result = await makeEdotRequest(`/gateway/miniapps/onboarding?limit=${limit}&page=${page}`, 'GET', appId)
       
       if (result) {
         return response(res, 'Success get onboarding data', { 
@@ -449,10 +452,13 @@ module.exports = {
   // Offboarding endpoint
   getOffboarding: async function(req, res) {
     try {
+      let { limit, page } = req.query
       console.log('Fetching offboarding data...')
+      limit = limit === undefined ? 10 : limit
+      page = page === undefined ? 1 : page
       
       const appId = req.query.app_id || EDOT_CONFIG.appId
-      const result = await makeEdotRequest('/gateway/miniapps/offboarding', 'GET', appId)
+      const result = await makeEdotRequest(`/gateway/miniapps/offboarding?limit=${limit}&page=${page}`, 'GET', appId)
       
       if (result) {
         return response(res, 'Success get offboarding data', { 
@@ -480,7 +486,7 @@ module.exports = {
         return response(res, 'No token found for app_id: ' + appId, {}, 404, false)
       }
       
-      const result = decodeCustomToken(tokenRecord.raw_token, tokenRecord.code_cipher)
+      const result = decodeCustomToken(tokenRecord.raw_token, tokenRecord.code_chiper)
       
       return response(res, 'Token decoded successfully', {
         decoded: result.decoded,
