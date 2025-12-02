@@ -37,6 +37,7 @@ const reportRoute = require('./routes/report')
 const menuRoute = require('./routes/menu')
 const dashboardRoute = require('./routes/dashboard')
 const apkRoute = require('./routes/apk')
+const edotRoute = require('./routes/edot')
 
 const authMiddleware = require('./middlewares/auth')
 
@@ -68,6 +69,7 @@ app.use('/report', authMiddleware, reportRoute)
 app.use('/menu', authMiddleware, menuRoute)
 app.use('/dashboard', authMiddleware, dashboardRoute)
 app.use('/apk', authMiddleware, apkRoute)
+app.use('/edot', authMiddleware, edotRoute)
 
 app.get('*', (req, res) => {
   response(res, 'Error route not found', {}, 404, false)

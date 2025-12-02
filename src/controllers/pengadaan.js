@@ -4242,7 +4242,7 @@ module.exports = {
             profit_ctr: findDepo.profit_center,
             invest_ord: findData[i].no_io
           }
-          const getSap = await axios({
+          const sendSap = await axios({
             method: 'get',
             url: `${APP_SAP}/sap/bc/zws_fi/zcl_ws_fi/?sap-client=${APP_CLIENT}&q=assetcreate`,
             headers: {
@@ -4252,8 +4252,8 @@ module.exports = {
             data: body,
             timeout: 1000 * 60 * 5
           })
-          if (getSap && getSap.data.details !== undefined) {
-            const cekNumb = getSap.data.details
+          if (sendSap && sendSap.data.details !== undefined) {
+            const cekNumb = sendSap.data.details
             if (cekNumb[0].message_v1 !== undefined) {
               const findItem = await assettemp.findByPk(findData[i].id)
               const dataUpdate = {
@@ -4261,7 +4261,7 @@ module.exports = {
               }
               await findItem.update(dataUpdate)
             }
-            cek.push(getSap.data.details)
+            cek.push(sendSap.data.details)
           }
         }
         if (cek.length > 0) {
