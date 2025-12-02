@@ -667,7 +667,7 @@ module.exports = {
           const findAset = await asset.findOne({ where: { no_asset: noAset } })
 
           const send = {
-            no_asset: (data.anln1 + '0').slice(2, -1),
+            no_asset: data.anln1,
             no_doc: 0,
             tanggal: data.aktiv || '',
             nama_asset: data.txt50 || '',
@@ -679,7 +679,7 @@ module.exports = {
             area: findDepo ? depoData.place_asset : '',
             unit: 1,
             no_io: data.eaufn,
-            status: (data.deakt !== undefined && data.deakt !== null)
+            status: (data.deakt !== undefined && data.deakt !== null && data.deakt !== '0000-00-00')
               ? '0'
               : (findAset && findAset.status === '100')
                   ? null
@@ -703,7 +703,7 @@ module.exports = {
         //   { timeout: (1000 * 60 * 10) })
         const findApi = await axios({
           method: 'get',
-          url: `${APP_SAP}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=asset`,
+          url: `${SAP_PROD_URL}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=asset`,
           headers: {
             'Content-Type': 'application/json',
             'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
@@ -734,12 +734,12 @@ module.exports = {
         const tempAssets = new Set(assetTempData.map(i => i.no_asset))
 
         // simpan semua asset dari API ke Set juga
-        const apiAssets = new Set(data.map(item => (item.anln1 + '0').slice(2, -1)))
+        const apiAssets = new Set(data.map(item => item.anln1))
 
         // HELPER FUNCTION: biar gak nulis panjang-panjang
         const mapApiDataToAsset = (apiItem, depoData, existingAsset = null) => {
           const send = {
-            no_asset: (apiItem.anln1 + '0').slice(2, -1),
+            no_asset: apiItem.anln1,
             no_doc: 0,
             tanggal: apiItem.aktiv || '',
             nama_asset: apiItem.txt50 || '',
@@ -766,7 +766,7 @@ module.exports = {
 
         const bulkData = allAssets.map(existing => {
           const no_asset = existing.no_asset
-          const apiItem = data.find(item => (item.anln1 + '0').slice(2, -1) === no_asset)
+          const apiItem = data.find(item => item.anln1 === no_asset)
           const depoData = apiItem ? findDepo.find(d => d.cost_center === apiItem.kostl) : null
 
           // kalau asset ada di API, update dari data API
@@ -816,7 +816,7 @@ module.exports = {
 
         // untuk memastikan ada juga aset baru dari API yg belum ada di asset (insert baru)
         const newApiAssets = data.filter(item => {
-          const no_asset = (item.anln1 + '0').slice(2, -1)
+          const no_asset = item.anln1
           return !existingAssetMap.has(no_asset)
         }).map(item => {
           const depoData = findDepo.find(d => d.cost_center === item.kostl)
