@@ -703,10 +703,10 @@ module.exports = {
         //   { timeout: (1000 * 60 * 10) })
         const findApi = await axios({
           method: 'get',
-          url: `${SAP_PROD_URL}/sap/bc/zapclaim?sap-client=${APP_CLIENT}&q=asset`,
+          url: `${SAP_PROD_URL}/sap/bc/zapclaim?sap-client=${SAP_PROD_CLIENT}&q=asset`,
           headers: {
             'Content-Type': 'application/json',
-            'Cookie': `sap-usercontext=sap-client=${APP_CLIENT}` // eslint-disable-line
+            'Cookie': `sap-usercontext=sap-client=${SAP_PROD_CLIENT}` // eslint-disable-line
           },
           data: body,
           timeout: 1000 * 60 * 5
