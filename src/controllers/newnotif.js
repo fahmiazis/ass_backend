@@ -1,4 +1,4 @@
-const { newnotif, pengadaan, disposal, stock, role, mutasi } = require('../models')
+const { newnotif, pengadaan, disposal, stock, role, mutasi, user } = require('../models')
 const { Op } = require('sequelize')
 const response = require('../helpers/response')
 const moment = require('moment')
@@ -15,12 +15,19 @@ module.exports = {
         }
       })
       if (findRole) {
-        const transaksi = tipe === 'pengadaan' ? pengadaan : tipe === 'disposal' || tipe === 'persetujuan' ? disposal : tipe === 'mutasi' ? mutasi : stock
+        const transaksi = tipe === 'pengadaan'
+          ? pengadaan : tipe === 'disposal' || tipe === 'persetujuan' // eslint-disable-line
+            ? disposal : tipe === 'mutasi'                            // eslint-disable-line
+              ? mutasi : tipe === 'user'                              // eslint-disable-line
+                ? user : stock                                        // eslint-disable-line
+
         const noTrans = tipe === 'pengadaan'
-        ? { no_pengadaan: no } : tipe === 'disposal'   // eslint-disable-line
-            ? { no_disposal: no } : tipe === 'persetujuan'   // eslint-disable-line
+        ? { no_pengadaan: no } : tipe === 'disposal'        // eslint-disable-line
+            ? { no_disposal: no } : tipe === 'persetujuan'  // eslint-disable-line
               ? { no_persetujuan: no } : tipe === 'mutasi'  // eslint-disable-line
-                ? { no_mutasi: no } : { no_stock: no }  // eslint-disable-line
+                ? { no_mutasi: no } : tipe === 'user'       // eslint-disable-line
+                  ? { mpn_number: no } : { no_stock: no }   // eslint-disable-line
+
         const findData = await transaksi.findAll({
           where: {
             [Op.and]: [
@@ -86,7 +93,7 @@ module.exports = {
             } else {
               const data = {
                 user: nameTo,
-                kode_plant: findData[0].kode_plant,
+                kode_plant: tipe === 'user' ? no : findData[0].kode_plant,
                 transaksi: tipe,
                 proses: menu,
                 no_transaksi: no,
@@ -147,27 +154,27 @@ module.exports = {
           [Op.and]: [
             level === 5 || level === '5'
               ? {
-                  [Op.and]: [
-                    {
-                      [Op.or]: [
-                        { user: { [Op.like]: `%${name}%` } },
-                        { user: { [Op.like]: `%${fullname}%` } }
-                      ]
-                    },
-                    {
-                      [Op.or]: [
-                        { kode_plant: { [Op.like]: `%${kode}%` } },
-                        { proses: { [Op.like]: '%mutasi asset%' } }
-                      ]
-                    }
-                  ]
-                }
+                [Op.and]: [
+                  {
+                    [Op.or]: [
+                      { user: { [Op.like]: `%${name}%` } },
+                      { user: { [Op.like]: `%${fullname}%` } }
+                    ]
+                  },
+                  {
+                    [Op.or]: [
+                      { kode_plant: { [Op.like]: `%${kode}%` } },
+                      { proses: { [Op.like]: '%mutasi asset%' } }
+                    ]
+                  }
+                ]
+              }
               : {
-                  [Op.or]: [
-                    { user: { [Op.like]: `%${name}%` } },
-                    { user: { [Op.like]: `%${fullname}%` } }
-                  ]
-                },
+                [Op.or]: [
+                  { user: { [Op.like]: `%${name}%` } },
+                  { user: { [Op.like]: `%${fullname}%` } }
+                ]
+              },
             {
               createdAt: {
                 [Op.gte]: timeV1,

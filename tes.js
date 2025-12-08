@@ -4,7 +4,7 @@ let obj = [
 ]
 
 obj = obj.map(item =>
-    item.id === 2 ? { ...item, queen: 'update'} : item
-  )
+  item.id === 2 ? { ...item, queen: 'update' } : item
+)
 
 console.log(obj)

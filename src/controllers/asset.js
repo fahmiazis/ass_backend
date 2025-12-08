@@ -429,7 +429,8 @@ module.exports = {
         lokasi: joi.string().allow(''),
         grouping: joi.string().allow(''),
         status_fisik: joi.string().allow(''),
-        kategori: joi.string().allow('')
+        kategori: joi.string().allow(''),
+        record_type: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -438,10 +439,10 @@ module.exports = {
         if (results.no_asset) {
           const result = await asset.findAll({
             where:
-                {
-                  no_asset: results.no_asset,
-                  [Op.not]: { id: id }
-                }
+            {
+              no_asset: results.no_asset,
+              [Op.not]: { id: id }
+            }
           })
           if (result.length > 0) {
             return response(res, 'no asset already use', {}, 400, false)
@@ -653,16 +654,33 @@ module.exports = {
       const body = {
         asset: [],
         asset_class: [],
-        company: "PP01",
+        company: 'PP01',
         year: `${time[2]}`,
         period: `${time[0]}`
       }
+      const listAsset = await asset.findAll({
+        where: {
+          record_type: 'WEB'
+        }
+      })
+      // const listAsset = ['004200000200']
       if (type === 'no') {
-        const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${noAset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
-          { timeout: (1000 * 60 * 10) }).then(response => response).catch(err => err.isAxiosError)
+        // const findApi = await axios.get(`${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${noAset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
+        //   { timeout: (1000 * 60 * 10) }).then(response => response).catch(err => err.isAxiosError)
+
+        const findApi = await axios({
+          method: 'get',
+          url: `${SAP_PROD_URL}/sap/bc/zapclaim?sap-client=${SAP_PROD_CLIENT}&q=asset`,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': `sap-usercontext=sap-client=${SAP_PROD_CLIENT}` // eslint-disable-line
+          },
+          data: body,
+          timeout: 1000 * 60 * 5
+        })
 
         if (findApi.status === 200 && findApi.data.length > 0) {
-          const data = findApi.data[0]
+          const data = findApi.data.find(item => item.anln1 === noAset)
           const findDepo = await depo.findOne({ where: { cost_center: data.kostl } })
           const findAset = await asset.findOne({ where: { no_asset: noAset } })
 
@@ -676,16 +694,19 @@ module.exports = {
             nilai_buku: data.nafap ? data.nafap.toString().split('.')[0] : 0,
             kode_plant: findDepo ? findDepo.kode_plant : '',
             cost_center: data.kostl,
-            area: findDepo ? depoData.place_asset : '',
+            area: findDepo ? findDepo.place_asset : '',
             unit: 1,
             no_io: data.eaufn,
-            status: (data.deakt !== undefined && data.deakt !== null && data.deakt !== '0000-00-00')
+            status: ((data.deakt !== undefined && data.deakt !== null && data.deakt !== '0000-00-00') || listAsset.find(item => item.no_asset === data.anln1))
               ? '0'
               : (findAset && findAset.status === '100')
-                  ? null
-                  : findAset
-                    ? findAset.status
-                    : null
+                ? null
+                : findAset
+                  ? findAset.status
+                  : null,
+            record_type: (listAsset.find(item => item.no_asset === data.anln1))
+              ? 'WEB'
+              : 'SAP'
           }
 
           if (findAset) {
@@ -734,7 +755,7 @@ module.exports = {
         const tempAssets = new Set(assetTempData.map(i => i.no_asset))
 
         // simpan semua asset dari API ke Set juga
-        const apiAssets = new Set(data.map(item => item.anln1))
+        // const apiAssets = new Set(data.map(item => item.anln1))
 
         // HELPER FUNCTION: biar gak nulis panjang-panjang
         const mapApiDataToAsset = (apiItem, depoData, existingAsset = null) => {
@@ -754,8 +775,12 @@ module.exports = {
           }
 
           // handle status
-          if (apiItem.deakt !== undefined && apiItem.deakt !== null  && apiItem.deakt !== '0000-00-00') {
+          if ((apiItem.deakt !== undefined && apiItem.deakt !== null && apiItem.deakt !== '0000-00-00') || listAsset.find(item => item.no_asset === apiItem.anln1)) {
             send.status = '0'
+          } else if (listAsset.find(item => item.no_asset === apiItem.anln1)) {
+            send.record_type = 'WEB'
+          } else if (listAsset.find(item => item.no_asset !== apiItem.anln1)) {
+            send.record_type = 'SAP'
           } else if (existingAsset && existingAsset.status === '100') {
             send.status = null
           } else if (existingAsset && existingAsset.status !== undefined) {
@@ -792,7 +817,7 @@ module.exports = {
               area: existing.area,
               unit: existing.unit,
               no_io: existing.no_io,
-              status: '0'  // ← cuma ini aja yang berubah
+              status: '0' // ← cuma ini aja yang berubah
             }
           }
 
@@ -844,21 +869,21 @@ module.exports = {
             //   `${SAP_PROD_URL}/sap/bc/zast/?sap-client=${SAP_PROD_CLIENT}&pgmna=zfir0090&p_anln1=${findGr[x].no_asset}&p_bukrs=pp01&p_gjahr=${time[2]}&p_monat=${time[0]}`,
             //   { timeout: (1000 * 60 * 10) }
             // )
-            const cekApi = data.find(item => item.no_asset === findGr[x].no_asset)
+            const cekApi = data.find(item => item.anln1 === findGr[x].no_asset)
 
             const findApi = {
               data: cekApi !== undefined ? [cekApi] : []
-            } 
-            
+            }
+
             // SAMA KAYAK type === 'no': kalau API return data, baru update
             // if (findApi.status === 200 && findApi.data.length > 0) {
             if (findApi.data.length > 0) {
               const apiData = findApi.data[0]
               const depoData = findDepo.find(d => d.cost_center === apiData.kostl)
-              
+
               const updateData = mapApiDataToAsset(apiData, depoData, findGr[x])
               delete updateData.no_asset // gak usah update no_asset
-              
+
               await asset.update(updateData, { where: { id: findGr[x].id } })
               cekGr.push({ id: findGr[x].id, no_asset: findGr[x].no_asset, updated: true })
             }
@@ -869,7 +894,7 @@ module.exports = {
           }
         }
 
-        return response(res, 'success sync asset', { 
+        return response(res, 'success sync asset', {
           updatedGr: cekGr,
           totalProcessed: finalBulk.length,
           totalGrChecked: findGr.length

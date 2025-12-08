@@ -12,7 +12,8 @@ const fs = require('fs')
 const excel = require('exceljs')
 const vs = require('fs-extra')
 const { APP_BE, APP_KEY } = process.env
-const axios = require('axios')
+const moment = require('moment')
+const axios = require('axios') // eslint-disable-line
 
 module.exports = {
   addUser: async (req, res) => {
@@ -158,6 +159,7 @@ module.exports = {
     try {
       const level = req.user.level
       const id = req.params.id
+      const fullname = req.user.fullname
       const schema = joi.object({
         username: joi.string().required(),
         fullname: joi.string().required(),
@@ -166,7 +168,11 @@ module.exports = {
         email: joi.string().email().required(),
         status: joi.string().required(),
         status_it: joi.string().allow(''),
-        multi_role: joi.string().allow('')
+        multi_role: joi.string().allow(''),
+        nik: joi.string().allow(''),
+        status_request: joi.string().allow(''),
+        request_level: joi.string().allow(''),
+        request_kode: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
       if (error) {
@@ -218,7 +224,19 @@ module.exports = {
               const findName = await user.findByPk(id)
               const result = await user.findByPk(id)
               if (result && findName) {
-                const updateUser = await result.update(results)
+                const historySubmit = `submit by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                const historyVerif = `verifikasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                const historyReject = `reject by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                const historyDef = `update by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
+                const cekHistory = parseInt(result.user_level) === 50 && parseInt(results.status_request) === 1 ? historySubmit // eslint-disable-line
+                  : parseInt(result.user_level) === 50 && parseInt(results.status_request) === 2 ? historyVerif // eslint-disable-line
+                    : parseInt(result.user_level) === 50 && parseInt(results.status_request) === 0 ? historyReject // eslint-disable-line
+                      : historyDef // eslint-disable-line
+                const dataUpdate = {
+                  ...results,
+                  history: `${result.history}, ${cekHistory}`
+                }
+                const updateUser = await result.update(dataUpdate)
                 if (updateUser) {
                   if (listRole.length > 0) {
                     const findRole = await role_user.findAll({
@@ -318,7 +336,7 @@ module.exports = {
   },
   getUser: async (req, res) => {
     try {
-      let { limit, page, search, sortName, filter, sortType } = req.query
+      let { limit, page, search, sortName, filter, sortType, typeData } = req.query
       let searchValue = ''
       const sortNameVal = sortName === undefined || sortName === 'undefined' || sortName === '' || sortName === null ? 'id' : sortName
       const sortTypeVal = sortType === undefined || sortType === 'undefined' || sortType === '' || sortType === null ? 'ASC' : sortType
@@ -341,14 +359,17 @@ module.exports = {
         page = parseInt(page)
       }
       console.log(filter)
+      const searchType = typeData === 'verif' ? { status_request: 1 } : { [Op.not]: { id: null } }
       if (filter === 'null' || filter === undefined || filter === 'All' || filter === 'all') {
         const result = await user.findAndCountAll({
           where: {
+            ...searchType,
             [Op.or]: [
               { username: { [Op.like]: `%${searchValue}%` } },
               { fullname: { [Op.like]: `%${searchValue}%` } },
               { email: { [Op.like]: `%${searchValue}%` } },
-              { kode_plant: { [Op.like]: `%${searchValue}%` } }
+              { kode_plant: { [Op.like]: `%${searchValue}%` } },
+              { mpn_number: { [Op.like]: `%${searchValue}%` } }
             ],
             [Op.not]: { user_level: 1 }
           },
@@ -364,7 +385,7 @@ module.exports = {
         })
         const pageInfo = pagination('/user/get', req.query, page, limit, result.count)
         if (result) {
-          return response(res, 'list user', { result, pageInfo })
+          return response(res, 'list user', { result, pageInfo, ...searchType })
         } else {
           return response(res, 'failed to get user', {}, 404, false)
         }
@@ -378,12 +399,14 @@ module.exports = {
         if (findRole) {
           const result = await user.findAndCountAll({
             where: {
+              ...searchType,
               user_level: findRole.nomor,
               [Op.or]: [
                 { username: { [Op.like]: `%${searchValue}%` } },
                 { fullname: { [Op.like]: `%${searchValue}%` } },
                 { email: { [Op.like]: `%${searchValue}%` } },
-                { kode_plant: { [Op.like]: `%${searchValue}%` } }
+                { kode_plant: { [Op.like]: `%${searchValue}%` } },
+                { mpn_number: { [Op.like]: `%${searchValue}%` } }
               ],
               [Op.not]: { user_level: 1 }
             },
@@ -393,7 +416,7 @@ module.exports = {
           })
           const pageInfo = pagination('/user/get', req.query, page, limit, result.count)
           if (result) {
-            return response(res, 'list user', { result, pageInfo })
+            return response(res, 'list user', { result, pageInfo, ...searchType })
           } else {
             return response(res, 'failed to get user', {}, 404, false)
           }
@@ -523,7 +546,8 @@ module.exports = {
                     kode_plant: dataUser[2],
                     email: dataUser[3],
                     user_level: dataUser[4].split('-')[0],
-                    password: dataUser[5]
+                    password: dataUser[5],
+                    status: 'active'
                   }
                   const dataUpdate = {
                     username: dataUser[0],
@@ -531,7 +555,8 @@ module.exports = {
                     kode_plant: dataUser[2],
                     email: dataUser[3],
                     user_level: dataUser[4].split('-')[0],
-                    password: dataUser[5]
+                    password: dataUser[5],
+                    status: 'active'
                   }
                   if (parseInt(dataUpdate.user_level) === 5 || parseInt(dataUpdate.user_level) === 9) {
                     const findUser = await user.findOne({

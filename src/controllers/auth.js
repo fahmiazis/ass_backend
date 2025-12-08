@@ -16,6 +16,7 @@ module.exports = {
         cost_center: joi.string().allow('')
       })
       const { value: results, error } = schema.validate(req.body)
+      console.log(results.username)
       if (error) {
         return response(res, 'Error', { error: error.message }, 401, false)
       } else {
@@ -76,10 +77,22 @@ module.exports = {
         } else {
           const result = await user.findOne({
             where: {
-              [Op.or]: [
-                { username: results.username },
-                { email: results.username },
-                { kode_plant: results.username }
+              [Op.and]: [
+                {
+                  [Op.or]: [
+                    { username: results.username },
+                    { email: results.username },
+                    { kode_plant: results.username },
+                    { nik: results.username },
+                    { mpn_number: results.username }
+                  ]
+                },
+                {
+                  [Op.or]: [
+                    { status: { [Op.ne]: 'inactive' } },
+                    { status: { [Op.is]: null } }
+                  ]
+                }
               ]
             },
             include: [
@@ -91,7 +104,9 @@ module.exports = {
               [Op.or]: [
                 { username: results.username },
                 { email: results.username },
-                { kode_plant: results.username }
+                { kode_plant: results.username },
+                { nik: results.username },
+                { mpn_number: results.username }
               ]
             },
             include: [

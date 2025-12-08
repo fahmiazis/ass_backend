@@ -158,12 +158,19 @@ module.exports = {
       const name = req.user.name
       const level = req.user.level
       const { no, kode, tipe, menu, jenis, typeReject, indexApp, listData } = req.body
-      const transaksi = jenis === 'pengadaan' ? pengadaan : (jenis === 'disposal' || jenis === 'persetujuan') ? disposal : jenis === 'mutasi' ? mutasi : stock
+      const transaksi = jenis === 'pengadaan'
+        ? pengadaan : (jenis === 'disposal' || jenis === 'persetujuan') // eslint-disable-line
+          ? disposal : jenis === 'mutasi'                               // eslint-disable-line
+            ? mutasi : jenis === 'user'                                 // eslint-disable-line
+              ? user : stock                                            // eslint-disable-line
+
       const noTrans = jenis === 'pengadaan'
-        ? { no_pengadaan: no } : jenis === 'disposal'         // eslint-disable-line
-            ? { no_disposal: no } : jenis === 'persetujuan'   // eslint-disable-line
-              ? { no_persetujuan: no } : jenis === 'mutasi'  // eslint-disable-line
-                ? { no_mutasi: no } : { no_stock: no }       // eslint-disable-line
+        ? { no_pengadaan: no } : jenis === 'disposal'     // eslint-disable-line
+          ? { no_disposal: no } : jenis === 'persetujuan' // eslint-disable-line
+            ? { no_persetujuan: no } : jenis === 'mutasi' // eslint-disable-line
+              ? { no_mutasi: no } : jenis === 'user'      // eslint-disable-line
+                ? { mpn_number: no } : { no_stock: no }   // eslint-disable-line
+
       const findDepo = await depo.findOne({
         where: {
           kode_plant: kode
@@ -194,6 +201,7 @@ module.exports = {
           nomor: jenis === 'disposal' && findTrans.status_form === 26 ? cekLevel : level
         }
       })
+
       if (findRole && findDepo && findTrans && findAllTrans.length > 0) {
         const listName = Object.values(findDepo.dataValues)
         if (tipe === 'submit') {
@@ -211,6 +219,7 @@ module.exports = {
           })
           if (findDraft) {
             const temp = []
+            const arrLevel = []
             const arrCc = findDraft.cc.split(',')
             for (let i = 0; i < arrCc.length; i++) {
               const findLevel = await role.findOne({
@@ -259,7 +268,13 @@ module.exports = {
                   for (let i = 0; i < findDraftUser.length; i++) {
                     const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                     const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                    if (cekLevel === 9) {
+                    if (jenis === 'user') {
+                      const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                      if (cekTemp === undefined) {
+                        temp.push(findDraftUser[i])
+                      }
+                    } else if (cekLevel === 9) {
+                      arrLevel.push({ type: 'cekLevel 9', user: 'area' })
                       const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
                       const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
                       const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
@@ -270,6 +285,7 @@ module.exports = {
                         }
                       }
                     } else {
+                      arrLevel.push({ type: 'cekLevel not 9', user: 'area' })
                       if (listName.find(e => e !== null && (e.toString().toLowerCase() === findName.toLowerCase() || e.toString().toLowerCase() === findEmail.toLowerCase())) !== undefined) {
                         const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
                         if (cekTemp === undefined) {
@@ -291,6 +307,7 @@ module.exports = {
                     }
                   ]
                 })
+                arrLevel.push({ type: 'cekLevel not 9', user: 'nasional' })
                 if (findDraftUser) {
                   temp.push(findDraftUser)
                 }
@@ -304,7 +321,9 @@ module.exports = {
               const cekEks = (parseInt(findTrans.status_form) === 4 && jenis === 'disposal')
               const cekTax = (parseInt(findTrans.status_form) === 5 && jenis === 'disposal')
               const cekFinal = (parseInt(findTrans.status_form) === 7 && jenis === 'disposal')
-              const tipeStat = cek1 ? 6 : cekEks ? 3 : cekTax ? 4 : cek2 || cek3 || cekFinal ? cekLevel : 2
+              const cekUser = parseInt(level) === 50 && jenis === 'user'
+              const cekUserVerif = parseInt(level) === 1 && jenis === 'user'
+              const tipeStat = cek1 ? 6 : cekEks ? 3 : cekTax ? 4 : cek2 || cek3 || cekFinal ? cekLevel : cekUser ? 32 : cekUserVerif ? 50 : 2
               // const tipeStat = 5
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
@@ -393,7 +412,7 @@ module.exports = {
                 }
               }
             } else {
-              return response(res, 'failed get email4 submit', { temp, arrCc }, 404, false)
+              return response(res, 'failed get email4 submit', { temp, arrCc, arrLevel }, 404, false)
             }
           } else {
             return response(res, 'failed get email3', { findDraft }, 404, false)
@@ -1025,7 +1044,7 @@ module.exports = {
                   }
                 }
               } else {
-                return response(res, 'failed get email4 reject', { temp }, 404, false)
+                return response(res, 'failed get email4 reject 1', { temp }, 404, false)
               }
             } else {
               for (let i = 0; i < arrCc.length; i++) {
@@ -1442,7 +1461,7 @@ module.exports = {
                   }
                 }
               } else {
-                return response(res, 'failed get email4 reject', { temp }, 404, false)
+                return response(res, 'failed get email4 reject 2', { temp }, 404, false)
               }
             } else {
               const temp = []
@@ -1494,7 +1513,12 @@ module.exports = {
                     for (let i = 0; i < findDraftUser.length; i++) {
                       const findName = findDraftUser[i].fullname === null ? '' : findDraftUser[i].fullname
                       const findEmail = findDraftUser[i].email === null ? '' : findDraftUser[i].email
-                      if (cekLevel === 9) {
+                      if (jenis === 'user') {
+                        const cekTemp = temp.find(item => (item.fullname.toString().toLowerCase() === findName.toLowerCase() || item.email.toString().toLowerCase() === findEmail.toLowerCase()))
+                        if (cekTemp === undefined) {
+                          temp.push(findDraftUser[i])
+                        }
+                      } else if (cekLevel === 9) {
                         const cekBm = findDepo.nama_bm.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_bm.toString().toLowerCase() === findEmail.toLowerCase()
                         const cekOm = findDepo.nama_om.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_om.toString().toLowerCase() === findEmail.toLowerCase()
                         const cekAos = findDepo.nama_aos.toString().toLowerCase() === findName.toLowerCase() || findDepo.nama_aos.toString().toLowerCase() === findEmail.toLowerCase()
@@ -1533,7 +1557,7 @@ module.exports = {
               }
               if (temp.length > 0) {
                 let noLevel = null
-                const tipeStat = cekLevel
+                const tipeStat = jenis === 'user' ? 50 : cekLevel
                 for (let i = 0; i < 1; i++) {
                   const findLevel = await role.findOne({
                     where: {
@@ -1616,7 +1640,9 @@ module.exports = {
                 } else {
                   const findUser = await user.findOne({
                     where: {
-                      user_level: noLevel.nomor
+                      [Op.and]: [
+                        jenis === 'user' ? { id: findTrans.id } : { user_level: noLevel.nomor }
+                      ]
                     },
                     include: [
                       {
@@ -1632,7 +1658,7 @@ module.exports = {
                   }
                 }
               } else {
-                return response(res, 'failed get email4 reject', { temp }, 404, false)
+                return response(res, 'failed get email4 reject 3', { temp }, 404, false)
               }
             }
           } else {
@@ -2047,7 +2073,9 @@ module.exports = {
         return response(res, 'failed get email 1', { findRole, findDepo, findTrans, noTrans }, 404, false)
       }
     } catch (error) {
-      return response(res, error.message, {}, 500, false)
+      const stackLines = error.stack ? error.stack.split('\n') : ['', '']
+      const errorLine = stackLines ? stackLines[1] : ''
+      return response(res, error.message, { errorLine }, 500, false)
     }
   },
   sendEmail: async (req, res) => {
@@ -2061,13 +2089,19 @@ module.exports = {
           nomor: level
         }
       })
+      const findAllRole = await role.findAll()
       if (findRole) {
-        const transaksi = tipe === 'pengadaan' ? pengadaan : tipe === 'disposal' || tipe === 'persetujuan' ? disposal : tipe === 'mutasi' ? mutasi : stock
+        const transaksi = tipe === 'pengadaan' ? pengadaan : tipe === 'disposal' || tipe === 'persetujuan' ? disposal : tipe === 'mutasi' ? mutasi : tipe === 'user' ? user : stock
         // const title = tipe === 'ikk' ? 'IKK' : tipe === 'klaim' ? 'Klaim' : 'Operasional'
         const findData = await transaksi.findAll({
           where: {
             [Op.and]: [
-              tipe === 'pengadaan' ? { no_pengadaan: no } : tipe === 'disposal' ? { no_disposal: no } : tipe === 'persetujuan' ? { no_persetujuan: no } : tipe === 'mutasi' ? { no_mutasi: no } : { no_stock: no }
+              tipe === 'pengadaan'
+                ? { no_pengadaan: no } : tipe === 'disposal'      // eslint-disable-line
+                  ? { no_disposal: no } : tipe === 'persetujuan'  // eslint-disable-line
+                    ? { no_persetujuan: no } : tipe === 'mutasi'  // eslint-disable-line
+                      ? { no_mutasi: no }  : tipe === 'user'     // eslint-disable-line
+                        ? { mpn_number: no } : { no_stock: no }   // eslint-disable-line
             ]
           }
         })
@@ -2094,7 +2128,7 @@ module.exports = {
               no_transaksi: no,
               type: dataDraft.type,
               menu: dataDraft.menu,
-              kode_plant: findData[0].kode_plant,
+              kode_plant: tipe === 'user' ? findData[0].request_kode : findData[0].kode_plant,
               type_trans: tipe,
               subject: subject,
               message: message,
@@ -2113,7 +2147,7 @@ module.exports = {
               no_transaksi: no,
               type: dataDraft.type,
               menu: dataDraft.menu,
-              kode_plant: findData[0].kode_plant,
+              kode_plant: tipe === 'user' ? findData[0].request_kode : findData[0].kode_plant,
               type_trans: tipe,
               subject: subject,
               message: message,
@@ -2132,7 +2166,7 @@ module.exports = {
             const dataTo = nameTo === undefined ? '' : nameTo
             for (let i = 0; i < (tipe === 'stock' && proses === 'reminder' ? listData.length : tipe === 'stock' && proses !== 'reminder' ? 1 : findData.length); i++) {
               const data = findData[i]
-              const dateData = tipe === 'pengadaan' ? data.tglIo : tipe === 'disposal' ? data.tanggalDis : tipe === 'mutasi' ? data.tanggalMut : data.tanggalStock
+              const dateData = tipe === 'pengadaan' ? data.tglIo : tipe === 'disposal' ? data.tanggalDis : tipe === 'mutasi' ? data.tanggalMut : tipe === 'user' ? data.updatedAt : data.tanggalStock
               // if (tipe !== 'vendor' && proses === 'reject perbaikan' && listData !== undefined && listData.length > 0) {
               //   if (listData.find((item) => parseInt(item) === parseInt(data.id)) !== undefined) {
               //     const element = `
@@ -2208,16 +2242,33 @@ module.exports = {
                           <td>${findData[i].area}</td>
                           <td>${moment(tipe === 'persetujuan' ? findData[i].date_persetujuan : findData[i].tanggalDis).format('DD MMMM YYYY')}</td>
                         </tr>`
-                        : `
-                        <tr>
-                          <th>${findData[i].no_transaksi}</th>
-                          <th>${findData[i].cost_center}</th>
-                          <th>${findData[i].area}</th>
-                          <th>${findData[i].no_coa}</th>
-                          <th>${findData[i].sub_coa}</th>
-                          <th>${findData[i].keterangan || findData[i].uraian}</th>
-                          <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
-                        </tr>`
+                        : tipe === 'user'
+                          ? `
+                          <tr>
+                            <td>${findData[i].username}</td>
+                            <td>${findData[i].fullname}</td>
+                            <td>${findData[i].nik}</td>
+                            <td>${findData[i].mpn_number}</td>
+                            <td>${findData[i].email}</td>
+                            <td>${
+                              findAllRole.find(item => item.nomor == findData[i].request_level) === undefined // eslint-disable-line
+                                ? findData[i].request_level // eslint-disable-line
+                                : findAllRole.find(item => item.nomor == findData[i].request_level).name// eslint-disable-line
+} 
+                            </td>
+                            <td>${findData[i].request_kode}</td>
+                            <td>${moment().format('DD MMMM YYYY')}</td>
+                          </tr>`
+                          : `
+                            <tr>
+                              <th>${findData[i].no_transaksi}</th>
+                              <th>${findData[i].cost_center}</th>
+                              <th>${findData[i].area}</th>
+                              <th>${findData[i].no_coa}</th>
+                              <th>${findData[i].sub_coa}</th>
+                              <th>${findData[i].keterangan || findData[i].uraian}</th>
+                              <th>${moment(dateData || moment()).format('DD MMMM YYYY')}</th>
+                            </tr>`
               tableTd = tableTd + element
               cekNon.push(data)
               // }
@@ -2281,16 +2332,28 @@ module.exports = {
                       <th>Cabang / Depo</th>
                       <th>Tgl ${tipe === 'persetujuan' ? 'Persetujuan' : 'Ajuan'}</th>
                     </tr>`
-                      : `
-                      <tr>
-                        <th>NO.AJUAN</th>
-                        <th>COST CENTRE</th>
-                        <th>AREA</th>
-                        <th>NO.COA</th>
-                        <th>JENIS TRANSAKSI</th>
-                        <th>KETERANGAN TAMBAHAN</th>
-                        <th>TANGGAL AJUAN</th>
-                      </tr>`
+                      : tipe === 'user'
+                        ? `
+                        <tr>
+                          <th>USER NAME</th>
+                          <th>FULL NAME</th>
+                          <th>NIK</th>
+                          <th>MPN NUMBER</th>
+                          <th>EMAIL</th>
+                          <th>LEVEL</th>
+                          <th>KODE</th>
+                          <th>TGL REQUEST</th>
+                        </tr>`
+                        : `
+                        <tr>
+                          <th>NO.AJUAN</th>
+                          <th>COST CENTRE</th>
+                          <th>AREA</th>
+                          <th>NO.COA</th>
+                          <th>JENIS TRANSAKSI</th>
+                          <th>KETERANGAN TAMBAHAN</th>
+                          <th>TANGGAL AJUAN</th>
+                        </tr>`
             const mailOptions = {
               from: 'noreply_aset@pinusmerahabadi.co.id',
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
@@ -2299,7 +2362,7 @@ module.exports = {
               // to: 'neng_rina@pinusmerahabadi.co.id',
               // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               // to: 'noreplyofr@gmail.com',
-              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
+              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, fahmiazis797@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>

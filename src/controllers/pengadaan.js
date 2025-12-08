@@ -67,11 +67,11 @@ module.exports = {
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
-                    tglIo: {
-                      [Op.gte]: timeV1,
-                      [Op.lt]: timeV2
-                    }
+                  tglIo: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
                   }
+                }
             ],
             [Op.or]: [
             // { area: { [Op.like]: `%${searchValue}%` } },
@@ -122,7 +122,7 @@ module.exports = {
               { pic_tax: level === 4 ? fullname : 'undefined' },
               { pic_purchasing: level === 6 ? fullname : 'undefined' },
               { manager_ho: level === 27 ? fullname : 'undefined' },
-              { asman_ho: level === 26 ? fullname : 'undefined' },
+              { asman_ho: level === 26 ? fullname : 'undefined' }
             ]
           }
         })
@@ -153,11 +153,11 @@ module.exports = {
                 timeVal1 === 'all'
                   ? { [Op.not]: { id: null } }
                   : {
-                      tglIo: {
-                        [Op.gte]: timeV1,
-                        [Op.lt]: timeV2
-                      }
+                    tglIo: {
+                      [Op.gte]: timeV1,
+                      [Op.lt]: timeV2
                     }
+                  }
               ],
               [Op.or]: [
                 { area: { [Op.like]: `%${searchValue}%` } },
@@ -212,11 +212,11 @@ module.exports = {
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
-                    tglIo: {
-                      [Op.gte]: timeV1,
-                      [Op.lt]: timeV2
-                    }
+                  tglIo: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
                   }
+                }
             ],
             [Op.or]: [
               { area: { [Op.like]: `%${searchValue}%` } },

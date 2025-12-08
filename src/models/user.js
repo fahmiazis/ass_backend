@@ -32,7 +32,13 @@ module.exports = (sequelize, DataTypes) => {
     user_level: DataTypes.INTEGER,
     status: DataTypes.ENUM('active', 'inactive'),
     status_it: DataTypes.STRING,
-    multi_role: DataTypes.TEXT
+    multi_role: DataTypes.TEXT,
+    nik: DataTypes.STRING,
+    mpn_number: DataTypes.STRING,
+    request_level: DataTypes.INTEGER,
+    status_request: DataTypes.INTEGER,
+    request_kode: DataTypes.STRING,
+    history: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'user'

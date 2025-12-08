@@ -41,7 +41,8 @@ module.exports = (sequelize, DataTypes) => {
     kategori: DataTypes.ENUM('IT', 'NON IT'),
     cost_center: DataTypes.STRING,
     profit_center: DataTypes.STRING,
-    no_io: DataTypes.STRING
+    no_io: DataTypes.STRING,
+    record_type: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'asset'

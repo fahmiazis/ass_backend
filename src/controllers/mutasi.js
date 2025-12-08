@@ -337,11 +337,11 @@ module.exports = {
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
-                    tanggalMut: {
-                      [Op.gte]: timeV1,
-                      [Op.lt]: timeV2
-                    }
-                  },
+                  tanggalMut: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
+                  }
+                },
               statTrans === 'revisi' && { [Op.not]: { status_form: 0 } },
               { [Op.not]: { status_form: 1 } },
               { [Op.not]: { no_mutasi: null } }
@@ -396,8 +396,8 @@ module.exports = {
         } else {
           return response(res, 'failed to get mutasi', {}, 404, false)
         }
-      // } else if (level === 12 || level === 7 || level === 26 || level === 27) {
-      // } else if (listApp.find(item => dumpLevel.find(x => x === item)) !== undefined) {
+        // } else if (level === 12 || level === 7 || level === 26 || level === 27) {
+        // } else if (listApp.find(item => dumpLevel.find(x => x === item)) !== undefined) {
       } else if (findUser.role.type === 'area') {
         const findDepo = await depo.findAll({
           where: {
@@ -447,11 +447,11 @@ module.exports = {
                 timeVal1 === 'all'
                   ? { [Op.not]: { id: null } }
                   : {
-                      tanggalMut: {
-                        [Op.gte]: timeV1,
-                        [Op.lt]: timeV2
-                      }
-                    },
+                    tanggalMut: {
+                      [Op.gte]: timeV1,
+                      [Op.lt]: timeV2
+                    }
+                  },
                 { [Op.not]: { status_form: 1 } },
                 { [Op.not]: { no_mutasi: null } }
               ],
@@ -514,11 +514,11 @@ module.exports = {
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
-                    tanggalMut: {
-                      [Op.gte]: timeV1,
-                      [Op.lt]: timeV2
-                    }
-                  },
+                  tanggalMut: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
+                  }
+                },
               { [Op.not]: { status_form: 1 } },
               { [Op.not]: { no_mutasi: null } }
             ],
@@ -1275,7 +1275,7 @@ module.exports = {
           } else if (month === 12) {
             rome = 'XII'
           }
-          const tempData = findMut.find(({no_mutasi}) => no_mutasi !== null) // eslint-disable-line
+          const tempData = findMut.find(({ no_mutasi }) => no_mutasi !== null) // eslint-disable-line
           const cekData = tempData === undefined ? 'ya' : 'no'
           const noTrans = `${notrans}/${kode}/${findMut[0].area}/${rome}/${year}-MTI`
           const data = {
@@ -2658,7 +2658,7 @@ module.exports = {
             isreject: null,
             tgl_mutasisap: moment(),
             pic_aset: fullname,
-            history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+            history: `${findMut[i].history}, submit eksekusi mutasi by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           const body = {
             id: `${findMut[i].no_mutasi}-${findMut[i].no_asset}`,
