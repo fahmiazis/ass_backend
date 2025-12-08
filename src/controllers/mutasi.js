@@ -123,7 +123,7 @@ module.exports = {
                   const make = await mutasi.create(send)
                   if (make) {
                     const data = {
-                      status: 11,
+                      status: '11',
                       keterangan: 'proses mutasi'
                     }
                     const update = await result.update(data)

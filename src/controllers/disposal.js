@@ -70,7 +70,7 @@ module.exports = {
             const make = await disposal.create(send)
             if (make) {
               const data = {
-                status: 1,
+                status: '1',
                 keterangan: 'proses disposal'
               }
               const updateData = await result.update(data)
@@ -147,7 +147,7 @@ module.exports = {
             const make = await disposal.create(send)
             if (make) {
               const data = {
-                status: 1,
+                status: '1',
                 keterangan: 'proses mutasi'
               }
               const updateData = await result.update(data)
