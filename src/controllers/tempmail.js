@@ -220,7 +220,8 @@ module.exports = {
           if (findDraft) {
             const temp = []
             const arrLevel = []
-            const arrCc = findDraft.cc.split(',')
+            const firstArrCc = findDraft.cc.split(',')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
             for (let i = 0; i < arrCc.length; i++) {
               const findLevel = await role.findOne({
                 where: {
@@ -438,7 +439,8 @@ module.exports = {
             })
             if (findDraft) {
               const temp = []
-              const arrCc = findDraft.cc.split(',')
+              const firstArrCc = findDraft.cc.split(',')
+              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
               let cekCC = ''
               if (jenis === 'persetujuan') {
                 cekCC = 'persetujuan'
@@ -828,7 +830,8 @@ module.exports = {
           })
           if (findDraft) {
             const temp = []
-            const arrCc = findDraft.cc.split(',')
+            const firstArrCc = findDraft.cc.split(',')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
             if (jenis === 'persetujuan') {
               for (let x = 0; x < listData.length; x++) {
                 const findDepo = await depo.findOne({
@@ -1247,7 +1250,8 @@ module.exports = {
           })
           if (findDraft) {
             const temp = []
-            const arrCc = findDraft.cc.split(',')
+            const firstArrCc = findDraft.cc.split(',')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
             if (jenis === 'persetujuan') {
               for (let x = 0; x < listData.length; x++) {
                 const findDepo = await depo.findOne({
@@ -1465,7 +1469,8 @@ module.exports = {
               }
             } else {
               const temp = []
-              const arrCc = findDraft.cc.split(',')
+              const firstArrCc = findDraft.cc.split(',')
+              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
               for (let i = 0; i < arrCc.length; i++) {
                 const findLevel = await role.findOne({
                   where: {
@@ -1679,7 +1684,8 @@ module.exports = {
           })
           if (findDraft) {
             const temp = []
-            const arrCc = findDraft.cc.split(',')
+            const firstArrCc = findDraft.cc.split(',')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
             for (let i = 0; i < arrCc.length; i++) {
               const findLevel = await role.findOne({
                 where: {
@@ -1880,7 +1886,8 @@ module.exports = {
             })
             if (findDraft) {
               const temp = []
-              const arrCc = findDraft.cc.split(',')
+              const firstArrCc = findDraft.cc.split(',')
+              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
               for (let i = 0; i < arrCc.length; i++) {
                 const findLevel = await role.findOne({
                   where: {
