@@ -319,12 +319,13 @@ module.exports = {
               const cek1 = (parseInt(findTrans.status_form) === 1 && jenis === 'disposal')
               const cek2 = (parseInt(findTrans.status_form) === 1 || parseInt(findTrans.status_form) === 9 || (parseInt(findTrans.status_form) === 4 && jenis === 'mutasi'))
               const cek3 = (parseInt(findTrans.status_form) === 26 && jenis === 'disposal')
-              const cekEks = (parseInt(findTrans.status_form) === 4 && jenis === 'disposal')
+              const cekEksSell = (parseInt(findTrans.status_form) === 4 && jenis === 'disposal' && findTrans.nilai_jual !== '0')
+              const cekEksDispose = (parseInt(findTrans.status_form) === 4 && jenis === 'disposal' && findTrans.nilai_jual === '0')
               const cekTax = (parseInt(findTrans.status_form) === 5 && jenis === 'disposal')
               const cekFinal = (parseInt(findTrans.status_form) === 7 && jenis === 'disposal')
               const cekUser = parseInt(level) === 50 && jenis === 'user'
               const cekUserVerif = parseInt(level) === 1 && jenis === 'user'
-              const tipeStat = cek1 ? 6 : cekEks ? 3 : cekTax ? 4 : cek2 || cek3 || cekFinal ? cekLevel : cekUser ? 32 : cekUserVerif ? 50 : 2
+              const tipeStat = cek1 ? 6 : cekEksSell ? 3 : cekEksDispose ? 5 : cekTax ? 4 : cek2 || cek3 || cekFinal ? cekLevel : cekUser ? 32 : cekUserVerif ? 50 : 2
               // const tipeStat = 5
               for (let i = 0; i < 1; i++) {
                 const findLevel = await role.findOne({
