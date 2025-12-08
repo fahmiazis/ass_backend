@@ -22,7 +22,7 @@ module.exports = {
     try {
       const no = req.params.no
       const kode = req.user.kode
-      const name = req.user.name
+      // const name = req.user.name
       const level = req.user.level
       const findDepo = await depo.findOne({
         where: {
@@ -70,10 +70,11 @@ module.exports = {
             const make = await disposal.create(send)
             if (make) {
               const data = {
-                status: 1
+                status: 1,
+                keterangan: 'proses disposal'
               }
-              const update = await result.update(data)
-              if (update) {
+              const updateData = await result.update(data)
+              if (updateData) {
                 return response(res, 'success add disposal', { result: make })
               } else {
                 return response(res, 'failed add disposal 09', {}, 400, false)
@@ -96,7 +97,7 @@ module.exports = {
   },
   addSell: async (req, res) => {
     try {
-      const name = req.user.name
+      // const name = req.user.name
       const level = req.user.level
       const { no } = req.body
       const kode = req.user.kode
@@ -146,10 +147,11 @@ module.exports = {
             const make = await disposal.create(send)
             if (make) {
               const data = {
-                status: 1
+                status: 1,
+                keterangan: 'proses mutasi'
               }
-              const update = await result.update(data)
-              if (update) {
+              const updateData = await result.update(data)
+              if (updateData) {
                 return response(res, 'success add sell', { result: make })
               } else {
                 return response(res, 'failed add sell1', {}, 400, false)
@@ -352,11 +354,11 @@ module.exports = {
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
-                    tanggalDis: {
-                      [Op.gte]: timeV1,
-                      [Op.lt]: timeV2
-                    }
-                  },
+                  tanggalDis: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
+                  }
+                },
               statForm === 'editdis' ? { [Op.not]: { status_form: 0 } } : { [Op.not]: { status_form: 1 } }
             ]
           },
@@ -410,7 +412,7 @@ module.exports = {
               { pic_purchasing: level === 6 ? fullname : 'undefined' },
               { nama_pic_2: level === 32 ? fullname : 'undefined' },
               { manager_ho: level === 27 ? fullname : 'undefined' },
-              { asman_ho: level === 26 ? fullname : 'undefined' },
+              { asman_ho: level === 26 ? fullname : 'undefined' }
             ]
           }
         })
@@ -4814,8 +4816,8 @@ module.exports = {
     try {
       const { no, gl_debit, gl_credit } = req.body
       const fullname = req.user.fullname
-      const finalDebit = (gl_debit === undefined || gl_debit === '') ? "11020909" : gl_debit
-      const finalCredit = (gl_credit === undefined || gl_credit === '') ? "71050001" : gl_credit
+      const finalDebit = (gl_debit === undefined || gl_debit === '') ? '11020909' : gl_debit
+      const finalCredit = (gl_credit === undefined || gl_credit === '') ? '71050001' : gl_credit
       const result = await disposal.findAll({
         where: {
           no_disposal: no
@@ -4829,17 +4831,16 @@ module.exports = {
         })
         const cek = []
         for (let i = 0; i < result.length; i++) {
-
           const body = {
             id: `${result[i].no_disposal}-${result[i].no_asset}`,
             header: {
-              bukrs: "PP01",
+              bukrs: 'PP01',
               doc_date: moment(result[i].date_faktur).format('DDMMYYYY'),
               pstng_date: moment(result[i].date_faktur).format('DDMMYYYY'),
               monat: moment().format('MM'),
-              currency: "IDR",
+              currency: 'IDR',
               ref_doc_no: result[i].pic_aset,
-              header_txt: "PENJUALAN ASSET"
+              header_txt: 'PENJUALAN ASSET'
             },
             debit: {
               gl_account: finalDebit,
@@ -4851,13 +4852,13 @@ module.exports = {
             credit: {
               gl_account: finalCredit,
               amount: `${result[i].nilai_jual}`,
-              tax_code: "A4",
+              tax_code: 'A4',
               text: `${result[i].no_asset}_${result[i].nama_asset}_${result[i].area}_DIJUAL`,
               costcenter: getDepo.cost_center,
               profit_ctr: getDepo.profit_center,
               asset_no: result[i].no_asset,
-              sub_number: "0000",
-              assettrans_type: "210",
+              sub_number: '0000',
+              assettrans_type: '210',
               asset_valdate: moment(result[i].date_faktur).format('DDMMYYYY')
             },
             tax: {
