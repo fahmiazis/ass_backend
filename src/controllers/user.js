@@ -600,7 +600,10 @@ module.exports = {
                     if (findRole && findRole.type === 'area') {
                       const findUser = await user.findOne({
                         where: {
-                          username: dataUser[0]
+                          [Op.or]: [
+                            { username: dataUser[0] },
+                            { nik: dataUser[2] }
+                          ]
                         }
                       })
                       if (findUser) {
