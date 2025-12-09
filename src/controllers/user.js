@@ -468,7 +468,7 @@ module.exports = {
           const dokumen = `assets/masters/${req.files[0].filename}`
           const rows = await readXlsxFile(dokumen)
           const count = []
-          const cek = ['User Name', 'Full Name', 'Kode Area', 'Email', 'User Level']
+          const cek = ['User Name', 'Full Name', 'NIK', 'Kode Area', 'Email', 'User Level']
           const valid = rows[0]
           for (let i = 0; i < cek.length; i++) {
             if (valid[i] === cek[i]) {
@@ -478,17 +478,19 @@ module.exports = {
           if (count.length === cek.length) {
             const plant = []
             const userData = []
+            const nikData = []
             const cek = []
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
-              const cekArea = (a[4].split('-')[0] === '5' || a[4].split('-')[0] === 5)
-              const cekHo = (a[4].split('-')[0] === '9' || a[4].split('-')[0] === 9)
+              const cekArea = (a[5].split('-')[0] === '5' || a[5].split('-')[0] === 5)
+              const cekHo = (a[5].split('-')[0] === '9' || a[5].split('-')[0] === 9)
               if (cekArea || cekHo) {
-                plant.push(`Kode area ${a[2]} dan  User level ${a[4]}`)
-                userData.push(`Terdapat duplikasi username ${a[0]} dan kode area ${a[2]}`)
+                plant.push(`Kode area ${a[3]} dan  User level ${a[5]}`)
+                userData.push(`Terdapat duplikasi username ${a[0]} dan kode area ${a[3]}`)
                 cek.push(`${a[0]}`)
               } else {
                 userData.push(`Terdapat duplikasi username ${a[0]}`)
+                nikData.push(`Terdapat duplikasi NIK ${a[2]}`)
                 cek.push(`${a[0]}`)
               }
             }
@@ -517,6 +519,18 @@ module.exports = {
                 result.push(prop)
               }
             }
+
+            nikData.forEach(item => {
+              if (!object[item]) { object[item] = 0 }
+              object[item] += 1
+            })
+
+            for (const prop in object) {
+              if (object[prop] >= 2) {
+                result.push(prop)
+              }
+            }
+
             if (result.length > 0) {
               return response(res, 'Terdapat duplikasi data', { result }, 404, false)
             } else {
@@ -543,25 +557,27 @@ module.exports = {
                   const dataCreate = {
                     username: dataUser[0],
                     fullname: dataUser[1],
-                    kode_plant: dataUser[2],
-                    email: dataUser[3],
-                    user_level: dataUser[4].split('-')[0],
-                    password: dataUser[5],
+                    nik: dataUser[2],
+                    kode_plant: dataUser[3],
+                    email: dataUser[4],
+                    user_level: dataUser[5].split('-')[0],
+                    password: dataUser[6],
                     status: 'active'
                   }
                   const dataUpdate = {
                     username: dataUser[0],
                     fullname: dataUser[1],
-                    kode_plant: dataUser[2],
-                    email: dataUser[3],
-                    user_level: dataUser[4].split('-')[0],
-                    password: dataUser[5],
+                    nik: dataUser[2],
+                    kode_plant: dataUser[3],
+                    email: dataUser[4],
+                    user_level: dataUser[5].split('-')[0],
+                    password: dataUser[6],
                     status: 'active'
                   }
                   if (parseInt(dataUpdate.user_level) === 5 || parseInt(dataUpdate.user_level) === 9) {
                     const findUser = await user.findOne({
                       where: {
-                        kode_plant: dataUser[2]
+                        kode_plant: dataUser[3]
                       }
                     })
                     if (findUser) {
