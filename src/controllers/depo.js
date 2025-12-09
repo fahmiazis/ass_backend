@@ -462,14 +462,14 @@ module.exports = {
                   nama_pic_1: dataDepo[14],
                   nama_pic_2: dataDepo[15],
                   nama_pic_3: dataDepo[16],
+                  nama_asman: dataDepo[16],
                   nama_pic_4: dataDepo[17],
-                  nama_asman: dataDepo[18],
-                  pic_budget: dataDepo[19],
-                  pic_finance: dataDepo[20],
-                  pic_tax: dataDepo[21],
-                  pic_purchasing: dataDepo[22],
-                  asman_ho: dataDepo[23],
-                  manager_ho: dataDepo[24]
+                  pic_budget: dataDepo[18],
+                  pic_finance: dataDepo[19],
+                  pic_tax: dataDepo[20],
+                  pic_purchasing: dataDepo[21],
+                  asman_ho: dataDepo[22],
+                  manager_ho: dataDepo[23]
                 }
                 const select = await depo.findOne({
                   where: {
