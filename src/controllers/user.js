@@ -490,7 +490,7 @@ module.exports = {
                 cek.push(`${a[0]}`)
               } else {
                 userData.push(`Terdapat duplikasi username ${a[0]}`)
-                nikData.push(`Terdapat duplikasi NIK ${a[2]}`)
+                nikData.push(`Terdapat duplikasi NIK ${a[2] === null ? i : a[2]}`)
                 cek.push(`${a[0]}`)
               }
             }
