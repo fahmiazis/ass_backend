@@ -148,7 +148,7 @@ module.exports = {
             if (make) {
               const data = {
                 status: '1',
-                keterangan: 'proses mutasi'
+                keterangan: 'proses disposal'
               }
               const updateData = await result.update(data)
               if (updateData) {
@@ -222,7 +222,8 @@ module.exports = {
         })
         if (findAsset) {
           const data = {
-            status: null
+            status: null,
+            keterangan: ''
           }
           const sent = await findAsset.update(data)
           if (sent) {

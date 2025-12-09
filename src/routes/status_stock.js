@@ -1,5 +1,5 @@
 const route = require('express').Router()
-const status = require('../controllers/status-stock')
+const status = require('../controllers/status_stock')
 
 route.post('/add', status.addStatusStock)
 route.get('/all/:tipe', status.getStatusStock)

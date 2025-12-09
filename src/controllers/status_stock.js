@@ -138,7 +138,7 @@ module.exports = {
             for (let i = 1; i < rows.length; i++) {
               const a = rows[i]
               kode.push(`${a[0]}`)
-              cost.push(`kondisi ${a[0]} status fisik ${a[4]} status asset`)
+              cost.push(`kondisi ${a[0]} status fisik ${a[1]} status asset ${a[2]} type asset ${a[3] === 'true' ? 'SAP' : 'Aset Tambahan'}`)
             }
             const result = []
             const dupCost = {}
@@ -164,18 +164,18 @@ module.exports = {
                 const select = await status_stock.findOne({
                   where: {
                     [Op.and]: [
-                      { kode_dist: { [Op.like]: `%${dataStatusStock[0]}%` } },
-                      { profit_center: { [Op.like]: `%${dataStatusStock[1]}%` } }
+                      { kondisi: dataStatusStock[0] },
+                      { fisik: dataStatusStock[1] },
+                      { status: dataStatusStock[2] },
+                      { isSap: dataStatusStock[3] }
                     ]
                   }
                 })
                 const data = {
-                  kode_dist: dataStatusStock[0],
-                  profit_center: dataStatusStock[1],
-                  area: dataStatusStock[2],
-                  system: dataStatusStock[3],
-                  gl_account: dataStatusStock[4],
-                  gl_name: dataStatusStock[5]
+                  kondisi: dataStatusStock[0],
+                  fisik: dataStatusStock[1],
+                  status: dataStatusStock[2],
+                  isSap: dataStatusStock[3]
                 }
                 if (select) {
                   const upbank = await select.update(data)
@@ -319,14 +319,12 @@ module.exports = {
         const worksheet = workbook.addWorksheet()
         const arr = []
         const header = [
-          'KODE DIST',
-          'PROFIT CENTER',
-          'NAMA AREA',
-          'SAP/SCYLLA',
-          'GL Account',
-          'GL Name'
+          'KONDISI',
+          'STATUS FISIK',
+          'STATUS ASSET',
+          'TYPE ASSET'
         ]
-        const key = ['kode_dist', 'profit_center', 'area', 'system', 'gl_account', 'gl_name']
+        const key = ['kondisi', 'fisik', 'status', 'isSap']
         for (let i = 0; i < header.length; i++) {
           let temp = { header: header[i], key: key[i] }
           arr.push(temp)
