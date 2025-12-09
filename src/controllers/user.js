@@ -185,7 +185,13 @@ module.exports = {
               where: {
                 [Op.and]: [
                   { kode_plant: results.kode_plant },
-                  { user_level: results.user_level }
+                  { user_level: results.user_level },
+                  {
+                    [Op.or]: [
+                      { status: { [Op.ne]: 'inactive' } },
+                      { status: { [Op.is]: null } }
+                    ]
+                  }
                 ],
                 [Op.not]: { id: id }
               }

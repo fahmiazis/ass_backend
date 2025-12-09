@@ -893,11 +893,11 @@ module.exports = {
                 timeVal1 === 'all'
                   ? { [Op.not]: { no_stock: null } }
                   : {
-                      tanggalStock: {
-                        [Op.gte]: timeV1,
-                        [Op.lt]: timeV2
-                      }
-                    },
+                    tanggalStock: {
+                      [Op.gte]: timeV1,
+                      [Op.lt]: timeV2
+                    }
+                  },
                 { [Op.not]: { no_stock: null } },
                 { [Op.not]: { status_form: null } }
               ],
@@ -951,7 +951,7 @@ module.exports = {
                 { nama_pic_1: level === 2 ? fullname : 'undefined' },
                 { nama_nom: level === 28 ? fullname : 'undefined' },
                 { manager_ho: level === 27 ? fullname : 'undefined' },
-                { asman_ho: level === 26 ? fullname : 'undefined' },
+                { asman_ho: level === 26 ? fullname : 'undefined' }
               ]
             }
           })
@@ -965,11 +965,11 @@ module.exports = {
                     timeVal1 === 'all'
                       ? { [Op.not]: { no_stock: null } }
                       : {
-                          tanggalStock: {
-                            [Op.gte]: timeV1,
-                            [Op.lt]: timeV2
-                          }
-                        },
+                        tanggalStock: {
+                          [Op.gte]: timeV1,
+                          [Op.lt]: timeV2
+                        }
+                      },
                     { [Op.not]: { status_form: null } }
                     // status === 'available' ? { status_form: 2 } : status === 'selesai' ? { status_form: 8 } : status === 'reject' ? { status_reject: 1 } : { [Op.not]: { no_stock: null } }
                     // {
@@ -1040,11 +1040,11 @@ module.exports = {
                 timeVal1 === 'all'
                   ? { [Op.not]: { no_stock: null } }
                   : {
-                      tanggalStock: {
-                        [Op.gte]: timeV1,
-                        [Op.lt]: timeV2
-                      }
-                    },
+                    tanggalStock: {
+                      [Op.gte]: timeV1,
+                      [Op.lt]: timeV2
+                    }
+                  },
                 { [Op.not]: { status_form: null } }
                 // {
                 //   tanggalStock: {
@@ -1955,11 +1955,11 @@ module.exports = {
             timeVal1 === 'all'
               ? { [Op.not]: { no_stock: null } }
               : {
-                  tanggalStock: {
-                    [Op.gte]: timeV1,
-                    [Op.lt]: timeV2
-                  }
+                tanggalStock: {
+                  [Op.gte]: timeV1,
+                  [Op.lt]: timeV2
                 }
+              }
           ],
           [Op.or]: [
             { no_asset: sap === 'null' ? null : { [Op.not]: null } },

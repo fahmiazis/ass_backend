@@ -7,28 +7,40 @@ module.exports = {
       const { year } = req.query
       const result = await sequelize.query(`
             SELECT
-              r.transaksi,
-              COUNT(r.id) AS totalData,
-              COUNT(CASE WHEN rel.status_form = 8 THEN r.id END) AS finished,
-              COUNT(CASE WHEN rel.status_form = 0 THEN r.id END) AS rejected,
-              COUNT(CASE WHEN rel.status_reject = 1 AND rel.status_form != 0 THEN r.id END) AS revisi
-            FROM reservoirs r
-            LEFT JOIN (
-                SELECT no_mutasi AS no_transaksi, status_form, status_reject FROM mutasis
+              transaksi,
+              COUNT(DISTINCT no_transaksi) AS totalData,
+              COUNT(DISTINCT CASE WHEN status_form = 8 THEN no_transaksi END) AS finished,
+              COUNT(DISTINCT CASE WHEN status_form = 0 THEN no_transaksi END) AS rejected,
+              COUNT(DISTINCT CASE WHEN status_reject = 1 AND status_form != 0 THEN no_transaksi END) AS revisi
+            FROM (
+                SELECT m.no_mutasi AS no_transaksi, m.status_form, m.status_reject, 'mutasi' AS transaksi
+                FROM mutasis m
+                WHERE YEAR(m.createdAt) = :year
+                
                 UNION ALL
-                SELECT no_disposal AS no_transaksi, status_form, status_reject FROM disposals
+                
+                SELECT d.no_disposal AS no_transaksi, d.status_form, d.status_reject, 'disposal' AS transaksi
+                FROM disposals d
+                WHERE YEAR(d.createdAt) = :year
+                
                 UNION ALL
-                SELECT no_stock AS no_transaksi, status_form, status_reject FROM stocks
+                
+                SELECT s.no_stock AS no_transaksi, s.status_form, s.status_reject, 'stock opname' AS transaksi
+                FROM stocks s
+                WHERE YEAR(s.createdAt) = :year
+                
                 UNION ALL
-                SELECT no_pengadaan AS no_transaksi, status_form, status_reject FROM pengadaans
-            ) rel ON rel.no_transaksi = r.no_transaksi
-            WHERE r.status = 'used'
-              AND YEAR(r.createdAt) = :year
-            GROUP BY r.transaksi
+                
+                SELECT p.no_pengadaan AS no_transaksi, p.status_form, p.status_reject, 'pengadaan' AS transaksi
+                FROM pengadaans p
+                WHERE YEAR(p.createdAt) = :year
+            ) AS all_transactions
+            GROUP BY transaksi
           `, {
         replacements: { year: year },
         type: sequelize.QueryTypes.SELECT
       })
+
       if (result) {
         return response(res, 'get dashboard success', { result })
       } else {
