@@ -606,9 +606,16 @@ module.exports = {
                     if (findRole && findRole.type === 'area') {
                       const findUser = await user.findOne({
                         where: {
-                          [Op.or]: [
-                            { username: dataUser[0] },
-                            { nik: dataUser[2] }
+                          [Op.and]: [
+                            {
+                              [Op.or]: [
+                                { username: dataUser[0] },
+                                { nik: dataUser[2] }
+                              ]
+                            },
+                            {
+                              [Op.not]: { nik: null }
+                            }
                           ]
                         }
                       })
@@ -626,7 +633,17 @@ module.exports = {
                     } else {
                       const findUser = await user.findOne({
                         where: {
-                          username: dataUser[0]
+                          [Op.and]: [
+                            {
+                              [Op.or]: [
+                                { username: dataUser[0] },
+                                { nik: dataUser[2] }
+                              ]
+                            },
+                            {
+                              [Op.not]: { nik: null }
+                            }
+                          ]
                         }
                       })
                       const findUserRole = await user.findOne({
