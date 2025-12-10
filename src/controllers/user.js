@@ -675,9 +675,9 @@ module.exports = {
                 if (arr.length) {
                   fs.unlink(dokumen, function (err) {
                     if (err) {
-                      return response(res, 'successfully upload file master', { result: arr })
+                      return response(res, 'successfully upload file master', { result: arr, dataUpload })
                     } else {
-                      return response(res, 'successfully upload file master', { result: arr })
+                      return response(res, 'successfully upload file master', { result: arr, dataUpload })
                     }
                   })
                 } else {
