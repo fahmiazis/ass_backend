@@ -542,6 +542,7 @@ module.exports = {
             } else {
               rows.shift()
               const create = []
+              const arrPass = []
               for (let i = 0; i < rows.length; i++) {
                 const noun = []
                 const process = rows[i]
@@ -550,6 +551,7 @@ module.exports = {
                     let str = 'pma12345'
                     str = await bcrypt.hash(str, await bcrypt.genSalt())
                     noun.push(str)
+                    arrPass.push(str)
                   } else {
                     noun.push(process[j])
                   }
