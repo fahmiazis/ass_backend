@@ -614,11 +614,8 @@ module.exports = {
                             {
                               [Op.or]: [
                                 { username: dataUser[0] },
-                                { nik: dataUser[2] }
+                                dataUser[2] !== null ? { nik: dataUser[2] } : { username: dataUser[0] }
                               ]
-                            },
-                            {
-                              [Op.not]: { nik: null }
                             }
                           ]
                         }
@@ -641,11 +638,8 @@ module.exports = {
                             {
                               [Op.or]: [
                                 { username: dataUser[0] },
-                                { nik: dataUser[2] }
+                                dataUser[2] !== null ? { nik: dataUser[2] } : { username: dataUser[0] }
                               ]
-                            },
-                            {
-                              [Op.not]: { nik: null }
                             }
                           ]
                         }
