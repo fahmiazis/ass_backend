@@ -558,6 +558,7 @@ module.exports = {
               }
               if (create.length > 0) {
                 const arr = []
+                const dataUpload = []
                 for (let i = 0; i < create.length; i++) {
                   const dataUser = create[i]
                   const dataCreate = {
@@ -580,6 +581,7 @@ module.exports = {
                     password: dataUser[6],
                     status: 'active'
                   }
+                  dataUpload.push(dataUpdate)
                   if (parseInt(dataUpdate.user_level) === 5 || parseInt(dataUpdate.user_level) === 9) {
                     const findUser = await user.findOne({
                       where: {
