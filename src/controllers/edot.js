@@ -508,6 +508,7 @@ module.exports = {
   },
   syncOnBoarding: async (req, res) => {
     try {
+      req.setTimeout(1000 * 60 * 60)
       let limit = 10
       const page = 1
       const appId = req.query.app_id || EDOT_CONFIG.appId
@@ -674,6 +675,7 @@ module.exports = {
   },
   syncOffBoarding: async (req, res) => {
     try {
+      req.setTimeout(1000 * 60 * 60)
       let limit = 10
       const page = 1
       const appId = req.query.app_id || EDOT_CONFIG.appId
