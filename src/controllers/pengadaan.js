@@ -1265,13 +1265,14 @@ module.exports = {
         })
         if (result) {
           const kodePlant = result[0].kode_plant
+          const finJenis = result.find(item => item.jenis === 'it') ? 'it' : 'non-it'
           const getApp = await approve.findAll({
             where: {
               nama_approve: kodePlant.split('').length === 4 ? 'pengadaan io' : 'pengadaan io HO',
               [Op.and]: [
                 {
                   [Op.or]: [
-                    { jenis: result[0].jenis === undefined || result[0].jenis === null ? 'all' : result[0].jenis },
+                    { jenis: finJenis },
                     { jenis: 'all' }
                   ]
                 },
