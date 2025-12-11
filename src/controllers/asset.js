@@ -273,8 +273,8 @@ module.exports = {
                     detailUser.status_it === null
                       ? {
                         [Op.or]: [
-                          { status: { [Op.ne]: 'inactive' } },
-                          { status: { [Op.is]: null } }
+                          { kategori: { [Op.ne]: 'IT' } },
+                          { kategori: { [Op.is]: null } }
                         ]
                       }
                       : { kategori: 'IT' }
@@ -310,8 +310,8 @@ module.exports = {
                 detailUser.status_it === null
                   ? {
                     [Op.or]: [
-                      { status: { [Op.ne]: 'inactive' } },
-                      { status: { [Op.is]: null } }
+                      { kategori: { [Op.ne]: 'IT' } },
+                      { kategori: { [Op.is]: null } }
                     ]
                   }
                   : { kategori: 'IT' },
