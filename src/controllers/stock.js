@@ -2009,6 +2009,7 @@ module.exports = {
           const data = {
             status_form: 8,
             status_reject: null,
+            pic_aset: name,
             isreject: null,
             history: `${findStock[i].history}, submit aset by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}`
           }
