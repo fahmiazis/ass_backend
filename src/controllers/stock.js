@@ -80,7 +80,17 @@ module.exports = {
               where: {
                 [Op.and]: [
                   partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-                  kode.length > 4 ? (detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }) : { [Op.not]: { id: null } },
+                  kode.length > 4
+                    ? (
+                      detailUser.status_it === null
+                        ? {
+                          [Op.or]: [
+                            { kategori: { [Op.ne]: 'IT' } },
+                            { kategori: { [Op.is]: null } }
+                          ]
+                        }
+                        : { kategori: 'IT' })
+                    : { [Op.not]: { id: null } },
                   { [Op.not]: { satuan: null } },
                   { [Op.not]: { unit: null } },
                   { [Op.not]: { lokasi: null } },
@@ -103,7 +113,17 @@ module.exports = {
                 where: {
                   [Op.and]: [
                     partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-                    kode.length > 4 ? (detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }) : { [Op.not]: { id: null } }
+                    kode.length > 4
+                      ? (
+                        detailUser.status_it === null
+                          ? {
+                            [Op.or]: [
+                              { kategori: { [Op.ne]: 'IT' } },
+                              { kategori: { [Op.is]: null } }
+                            ]
+                          }
+                          : { kategori: 'IT' })
+                      : { [Op.not]: { id: null } }
                   ],
                   [Op.or]: [
                     { status: '1' },
@@ -117,7 +137,17 @@ module.exports = {
                   where: {
                     [Op.and]: [
                       partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-                      kode.length > 4 ? (detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }) : { [Op.not]: { id: null } }
+                      kode.length > 4
+                        ? (
+                          detailUser.status_it === null
+                            ? {
+                              [Op.or]: [
+                                { kategori: { [Op.ne]: 'IT' } },
+                                { kategori: { [Op.is]: null } }
+                              ]
+                            }
+                            : { kategori: 'IT' })
+                        : { [Op.not]: { id: null } }
                     ],
                     [Op.or]: [
                       { status: '1' },
