@@ -70,20 +70,15 @@ module.exports = {
                 if (result.length > 0) {
                   return response(res, 'kode plant already use', {}, 404, false)
                 } else {
-                  const result = await depo.findAll({ where: { profit_center: results.profit_center } })
+                  const result = await depo.findAll({ where: { cost_center: results.cost_center } })
                   if (result.length > 0) {
-                    return response(res, 'profit center already use', {}, 404, false)
+                    return response(res, 'cost center already use', {}, 404, false)
                   } else {
-                    const result = await depo.findAll({ where: { cost_center: results.cost_center } })
-                    if (result.length > 0) {
-                      return response(res, 'cost center already use', {}, 404, false)
+                    const result = await depo.create(results)
+                    if (result) {
+                      return response(res, 'succesfully add depo', { result })
                     } else {
-                      const result = await depo.create(results)
-                      if (result) {
-                        return response(res, 'succesfully add depo', { result })
-                      } else {
-                        return response(res, 'failed to add depo', {}, 404, false)
-                      }
+                      return response(res, 'failed to add depo', {}, 404, false)
                     }
                   }
                 }
@@ -146,21 +141,16 @@ module.exports = {
               if (result.length > 0) {
                 return response(res, 'kode plant already use', {}, 404, false)
               } else {
-                const result = await depo.findAll({ where: { profit_center: results.profit_center, [Op.not]: { id: id } } })
+                const result = await depo.findAll({ where: { cost_center: results.cost_center, [Op.not]: { id: id } } })
                 if (result.length > 0) {
-                  return response(res, 'profit center already use', {}, 404, false)
+                  return response(res, 'cost center already use', {}, 404, false)
                 } else {
-                  const result = await depo.findAll({ where: { cost_center: results.cost_center, [Op.not]: { id: id } } })
-                  if (result.length > 0) {
-                    return response(res, 'cost center already use', {}, 404, false)
+                  const result = await depo.findByPk(id)
+                  if (result) {
+                    await result.update(results)
+                    return response(res, 'succesfully update depo', { result })
                   } else {
-                    const result = await depo.findByPk(id)
-                    if (result) {
-                      await result.update(results)
-                      return response(res, 'succesfully update depo', { result })
-                    } else {
-                      return response(res, 'failed to update depo', {}, 404, false)
-                    }
+                    return response(res, 'failed to update depo', {}, 404, false)
                   }
                 }
               }
