@@ -2036,14 +2036,22 @@ module.exports = {
         const cek = []
         for (let i = 0; i < findStock.length; i++) {
           const find = await stock.findByPk(findStock[i].id)
-          const data = {
-            status_form: 8,
-            status_reject: null,
-            pic_aset: name,
-            isreject: null,
-            history: `${findStock[i].history}, submit aset by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}`
-          }
+          const findAset = await asset.findOne({
+            where: {
+              no_asset: findStock[i].no_asset
+            }
+          })
           if (find) {
+            const data = {
+              status_form: 8,
+              status_reject: null,
+              pic_aset: name,
+              isreject: null,
+              nilai_buku: findAset.nilai_buku,
+              nilai_acquis: findAset.nilai_acquis,
+              accum_dep: findAset.accum_dep,
+              history: `${findStock[i].history}, submit aset by ${name} at ${moment().format('DD/MM/YYYY h:mm a')}`
+            }
             await find.update(data)
             cek.push(1)
           }

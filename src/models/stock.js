@@ -71,7 +71,10 @@ module.exports = (sequelize, DataTypes) => {
     date_img: DataTypes.DATE,
     id_doc: DataTypes.INTEGER,
     user_rev: DataTypes.STRING,
-    pic_aset: DataTypes.STRING
+    pic_aset: DataTypes.STRING,
+    nilai_buku: DataTypes.STRING,
+    nilai_acquis: DataTypes.STRING,
+    accum_dep: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'stock'
