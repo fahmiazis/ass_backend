@@ -270,7 +270,14 @@ module.exports = {
                 where: {
                   [Op.and]: [
                     area === 'all' ? { [Op.or]: listCenter } : { cost_center: area },
-                    detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' }
+                    detailUser.status_it === null
+                      ? {
+                        [Op.or]: [
+                          { status: { [Op.ne]: 'inactive' } },
+                          { status: { [Op.is]: null } }
+                        ]
+                      }
+                      : { kategori: 'IT' }
                   ]
                 }
               })
@@ -300,7 +307,14 @@ module.exports = {
             where: {
               [Op.and]: [
                 area === 'all' ? { [Op.or]: listData } : { cost_center: area },
-                detailUser.status_it === null ? { [Op.not]: { kategori: 'IT' } } : { kategori: 'IT' },
+                detailUser.status_it === null
+                  ? {
+                    [Op.or]: [
+                      { status: { [Op.ne]: 'inactive' } },
+                      { status: { [Op.is]: null } }
+                    ]
+                  }
+                  : { kategori: 'IT' },
                 {
                   [Op.or]: [
                     { status: '1' },
