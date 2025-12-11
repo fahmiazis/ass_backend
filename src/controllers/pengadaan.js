@@ -3903,6 +3903,7 @@ module.exports = {
           const data = {
             status_form: 9,
             date_budget: moment(),
+            pic_budget: name,
             history: `${findIo[i].history}, verifikasi budget by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
@@ -3958,6 +3959,7 @@ module.exports = {
             status_reject: null,
             date_eksekusi: moment(),
             isreject: null,
+            pic_aset: name,
             history: `${findIo[i].history}, eksekusi pengadaan aset by ${name} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`
           }
           if (findData) {
