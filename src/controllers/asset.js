@@ -14,6 +14,7 @@ const axios = require('axios')
 const { APP_BE, APP_SAP, APP_CLIENT } = process.env
 const SAP_PROD_URL = 'http://prdhana.nabatigroup.com:8000'
 const SAP_PROD_CLIENT = 300
+const exclude = ['Bandung']
 
 module.exports = {
   addAsset: async (req, res) => {
@@ -242,6 +243,14 @@ module.exports = {
       } else {
         page = parseInt(page)
       }
+      const depoExclude = await depo.findAll({
+        where: {
+          [Op.or]: [
+            { nama_area: { [Op.like]: `%${exclude}%` } },
+            { place_asset: { [Op.like]: `%${exclude}%` } }
+          ]
+        }
+      })
       const findDep = await depo.findOne({
         where: {
           kode_plant: kode
@@ -270,7 +279,7 @@ module.exports = {
                 where: {
                   [Op.and]: [
                     area === 'all' ? { [Op.or]: listCenter } : { cost_center: area },
-                    detailUser.status_it === null
+                    detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                       ? {
                         [Op.or]: [
                           { kategori: { [Op.ne]: 'IT' } },
@@ -307,7 +316,7 @@ module.exports = {
             where: {
               [Op.and]: [
                 area === 'all' ? { [Op.or]: listData } : { cost_center: area },
-                detailUser.status_it === null
+                detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                   ? {
                     [Op.or]: [
                       { kategori: { [Op.ne]: 'IT' } },

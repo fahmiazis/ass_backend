@@ -6,6 +6,7 @@ const joi = require('joi')
 const { pagination } = require('../helpers/pagination')
 const multer = require('multer')
 const uploadHelper = require('../helpers/upload')
+const exclude = ['Bandung']
 // const { APP_SAP, APP_CLIENT } = process.env
 // const fs = require('fs')
 // const { exiftool } = require('exiftool-vendored')
@@ -38,6 +39,14 @@ module.exports = {
       const detailUser = await user.findOne({
         where: {
           id: id
+        }
+      })
+      const depoExclude = await depo.findAll({
+        where: {
+          [Op.or]: [
+            { nama_area: { [Op.like]: `%${exclude}%` } },
+            { place_asset: { [Op.like]: `%${exclude}%` } }
+          ]
         }
       })
       if (findClose.length > 0 && findArea) {
@@ -82,7 +91,7 @@ module.exports = {
                   partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
                   kode.length > 4
                     ? (
-                      detailUser.status_it === null
+                      detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                         ? {
                           [Op.or]: [
                             { kategori: { [Op.ne]: 'IT' } },
@@ -115,7 +124,7 @@ module.exports = {
                     partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
                     kode.length > 4
                       ? (
-                        detailUser.status_it === null
+                        detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                           ? {
                             [Op.or]: [
                               { kategori: { [Op.ne]: 'IT' } },
@@ -139,7 +148,7 @@ module.exports = {
                       partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
                       kode.length > 4
                         ? (
-                          detailUser.status_it === null
+                          detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                             ? {
                               [Op.or]: [
                                 { kategori: { [Op.ne]: 'IT' } },
