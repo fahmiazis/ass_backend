@@ -22,7 +22,7 @@ module.exports = {
       const idUser = req.user.id
       const level = req.user.level
       const kode = req.user.kode
-      const name = req.user.name
+      // const name = req.user.name
       const fullname = req.user.fullname
       const { status, time1, time2, search } = req.query
       let { limit, page } = req.query
@@ -61,7 +61,7 @@ module.exports = {
       if (level === 5 || level === 9) {
         const result = await pengadaan.findAndCountAll({
           where: {
-            kode_plant: level === 5 ? kode : name,
+            kode_plant: kode,
             [Op.and]: [
               statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` },
               timeVal1 === 'all'
@@ -263,12 +263,12 @@ module.exports = {
     try {
       const level = req.user.level
       const kode = req.user.kode
-      const name = req.user.name
+      // const name = req.user.name
       const fullname = req.user.fullname
       if (level === 5 || level === 9) {
         const result = await pengadaan.findAll({
           where: {
-            kode_plant: level === 5 ? kode : name,
+            kode_plant: kode,
             no_pengadaan: { [Op.not]: null }
           },
           include: [

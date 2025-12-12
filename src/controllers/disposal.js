@@ -175,12 +175,12 @@ module.exports = {
   getCartDisposal: async (req, res) => {
     try {
       const kode = req.user.kode
-      const name = req.user.name
-      const level = req.user.level
+      // const name = req.user.name
+      // const level = req.user.level
       const result = await disposal.findAndCountAll({
         where: {
           [Op.and]: [
-            { kode_plant: level === 5 ? kode : name },
+            { kode_plant: kode },
             { status_form: 1 }
           ]
         },

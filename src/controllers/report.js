@@ -47,11 +47,11 @@ module.exports = {
             timeVal1 === 'all'
               ? { [Op.not]: { id: null } }
               : {
-                  tanggalDis: {
-                    [Op.gte]: timeV1,
-                    [Op.lt]: timeV2
-                  }
-                },
+                tanggalDis: {
+                  [Op.gte]: timeV1,
+                  [Op.lt]: timeV2
+                }
+              },
             { [Op.not]: { status_form: 1 } },
             { [Op.not]: { no_disposal: null } }
           ],
@@ -145,11 +145,11 @@ module.exports = {
             timeVal1 === 'all'
               ? { [Op.not]: { id: null } }
               : {
-                  tanggalMut: {
-                    [Op.gte]: timeV1,
-                    [Op.lt]: timeV2
-                  }
-                },
+                tanggalMut: {
+                  [Op.gte]: timeV1,
+                  [Op.lt]: timeV2
+                }
+              },
             { [Op.not]: { status_form: 1 } },
             { [Op.not]: { no_mutasi: null } }
           ],
@@ -231,22 +231,22 @@ module.exports = {
       }
       const level = req.user.level
       const kode = req.user.kode
-      const name = req.user.name
+      // const name = req.user.name
       const fullname = req.user.fullname
       if (level === 5 || level === 9) {
         const result = await pengadaan.findAll({
           where: {
-            kode_plant: level === 5 ? kode : name,
+            kode_plant: kode,
             [Op.and]: [
               statTrans === 'all' ? { [Op.not]: { no_pengadaan: null } } : { status_form: `${statTrans}` },
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
-                    tglIo: {
-                      [Op.gte]: timeV1,
-                      [Op.lt]: timeV2
-                    }
+                  tglIo: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
                   }
+                }
             ],
             [Op.or]: [
               { no_pengadaan: { [Op.like]: `%${searchValue}%` } },
@@ -310,11 +310,11 @@ module.exports = {
                   timeVal1 === 'all'
                     ? { [Op.not]: { id: null } }
                     : {
-                        tglIo: {
-                          [Op.gte]: timeV1,
-                          [Op.lt]: timeV2
-                        }
+                      tglIo: {
+                        [Op.gte]: timeV1,
+                        [Op.lt]: timeV2
                       }
+                    }
                 ],
                 [Op.or]: [
                   { no_pengadaan: { [Op.like]: `%${searchValue}%` } },
@@ -374,11 +374,11 @@ module.exports = {
               timeVal1 === 'all'
                 ? { [Op.not]: { id: null } }
                 : {
-                    tglIo: {
-                      [Op.gte]: timeV1,
-                      [Op.lt]: timeV2
-                    }
+                  tglIo: {
+                    [Op.gte]: timeV1,
+                    [Op.lt]: timeV2
                   }
+                }
             ],
             [Op.not]: { no_pengadaan: null }
           },

@@ -12,7 +12,7 @@ module.exports = {
     if (level === 5 || level === 9) {
       const result = await disposal.findAndCountAll({
         where: {
-          kode_plant: level === 5 ? kode : name,
+          kode_plant: kode,
           [Op.not]: { no_disposal: null }
         },
         order: [
