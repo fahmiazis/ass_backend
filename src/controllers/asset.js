@@ -279,14 +279,16 @@ module.exports = {
                 where: {
                   [Op.and]: [
                     area === 'all' ? { [Op.or]: listCenter } : { cost_center: area },
-                    detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
-                      ? {
-                        [Op.or]: [
-                          { kategori: { [Op.ne]: 'IT' } },
-                          { kategori: { [Op.is]: null } }
-                        ]
-                      }
-                      : { kategori: 'IT' }
+                    depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
+                      ? detailUser.status_it === null
+                        ? {
+                          [Op.or]: [
+                            { kategori: { [Op.ne]: 'IT' } },
+                            { kategori: { [Op.is]: null } }
+                          ]
+                        }
+                        : { kategori: 'IT' }
+                      : { [Op.not]: { id: null } }
                   ]
                 }
               })
@@ -316,14 +318,16 @@ module.exports = {
             where: {
               [Op.and]: [
                 area === 'all' ? { [Op.or]: listData } : { cost_center: area },
-                detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
-                  ? {
-                    [Op.or]: [
-                      { kategori: { [Op.ne]: 'IT' } },
-                      { kategori: { [Op.is]: null } }
-                    ]
-                  }
-                  : { kategori: 'IT' },
+                depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
+                  ? detailUser.status_it === null
+                    ? {
+                      [Op.or]: [
+                        { kategori: { [Op.ne]: 'IT' } },
+                        { kategori: { [Op.is]: null } }
+                      ]
+                    }
+                    : { kategori: 'IT' }
+                  : { [Op.not]: { id: null } },
                 {
                   [Op.or]: [
                     { status: '1' },

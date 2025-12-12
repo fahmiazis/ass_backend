@@ -89,9 +89,9 @@ module.exports = {
               where: {
                 [Op.and]: [
                   partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-                  kode.length > 4
+                  kode.length > 4 && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                     ? (
-                      detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
+                      detailUser.status_it === null
                         ? {
                           [Op.or]: [
                             { kategori: { [Op.ne]: 'IT' } },
@@ -122,9 +122,9 @@ module.exports = {
                 where: {
                   [Op.and]: [
                     partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-                    kode.length > 4
+                    kode.length > 4 && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                       ? (
-                        detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
+                        detailUser.status_it === null
                           ? {
                             [Op.or]: [
                               { kategori: { [Op.ne]: 'IT' } },
@@ -146,9 +146,9 @@ module.exports = {
                   where: {
                     [Op.and]: [
                       partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-                      kode.length > 4
+                      kode.length > 4 && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
                         ? (
-                          detailUser.status_it === null && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
+                          detailUser.status_it === null
                             ? {
                               [Op.or]: [
                                 { kategori: { [Op.ne]: 'IT' } },
