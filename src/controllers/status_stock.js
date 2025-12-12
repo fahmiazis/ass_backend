@@ -34,7 +34,7 @@ module.exports = {
           where: {
             [Op.and]: [
               { fisik: results.fisik },
-              { kondisi: results.kondisi },
+              { kondisi: results.kondisi === '' ? null : results.kondisi },
               { status: results.status },
               { isSap: results.isSap }
             ]
@@ -43,7 +43,11 @@ module.exports = {
         if (result.length > 0) {
           return response(res, 'success create status stock')
         } else {
-          const result = await status_stock.create(results)
+          const dataUp = {
+            ...results,
+            kondisi: results.kondisi === '' ? null : results.kondisi
+          }
+          const result = await status_stock.create(dataUp)
           if (result) {
             return response(res, 'success create status stock')
           } else {
@@ -72,7 +76,7 @@ module.exports = {
           where: {
             [Op.and]: [
               { fisik: results.fisik },
-              { kondisi: results.kondisi },
+              { kondisi: results.kondisi === '' ? null : results.kondisi },
               { status: results.status },
               { isSap: results.isSap }
             ],
@@ -86,7 +90,11 @@ module.exports = {
         } else {
           const findStatusStock = await status_stock.findByPk(id)
           if (findStatusStock) {
-            const updateStatusStock = await findStatusStock.update(results)
+            const dataUp = {
+              ...results,
+              kondisi: results.kondisi === '' ? null : results.kondisi
+            }
+            const updateStatusStock = await findStatusStock.update(dataUp)
             if (updateStatusStock) {
               return response(res, 'success update status_stock')
             } else {
