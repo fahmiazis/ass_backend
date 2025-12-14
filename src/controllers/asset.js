@@ -210,205 +210,6 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
-  getAssetAllOld: async (req, res) => {
-    try {
-      const kode = req.user.kode
-      const level = req.user.level
-      const id = req.user.id
-      let { limit, page, search, sort, tipe, area } = req.query
-      let searchValue = ''
-      let sortValue = ''
-      if (typeof search === 'object') {
-        searchValue = Object.values(search)[0]
-      } else {
-        searchValue = search || ''
-      }
-      if (typeof sort === 'object') {
-        sortValue = Object.values(sort)[0]
-      } else {
-        sortValue = sort || 'id'
-      }
-      if (!tipe) {
-        tipe = 'all'
-      }
-      if (!limit) {
-        limit = 10
-      } else if (limit === 'all') {
-        limit = 100
-      } else {
-        limit = parseInt(limit)
-      }
-      if (!page) {
-        page = 1
-      } else {
-        page = parseInt(page)
-      }
-      const depoExclude = await depo.findAll({
-        where: {
-          [Op.or]: [
-            { nama_area: { [Op.like]: `%${exclude}%` } },
-            { place_asset: { [Op.like]: `%${exclude}%` } }
-          ]
-        }
-      })
-      const findDep = await depo.findOne({
-        where: {
-          kode_plant: kode
-        }
-      })
-      const detailUser = await user.findOne({
-        where: {
-          id: id
-        }
-      })
-      if (findDep) {
-        const listCenter = []
-        if (limit === 'all') {
-          if (level === 9) {
-            const findUser = await user.findAll({
-              where: {
-                user_level: 9
-              }
-            })
-            for (let i = 0; i < findUser.length; i++) {
-              const data = { cost_center: findUser[i].kode_plant }
-              listCenter.push(data)
-            }
-            if (listCenter) {
-              const findLimit = await asset.findAll({
-                where: {
-                  [Op.and]: [
-                    area === 'all' ? { [Op.or]: listCenter } : { cost_center: area },
-                    depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
-                      ? detailUser.status_it === null
-                        ? {
-                          [Op.or]: [
-                            { kategori: { [Op.ne]: 'IT' } },
-                            { kategori: { [Op.is]: null } }
-                          ]
-                        }
-                        : { kategori: 'IT' }
-                      : { [Op.not]: { id: null } }
-                  ]
-                }
-              })
-              limit = findLimit.length
-            }
-          } else {
-            const findLimit = await asset.findAll({
-              where: {
-                cost_center: findDep.cost_center
-              }
-            })
-            limit = findLimit.length
-          }
-        }
-        if (level === 9) {
-          const findUser = await user.findAll({
-            where: {
-              user_level: 9
-            }
-          })
-          const listData = []
-          for (let i = 0; i < findUser.length; i++) {
-            const data = { cost_center: findUser[i].kode_plant }
-            listData.push(data)
-          }
-          const result = await asset.findAndCountAll({
-            where: {
-              [Op.and]: [
-                area === 'all' ? { [Op.or]: listData } : { cost_center: area },
-                depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
-                  ? detailUser.status_it === null
-                    ? {
-                      [Op.or]: [
-                        { kategori: { [Op.ne]: 'IT' } },
-                        { kategori: { [Op.is]: null } }
-                      ]
-                    }
-                    : { kategori: 'IT' }
-                  : { [Op.not]: { id: null } },
-                {
-                  [Op.or]: [
-                    { status: '1' },
-                    { status: '11' },
-                    { status: null }
-                  ]
-                }
-              ],
-              [Op.or]: [
-                { no_asset: { [Op.like]: `%${searchValue}` } },
-                { nama_asset: { [Op.like]: `%${searchValue}` } }
-              ]
-              // [Op.not]: { status: '0' }
-            },
-            include: [
-              {
-                model: path,
-                as: 'pict'
-              }
-            ],
-            order: [
-              [sortValue, 'ASC'],
-              [{ model: path, as: 'pict' }, 'id', 'ASC']
-            ],
-            limit: limit,
-            offset: (page - 1) * limit,
-            distinct: true
-          })
-          const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
-          if (result) {
-            return response(res, 'list asset', { result, pageInfo, level: level === 9, listData, area })
-          } else {
-            return response(res, 'failed to get asset', {}, 404, false)
-          }
-        } else {
-          const result = await asset.findAndCountAll({
-            where: {
-              [Op.and]: [
-                { cost_center: findDep.cost_center },
-                {
-                  [Op.or]: [
-                    { status: '1' },
-                    { status: '11' },
-                    { status: null }
-                  ]
-                }
-              ],
-              [Op.or]: [
-                { no_asset: { [Op.like]: `%${searchValue}` } },
-                { nama_asset: { [Op.like]: `%${searchValue}` } }
-              ]
-              // [Op.not]: { status: '0' }
-            },
-            include: [
-              {
-                model: path,
-                as: 'pict'
-              }
-            ],
-            order: [
-              [sortValue, 'ASC'],
-              [{ model: path, as: 'pict' }, 'id', 'ASC']
-            ],
-            limit: limit,
-            offset: (page - 1) * limit,
-            distinct: true
-          })
-          const pageInfo = pagination('/asset/all', req.query, page, limit, result.count)
-          if (result) {
-            return response(res, 'list asset', { result, pageInfo })
-          } else {
-            return response(res, 'failed to get asset', {}, 404, false)
-          }
-        }
-      } else {
-        return response(res, 'failed to get asset', {}, 404, false)
-      }
-    } catch (error) {
-      return response(res, error.message, {}, 500, false)
-    }
-  },
   getAssetAll: async (req, res) => {
     try {
       const kode = req.user.kode
@@ -501,7 +302,12 @@ module.exports = {
                             { kategori: { [Op.is]: null } }
                           ]
                         }
-                        : { kategori: 'IT' }
+                        : {
+                          [Op.or]: [
+                            { kategori: 'IT' },
+                            { kategori: { [Op.is]: null } }
+                          ]
+                        }
                       : { [Op.not]: { id: null } }
                   ]
                 },
@@ -543,7 +349,12 @@ module.exports = {
                         { kategori: { [Op.is]: null } }
                       ]
                     }
-                    : { kategori: 'IT' }
+                    : {
+                      [Op.or]: [
+                        { kategori: 'IT' },
+                        { kategori: { [Op.is]: null } }
+                      ]
+                    }
                   : { [Op.not]: { id: null } },
                 {
                   [Op.or]: [
