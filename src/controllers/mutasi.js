@@ -1355,6 +1355,7 @@ module.exports = {
       const { no } = req.body
       // const kode = req.user.kode
       // const name = req.user.name
+      const idUser = req.user.id
       const fullname = req.user.fullname
       const findMut = await mutasi.findAll({
         where: {
@@ -1371,7 +1372,8 @@ module.exports = {
           const data = {
             status_form: 2,
             history: `submit pengajuan by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
-            tanggalMut: moment()
+            tanggalMut: moment(),
+            id_applicant: idUser
           }
           const findData = await mutasi.findByPk(findMut[i].id)
           if (findData) {

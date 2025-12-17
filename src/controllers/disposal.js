@@ -753,6 +753,7 @@ module.exports = {
     try {
       const fullname = req.user.fullname
       const kode = req.user.kode
+      const idUser = req.user.id
       const { no } = req.body
       const result = await disposal.findAll({
         where: {
@@ -779,7 +780,8 @@ module.exports = {
                 no_disposal: noTrans,
                 nilai_buku: findApi.data.length > 0 && findApi.data[0].nafap !== undefined ? findApi.data[0].nafap : find.nilai_buku,
                 tanggalDis: moment(),
-                history: dataHistory
+                history: dataHistory,
+                id_applicant: idUser
               }
               await find.update(send)
               temp.push(cekJual ? 'musnah' : 'jual')
@@ -789,7 +791,8 @@ module.exports = {
                 no_disposal: noTrans,
                 nilai_buku: find.nilai_buku,
                 tanggalDis: moment(),
-                history: dataHistory
+                history: dataHistory,
+                id_applicant: idUser
               }
               await find.update(send)
               temp.push(cekJual ? 'musnah' : 'jual')

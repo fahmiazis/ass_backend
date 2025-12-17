@@ -387,7 +387,7 @@ module.exports = {
       // const level = req.user.level
       const name = req.user.fullname
       const role = req.user.role
-      // const id = req.user.id
+      const idUser = req.user.id
       const findArea = await depo.findOne({
         where: {
           kode_plant: kode
@@ -447,7 +447,8 @@ module.exports = {
                   image: cekPict ? pict : cekImg ? img : null,
                   date_img: moment(),
                   id_doc: validDoc[j].id,
-                  tanggalStock: moment()
+                  tanggalStock: moment(),
+                  id_applicant: idUser
                 }
                 const findData = await stock.findByPk(findStock[i].id)
                 if (findData) {
@@ -463,7 +464,8 @@ module.exports = {
                 status_app: 1,
                 image: cekPict ? pict : cekImg ? img : null,
                 date_img: moment(),
-                tanggalStock: moment()
+                tanggalStock: moment(),
+                id_applicant: idUser
               }
               const findData = await stock.findByPk(findStock[i].id)
               if (findData) {

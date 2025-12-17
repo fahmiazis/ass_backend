@@ -962,7 +962,9 @@ module.exports = {
   submitIoFinal: async (req, res) => {
     try {
       const { no } = req.body
-      const kode = req.user.kode
+      // const kode = req.user.kode
+      const idUser = req.user.id
+      const fullname = req.user.fullname
       const findIo = await pengadaan.findAll({
         where: {
           no_pengadaan: no,
@@ -976,8 +978,9 @@ module.exports = {
             // status_form: findIo[i].kategori === 'return' ? 2 : 1,
             status_form: 1,
             isAsset: findIo[i].kategori === 'return' ? 'true' : null,
-            history: `submit pengajuan by ${kode} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
-            tglIo: moment()
+            history: `submit pengajuan by ${fullname} at ${moment().format('DD/MM/YYYY h:mm:ss a')}`,
+            tglIo: moment(),
+            id_applicant: idUser
           }
           const findData = await pengadaan.findByPk(findIo[i].id)
           if (findData) {
