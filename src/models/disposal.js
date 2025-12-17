@@ -94,10 +94,11 @@ module.exports = (sequelize, DataTypes) => {
     date_faktur: DataTypes.DATE,
     gl_debit: DataTypes.STRING,
     gl_credit: DataTypes.STRING,
-    message_sap: DataTypes.STRING,
+    message_sap: DataTypes.TEXT,
     nilai_acquis: DataTypes.TEXT,
     accum_dep: DataTypes.TEXT,
     cap_date: DataTypes.DATE,
+    id_applicant: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'disposal'

@@ -74,7 +74,8 @@ module.exports = (sequelize, DataTypes) => {
     pic_aset: DataTypes.STRING,
     nilai_buku: DataTypes.STRING,
     nilai_acquis: DataTypes.STRING,
-    accum_dep: DataTypes.STRING
+    accum_dep: DataTypes.STRING,
+    id_applicant: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'stock'

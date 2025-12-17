@@ -72,6 +72,7 @@ module.exports = (sequelize, DataTypes) => {
     pic_aset: DataTypes.STRING,
     pic_budget: DataTypes.STRING,
     message_sap: DataTypes.STRING,
+    id_applicant: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'mutasi'

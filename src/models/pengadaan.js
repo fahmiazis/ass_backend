@@ -81,7 +81,8 @@ module.exports = (sequelize, DataTypes) => {
     no_ref: DataTypes.STRING,
     user_rev: DataTypes.STRING,
     pic_aset: DataTypes.STRING,
-    pic_budget: DataTypes.STRING
+    pic_budget: DataTypes.STRING,
+    id_applicant: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'pengadaan'
