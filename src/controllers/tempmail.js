@@ -2366,7 +2366,7 @@ module.exports = {
               from: 'noreply_aset@pinusmerahabadi.co.id',
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
               to: `${to}`,
-              cc: `${cc.split(',')}, neng_rina@pinusmerahabadi.co.id, pmaho_asset1@pinusmerahabadi.co.id, noreplyofr@gmail.com`,
+              cc: `${cc.split(',')}, noreplyofr@gmail.com`,
               // to: 'neng_rina@pinusmerahabadi.co.id',
               // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
               // to: 'noreplyofr@gmail.com',
