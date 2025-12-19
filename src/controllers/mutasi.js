@@ -63,25 +63,95 @@ module.exports = {
         }
       })
       if (result) {
-        const findArea = await mutasi.findAll({
-          where: {
-            [Op.and]: [
-              { kode_plant: kode },
-              { status_form: 1 }
-            ]
-          }
-        })
-        if (findArea.length > 0) {
-          const findPlant = await mutasi.findAll({
+        const cekKategori = result.kategori ? (!!((result.kategori.toLowerCase() === 'it' || result.kategori.toLowerCase() === 'non it'))) : false
+        if (!cekKategori) {
+          return response(res, 'gagal, pastikan asset memliki kategori', {}, 400, false)
+        } else {
+          const findArea = await mutasi.findAll({
             where: {
               [Op.and]: [
                 { kode_plant: kode },
-                { kode_plant_rec: plant }
-              ],
-              status_form: 1
+                { status_form: 1 }
+              ]
             }
           })
-          if (findPlant.length > 0) {
+          if (findArea.length > 0) {
+            const findPlant = await mutasi.findAll({
+              where: {
+                [Op.and]: [
+                  { kode_plant: kode },
+                  { kode_plant_rec: plant }
+                ],
+                status_form: 1
+              }
+            })
+            if (findPlant.length > 0) {
+              const findAsset = await mutasi.findAll({
+                where: {
+                  [Op.and]: [
+                    { no_asset: result.no_asset },
+                    { kode_plant: kode }
+                  ]
+                }
+              })
+              const findDepo = await depo.findOne({
+                where: {
+                  kode_plant: kode
+                }
+              })
+              if (findAsset.length > 0) {
+                return response(res, 'success add mutasi', { result: findAsset })
+              } else if ((level === 5 && result.cost_center === findDepo.cost_center) || (level === 9 && result.cost_center === kode)) {
+                if (findDepo) {
+                  const findRec = await depo.findOne({
+                    where: {
+                      kode_plant: plant
+                    }
+                  })
+                  if (findRec) {
+                    const send = {
+                      kode_plant: kode,
+                      area: findDepo.nama_area,
+                      no_doc: result.no_doc,
+                      no_asset: result.no_asset,
+                      nama_asset: result.nama_asset,
+                      cost_center: findDepo.cost_center,
+                      status_depo: findDepo.status_area,
+                      kode_plant_rec: plant,
+                      cost_center_rec: findRec.cost_center,
+                      area_rec: findRec.nama_area,
+                      status_form: 1,
+                      kategori: result.kategori,
+                      merk: result.merk
+                    }
+                    const make = await mutasi.create(send)
+                    if (make) {
+                      const data = {
+                        status: '11',
+                        keterangan: 'proses mutasi'
+                      }
+                      const update = await result.update(data)
+                      if (update) {
+                        return response(res, 'success add mutasi', { result: make })
+                      } else {
+                        return response(res, 'failed add mutasi1', {}, 400, false)
+                      }
+                    } else {
+                      return response(res, 'failed add mutasi2', {}, 400, false)
+                    }
+                  } else {
+                    return response(res, 'failed add mutasi3', {}, 400, false)
+                  }
+                } else {
+                  return response(res, 'failed add mutasi4', {}, 400, false)
+                }
+              } else {
+                return response(res, 'failed add mutasi5', { findDepo, result }, 400, false)
+              }
+            } else {
+              return response(res, 'Hanya bisa menambahkan item dengan area tujuan yang sama. Kosongkan atau submit cart terlebih dahulu !', { findArea }, 400, false)
+            }
+          } else {
             const findAsset = await mutasi.findAll({
               where: {
                 [Op.and]: [
@@ -123,7 +193,7 @@ module.exports = {
                   const make = await mutasi.create(send)
                   if (make) {
                     const data = {
-                      status: '11',
+                      status: 11,
                       keterangan: 'proses mutasi'
                     }
                     const update = await result.update(data)
@@ -142,73 +212,8 @@ module.exports = {
                 return response(res, 'failed add mutasi4', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add mutasi5', { findDepo, result }, 400, false)
+              return response(res, 'failed add mutasi5', { result, findDepo }, 400, false)
             }
-          } else {
-            return response(res, 'Hanya bisa menambahkan item dengan area tujuan yang sama. Kosongkan atau submit cart terlebih dahulu !', { findArea }, 400, false)
-          }
-        } else {
-          const findAsset = await mutasi.findAll({
-            where: {
-              [Op.and]: [
-                { no_asset: result.no_asset },
-                { kode_plant: kode }
-              ]
-            }
-          })
-          const findDepo = await depo.findOne({
-            where: {
-              kode_plant: kode
-            }
-          })
-          if (findAsset.length > 0) {
-            return response(res, 'success add mutasi', { result: findAsset })
-          } else if ((level === 5 && result.cost_center === findDepo.cost_center) || (level === 9 && result.cost_center === kode)) {
-            if (findDepo) {
-              const findRec = await depo.findOne({
-                where: {
-                  kode_plant: plant
-                }
-              })
-              if (findRec) {
-                const send = {
-                  kode_plant: kode,
-                  area: findDepo.nama_area,
-                  no_doc: result.no_doc,
-                  no_asset: result.no_asset,
-                  nama_asset: result.nama_asset,
-                  cost_center: findDepo.cost_center,
-                  status_depo: findDepo.status_area,
-                  kode_plant_rec: plant,
-                  cost_center_rec: findRec.cost_center,
-                  area_rec: findRec.nama_area,
-                  status_form: 1,
-                  kategori: result.kategori,
-                  merk: result.merk
-                }
-                const make = await mutasi.create(send)
-                if (make) {
-                  const data = {
-                    status: 11,
-                    keterangan: 'proses mutasi'
-                  }
-                  const update = await result.update(data)
-                  if (update) {
-                    return response(res, 'success add mutasi', { result: make })
-                  } else {
-                    return response(res, 'failed add mutasi1', {}, 400, false)
-                  }
-                } else {
-                  return response(res, 'failed add mutasi2', {}, 400, false)
-                }
-              } else {
-                return response(res, 'failed add mutasi3', {}, 400, false)
-              }
-            } else {
-              return response(res, 'failed add mutasi4', {}, 400, false)
-            }
-          } else {
-            return response(res, 'failed add mutasi5', { result, findDepo }, 400, false)
           }
         }
       } else {

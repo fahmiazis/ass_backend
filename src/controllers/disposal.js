@@ -35,58 +35,63 @@ module.exports = {
         }
       })
       if (result && findDepo) {
-        const findAsset = await disposal.findAll({
-          where: {
-            no_asset: result.no_asset,
-            [Op.not]: { status_form: 0 }
-          }
-        })
-        if (findAsset.length > 0) {
-          return response(res, 'success add disposal', { result: findAsset })
-        } else if (result.cost_center === findDepo.cost_center) {
-          const findDepo = await depo.findAll({
+        const cekKategori = result.kategori ? (!!((result.kategori.toLowerCase() === 'it' || result.kategori.toLowerCase() === 'non it'))) : false
+        if (!cekKategori) {
+          return response(res, 'gagal, pastikan asset memliki kategori', {}, 400, false)
+        } else {
+          const findAsset = await disposal.findAll({
             where: {
-              kode_plant: level === 9 ? result.cost_center : kode
+              no_asset: result.no_asset,
+              [Op.not]: { status_form: 0 }
             }
           })
-          if (findDepo.length > 0) {
-            const send = {
-              kode_plant: findDepo[0].kode_plant,
-              area: findDepo[0].nama_area,
-              no_doc: result.no_doc,
-              no_asset: result.no_asset,
-              nama_asset: result.nama_asset,
-              cost_center: findDepo[0].cost_center,
-              status_depo: findDepo[0].status_area,
-              nilai_jual: 0,
-              nilai_buku: result.nilai_buku,
-              nilai_acquis: result.nilai_acquis,
-              accum_dep: result.accum_dep,
-              cap_date: result.tanggal,
-              status_form: 1,
-              kategori: result.kategori,
-              merk: result.merk
-            }
-            const make = await disposal.create(send)
-            if (make) {
-              const data = {
-                status: '1',
-                keterangan: 'proses disposal'
+          if (findAsset.length > 0) {
+            return response(res, 'success add disposal', { result: findAsset })
+          } else if (result.cost_center === findDepo.cost_center) {
+            const findDepo = await depo.findAll({
+              where: {
+                kode_plant: level === 9 ? result.cost_center : kode
               }
-              const updateData = await result.update(data)
-              if (updateData) {
-                return response(res, 'success add disposal', { result: make })
+            })
+            if (findDepo.length > 0) {
+              const send = {
+                kode_plant: findDepo[0].kode_plant,
+                area: findDepo[0].nama_area,
+                no_doc: result.no_doc,
+                no_asset: result.no_asset,
+                nama_asset: result.nama_asset,
+                cost_center: findDepo[0].cost_center,
+                status_depo: findDepo[0].status_area,
+                nilai_jual: 0,
+                nilai_buku: result.nilai_buku,
+                nilai_acquis: result.nilai_acquis,
+                accum_dep: result.accum_dep,
+                cap_date: result.tanggal,
+                status_form: 1,
+                kategori: result.kategori,
+                merk: result.merk
+              }
+              const make = await disposal.create(send)
+              if (make) {
+                const data = {
+                  status: '1',
+                  keterangan: 'proses disposal'
+                }
+                const updateData = await result.update(data)
+                if (updateData) {
+                  return response(res, 'success add disposal', { result: make })
+                } else {
+                  return response(res, 'failed add disposal 09', {}, 400, false)
+                }
               } else {
-                return response(res, 'failed add disposal 09', {}, 400, false)
+                return response(res, 'failed add disposal 0', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add disposal 0', {}, 400, false)
+              return response(res, 'failed add disposal 1', {}, 400, false)
             }
           } else {
-            return response(res, 'failed add disposal 1', {}, 400, false)
+            return response(res, 'failed add disposal 2', { result }, 400, false)
           }
-        } else {
-          return response(res, 'failed add disposal 2', { result }, 400, false)
         }
       } else {
         return response(res, 'failed add disposal 3', {}, 400, false)
@@ -112,58 +117,63 @@ module.exports = {
         }
       })
       if (result && findDepo) {
-        const findAsset = await disposal.findAll({
-          where: {
-            no_asset: result.no_asset,
-            [Op.not]: { status_form: 0 }
-          }
-        })
-        if (findAsset.length > 0) {
-          return response(res, 'success add sell', { result: findAsset })
-        } else if (result.cost_center === findDepo.cost_center) {
-          const findDepo = await depo.findAll({
+        const cekKategori = result.kategori ? (!!((result.kategori.toLowerCase() === 'it' || result.kategori.toLowerCase() === 'non it'))) : false
+        if (!cekKategori) {
+          return response(res, 'gagal, pastikan asset memliki kategori', {}, 400, false)
+        } else {
+          const findAsset = await disposal.findAll({
             where: {
-              kode_plant: level === 9 ? result.cost_center : kode
+              no_asset: result.no_asset,
+              [Op.not]: { status_form: 0 }
             }
           })
-          if (findDepo.length > 0) {
-            const send = {
-              kode_plant: findDepo[0].kode_plant,
-              area: findDepo[0].nama_area,
-              no_doc: result.no_doc,
-              no_asset: result.no_asset,
-              nama_asset: result.nama_asset,
-              cost_center: findDepo[0].cost_center,
-              status_depo: findDepo[0].status_area,
-              nilai_buku: result.nilai_buku,
-              nilai_acquis: result.nilai_acquis,
-              accum_dep: result.accum_dep,
-              cap_date: result.tanggal,
-              status_form: 1,
-              kategori: result.kategori,
-              merk: result.merk
-              // npwp: tipeNpwp
-            }
-            const make = await disposal.create(send)
-            if (make) {
-              const data = {
-                status: '1',
-                keterangan: 'proses disposal'
+          if (findAsset.length > 0) {
+            return response(res, 'success add sell', { result: findAsset })
+          } else if (result.cost_center === findDepo.cost_center) {
+            const findDepo = await depo.findAll({
+              where: {
+                kode_plant: level === 9 ? result.cost_center : kode
               }
-              const updateData = await result.update(data)
-              if (updateData) {
-                return response(res, 'success add sell', { result: make })
+            })
+            if (findDepo.length > 0) {
+              const send = {
+                kode_plant: findDepo[0].kode_plant,
+                area: findDepo[0].nama_area,
+                no_doc: result.no_doc,
+                no_asset: result.no_asset,
+                nama_asset: result.nama_asset,
+                cost_center: findDepo[0].cost_center,
+                status_depo: findDepo[0].status_area,
+                nilai_buku: result.nilai_buku,
+                nilai_acquis: result.nilai_acquis,
+                accum_dep: result.accum_dep,
+                cap_date: result.tanggal,
+                status_form: 1,
+                kategori: result.kategori,
+                merk: result.merk
+              // npwp: tipeNpwp
+              }
+              const make = await disposal.create(send)
+              if (make) {
+                const data = {
+                  status: '1',
+                  keterangan: 'proses disposal'
+                }
+                const updateData = await result.update(data)
+                if (updateData) {
+                  return response(res, 'success add sell', { result: make })
+                } else {
+                  return response(res, 'failed add sell1', {}, 400, false)
+                }
               } else {
-                return response(res, 'failed add sell1', {}, 400, false)
+                return response(res, 'failed add sell2', {}, 400, false)
               }
             } else {
-              return response(res, 'failed add sell2', {}, 400, false)
+              return response(res, 'failed add sell3', {}, 400, false)
             }
           } else {
-            return response(res, 'failed add sell3', {}, 400, false)
+            return response(res, 'failed add sell4', {}, 400, false)
           }
-        } else {
-          return response(res, 'failed add sell4', {}, 400, false)
         }
       } else {
         return response(res, 'failed add sell5', {}, 400, false)
