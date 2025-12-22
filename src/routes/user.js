@@ -20,4 +20,7 @@ route.patch('/chplant', user.choosePlant)
 route.patch('/data/:id', user.getLogin)
 route.patch('/token/:id', user.getToken)
 
+// fcm token
+route.post('/update-fcm-token', user.updateFcmToken)
+
 module.exports = route

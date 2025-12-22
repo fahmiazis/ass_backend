@@ -115,6 +115,29 @@ module.exports = {
       return response(res, error.message, {}, 500, false)
     }
   },
+  updateFcmToken: async (req, res) => {
+    try {
+      const { fcm_token } = req.body
+      const idUser = req.user.id // Dari JWT
+
+      if (!fcm_token) {
+        return response(res, 'FCM token is required', {}, 400, false)
+      }
+
+      const updateUser = await user.update(
+        { fcm_token: fcm_token },
+        { where: { id: idUser } }
+      )
+
+      if (updateUser[0] > 0) {
+        return response(res, 'FCM token updated successfully', { updateUser })
+      } else {
+        return response(res, 'Failed to update FCM token', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
   createRole: async (req, res) => {
     try {
       const level = req.user.level

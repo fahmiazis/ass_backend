@@ -1,5 +1,5 @@
 const response = require('../helpers/response')
-const { mutasi, asset, depo, ttd, approve, role, user, docUser, document, path, email, reservoir, role_user, sequelize } = require('../models') // eslint-disable-line
+const { mutasi, asset, depo, ttd, approve, role, user, docUser, document, path, email, reservoir, role_user, sequelize, info_approval } = require('../models') // eslint-disable-line
 const { Op } = require('sequelize')
 const { pagination } = require('../helpers/pagination')
 const joi = require('joi')
@@ -1434,7 +1434,52 @@ module.exports = {
                 createdAt: moment()
               }
               await findNewReser.update(upDataReser)
-              return response(res, 'success submit cart')
+              const listName = ['Mutasi HO HO', 'Mutasi HO area', 'Mutasi area HO', 'Mutasi area area']
+              let pembuat = '1. Dibuat :; '
+              let pemeriksa = ']2. Diperiksa :; '
+              let penyetuju = ']3. Disetujui :; '
+              for (let i = 0; i < listName.length; i++) {
+                // for (let y = 0; y < 2; y++) {
+                const getApproval = await approve.findAll({
+                  where: {
+                    nama_approve: listName[i],
+                    [Op.or]: [
+                      // { jenis: y === 1 ? 'it' : 'all' },
+                      { jenis: 'all' }
+                    ]
+                  }
+                })
+                const dataPembuat = getApproval.filter(item => item.sebagai === 'pembuat')
+                const dataPemeriksa = getApproval.filter(item => item.sebagai === 'pemeriksa' && item.jabatan !== 'asset')
+                const dataPenyetuju = getApproval.filter(item => item.sebagai === 'penyetuju')
+                for (let x = 0; x < dataPembuat.length; x++) {
+                  pembuat += `${dataPembuat[x].jabatan}${x === (dataPembuat.length - 1) ? ';' : ', '}`
+                }
+                for (let x = 0; x < dataPemeriksa.length; x++) {
+                  pemeriksa += `${dataPemeriksa[x].jabatan}${dataPemeriksa[x].jenis === 'it' ? ' (aset IT)' : ''}${x === (dataPemeriksa.length - 1) ? ';' : ', '}`
+                }
+                for (let x = 0; x < dataPenyetuju.length; x++) {
+                  penyetuju += `${dataPenyetuju[x].jabatan}${dataPenyetuju[x].jenis === 'it' ? ' (aset IT)' : ''}${x === (dataPenyetuju.length - 1) ? ';' : ', '}`
+                }
+                // }
+              }
+
+              const findInfoApp = await info_approval.findOne({
+                where: {
+                  no_transaksi: no
+                }
+              })
+              const sendInfo = {
+                no_transaksi: no,
+                info: `${pembuat}${pemeriksa}${penyetuju}`
+              }
+              if (findInfoApp) {
+                await findInfoApp.update(sendInfo)
+                return response(res, 'success submit cart')
+              } else {
+                await info_approval.create(sendInfo)
+                return response(res, 'success submit cart')
+              }
             } else {
               return response(res, 'success submit cart')
             }
@@ -1480,7 +1525,12 @@ module.exports = {
         ]
       })
       if (result.length > 0) {
-        return response(res, 'success get mutasi', { result })
+        const findInfo = await info_approval.findOne({
+          where: {
+            no_transaksi: no
+          }
+        })
+        return response(res, 'success get mutasi', { result, infoApp: findInfo })
       } else {
         return response(res, 'failed get mutasi', {}, 404, false)
       }
@@ -3348,6 +3398,59 @@ module.exports = {
         return response(res, 'qr berhasil diverifikasi', { result: dataToken })
       } else {
         return response(res, 'qr code tidak valid', {}, 400, false)
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  createInfoApproval: async (req, res) => {
+    try {
+      const { no } = req.body
+      const listName = ['Mutasi HO HO', 'Mutasi HO area', 'Mutasi area HO', 'Mutasi area area']
+      let pembuat = '1. Dibuat :; '
+      let pemeriksa = ']2. Diperiksa :; '
+      let penyetuju = ']3. Disetujui :; '
+      for (let i = 0; i < listName.length; i++) {
+        // for (let y = 0; y < 2; y++) {
+        const getApproval = await approve.findAll({
+          where: {
+            nama_approve: listName[i]
+            // [Op.or]: [
+            //   { jenis: 'it' },
+            //   { jenis: 'all' }
+            // ]
+          }
+        })
+        const dataPembuat = getApproval.filter(item => item.sebagai === 'pembuat')
+        const dataPemeriksa = getApproval.filter(item => item.sebagai === 'pemeriksa' && item.jabatan !== 'asset')
+        const dataPenyetuju = getApproval.filter(item => item.sebagai === 'penyetuju')
+        for (let x = 0; x < dataPembuat.length; x++) {
+          pembuat += `${dataPembuat[x].jabatan}${x === (dataPembuat.length - 1) ? ';' : ', '}`
+        }
+        for (let x = 0; x < dataPemeriksa.length; x++) {
+          pemeriksa += `${dataPemeriksa[x].jabatan}${dataPemeriksa[x].jenis === 'it' ? ' (aset IT)' : ''}${x === (dataPemeriksa.length - 1) ? ';' : ', '}`
+        }
+        for (let x = 0; x < dataPenyetuju.length; x++) {
+          penyetuju += `${dataPenyetuju[x].jabatan}${dataPenyetuju[x].jenis === 'it' ? ' (aset IT)' : ''}${x === (dataPenyetuju.length - 1) ? ';' : ', '}`
+        }
+        // }
+      }
+
+      const findInfoApp = await info_approval.findOne({
+        where: {
+          no_transaksi: no
+        }
+      })
+      const sendInfo = {
+        no_transaksi: no,
+        info: `${pembuat}${pemeriksa}${penyetuju}`
+      }
+      if (findInfoApp) {
+        await findInfoApp.update(sendInfo)
+        return response(res, 'success update info approval')
+      } else {
+        await info_approval.create(sendInfo)
+        return response(res, 'success create info approval')
       }
     } catch (error) {
       return response(res, error.message, {}, 500, false)

@@ -38,7 +38,8 @@ module.exports = (sequelize, DataTypes) => {
     request_level: DataTypes.INTEGER,
     status_request: DataTypes.INTEGER,
     request_kode: DataTypes.STRING,
-    history: DataTypes.TEXT
+    history: DataTypes.TEXT,
+    fcm_token: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'user'

@@ -32,10 +32,11 @@ route.patch('/taxfin/edit/:no', disposal.submitEditTaxFin)
 route.patch('/asset', disposal.updateStatus)
 route.get('/purch/get', disposal.getDocumentPurch)
 route.patch('/editdis/:no', disposal.submitEditDis)
-route.patch('/rejeks', disposal.rejectEks)
-route.patch('/editeks', disposal.submitEditEks)
 route.patch('/apprev/:id/:type', disposal.appRevisi)
 route.patch('/subrev', disposal.submitRevisi)
 route.patch('/gennoset', disposal.genNoSetDisposal)
+
+// update info approval
+route.patch('/infoapp', disposal.createInfoApproval)
 
 module.exports = route

@@ -52,4 +52,7 @@ route.patch('/remspar', pengadaan.removeSpar)
 // remove underline in no ref
 route.patch('/underline', pengadaan.removeUnderline)
 
+// update info approval
+route.patch('/infoapp', pengadaan.createInfoApproval)
+
 module.exports = route

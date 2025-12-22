@@ -30,4 +30,7 @@ route.patch('/subrev', mutasi.submitRevisi)
 route.patch('/upreason', mutasi.updateReason)
 route.patch('/scan', mutasi.scanQrMutasi)
 
+// update info approval
+route.patch('/infoapp', mutasi.createInfoApproval)
+
 module.exports = route

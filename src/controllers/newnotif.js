@@ -3,9 +3,10 @@ const { Op } = require('sequelize')
 const response = require('../helpers/response')
 const moment = require('moment')
 const { pagination } = require('../helpers/pagination')
+const { sendFCMNotification, sendFCMNotificationMultiple } = require('../helpers/fcmHelper')
 
 module.exports = {
-  addNotif: async (req, res) => {
+  addNotifOld: async (req, res) => {
     try {
       const level = req.user.level
       const { nameTo, no, tipe, jenis, menu, proses, route, draft, filter } = req.body
@@ -103,6 +104,199 @@ module.exports = {
               }
               const createNotif = await newnotif.create(data)
               if (createNotif) {
+                return response(res, 'success create newnotif', { createNotif, nameTo })
+              } else {
+                return response(res, 'failed create newnotif 1', { createNotif, nameTo })
+              }
+            }
+          }
+        } else {
+          return response(res, 'failed create newnotif 2', { findData, nameTo })
+        }
+      } else {
+        return response(res, 'failed get newnotif 3', { findRole, nameTo })
+      }
+    } catch (error) {
+      return response(res, error.message, {}, 500, false)
+    }
+  },
+  addNotif: async (req, res) => {
+    try {
+      const level = req.user.level
+      const { nameTo, no, tipe, jenis, menu, proses, route, draft, filter } = req.body
+
+      const findRole = await role.findOne({
+        where: {
+          nomor: level
+        }
+      })
+
+      if (findRole) {
+        const transaksi = tipe === 'pengadaan'
+          ? pengadaan : tipe === 'disposal' || tipe === 'persetujuan' // eslint-disable-line
+            ? disposal : tipe === 'mutasi'                            // eslint-disable-line
+              ? mutasi : tipe === 'user'                              // eslint-disable-line
+                ? user : stock                                        // eslint-disable-line
+
+        const noTrans = tipe === 'pengadaan'
+        ? { no_pengadaan: no } : tipe === 'disposal'        // eslint-disable-line
+            ? { no_disposal: no } : tipe === 'persetujuan'  // eslint-disable-line
+              ? { no_persetujuan: no } : tipe === 'mutasi'  // eslint-disable-line
+                ? { no_mutasi: no } : tipe === 'user'       // eslint-disable-line
+                  ? { mpn_number: no } : { no_stock: no }   // eslint-disable-line
+
+        const findData = await transaksi.findAll({
+          where: {
+            [Op.and]: [
+              noTrans
+            ]
+          }
+        })
+
+        if (findData) {
+          if (jenis === 'reject persetujuan' || jenis === 'full approve persetujuan') {
+            const cekData = []
+            const dataTo = draft.to !== undefined && draft.to.length !== undefined && draft.to.length > 0
+              ? draft.to
+              : [{ username: nameTo }]
+
+            console.log(dataTo)
+
+            // Array untuk simpan FCM tokens
+            const fcmTokensToSend = []
+
+            for (let i = 0; i < dataTo.length; i++) {
+              const findNotif = await newnotif.findOne({
+                where: {
+                  [Op.and]: [
+                    { user: { [Op.like]: `%${dataTo[i].username}` } },
+                    { no_transaksi: { [Op.like]: `%${no}` } },
+                    { proses: { [Op.like]: `%${menu}%` } },
+                    { tipe: { [Op.like]: `%${proses}%` } },
+                    { status: 100 }
+                  ]
+                }
+              })
+
+              if (findNotif) {
+                return response(res, 'success create newnotif', { findNotif, dataTo, tipe: tipe })
+              } else {
+                const data = {
+                  user: dataTo[i].username,
+                  kode_plant: dataTo[i].kode_plant,
+                  transaksi: tipe,
+                  proses: menu,
+                  no_transaksi: no,
+                  tipe: proses,
+                  routes: route,
+                  filter: filter
+                }
+
+                const createNotif = await newnotif.create(data)
+
+                if (createNotif) {
+                  cekData.push(createNotif)
+
+                  // ✅ AMBIL FCM TOKEN USER (asumsi ada field fcm_token di table user)
+                  const findUser = await user.findOne({
+                    where: { username: dataTo[i].username }
+                  })
+
+                  if (findUser && findUser.fcm_token) {
+                    fcmTokensToSend.push(findUser.fcm_token)
+                  }
+                }
+              }
+            }
+
+            if (cekData.length > 0) {
+              // ✅ KIRIM FCM NOTIFICATION ke multiple users (async tanpa await)
+              if (fcmTokensToSend.length > 0) {
+                const notifTitle = menu + ' - ' + proses
+                const notifBody = 'Transaksi ' + no + ' memerlukan perhatian Anda'
+                const notifData = {
+                  transaksi: tipe,
+                  no_transaksi: no,
+                  proses: menu,
+                  tipe: proses,
+                  route: route || '',
+                  filter: filter || '',
+                  jenis: jenis || '',
+                  timestamp: new Date().toISOString()
+                }
+
+                // Jalankan async tanpa await supaya tidak blocking response
+                sendFCMNotificationMultiple(
+                  fcmTokensToSend,
+                  notifTitle,
+                  notifBody,
+                  notifData
+                ).catch(err => console.error('FCM Error:', err))
+              }
+
+              return response(res, 'success create newnotif', { cekData, dataTo, tipe: 'persetujuan' })
+            } else {
+              return response(res, 'failed create newnotif', { cekData, dataTo, tipe: 'persetujuan' })
+            }
+          } else {
+            const findNotif = await newnotif.findOne({
+              where: {
+                [Op.and]: [
+                  { user: { [Op.like]: `%${nameTo}%` } },
+                  { no_transaksi: { [Op.like]: `%${no}%` } },
+                  { proses: { [Op.like]: `%${menu}%` } },
+                  { tipe: { [Op.like]: `%${proses}%` } },
+                  { status: 100 }
+                ]
+              }
+            })
+
+            if (findNotif) {
+              return response(res, 'success create newnotif', { findNotif })
+            } else {
+              const data = {
+                user: nameTo,
+                kode_plant: tipe === 'user' ? no : findData[0].kode_plant,
+                transaksi: tipe,
+                proses: menu,
+                no_transaksi: no,
+                tipe: proses,
+                routes: route,
+                filter: filter
+              }
+
+              const createNotif = await newnotif.create(data)
+
+              if (createNotif) {
+                // ✅ AMBIL FCM TOKEN USER
+                const findUser = await user.findOne({
+                  where: { username: nameTo }
+                })
+
+                // ✅ KIRIM FCM NOTIFICATION ke single user (async tanpa await)
+                if (findUser && findUser.fcm_token) {
+                  const notifTitle = menu + ' - ' + proses
+                  const notifBody = 'Transaksi ' + no + ' memerlukan perhatian Anda'
+                  const notifData = {
+                    transaksi: tipe,
+                    no_transaksi: no,
+                    proses: menu,
+                    tipe: proses,
+                    route: route || '',
+                    filter: filter || '',
+                    jenis: jenis || '',
+                    timestamp: new Date().toISOString()
+                  }
+
+                  // Jalankan async tanpa await supaya tidak blocking response
+                  sendFCMNotification(
+                    findUser.fcm_token,
+                    notifTitle,
+                    notifBody,
+                    notifData
+                  ).catch(err => console.error('FCM Error:', err))
+                }
+
                 return response(res, 'success create newnotif', { createNotif, nameTo })
               } else {
                 return response(res, 'failed create newnotif 1', { createNotif, nameTo })
