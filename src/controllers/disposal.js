@@ -1,4 +1,4 @@
-const { disposal, asset, depo, path, ttd, approve, role, document, docUser, email, user, notif, reservoir } = require('../models')
+const { disposal, asset, depo, path, ttd, approve, role, document, docUser, email, user, notif, reservoir, info_approval } = require('../models')
 const joi = require('joi')
 const response = require('../helpers/response')
 const { Op } = require('sequelize')
@@ -777,6 +777,7 @@ module.exports = {
         const noTrans = no
 
         const temp = []
+        const cekIt = []
         for (let i = 0; i < result.length; i++) {
           const find = await disposal.findByPk(result[i].id)
           if (find) {
@@ -795,6 +796,9 @@ module.exports = {
               }
               await find.update(send)
               temp.push(cekJual ? 'musnah' : 'jual')
+              if (find.kategori === 'IT') {
+                cekIt.push(1)
+              }
             } else {
               const send = {
                 status_form: cekJual ? 2 : 26,
@@ -806,6 +810,9 @@ module.exports = {
               }
               await find.update(send)
               temp.push(cekJual ? 'musnah' : 'jual')
+              if (find.kategori === 'IT') {
+                cekIt.push(1)
+              }
             }
           }
         }
@@ -821,7 +828,52 @@ module.exports = {
               createdAt: moment()
             }
             await findNewReser.update(upDataReser)
-            return response(res, 'success submit cart')
+            const listName = ['disposal pengajuan HO', 'disposal pengajuan']
+            let pembuat = '1. Dibuat :; '
+            let pemeriksa = ']2. Diperiksa :; '
+            let penyetuju = ']3. Disetujui :; '
+            for (let i = 0; i < listName.length; i++) {
+              for (let y = 0; y < 2; y++) {
+                const getApproval = await approve.findAll({
+                  where: {
+                    nama_approve: listName[i],
+                    [Op.or]: [
+                      { jenis: y === 1 ? 'it' : 'all' },
+                      { jenis: 'all' }
+                    ]
+                  }
+                })
+                const dataPembuat = getApproval.filter(item => item.sebagai === 'pembuat')
+                const dataPemeriksa = getApproval.filter(item => item.sebagai === 'pemeriksa')
+                const dataPenyetuju = getApproval.filter(item => item.sebagai === 'penyetuju')
+                for (let x = 0; x < dataPembuat.length; x++) {
+                  pembuat += `${dataPembuat[x].jabatan}${x === (dataPembuat.length - 1) ? ';' : ', '}`
+                }
+                for (let x = 0; x < dataPemeriksa.length; x++) {
+                  pemeriksa += `${dataPemeriksa[x].jabatan}${x === (dataPemeriksa.length - 1) ? ';' : ', '}`
+                }
+                for (let x = 0; x < dataPenyetuju.length; x++) {
+                  penyetuju += `${dataPenyetuju[x].jabatan}${x === (dataPenyetuju.length - 1) ? ';' : ', '}`
+                }
+              }
+            }
+
+            const findInfoApp = await info_approval.findOne({
+              where: {
+                no_transaksi: no
+              }
+            })
+            const sendInfo = {
+              no_transaksi: no,
+              info: `${pembuat}${pemeriksa}${penyetuju}`
+            }
+            if (findInfoApp) {
+              await findInfoApp.update(sendInfo)
+              return response(res, 'success submit cart')
+            } else {
+              await info_approval.create(sendInfo)
+              return response(res, 'success submit cart')
+            }
           } else {
             return response(res, 'success submit cart')
           }
