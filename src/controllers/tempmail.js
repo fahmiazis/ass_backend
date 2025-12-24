@@ -179,7 +179,12 @@ module.exports = {
           exclude: ['nama_pic_4', 'nama_pic_3']
         }
       })
+
+      const findAllRole = await role.findAll()
+
       const cekLevel = kode.length > 4 ? 9 : 5
+      const roleHo = findAllRole.find(item => parseInt(item.nomor) === 9) ? findAllRole.find(item => parseInt(item.nomor) === 9).name : ''
+      const roleAos = findAllRole.find(item => parseInt(item.nomor) === 5) ? findAllRole.find(item => parseInt(item.nomor) === 5).name : ''
       const findTrans = await transaksi.findOne({
         where: {
         // noTrans,
@@ -221,7 +226,7 @@ module.exports = {
             const temp = []
             const arrLevel = []
             const firstArrCc = findDraft.cc.split(',')
-            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== roleHo : cekLevel === 9 && item !== roleAos)
             for (let i = 0; i < arrCc.length; i++) {
               const findLevel = await role.findOne({
                 where: {
@@ -441,7 +446,7 @@ module.exports = {
             if (findDraft) {
               const temp = []
               const firstArrCc = findDraft.cc.split(',')
-              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
+              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== roleHo : cekLevel === 9 && item !== roleAos)
               let cekCC = ''
               if (jenis === 'persetujuan') {
                 cekCC = 'persetujuan'
@@ -642,7 +647,7 @@ module.exports = {
                     arr = convIndex + 1
                     const findLevel = await role.findOne({
                       where: {
-                        name: (findApp[arr].jabatan === 'AOS' && jenis === 'mutasi' && findTrans.kode_plant_rec.length > 4) ? 'HO' : findApp[arr].jabatan
+                        name: (findApp[arr].jabatan === roleAos && jenis === 'mutasi' && findTrans.kode_plant_rec.length > 4) ? roleHo : findApp[arr].jabatan
                       }
                     })
                     if (findLevel) {
@@ -653,7 +658,7 @@ module.exports = {
                     arr = i + 1
                     const findLevel = await role.findOne({
                       where: {
-                        name: (findApp[arr].jabatan === 'AOS' && jenis === 'mutasi' && findTrans.kode_plant_rec.length > 4) ? 'HO' : findApp[arr].jabatan
+                        name: (findApp[arr].jabatan === roleAos && jenis === 'mutasi' && findTrans.kode_plant_rec.length > 4) ? roleHo : findApp[arr].jabatan
                       }
                     })
                     if (findLevel) {
@@ -808,7 +813,7 @@ module.exports = {
                   }
                 }
               } else {
-                return response(res, 'failed get emai1l', { temp, listName, findDepo }, 404, false)
+                return response(res, 'failed get emai1l not found cc email', { temp, listName, findDepo }, 404, false)
               }
             } else {
               return response(res, 'failed get emai2l', { findDraft }, 404, false)
@@ -832,7 +837,7 @@ module.exports = {
           if (findDraft) {
             const temp = []
             const firstArrCc = findDraft.cc.split(',')
-            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== roleHo : cekLevel === 9 && item !== roleAos)
             if (jenis === 'persetujuan') {
               for (let x = 0; x < listData.length; x++) {
                 const findDepo = await depo.findOne({
@@ -1252,7 +1257,7 @@ module.exports = {
           if (findDraft) {
             const temp = []
             const firstArrCc = findDraft.cc.split(',')
-            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== roleHo : cekLevel === 9 && item !== roleAos)
             if (jenis === 'persetujuan') {
               for (let x = 0; x < listData.length; x++) {
                 const findDepo = await depo.findOne({
@@ -1471,7 +1476,7 @@ module.exports = {
             } else {
               const temp = []
               const firstArrCc = findDraft.cc.split(',')
-              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
+              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== roleHo : cekLevel === 9 && item !== roleAos)
               for (let i = 0; i < arrCc.length; i++) {
                 const findLevel = await role.findOne({
                   where: {
@@ -1686,7 +1691,7 @@ module.exports = {
           if (findDraft) {
             const temp = []
             const firstArrCc = findDraft.cc.split(',')
-            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
+            const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== roleHo : cekLevel === 9 && item !== roleAos)
             for (let i = 0; i < arrCc.length; i++) {
               const findLevel = await role.findOne({
                 where: {
@@ -1888,7 +1893,7 @@ module.exports = {
             if (findDraft) {
               const temp = []
               const firstArrCc = findDraft.cc.split(',')
-              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== 'HO' : cekLevel === 9 && item !== 'AOS')
+              const arrCc = firstArrCc.filter(item => cekLevel === 5 ? item !== roleHo : cekLevel === 9 && item !== roleAos)
               for (let i = 0; i < arrCc.length; i++) {
                 const findLevel = await role.findOne({
                   where: {
@@ -2365,12 +2370,12 @@ module.exports = {
             const mailOptions = {
               from: 'noreply_aset@pinusmerahabadi.co.id',
               replyTo: 'noreply_aset@pinusmerahabadi.co.id',
-              to: `${to}`,
-              cc: `${cc.split(',')}, noreplyofr@gmail.com, yuda.firmansyah@pinusmerahabadi.co.id, neng_rina@pinusmerahabadi.co.id, pmaho_asset1@pinusmerahabadi.co.id, pmaho_asset2@pinusmerahabadi.co.id`,
+              // to: `${to}`,
+              // cc: `${cc.split(',')}, noreplyofr@gmail.com, yuda.firmansyah@pinusmerahabadi.co.id, neng_rina@pinusmerahabadi.co.id, pmaho_asset1@pinusmerahabadi.co.id, pmaho_asset2@pinusmerahabadi.co.id`,
               // to: 'neng_rina@pinusmerahabadi.co.id',
               // cc: 'pmaho_asset1@pinusmerahabadi.co.id, fahmi_aziz@pinusmerahabadi.co.id, noreplyofr@gmail.com',
-              // to: 'noreplyofr@gmail.com',
-              // cc: 'fahmi_aziz@pinusmerahabadi.co.id, fahmiazis797@gmail.com',
+              to: 'noreplyofr@gmail.com',
+              cc: 'fahmi_aziz@pinusmerahabadi.co.id, fahmiazis797@gmail.com',
               subject: `${subject}`,
               html: `
                   <head>

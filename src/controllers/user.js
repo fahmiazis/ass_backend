@@ -21,7 +21,7 @@ module.exports = {
       const level = req.user.level
       const schema = joi.object({
         username: joi.string().required(),
-        email: joi.string().email(),
+        email: joi.string().required(),
         fullname: joi.string().required(),
         password: joi.string().required(),
         kode_plant: joi.string().allow(''),
@@ -188,7 +188,7 @@ module.exports = {
         fullname: joi.string().required(),
         kode_plant: joi.string().allow(''),
         user_level: joi.number().required(),
-        email: joi.string().email().required(),
+        email: joi.string().required(),
         status: joi.string().required(),
         status_it: joi.string().allow(''),
         multi_role: joi.string().allow(''),

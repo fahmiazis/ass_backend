@@ -1553,6 +1553,10 @@ module.exports = {
         }
       })
       const findAllRole = await role.findAll()
+
+      const roleHo = findAllRole.find(item => parseInt(item.nomor) === 9) ? findAllRole.find(item => parseInt(item.nomor) === 9).name : ''
+      const roleAos = findAllRole.find(item => parseInt(item.nomor) === 5) ? findAllRole.find(item => parseInt(item.nomor) === 5).name : ''
+
       if (result.length > 0 && findRole) {
         const penyetuju = []
         const pembuat = []
@@ -1609,7 +1613,7 @@ module.exports = {
             const hasil = []
             for (let i = 0; i < getApp.length; i++) {
               const send = {
-                jabatan: getApp[i].jabatan === 'AOS' && ((cekFrm === 9 && i === 0) || (cekTo === 9 && i === (getApp.length - 1))) ? 'HO' : getApp[i].jabatan,
+                jabatan: getApp[i].jabatan === roleAos && ((cekFrm === 9 && i === 0) || (cekTo === 9 && i === (getApp.length - 1))) ? roleHo : getApp[i].jabatan,
                 jenis: getApp[i].jenis,
                 sebagai: getApp[i].sebagai,
                 kategori: null,
