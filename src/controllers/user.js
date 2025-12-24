@@ -1,6 +1,6 @@
 const joi = require('joi')
 const response = require('../helpers/response')
-const { user, role, depo, approve, ttd, role_user } = require('../models') // eslint-disable-line
+const { user, role, depo, approve, ttd, role_user, tempmail } = require('../models') // eslint-disable-line
 const bcrypt = require('bcryptjs')
 const { Op } = require('sequelize')
 const jwt = require('jsonwebtoken')
@@ -1047,9 +1047,25 @@ module.exports = {
                     jabatan: findRole.name
                   }
                 })
+                const findCc = await tempmail.findAll({
+                  where: {
+                    [Op.or]: [
+                      { cc: { [Op.like]: `%${findRole.name}%` } }
+                    ]
+                  }
+                })
+                const findTo = await tempmail.findAll({
+                  where: {
+                    [Op.or]: [
+                      { to: { [Op.like]: `%${findRole.name}%` } }
+                    ]
+                  }
+                })
                 if (findTtd.length > 0 || findApp.length > 0) {
                   const temp = []
                   const hasil = []
+                  const cekCc = []
+                  const cekTo = []
                   for (let i = 0; i < findTtd.length; i++) {
                     const findData = await ttd.findByPk(findTtd[i].id)
                     const upData = {
@@ -1070,8 +1086,30 @@ module.exports = {
                       hasil.push(1)
                     }
                   }
+                  for (let i = 0; i < findCc.length; i++) {
+                    const findData = await tempmail.findByPk(findCc[i].id)
+                    const ccUpdate = findData.cc.replace(findRole.name, results.name)
+                    const upData = {
+                      cc: ccUpdate
+                    }
+                    if (findData) {
+                      await findData.update(upData)
+                      cekCc.push(1)
+                    }
+                  }
+                  for (let i = 0; i < findTo.length; i++) {
+                    const findData = await tempmail.findByPk(findTo[i].id)
+                    const toUpdate = findData.to.replace(findRole.name, results.name)
+                    const upData = {
+                      to: toUpdate
+                    }
+                    if (findData) {
+                      await findData.update(upData)
+                      cekTo.push(1)
+                    }
+                  }
                   if (temp.length || hasil.length) {
-                    return response(res, 'update Role succesfully good', { result, findTtd, findApp, findRole, temp, hasil })
+                    return response(res, 'update Role succesfully good', { result, findTtd, findApp, findRole, temp, hasil, cekCc, cekTo })
                   } else {
                     return response(res, 'update Role succesfully wut', { result, findTtd, findApp, findRole })
                   }
