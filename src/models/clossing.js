@@ -16,7 +16,9 @@ module.exports = (sequelize, DataTypes) => {
   clossing.init({
     jenis: DataTypes.STRING,
     start: DataTypes.INTEGER,
-    end: DataTypes.INTEGER
+    end: DataTypes.INTEGER,
+    periode: DataTypes.DATE,
+    type_clossing: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'clossing'

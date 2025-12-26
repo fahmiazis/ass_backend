@@ -50,42 +50,75 @@ module.exports = {
         }
       })
       if (findClose.length > 0 && findArea) {
-        const time = moment().format('L').split('/')
+        // const time = moment().format('L').split('/')
         const start = findClose[0].start
         const end = findClose[0].end
-        if (parseInt(time[1]) > end && parseInt(time[1]) < start) {
-          return response(res, 'Belum saatnya atau waktu telah terlewat untuk stock opname', {}, 404, false)
+        // if (parseInt(time[1]) > end && parseInt(time[1]) < start) {
+        //   return response(res, 'Belum saatnya atau waktu telah terlewat untuk stock opname', {}, 404, false)
+        // } else {
+        // let awal = ''
+        // let akhir = ''
+        // if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+        //   const next = moment().subtract(1, 'month').format('L').split('/')
+        //   akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
+        //   awal = `${next[2]}-${next[0]}-${findClose[0].start}`
+        // } else {
+        //   const next = moment().add(1, 'month').format('L').split('/')
+        //   awal = `${time[2]}-${time[0]}-${findClose[0].start}`
+        //   akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
+        // }
+        const findStock = await stock.findOne({
+          where: {
+            [Op.and]: [
+              { kode_plant: kode },
+              { status_form: null }
+              // ,
+              // {
+              //   tanggalStock: {
+              //     [Op.lte]: akhir,
+              //     [Op.gte]: awal
+              //   }
+              // }
+            ]
+          }
+        })
+        if (findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock.status_form === 1) {
+          return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
         } else {
-          // let awal = ''
-          // let akhir = ''
-          // if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-          //   const next = moment().subtract(1, 'month').format('L').split('/')
-          //   akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
-          //   awal = `${next[2]}-${next[0]}-${findClose[0].start}`
-          // } else {
-          //   const next = moment().add(1, 'month').format('L').split('/')
-          //   awal = `${time[2]}-${time[0]}-${findClose[0].start}`
-          //   akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
-          // }
-          const findStock = await stock.findOne({
+          const result = await asset.findAll({
             where: {
               [Op.and]: [
-                { kode_plant: kode },
-                { status_form: null }
-                // ,
-                // {
-                //   tanggalStock: {
-                //     [Op.lte]: akhir,
-                //     [Op.gte]: awal
-                //   }
-                // }
+                partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
+                kode.length > 4 && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
+                  ? (
+                    detailUser.status_it === null
+                      ? {
+                        [Op.or]: [
+                          { kategori: { [Op.ne]: 'IT' } },
+                          { kategori: { [Op.is]: null } }
+                        ]
+                      }
+                      : { kategori: 'IT' })
+                  : { [Op.not]: { id: null } },
+                { [Op.not]: { satuan: null } },
+                { [Op.not]: { unit: null } },
+                { [Op.not]: { lokasi: null } },
+                { [Op.not]: { grouping: null } },
+                { [Op.not]: { kondisi: null } },
+                { [Op.not]: { status_fisik: null } },
+                { [Op.not]: { kategori: null } },
+                {
+                  [Op.or]: [
+                    { status: '1' },
+                    { status: '11' },
+                    { status: null }
+                  ]
+                }
               ]
             }
           })
-          if (findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock.status_form === 1) {
-            return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
-          } else {
-            const result = await asset.findAll({
+          if (result.length > 0) {
+            const findAsset = await asset.findAll({
               where: {
                 [Op.and]: [
                   partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
@@ -99,26 +132,17 @@ module.exports = {
                           ]
                         }
                         : { kategori: 'IT' })
-                    : { [Op.not]: { id: null } },
-                  { [Op.not]: { satuan: null } },
-                  { [Op.not]: { unit: null } },
-                  { [Op.not]: { lokasi: null } },
-                  { [Op.not]: { grouping: null } },
-                  { [Op.not]: { kondisi: null } },
-                  { [Op.not]: { status_fisik: null } },
-                  { [Op.not]: { kategori: null } },
-                  {
-                    [Op.or]: [
-                      { status: '1' },
-                      { status: '11' },
-                      { status: null }
-                    ]
-                  }
+                    : { [Op.not]: { id: null } }
+                ],
+                [Op.or]: [
+                  { status: '1' },
+                  { status: '11' },
+                  { status: null }
                 ]
               }
             })
-            if (result.length > 0) {
-              const findAsset = await asset.findAll({
+            if (result.length === findAsset.length) {
+              const findPict = await asset.findAll({
                 where: {
                   [Op.and]: [
                     partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
@@ -139,179 +163,178 @@ module.exports = {
                     { status: '11' },
                     { status: null }
                   ]
-                }
+                },
+                include: [
+                  {
+                    model: path,
+                    as: 'pict'
+                  }
+                ]
               })
-              if (result.length === findAsset.length) {
-                const findPict = await asset.findAll({
-                  where: {
-                    [Op.and]: [
-                      partArea === 'all' ? { cost_center: findArea.cost_center } : { cost_center: partArea },
-                      kode.length > 4 && depoExclude.find(x => x.cost_center === detailUser.kode_plant) === undefined
-                        ? (
-                          detailUser.status_it === null
-                            ? {
-                              [Op.or]: [
-                                { kategori: { [Op.ne]: 'IT' } },
-                                { kategori: { [Op.is]: null } }
-                              ]
-                            }
-                            : { kategori: 'IT' })
-                        : { [Op.not]: { id: null } }
-                    ],
-                    [Op.or]: [
-                      { status: '1' },
-                      { status: '11' },
-                      { status: null }
-                    ]
-                  },
-                  include: [
-                    {
-                      model: path,
-                      as: 'pict'
-                    }
-                  ]
-                })
-                if (findPict.length > 0) {
-                  const cekImage = []
-                  const failImage = []
-                  for (let i = 0; i < findPict.length; i++) {
-                    const image = findPict[i].pict
-                    if (image.length > 0) {
-                      const timeIm = moment(image[image.length - 1].createdAt).format('L').split('/')
-                      if (parseInt(timeIm[1]) > end && parseInt(timeIm[1]) < start) {
-                        failImage.push(findPict[i])
-                      } else {
-                        cekImage.push(1)
-                      }
-                    } else {
+              if (findPict.length > 0) {
+                const cekImage = []
+                const failImage = []
+                for (let i = 0; i < findPict.length; i++) {
+                  const image = findPict[i].pict
+                  if (image.length > 0) {
+                    const timeIm = moment(image[image.length - 1].createdAt).format('L').split('/')
+                    if (parseInt(timeIm[1]) > end && parseInt(timeIm[1]) < start) {
                       failImage.push(findPict[i])
+                    } else {
+                      cekImage.push(1)
+                    }
+                  } else {
+                    failImage.push(findPict[i])
+                  }
+                }
+                if (cekImage.length === findPict.length) {
+                  const findNo = await reservoir.findAll({
+                    where: {
+                      transaksi: 'stock opname',
+                      tipe: 'area'
+                      // ,
+                      // createdAt: {
+                      //   [Op.gte]: timeV1,
+                      //   [Op.lt]: timeV2
+                      // }
+                    },
+                    order: [['id', 'DESC']],
+                    limit: 50
+                  })
+                  const cekNo = []
+                  if (findNo.length > 0) {
+                    for (let i = 0; i < findNo.length; i++) {
+                      const no = findNo[i].no_transaksi.split('/')
+                      cekNo.push(parseInt(no[0]))
+                    }
+                  } else {
+                    cekNo.push(0)
+                  }
+                  const noStock = Math.max(...cekNo) + 1
+                  const change = noStock.toString().split('')
+                  const notrans = change.length === 2 ? '00' + noStock : change.length === 1 ? '000' + noStock : change.length === 3 ? '0' + noStock : noStock
+                  const month = parseInt(moment().format('MM'))
+                  const year = moment().format('YYYY')
+                  let rome = ''
+                  if (month === 1) {
+                    rome = 'I'
+                  } else if (month === 2) {
+                    rome = 'II'
+                  } else if (month === 3) {
+                    rome = 'III'
+                  } else if (month === 4) {
+                    rome = 'IV'
+                  } else if (month === 5) {
+                    rome = 'V'
+                  } else if (month === 6) {
+                    rome = 'VI'
+                  } else if (month === 7) {
+                    rome = 'VII'
+                  } else if (month === 8) {
+                    rome = 'VIII'
+                  } else if (month === 9) {
+                    rome = 'IX'
+                  } else if (month === 10) {
+                    rome = 'X'
+                  } else if (month === 11) {
+                    rome = 'XI'
+                  } else if (month === 12) {
+                    rome = 'XII'
+                  }
+                    const tempData = findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock // eslint-disable-line
+                  const cekData = tempData ? 'ya' : 'no'
+                  const noTrans = `${notrans}/${kode}/${findArea.nama_area}/${rome}/${year}-OPNM`
+                  const hasil = []
+                  for (let i = 0; i < result.length; i++) {
+                    const data = {
+                      kode_plant: kode,
+                      area: `${findArea.nama_area}`,
+                      deskripsi: result[i].nama_asset,
+                      no_asset: result[i].no_asset,
+                      merk: result[i].merk,
+                      satuan: result[i].satuan,
+                      unit: result[i].unit,
+                      kondisi: result[i].kondisi,
+                      lokasi: result[i].lokasi,
+                      grouping: result[i].grouping,
+                      keterangan: result[i].keterangan,
+                      status_fisik: result[i].status_fisik
+                    }
+                    if (findStock && findStock.no_stock !== undefined && findStock.no_stock !== null) {
+                      hasil.push('1')
+                    } else {
+                      const send = await stock.create(data)
+                      if (send) {
+                        hasil.push('1')
+                      }
                     }
                   }
-                  if (cekImage.length === findPict.length) {
-                    const findNo = await reservoir.findAll({
+                  if (hasil.length === result.length) {
+                    const findAllStock = await stock.findAll({
                       where: {
-                        transaksi: 'stock opname',
-                        tipe: 'area'
-                        // ,
-                        // createdAt: {
-                        //   [Op.gte]: timeV1,
-                        //   [Op.lt]: timeV2
-                        // }
-                      },
-                      order: [['id', 'DESC']],
-                      limit: 50
+                        [Op.and]: [
+                          { kode_plant: kode },
+                          { status_form: null }
+                        ]
+                      }
                     })
-                    const cekNo = []
-                    if (findNo.length > 0) {
-                      for (let i = 0; i < findNo.length; i++) {
-                        const no = findNo[i].no_transaksi.split('/')
-                        cekNo.push(parseInt(no[0]))
-                      }
-                    } else {
-                      cekNo.push(0)
-                    }
-                    const noStock = Math.max(...cekNo) + 1
-                    const change = noStock.toString().split('')
-                    const notrans = change.length === 2 ? '00' + noStock : change.length === 1 ? '000' + noStock : change.length === 3 ? '0' + noStock : noStock
-                    const month = parseInt(moment().format('MM'))
-                    const year = moment().format('YYYY')
-                    let rome = ''
-                    if (month === 1) {
-                      rome = 'I'
-                    } else if (month === 2) {
-                      rome = 'II'
-                    } else if (month === 3) {
-                      rome = 'III'
-                    } else if (month === 4) {
-                      rome = 'IV'
-                    } else if (month === 5) {
-                      rome = 'V'
-                    } else if (month === 6) {
-                      rome = 'VI'
-                    } else if (month === 7) {
-                      rome = 'VII'
-                    } else if (month === 8) {
-                      rome = 'VIII'
-                    } else if (month === 9) {
-                      rome = 'IX'
-                    } else if (month === 10) {
-                      rome = 'X'
-                    } else if (month === 11) {
-                      rome = 'XI'
-                    } else if (month === 12) {
-                      rome = 'XII'
-                    }
-                    const tempData = findStock && findStock.no_stock !== undefined && findStock.no_stock !== null && findStock // eslint-disable-line
-                    const cekData = tempData ? 'ya' : 'no'
-                    const noTrans = `${notrans}/${kode}/${findArea.nama_area}/${rome}/${year}-OPNM`
-                    const hasil = []
-                    for (let i = 0; i < result.length; i++) {
-                      const data = {
-                        kode_plant: kode,
-                        area: `${findArea.nama_area}`,
-                        deskripsi: result[i].nama_asset,
-                        no_asset: result[i].no_asset,
-                        merk: result[i].merk,
-                        satuan: result[i].satuan,
-                        unit: result[i].unit,
-                        kondisi: result[i].kondisi,
-                        lokasi: result[i].lokasi,
-                        grouping: result[i].grouping,
-                        keterangan: result[i].keterangan,
-                        status_fisik: result[i].status_fisik
-                      }
-                      if (findStock && findStock.no_stock !== undefined && findStock.no_stock !== null) {
-                        hasil.push('1')
-                      } else {
-                        const send = await stock.create(data)
-                        if (send) {
-                          hasil.push('1')
+                    if (findAllStock) {
+                      const cek = []
+                      for (let i = 0; i < findAllStock.length; i++) {
+                        const data = {
+                          no_stock: noTrans
+                        }
+                        const result = await stock.findByPk(findAllStock[i].id)
+                        if (result) {
+                          await result.update(data)
+                          cek.push('1')
                         }
                       }
-                    }
-                    if (hasil.length === result.length) {
-                      const findAllStock = await stock.findAll({
-                        where: {
-                          [Op.and]: [
-                            { kode_plant: kode },
-                            { status_form: null }
-                          ]
-                        }
-                      })
-                      if (findAllStock) {
-                        const cek = []
-                        for (let i = 0; i < findAllStock.length; i++) {
-                          const data = {
-                            no_stock: noTrans
+                      if (cek.length > 0) {
+                        const findDepo = await depo.findOne({
+                          where: {
+                            kode_plant: kode
                           }
-                          const result = await stock.findByPk(findAllStock[i].id)
-                          if (result) {
-                            await result.update(data)
-                            cek.push('1')
-                          }
-                        }
-                        if (cek.length > 0) {
-                          const findDepo = await depo.findOne({
-                            where: {
-                              kode_plant: kode
-                            }
-                          })
-                          if (findDepo) {
-                            console.log(cekData)
-                            if (cekData === 'ya') {
-                              const findReser = await reservoir.findOne({
-                                where: {
-                                  no_transaksi: tempData.no_stock
-                                }
-                              })
-                              const findNewReser = await reservoir.findOne({
-                                where: {
-                                  no_transaksi: noTrans
-                                }
-                              })
-                              const upDataReser = {
-                                status: 'expired'
+                        })
+                        if (findDepo) {
+                          console.log(cekData)
+                          if (cekData === 'ya') {
+                            const findReser = await reservoir.findOne({
+                              where: {
+                                no_transaksi: tempData.no_stock
                               }
+                            })
+                            const findNewReser = await reservoir.findOne({
+                              where: {
+                                no_transaksi: noTrans
+                              }
+                            })
+                            const upDataReser = {
+                              status: 'expired'
+                            }
+                            const creDataReser = {
+                              no_transaksi: noTrans,
+                              kode_plant: kode,
+                              transaksi: 'stock opname',
+                              tipe: 'area',
+                              status: 'delayed'
+                            }
+                            if (findReser && !findNewReser) {
+                              await findReser.update(upDataReser)
+                              await reservoir.create(creDataReser)
+                              return response(res, 'success submit cart', { noStock: noTrans })
+                            } else {
+                              return response(res, 'success submit cart', { noStock: noTrans })
+                            }
+                          } else {
+                            const findNewReser = await reservoir.findOne({
+                              where: {
+                                no_transaksi: noTrans
+                              }
+                            })
+                            if (findNewReser) {
+                              return response(res, 'success submit cart', { noStock: noTrans })
+                            } else {
                               const creDataReser = {
                                 no_transaksi: noTrans,
                                 kode_plant: kode,
@@ -319,59 +342,36 @@ module.exports = {
                                 tipe: 'area',
                                 status: 'delayed'
                               }
-                              if (findReser && !findNewReser) {
-                                await findReser.update(upDataReser)
-                                await reservoir.create(creDataReser)
-                                return response(res, 'success submit cart', { noStock: noTrans })
-                              } else {
-                                return response(res, 'success submit cart', { noStock: noTrans })
-                              }
-                            } else {
-                              const findNewReser = await reservoir.findOne({
-                                where: {
-                                  no_transaksi: noTrans
-                                }
-                              })
-                              if (findNewReser) {
-                                return response(res, 'success submit cart', { noStock: noTrans })
-                              } else {
-                                const creDataReser = {
-                                  no_transaksi: noTrans,
-                                  kode_plant: kode,
-                                  transaksi: 'stock opname',
-                                  tipe: 'area',
-                                  status: 'delayed'
-                                }
-                                await reservoir.create(creDataReser)
-                                return response(res, 'success submit cart', { noStock: noTrans })
-                              }
+                              await reservoir.create(creDataReser)
+                              return response(res, 'success submit cart', { noStock: noTrans })
                             }
-                          } else {
-                            return response(res, 'success submit stock opname')
                           }
                         } else {
-                          return response(res, 'failed submit stock opname1', {}, 400, false)
+                          return response(res, 'success submit stock opname')
                         }
                       } else {
-                        return response(res, 'failed submit stock opname2', {}, 400, false)
+                        return response(res, 'failed submit stock opname1', {}, 400, false)
                       }
                     } else {
-                      return response(res, 'failed submit stock opname3', {}, 400, false)
+                      return response(res, 'failed submit stock opname2', {}, 400, false)
                     }
                   } else {
-                    return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length, dataPict: findPict, failPict: failImage }, 400, false)
+                    return response(res, 'failed submit stock opname3', {}, 400, false)
                   }
                 } else {
-                  return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
+                  return response(res, 'upload gambar asset terbaru terlebih dahulu', { img: cekImage.length, asset: findPict.length, dataPict: findPict, failPict: failImage }, 400, false)
                 }
               } else {
-                return response(res, 'Pastikan lokasi, kategori, status fisik, kondisi, dan status asset telah terisi', { result: result, findaset: findAsset, partArea, detailUser }, 400, false)
+                return response(res, 'upload gambar asset terbaru terlebih dahulu', {}, 400, false)
               }
             } else {
-              return response(res, 'Pastikan lokasi, kategori, status fisik, kondisi, dan status asset telah terisi', { result: result.length, partArea, detailUser }, 400, false)
+              return response(res, 'Pastikan lokasi, kategori, status fisik, kondisi, dan status asset telah terisi', { result: result, findaset: findAsset, partArea, detailUser }, 400, false)
             }
+          } else {
+            return response(res, 'Pastikan lokasi, kategori, status fisik, kondisi, dan status asset telah terisi', { result: result.length, partArea, detailUser }, 400, false)
           }
         }
+        // }
       } else {
         return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
       }
@@ -393,6 +393,22 @@ module.exports = {
           kode_plant: kode
         }
       })
+      // const findClosing = await clossing.findOne({
+      //   where: {
+      //     [Op.and]: [
+      //       { type_clossing: 'periode' },
+      //       []
+      //     ]
+      //   }
+      // })
+      // const findClosingAll = await clossing.findOne({
+      //   where: {
+      //     type_clossing: 'all'
+      //   }
+      // })
+      // const finalClosing = findClosing ? findClosing : findClosingAll
+      // const dateClosing =
+
       // const detailUser = await user.findOne({
       //   where: {
       //     id: id
@@ -2230,72 +2246,72 @@ module.exports = {
         })
         if (findClose.length > 0) {
           const time = moment().format('L').split('/')
-          const start = findClose[0].start
-          const end = findClose[0].end
-          if (parseInt(time[1]) > end && parseInt(time[1]) < start) {
-            return response(res, 'Belum saatnya atau waktu telah terlewat untuk stock opname', {}, 404, false)
+          // const start = findClose[0].start
+          // const end = findClose[0].end
+          // if (parseInt(time[1]) > end && parseInt(time[1]) < start) {
+          //   return response(res, 'Belum saatnya atau waktu telah terlewat untuk stock opname', {}, 404, false)
+          // } else {
+          let awal = ''
+          let akhir = ''
+          if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+            const next = moment().subtract(1, 'month').format('L').split('/')
+            akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
+            awal = `${next[2]}-${next[0]}-${findClose[0].start}`
           } else {
-            let awal = ''
-            let akhir = ''
-            if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-              const next = moment().subtract(1, 'month').format('L').split('/')
-              akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
-              awal = `${next[2]}-${next[0]}-${findClose[0].start}`
-            } else {
-              const next = moment().add(1, 'month').format('L').split('/')
-              awal = `${time[2]}-${time[0]}-${findClose[0].start}`
-              akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
-            }
-            const findStock = await stock.findOne({
-              where: {
-                [Op.and]: [
-                  { kode_plant: level === 5 ? kode : cost },
-                  {
-                    tanggalStock: {
-                      [Op.lte]: akhir,
-                      [Op.gte]: awal
-                    }
+            const next = moment().add(1, 'month').format('L').split('/')
+            awal = `${time[2]}-${time[0]}-${findClose[0].start}`
+            akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
+          }
+          const findStock = await stock.findOne({
+            where: {
+              [Op.and]: [
+                { kode_plant: level === 5 ? kode : cost },
+                {
+                  tanggalStock: {
+                    [Op.lte]: akhir,
+                    [Op.gte]: awal
                   }
-                ]
-              }
-            })
-            const data = {
-              kode_plant: kode,
-              area: results.area,
-              deskripsi: results.deskripsi,
-              no_asset: results.no_asset,
-              merk: results.merk,
-              satuan: results.satuan,
-              unit: results.unit,
-              kondisi: results.kondisi,
-              lokasi: results.lokasi,
-              grouping: results.grouping,
-              keterangan: results.keterangan,
-              status_fisik: results.status_fisik,
-              tanggalStock: moment().format('L'),
-              status_doc: 1,
-              status_app: null
+                }
+              ]
             }
-            if (findStock) {
-              // if (findStock.no_stock !== null) {
-              //   return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
-              // } else {
-              const send = await stock.create(data)
-              if (send) {
-                return response(res, 'success add stock opname', { result: send })
-              } else {
-                return response(res, 'failed add stock opname', {}, 400, false)
-              }
-              // }
+          })
+          const data = {
+            kode_plant: kode,
+            area: results.area,
+            deskripsi: results.deskripsi,
+            no_asset: results.no_asset,
+            merk: results.merk,
+            satuan: results.satuan,
+            unit: results.unit,
+            kondisi: results.kondisi,
+            lokasi: results.lokasi,
+            grouping: results.grouping,
+            keterangan: results.keterangan,
+            status_fisik: results.status_fisik,
+            tanggalStock: moment().format('L'),
+            status_doc: 1,
+            status_app: null
+          }
+          if (findStock) {
+            // if (findStock.no_stock !== null) {
+            //   return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
+            // } else {
+            const send = await stock.create(data)
+            if (send) {
+              return response(res, 'success add stock opname', { result: send })
             } else {
-              const send = await stock.create(data)
-              if (send) {
-                return response(res, 'success add stock opname', { result: send })
-              } else {
-                return response(res, 'failed add stock opname', {}, 400, false)
-              }
+              return response(res, 'failed add stock opname', {}, 400, false)
+            }
+            // }
+          } else {
+            const send = await stock.create(data)
+            if (send) {
+              return response(res, 'success add stock opname', { result: send })
+            } else {
+              return response(res, 'failed add stock opname', {}, 400, false)
             }
           }
+          // }
         } else {
           return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
         }
