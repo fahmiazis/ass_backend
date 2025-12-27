@@ -2221,99 +2221,156 @@ module.exports = {
       const cost = req.user.kode
       const level = req.user.level
       const kode = req.user.kode
-      const schema = joi.object({
-        area: joi.string().allow(''),
-        kode_plant: joi.string().allow(''),
-        keterangan: joi.string().allow(''),
-        deskripsi: joi.string().allow(''),
-        nilai_buku: joi.string().allow(''),
-        merk: joi.string().allow(''),
-        satuan: joi.string().allow(''),
-        unit: joi.string().allow(''),
-        kondisi: joi.string().allow(''),
-        lokasi: joi.string().allow(''),
-        grouping: joi.string().allow(''),
-        status_fisik: joi.string().allow('')
-      })
-      const { value: results, error } = schema.validate(req.body)
-      if (error) {
-        return response(res, 'Error', { error: error.message }, 401, false)
-      } else {
-        const findClose = await clossing.findAll({
-          where: {
-            jenis: 'stock'
-          }
-        })
-        if (findClose.length > 0) {
-          const time = moment().format('L').split('/')
-          // const start = findClose[0].start
-          // const end = findClose[0].end
-          // if (parseInt(time[1]) > end && parseInt(time[1]) < start) {
-          //   return response(res, 'Belum saatnya atau waktu telah terlewat untuk stock opname', {}, 404, false)
-          // } else {
-          let awal = ''
-          let akhir = ''
-          if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
-            const next = moment().subtract(1, 'month').format('L').split('/')
-            akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
-            awal = `${next[2]}-${next[0]}-${findClose[0].start}`
-          } else {
-            const next = moment().add(1, 'month').format('L').split('/')
-            awal = `${time[2]}-${time[0]}-${findClose[0].start}`
-            akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
-          }
-          const findStock = await stock.findOne({
-            where: {
-              [Op.and]: [
-                { kode_plant: level === 5 ? kode : cost },
-                {
-                  tanggalStock: {
-                    [Op.lte]: akhir,
-                    [Op.gte]: awal
-                  }
-                }
-              ]
+      const { type } = req.query
+      if (type === 'revisi') {
+        uploadHelper(req, res, async function (err) {
+          if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length === 0) {
+              console.log(err.code === 'LIMIT_UNEXPECTED_FILE' && req.files.length > 0)
+              return response(res, 'fieldname doesnt match', {}, 500, false)
             }
-          })
+            return response(res, err.message, {}, 500, false)
+          } else if (err) {
+            return response(res, err.message, {}, 401, false)
+          }
+          const dokumen = `uploads/${req.file.filename}`
+          const dataBody = req.body
+          const findStock = await stock.findByPk(dataBody.idStock)
           const data = {
             kode_plant: kode,
-            area: results.area,
-            deskripsi: results.deskripsi,
-            no_asset: results.no_asset,
-            merk: results.merk,
-            satuan: results.satuan,
-            unit: results.unit,
-            kondisi: results.kondisi,
-            lokasi: results.lokasi,
-            grouping: results.grouping,
-            keterangan: results.keterangan,
-            status_fisik: results.status_fisik,
-            tanggalStock: moment().format('L'),
+            area: dataBody.area,
+            deskripsi: dataBody.deskripsi,
+            merk: dataBody.merk,
+            satuan: dataBody.satuan,
+            unit: dataBody.unit,
+            kondisi: dataBody.kondisi,
+            lokasi: dataBody.lokasi,
+            grouping: dataBody.grouping,
+            keterangan: dataBody.keterangan,
+            status_fisik: dataBody.status_fisik,
+            tanggalStock: findStock.tanggalStock,
+            image: dokumen,
+            date_img: moment(),
             status_doc: 1,
-            status_app: null
+            status_app: findStock.status_app,
+            status_form: findStock.status_form,
+            status_reject: findStock.status_reject,
+            history: findStock.history,
+            id_applicant: findStock.id_applicant,
+            no_stock: findStock.no_stock
           }
-          if (findStock) {
+          const createStock = await stock.create(data)
+          if (findStock && createStock) {
+            const send = {
+              path: dokumen,
+              no_asset: createStock.id,
+              no_doc: 'opname'
+            }
+
+            const result = await path.create(send)
+            if (result) {
+              return response(res, 'successfully upload', { send })
+            } else {
+              return response(res, 'failed upload', {}, 404, false)
+            }
+          } else {
+            return response(res, 'failed upload', {}, 404, false)
+          }
+        })
+      } else {
+        const schema = joi.object({
+          area: joi.string().allow(''),
+          kode_plant: joi.string().allow(''),
+          keterangan: joi.string().allow(''),
+          deskripsi: joi.string().allow(''),
+          nilai_buku: joi.string().allow(''),
+          merk: joi.string().allow(''),
+          satuan: joi.string().allow(''),
+          unit: joi.string().allow(''),
+          kondisi: joi.string().allow(''),
+          lokasi: joi.string().allow(''),
+          grouping: joi.string().allow(''),
+          status_fisik: joi.string().allow('')
+        })
+        const { value: results, error } = schema.validate(req.body)
+        if (error) {
+          return response(res, 'Error', { error: error.message }, 401, false)
+        } else {
+          const findClose = await clossing.findAll({
+            where: {
+              jenis: 'stock'
+            }
+          })
+          if (findClose.length > 0) {
+            const time = moment().format('L').split('/')
+            // const start = findClose[0].start
+            // const end = findClose[0].end
+            // if (parseInt(time[1]) > end && parseInt(time[1]) < start) {
+            //   return response(res, 'Belum saatnya atau waktu telah terlewat untuk stock opname', {}, 404, false)
+            // } else {
+            let awal = ''
+            let akhir = ''
+            if (parseInt(time[1]) >= 1 && parseInt(time[1]) <= findClose[0].end) {
+              const next = moment().subtract(1, 'month').format('L').split('/')
+              akhir = `${time[2]}-${time[0]}-${findClose[0].end}`
+              awal = `${next[2]}-${next[0]}-${findClose[0].start}`
+            } else {
+              const next = moment().add(1, 'month').format('L').split('/')
+              awal = `${time[2]}-${time[0]}-${findClose[0].start}`
+              akhir = `${next[2]}-${next[0]}-${findClose[0].end}`
+            }
+            const findStock = await stock.findOne({
+              where: {
+                [Op.and]: [
+                  { kode_plant: level === 5 ? kode : cost },
+                  {
+                    tanggalStock: {
+                      [Op.lte]: akhir,
+                      [Op.gte]: awal
+                    }
+                  }
+                ]
+              }
+            })
+            const data = {
+              kode_plant: kode,
+              area: results.area,
+              deskripsi: results.deskripsi,
+              merk: results.merk,
+              satuan: results.satuan,
+              unit: results.unit,
+              kondisi: results.kondisi,
+              lokasi: results.lokasi,
+              grouping: results.grouping,
+              keterangan: results.keterangan,
+              status_fisik: results.status_fisik,
+              tanggalStock: moment().format('L'),
+              status_doc: 1,
+              status_app: null
+            }
+            if (findStock) {
             // if (findStock.no_stock !== null) {
             //   return response(res, 'Telah melakukan pengajuan untuk periode sekarang', {}, 400, false)
             // } else {
-            const send = await stock.create(data)
-            if (send) {
-              return response(res, 'success add stock opname', { result: send })
-            } else {
-              return response(res, 'failed add stock opname', {}, 400, false)
-            }
+              const send = await stock.create(data)
+              if (send) {
+                return response(res, 'success add stock opname', { result: send })
+              } else {
+                return response(res, 'failed add stock opname', {}, 400, false)
+              }
             // }
-          } else {
-            const send = await stock.create(data)
-            if (send) {
-              return response(res, 'success add stock opname', { result: send })
             } else {
-              return response(res, 'failed add stock opname', {}, 400, false)
+              const send = await stock.create(data)
+              if (send) {
+                return response(res, 'success add stock opname', { result: send })
+              } else {
+                return response(res, 'failed add stock opname', {}, 400, false)
+              }
             }
-          }
           // }
-        } else {
-          return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+          } else {
+            return response(res, 'Buat clossing untuk stock opname terlebih dahulu', {}, 400, false)
+          }
         }
       }
     } catch (error) {
